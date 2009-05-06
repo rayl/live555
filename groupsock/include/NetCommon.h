@@ -36,6 +36,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #define closeSocket closesocket
 #define EWOULDBLOCK WSAEWOULDBLOCK
+#define EINPROGRESS WSAEWOULDBLOCK
+#define EAGAIN WSAEWOULDBLOCK
+#define EINTR WSAEINTR
 
 #if defined(_WIN32_WCE)
 #define NO_STRSTREAM 1

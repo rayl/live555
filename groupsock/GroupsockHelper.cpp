@@ -230,10 +230,8 @@ static int blockUntilReadable(UsageEnvironment& env,
     if (timeout != NULL && result == 0) {
       break; // this is OK - timeout occurred
     } else if (result <= 0) {
-#if defined(__WIN32__) || defined(_WIN32)
-#else
-      if (errno == EINTR || errno == EAGAIN) continue;
-#endif
+      int err = env.getErrno();
+      if (err == EINTR || err == EAGAIN || err == EWOULDBLOCK) continue;
       socketErr(env, "select() error: ");
       break;
     }

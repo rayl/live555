@@ -1834,11 +1834,7 @@ Boolean RTSPClient
         makeSocketNonBlocking(fInputSocketNum);
       }
       if (connect(fInputSocketNum, (struct sockaddr*) &remoteName, sizeof remoteName) != 0) {
-#if defined(__WIN32__) || defined(_WIN32)
-        if (errno != WSAEINPROGRESS && errno != WSAEWOULDBLOCK) {
-#else
-        if (errno != EINPROGRESS) {
-#endif
+        if (envir().getErrno() != EINPROGRESS && envir().getErrno() != EWOULDBLOCK) {
           envir().setResultErrMsg("connect() failed: ");
           break;
         }

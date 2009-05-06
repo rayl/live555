@@ -80,7 +80,7 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
       int dummySocketNum = socket(AF_INET, SOCK_DGRAM, 0);
       FD_SET((unsigned)dummySocketNum, &fReadSet);
     }
-    if (err != 0) {
+    if (err != EINTR) {
 #else
     if (errno != EINTR && errno != EAGAIN) {
 #endif
