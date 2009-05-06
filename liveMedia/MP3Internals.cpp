@@ -60,7 +60,7 @@ struct bandInfoStruct {
   int shortDiff[13];
 };
 
-static struct bandInfoStruct bandInfo[7] = { 
+static struct bandInfoStruct const bandInfo[7] = { 
 /* MPEG 1.0 */
  { {0,4,8,12,16,20,24,30,36,44,52,62,74, 90,110,134,162,196,238,288,342,418,576},
    {4,4,4,4,4,4,6,6,8, 8,10,12,16,20,24,28,34,42,50,54, 76,158},
@@ -145,8 +145,9 @@ MP3FrameParams::MP3FrameParams()
   }
 
   for (i=0;i<8;i++) {
-    static double Ci[8]={-0.6,-0.535,-0.33,-0.185,-0.095,-0.041,-0.0142,-0.0037};
-    double sq=sqrt(1.0+Ci[i]*Ci[i]);
+    static double const Ci[8]
+      = {-0.6,-0.535,-0.33,-0.185,-0.095,-0.041,-0.0142,-0.0037};
+    double sq = sqrt(1.0+Ci[i]*Ci[i]);
     aa_cs[i] = 1.0/sq;
     aa_ca[i] = Ci[i]/sq;
   }
@@ -185,7 +186,7 @@ MP3FrameParams::MP3FrameParams()
   }
 
   for (j=0;j<4;j++) {
-    static int len[4] = { 36,36,12,36 };
+    static int const len[4] = { 36,36,12,36 };
     for (i=0;i<len[j];i+=2) {
       win1[j][i] = + win[j][i];
     }
@@ -219,10 +220,10 @@ MP3FrameParams::MP3FrameParams()
   }
 
   for (j=0;j<7;j++) {
-    struct bandInfoStruct *bi = &bandInfo[j];
+    struct bandInfoStruct const* bi = &bandInfo[j];
     int *mp;
     int cb,lwin;
-    int *bdf;
+    int const* bdf;
     
     mp = map[j][0] = mapbuf0[j];
     bdf = bi->longDiff;

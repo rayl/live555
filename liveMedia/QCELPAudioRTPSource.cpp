@@ -460,8 +460,8 @@ Boolean QCELPDeinterleavingBuffer
   outBin.frameSize = 0; // for the next time this bin is used
 
   // Check whether this frame is missing; if so, return an 'erasure' frame:
+  unsigned char erasure = 14;
   if (fromSize == 0) {
-    static unsigned char erasure = 14;
     fromPtr = &erasure;
     fromSize = 1;
 

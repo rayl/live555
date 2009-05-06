@@ -92,9 +92,11 @@ private:
   void onExpire1();
 
   static void incomingReportHandler(RTCPInstance* instance, int /*mask*/);
+  void incomingReportHandler1();
   void onReceive(int typeOfPacket, int totPacketSize, unsigned ssrc);
 
 private:
+  unsigned char* fInBuf;
   OutPacketBuffer* fOutBuf;
   RTPInterface fRTCPInterface;
   unsigned fTotSessionBW;

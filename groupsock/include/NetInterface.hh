@@ -96,7 +96,7 @@ public:
     return fPort;
   }
   
-  UsageEnvironment& env() { return fEnv; }
+  UsageEnvironment& env() const { return fEnv; }
   
   static int DebugLevel;
   

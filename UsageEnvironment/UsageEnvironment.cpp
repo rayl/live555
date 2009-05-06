@@ -20,7 +20,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "UsageEnvironment.hh"
 
 UsageEnvironment::UsageEnvironment(TaskScheduler& scheduler)
-	: priv(NULL), fScheduler(scheduler) {
+  : liveMediaPriv(NULL), groupsockPriv(NULL), fScheduler(scheduler) {
 }
 
 UsageEnvironment::~UsageEnvironment() {

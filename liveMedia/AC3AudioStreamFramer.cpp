@@ -198,9 +198,9 @@ void AC3AudioStreamFramer::parseNextFrame() {
 
 ////////// AC3AudioStreamParser implementation //////////
 
-static int kbpsTable[] = {32,  40,  48,  56,  64,  80,  96, 112,
-			  128, 160, 192, 224, 256, 320, 384, 448,
-			  512, 576, 640};
+static int const kbpsTable[] = {32,  40,  48,  56,  64,  80,  96, 112,
+				128, 160, 192, 224, 256, 320, 384, 448,
+				512, 576, 640};
 
 void AC3FrameParams::setParamsFromHeader() {
   unsigned char byte4 = hdr1 >> 24;

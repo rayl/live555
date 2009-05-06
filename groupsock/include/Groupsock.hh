@@ -168,7 +168,7 @@ public:
 		    netAddressBits sourceFilterAddr,
 		    Port port);
       // Returns NULL if none already exists
-  Groupsock* Lookup(int sock);
+  Groupsock* Lookup(UsageEnvironment& env, int sock);
       // Returns NULL if none already exists
   Boolean Remove(Groupsock const* groupsock);
 

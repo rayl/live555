@@ -26,6 +26,15 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "FramedFilter.hh"
 #endif
 
+class TimeCode {
+public:
+  TimeCode();
+  virtual ~TimeCode();
+
+  int operator==(TimeCode const& arg2);
+  unsigned days, hours, minutes, seconds, pictures;
+};
+
 class MPEGVideoStreamFramer: public FramedFilter {
 public:
   static MPEGVideoStreamFramer*
@@ -57,10 +66,8 @@ private:
   unsigned fPictureCount; // hack used to implement doGetNextFrame()
   double fFrameRate;
   struct timeval fPresentationTimeBase;
-  typedef struct TimeCode {
-    unsigned days, hours, minutes, seconds, pictures;
-  } TimeCode_t;
-  TimeCode_t fCurGOPTimeCode;
+  TimeCode fCurGOPTimeCode, fPrevGOPTimeCode;
+  unsigned fPicturesAdjustment;
   double fPictureTimeBase;
   unsigned fTcSecsBase;
   Boolean fHaveSeenFirstTimeCode;

@@ -41,12 +41,12 @@ private:
 };
 
 static MediaLookupTable* ourMedia(UsageEnvironment& env) {
-  if (env.priv == NULL) {
+  if (env.liveMediaPriv == NULL) {
     // Create a new table to record the media that are to be created in
     // this environment:
-    env.priv = new MediaLookupTable;
+    env.liveMediaPriv = new MediaLookupTable;
   }
-  return (MediaLookupTable*)(env.priv);
+  return (MediaLookupTable*)(env.liveMediaPriv);
 }
 
 ////////// Medium //////////

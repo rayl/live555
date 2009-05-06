@@ -10,8 +10,7 @@
 
 #include <stdio.h>
 
-u_long
-our_inet_addr(cp)
+unsigned our_inet_addr(cp)
 	register /*#####const*/ char *cp;
 {
 	return inet_addr(cp);
@@ -225,8 +224,8 @@ done:
  */
 #define	MAX_TYPES	5		/* max number of types above */
 
-static int degrees[MAX_TYPES] =	{ DEG_0, DEG_1, DEG_2, DEG_3, DEG_4 };
-static int seps [MAX_TYPES] =	{ SEP_0, SEP_1, SEP_2, SEP_3, SEP_4 };
+static int const degrees[MAX_TYPES] = { DEG_0, DEG_1, DEG_2, DEG_3, DEG_4 };
+static int const seps [MAX_TYPES] = { SEP_0, SEP_1, SEP_2, SEP_3, SEP_4 };
 
 /*
  * Initially, everything is set up as if from:
@@ -266,8 +265,8 @@ static long randtbl[DEG_3 + 1] = {
  * in the initialization of randtbl) because the state table pointer is set
  * to point to randtbl[1] (as explained below).
  */
-static long *fptr = &randtbl[SEP_3 + 1];
-static long *rptr = &randtbl[1];
+static long* fptr = &randtbl[SEP_3 + 1];
+static long* rptr = &randtbl[1];
 
 /*
  * The following things are the pointer to the state information table, the
@@ -283,7 +282,7 @@ static long *state = &randtbl[1];
 static int rand_type = TYPE_3;
 static int rand_deg = DEG_3;
 static int rand_sep = SEP_3;
-static long *end_ptr = &randtbl[DEG_3 + 1];
+static long* end_ptr = &randtbl[DEG_3 + 1];
 
 /*
  * srandom:

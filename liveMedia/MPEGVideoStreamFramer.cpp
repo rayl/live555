@@ -137,6 +137,21 @@ private:
 };
 
 
+////////// TimeCode implementation //////////
+
+TimeCode::TimeCode()
+  : days(0), hours(0), minutes(0), seconds(0), pictures(0) {
+}
+
+TimeCode::~TimeCode() {
+}
+
+int TimeCode::operator==(TimeCode const& arg2) {
+  return pictures == arg2.pictures && seconds == arg2.seconds
+    && minutes == arg2.minutes && hours == arg2.hours && days == arg2.days;
+}
+
+
 ////////// MPEGVideoStreamFramer implementation //////////
 
 #ifdef BSD
@@ -152,12 +167,10 @@ MPEGVideoStreamFramer::MPEGVideoStreamFramer(UsageEnvironment& env,
   : FramedFilter(env, inputSource),
     fPictureEndMarker(False), fPictureCount(0),
     fFrameRate(0.0) /* until we learn otherwise (from a video seq hdr) */,
-    fPictureTimeBase(0.0), fTcSecsBase(0), fHaveSeenFirstTimeCode(False) {
+    fPicturesAdjustment(0), fPictureTimeBase(0.0), fTcSecsBase(0),
+    fHaveSeenFirstTimeCode(False) {
   // Use the current wallclock time as the base 'presentation time':
   gettimeofday(&fPresentationTimeBase, &Idunno);
-
-  fCurGOPTimeCode.days = fCurGOPTimeCode.hours = fCurGOPTimeCode.minutes=0;
-  fCurGOPTimeCode.seconds = fCurGOPTimeCode.pictures = 0;
 
   fParser
     = new MPEGVideoStreamParser(this, inputSource, iFramesOnly, vshPeriod);
@@ -220,10 +233,11 @@ void MPEGVideoStreamFramer
 ::computeTimestamp(unsigned numAdditionalPictures) {
   // Computes "fPresentationTime" from the most recent GOP's
   // time_code, along with the "numAdditionalPictures" parameter:
-  struct TimeCode& tc = fCurGOPTimeCode;
+  TimeCode& tc = fCurGOPTimeCode;
 
   double pictureTime
-    = (tc.pictures+numAdditionalPictures)/fFrameRate - fPictureTimeBase;
+    = (tc.pictures + fPicturesAdjustment + numAdditionalPictures)/fFrameRate
+    - fPictureTimeBase;
   unsigned pictureSeconds = (unsigned)pictureTime;
   double pictureFractionOfSecond = pictureTime - (float)pictureSeconds;
 
@@ -236,13 +250,13 @@ void MPEGVideoStreamFramer
     fPresentationTime.tv_usec -= 1000000;
     ++fPresentationTime.tv_sec;
   }
-#ifdef DEBUG_COMPUTE_TIMESTAMP
+#ifdef DEBUG_COMPUTE_TIMESTAMPS
   fprintf(stderr, "MPEGVideoStreamFramer::computeTimestamp(%d) -> %d.%06d\n", numAdditionalPictures, fPresentationTime.tv_sec, fPresentationTime.tv_usec);
 #endif
 }
 
 void MPEGVideoStreamFramer::setTimeCodeBaseParams() {
-  struct TimeCode& tc = fCurGOPTimeCode;
+  TimeCode& tc = fCurGOPTimeCode;
   fPictureTimeBase = tc.pictures/fFrameRate;
   fTcSecsBase = (((tc.days*24)+tc.hours)*60+tc.minutes)*60+tc.seconds;
   fHaveSeenFirstTimeCode = True;
@@ -352,7 +366,7 @@ unsigned MPEGVideoStreamParser::useSavedVSH() {
 #define PICTURE_START_CODE               0x00000100
 #define SEQUENCE_END_CODE                0x000001B7
 
-static double frameRateFromCode[] = {
+static double const frameRateFromCode[] = {
   0.0,          // forbidden
   24000/1001.0, // approx 23.976
   24.0,
@@ -466,7 +480,7 @@ unsigned MPEGVideoStreamParser::parseGOPHeader() {
   setParseState(PARSING_PICTURE_HEADER);
 
   // Record the time code:
-  MPEGVideoStreamFramer::TimeCode_t& tc = fUsingSource->fCurGOPTimeCode;
+  TimeCode& tc = fUsingSource->fCurGOPTimeCode; // abbrev
   unsigned day = tc.days;
   if (time_code_hours < tc.hours) {
     // Assume that the 'day' has wrapped around:
@@ -479,6 +493,13 @@ unsigned MPEGVideoStreamParser::parseGOPHeader() {
   tc.pictures = time_code_pictures;
   if (!fUsingSource->fHaveSeenFirstTimeCode) {
     fUsingSource->setTimeCodeBaseParams();
+  } else if (fUsingSource->fCurGOPTimeCode == fUsingSource->fPrevGOPTimeCode) {
+    // The time code has not changed since last time.  Adjust for this:
+    fUsingSource->fPicturesAdjustment += fPicturesSinceLastGOP;
+  } else {
+    // Normal case: The time code changed since last time.
+    fUsingSource->fPrevGOPTimeCode = tc;
+    fUsingSource->fPicturesAdjustment = 0;
   }
 
   fPicturesSinceLastGOP = 0;

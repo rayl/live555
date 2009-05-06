@@ -32,8 +32,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 static void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
 			   int socketNum, unsigned char streamChannelId);
 
-// Reading RTP-over-TCP is implemented using two levels of hash tables
-// The top-level hash table maps a TCP socket numbers to a
+// Reading RTP-over-TCP is implemented using two levels of hash tables.
+// The top-level hash table maps TCP socket numbers to a
 // "SocketDescriptor" that contains a hash table for each of the
 // sub-channels that are reading from this socket.
 

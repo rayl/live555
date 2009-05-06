@@ -34,8 +34,8 @@ extern "C" int initializeWinsockIfNecessary();
 #include <stdio.h>
 
 // By default, use INADDR_ANY for the sending and receiving interfaces:
-unsigned SendingInterfaceAddr = INADDR_ANY;
-unsigned ReceivingInterfaceAddr = INADDR_ANY;
+netAddressBits SendingInterfaceAddr = INADDR_ANY;
+netAddressBits ReceivingInterfaceAddr = INADDR_ANY;
 
 static void socketErr(UsageEnvironment& env, char* errorMsg) {
 #if defined(__WIN32__) || defined(_WIN32)
@@ -274,7 +274,7 @@ int readSocket(UsageEnvironment& env,
 
 Boolean writeSocket(UsageEnvironment& env,
 		    int socket, struct in_addr address, Port port,
-		    unsigned char ttlArg,
+		    u_int8_t ttlArg,
 		    unsigned char* buffer, unsigned bufferSize) {
 #ifdef DEBUG_PRINT
   fprintf(stderr, "Writing %d-byte packet to \"%s\", port %d (host order)\n", bufferSize, our_inet_ntoa(address), ntohs(port.num()));
@@ -350,7 +350,8 @@ unsigned increaseReceiveBufferTo(UsageEnvironment& env,
 	return increaseBufferTo(env, SO_RCVBUF, socket, requestedSize);
 }
 
-Boolean socketJoinGroup(UsageEnvironment& env, int socket, unsigned groupAddress){
+Boolean socketJoinGroup(UsageEnvironment& env, int socket,
+			netAddressBits groupAddress){
   if (!IsMulticastAddress(groupAddress)) return True; // ignore this case
 
   struct ip_mreq imr;
@@ -365,7 +366,8 @@ Boolean socketJoinGroup(UsageEnvironment& env, int socket, unsigned groupAddress
   return True;
 }
 
-Boolean socketLeaveGroup(UsageEnvironment&, int socket, unsigned groupAddress) {
+Boolean socketLeaveGroup(UsageEnvironment&, int socket,
+			 netAddressBits groupAddress) {
   if (!IsMulticastAddress(groupAddress)) return True; // ignore this case
 
   struct ip_mreq imr;
@@ -399,7 +401,8 @@ struct ip_mreq_source {
 #endif
 
 Boolean socketJoinGroupSSM(UsageEnvironment& env, int socket,
-			   unsigned groupAddress, unsigned sourceFilterAddr) {
+			   netAddressBits groupAddress,
+			   netAddressBits sourceFilterAddr) {
   if (!IsMulticastAddress(groupAddress)) return True; // ignore this case
 
   struct ip_mreq_source imr;
@@ -416,7 +419,8 @@ Boolean socketJoinGroupSSM(UsageEnvironment& env, int socket,
 }
 
 Boolean socketLeaveGroupSSM(UsageEnvironment& /*env*/, int socket,
-			    unsigned groupAddress, unsigned sourceFilterAddr) {
+			    netAddressBits groupAddress,
+			    netAddressBits sourceFilterAddr) {
   if (!IsMulticastAddress(groupAddress)) return True; // ignore this case
 
   struct ip_mreq_source imr;
@@ -443,18 +447,18 @@ Boolean getSourcePort(UsageEnvironment& env, int socket, Port& port) {
   return True;
 }
 
-static Boolean badAddress(unsigned addr) {
+static Boolean badAddress(netAddressBits addr) {
   // Check for some possible erroneous addresses:
-  unsigned hAddr = ntohl(addr);
+  netAddressBits hAddr = ntohl(addr);
   return (hAddr == 0x7F000001 /* 127.0.0.1 */
 	  || hAddr == 0
-	  || hAddr == (unsigned)0xFFFFFFFF);
+	  || hAddr == (netAddressBits)(~0));
 }
 
 Boolean loopbackWorks = 1;
 
-unsigned ourSourceAddressForMulticast(UsageEnvironment& env) {
-  	static unsigned ourAddress = 0;
+netAddressBits ourSourceAddressForMulticast(UsageEnvironment& env) {
+  	static netAddressBits ourAddress = 0;
 	int sock = -1;
 	struct in_addr testAddr;
 
@@ -511,12 +515,12 @@ unsigned ourSourceAddressForMulticast(UsageEnvironment& env) {
 		  }
 		  // Take the first address that's not bad
 		  // (This code, like many others, won't handle IPv6)
-		  unsigned addr = 0;
+		  netAddressBits addr = 0;
 		  for (unsigned i = 0; ; ++i) {
 		    char* addrPtr = hstent->h_addr_list[i];
 		    if (addrPtr == NULL) break;
 
-		    unsigned a = *(unsigned*)addrPtr;
+		    netAddressBits a = *(netAddressBits*)addrPtr;
 		    if (!badAddress(a)) {
 		      addr = a;
 		      break;
@@ -531,12 +535,12 @@ unsigned ourSourceAddressForMulticast(UsageEnvironment& env) {
 		}
 
 		// Make sure we have a good address:
-		unsigned from = fromAddr.sin_addr.s_addr;
+		netAddressBits from = fromAddr.sin_addr.s_addr;
                 if (badAddress(from)) {
 			char tmp[100];
 			sprintf(tmp,
 				"This computer has an invalid IP address: 0x%x",
-				(unsigned)(ntohl(from)));
+				(netAddressBits)(ntohl(from)));
 			env.setResultMsg(tmp);
 			break;
 		}

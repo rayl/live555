@@ -60,8 +60,9 @@ public:
 	// used to report a (previously set) error message within
 	// a background event
 
-  void* priv;
-      // a pointer to additional, optional, client-specific state
+  // a pointer to additional, optional, client-specific state
+  void* liveMediaPriv;
+  void* groupsockPriv;
 
 protected:
   UsageEnvironment(TaskScheduler& scheduler); // abstract base class

@@ -83,7 +83,7 @@ void MPEGAudioStreamFramer::doGetNextFrame() {
 
 #define MILLION 1000000
 
-static unsigned numSamplesByLayer[4] = {0, 384, 1152, 1152};
+static unsigned const numSamplesByLayer[4] = {0, 384, 1152, 1152};
 
 struct timeval MPEGAudioStreamFramer::currentFramePlayTime() const {
   MP3FrameParams const& fr = fParser->currentFrame();

@@ -232,8 +232,8 @@ void MP3ADUdeinterleaver::doGetNextFrame() {
 #ifdef TEST_LOSS
   NOTE: This code no longer works, because it uses synchronous reads,
   which are no longer supported. 
-    static unsigned framesPerPacket = 3;
-    static unsigned frameCount = 0;
+    static unsigned const framesPerPacket = 3;
+    static unsigned const frameCount = 0;
     static Boolean packetIsLost;
     while (1) {
       unsigned packetCount = frameCount/framesPerPacket;

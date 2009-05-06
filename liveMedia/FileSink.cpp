@@ -95,9 +95,9 @@ void FileSink::afterGettingFrame(void* clientData, unsigned frameSize,
 
   // Write to our file:
 #ifdef TEST_LOSS
-  static unsigned framesPerPacket = 10;
-  static unsigned frameCount = 0;
-  static Boolean packetIsLost;
+  static unsigned const framesPerPacket = 10;
+  static unsigned const frameCount = 0;
+  static Boolean const packetIsLost;
   if ((frameCount++)%framesPerPacket == 0) {
     packetIsLost = (our_random()%10 == 0); // simulate 10% packet loss #####
   }

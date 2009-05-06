@@ -139,6 +139,7 @@ RTCPInstance::RTCPInstance(UsageEnvironment& env, Groupsock* RTCPgs,
       fPrevReportTime = fNextReportTime = timeNow;
 
       fKnownMembers = new RTCPMemberDatabase;
+      fInBuf = new unsigned char[maxPacketSize];
       fOutBuf = new OutPacketBuffer(preferredPacketSize, maxPacketSize);
       if (fKnownMembers == NULL || fOutBuf == NULL) return;
 
@@ -166,6 +167,7 @@ RTCPInstance::~RTCPInstance() {
 
   delete fKnownMembers;
   delete fOutBuf;
+  delete[] fInBuf;
 }
 
 RTCPInstance* RTCPInstance::createNew(UsageEnvironment& env, Groupsock* RTCPgs,
@@ -227,37 +229,38 @@ static unsigned const IP_UDP_HDR_SIZE = 28;
 
 #define ADVANCE(n) pkt += (n); packetSize -= (n)
 
-static unsigned char readBuffer[maxPacketSize];
-
 void RTCPInstance::incomingReportHandler(RTCPInstance* instance,
 					 int /*mask*/) {
-  unsigned char* pkt = readBuffer;
+  instance->incomingReportHandler1();
+}
+
+void RTCPInstance::incomingReportHandler1() {
+  unsigned char* pkt = fInBuf;
   unsigned packetSize;
   struct sockaddr_in fromAddress;
   int typeOfPacket = PACKET_UNKNOWN_TYPE;
 
   do {
-    if (!instance->fRTCPInterface.handleRead(pkt, maxPacketSize,
-					     packetSize, fromAddress)) {
+    if (!fRTCPInterface.handleRead(pkt, maxPacketSize,
+				   packetSize, fromAddress)) {
       break;
     }
 
     // Ignore packets looped-back from ourself:
-    if (instance->RTCPgs()->wasLoopedBackFromUs(instance->envir(),
-					       fromAddress)) {
+    if (RTCPgs()->wasLoopedBackFromUs(envir(), fromAddress)) {
       // However, we still want to handle incoming RTCP packets from
       // *other processes* on the same machine.  To distinguish this
       // case from a true loop-back, check whether we've just sent a
       // packet:
-      if (instance->fHaveJustSentPacket) {
+      if (fHaveJustSentPacket) {
 	// This is a true loop-back:
-	instance->fHaveJustSentPacket = False;
+	fHaveJustSentPacket = False;
 	break; // ignore this packet
       }
     }
 
 #ifdef DEBUG_PRINT
-    fprintf(stderr, "[%p]saw incoming RTCP packet (from address %s, port %d)\n", instance, our_inet_ntoa(fromAddress.sin_addr), ntohs(fromAddress.sin_port));
+    fprintf(stderr, "[%p]saw incoming RTCP packet (from address %s, port %d)\n", this, our_inet_ntoa(fromAddress.sin_addr), ntohs(fromAddress.sin_port));
     unsigned char* p = pkt;
     for (unsigned i = 0; i < packetSize; ++i) {
       if (i%4 == 0) fprintf(stderr, " ");
@@ -307,9 +310,9 @@ void RTCPInstance::incomingReportHandler(RTCPInstance* instance,
 	  unsigned NTPmsw = ntohl(*(unsigned*)pkt); ADVANCE(4);
 	  unsigned NTPlsw = ntohl(*(unsigned*)pkt); ADVANCE(4);
 	  unsigned rtpTimestamp = ntohl(*(unsigned*)pkt); ADVANCE(4);
-	  if (instance->fSource != NULL) {
+	  if (fSource != NULL) {
 	    RTPReceptionStatsDB& receptionStats
-	      = instance->fSource->receptionStatsDB();
+	      = fSource->receptionStatsDB();
 	    receptionStats.noteIncomingSR(reportSenderSSRC,
 					  NTPmsw, NTPlsw, rtpTimestamp);
 	  }
@@ -335,11 +338,11 @@ void RTCPInstance::incomingReportHandler(RTCPInstance* instance,
 	  fprintf(stderr, "BYE\n");
 #endif
 	  // If a 'BYE handler' was set, call it now:
-	  TaskFunc* byeHandler = instance->fByeHandlerTask;
+	  TaskFunc* byeHandler = fByeHandlerTask;
 	  if (byeHandler != NULL) {
-	    instance->fByeHandlerTask = NULL;
+	    fByeHandlerTask = NULL;
 	        // we call this only once by default 
-	    (*byeHandler)(instance->fByeHandlerClientData);
+	    (*byeHandler)(fByeHandlerClientData);
 	  }
 
 	  // We should really check for & handle >1 SSRCs being present #####
@@ -397,7 +400,7 @@ void RTCPInstance::incomingReportHandler(RTCPInstance* instance,
 #endif
     }
       
-    instance->onReceive(typeOfPacket, totPacketSize, reportSenderSSRC);
+    onReceive(typeOfPacket, totPacketSize, reportSenderSSRC);
   } while (0);
 }
 

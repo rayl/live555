@@ -288,8 +288,8 @@ void MP3FromADUSource::doGetNextFrame() {
 #ifdef TEST_LOSS
   NOTE: This code no longer works, because it uses synchronous reads,
   which are no longer supported.
-    static unsigned framesPerPacket = 10;
-    static unsigned frameCount = 0;
+    static unsigned const framesPerPacket = 10;
+    static unsigned const frameCount = 0;
     static Boolean packetIsLost;
     while (1) {
       if ((frameCount++)%framesPerPacket == 0) {

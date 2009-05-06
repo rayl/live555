@@ -439,12 +439,12 @@ static void initialize_huffman() {
    huffman_initialized = True;
 }
 
-static unsigned char slen[2][16] = {
+static unsigned char const slen[2][16] = {
   {0, 0, 0, 0, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4},
   {0, 1, 2, 3, 0, 1, 2, 3, 1, 2, 3, 1, 2, 3, 2, 3}
 };
 
-static unsigned char stab[3][6][4] = {
+static unsigned char const stab[3][6][4] = {
   { { 6, 5, 5,5 } , { 6, 5, 7,3 } , { 11,10,0,0} ,
     { 7, 7, 7,0 } , { 6, 6, 6,3 } , {  8, 8,5,0} } ,
   { { 9, 9, 9,9 } , { 9, 9,12,6 } , { 18,18,0,0} ,
@@ -508,7 +508,7 @@ extern unsigned n_slen2[];
 extern unsigned i_slen2[];
 
 static unsigned rsf_get_scale_factors_2(MP3SideInfo::gr_info_s_t *gr_info) {
-  unsigned char *pnt;
+  unsigned char const* pnt;
   int i;
   unsigned int slen;
   int n = 0;

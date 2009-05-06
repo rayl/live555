@@ -385,16 +385,12 @@ ostream& operator<<(ostream& s, const Groupsock& g) {
 
 
 // A hash table used to index Groupsocks by socket number.
-// This is shared within a process.
 
-static HashTable* getSocketTable() {
-  static HashTable* socketTable = NULL;
-  
-  if (socketTable == NULL) { // we need to create it
-    socketTable = HashTable::create(ONE_WORD_HASH_KEYS);
+static HashTable* getSocketTable(UsageEnvironment& env) {
+  if (env.groupsockPriv == NULL) { // We need to create it
+    env.groupsockPriv = HashTable::create(ONE_WORD_HASH_KEYS);
   }
-  
-  return socketTable;
+  return (HashTable*)(env.groupsockPriv);
 }
 
 static Boolean unsetGroupsockBySocket(Groupsock const* groupsock) {
@@ -405,7 +401,7 @@ static Boolean unsetGroupsockBySocket(Groupsock const* groupsock) {
     // Make sure "sock" is in bounds:
     if (sock < 0) break;
     
-    HashTable* sockets = getSocketTable();
+    HashTable* sockets = getSocketTable(groupsock->env());
     if (sockets == NULL) break;
     
     Groupsock* gs = (Groupsock*)sockets->Lookup((char*)(long)sock);
@@ -429,7 +425,7 @@ static Boolean setGroupsockBySocket(UsageEnvironment& env, int sock,
       break;
     }
     
-    HashTable* sockets = getSocketTable();
+    HashTable* sockets = getSocketTable(env);
     if (sockets == NULL) break;
     
     // Make sure we're not replacing an existing Groupsock
@@ -452,12 +448,12 @@ static Boolean setGroupsockBySocket(UsageEnvironment& env, int sock,
   return False;
 }
 
-static Groupsock* getGroupsockBySocket(int sock) {
+static Groupsock* getGroupsockBySocket(UsageEnvironment& env, int sock) {
   do {
     // Make sure the "sock" parameter is in bounds:
     if (sock < 0) break;
     
-    HashTable* sockets = getSocketTable();
+    HashTable* sockets = getSocketTable(env);
     if (sockets == NULL) break;
     
     return (Groupsock*)sockets->Lookup((char*)(long)sock);
@@ -518,8 +514,8 @@ GroupsockLookupTable::Lookup(netAddressBits groupAddress,
   return (Groupsock*) fTable.Lookup(groupAddress, sourceFilterAddr, port);
 }
 
-Groupsock* GroupsockLookupTable::Lookup(int sock) {
-  return getGroupsockBySocket(sock);
+Groupsock* GroupsockLookupTable::Lookup(UsageEnvironment& env, int sock) {
+  return getGroupsockBySocket(env, sock);
 }
 
 Boolean GroupsockLookupTable::Remove(Groupsock const* groupsock) {

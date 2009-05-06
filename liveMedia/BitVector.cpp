@@ -35,7 +35,7 @@ void BitVector::setup(unsigned char* baseBytePtr,
   fCurBitIndex = 0;
 }
 
-static unsigned char singleBitMask[8]
+static unsigned char const singleBitMask[8]
     = {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
 
 #define MAX_LENGTH 32
