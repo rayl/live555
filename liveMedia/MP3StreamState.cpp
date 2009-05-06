@@ -92,6 +92,16 @@ float MP3StreamState::filePlayTime() const {
   return numFramesInFile*(pt.tv_sec + pt.tv_usec/(float)MILLION);
 }
 
+void MP3StreamState::seekWithinFile(float seekNPT) {
+  if (fFidIsReallyASocket) return; // it's not seekable
+
+  // NOTE: The following doesn't work well for VBR files; need to fix. #####
+  float fileDuration = filePlayTime();
+  if (seekNPT > fileDuration) seekNPT = fileDuration;
+  unsigned byteNumber = (unsigned)((seekNPT/fileDuration)*fFileSize);
+  fseek(fFid, byteNumber, SEEK_SET);
+}
+
 unsigned MP3StreamState::findNextHeader(struct timeval& presentationTime) {
   presentationTime = fNextFramePresentationTime;
 

@@ -33,6 +33,7 @@ public:
 					char const* fileName);
 
   unsigned numPCMBytes() const;
+  void seekToPCMByte(unsigned byteNumber);
 
 protected:
   WAVAudioFileSource(UsageEnvironment& env, FILE* fid);

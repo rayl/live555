@@ -55,6 +55,7 @@ public:
 		   char const* fileName);
 
   float filePlayTime() const; // in seconds
+  void seekWithinFile(float seekNPT);
 
   void checkForXingHeader(); // hack for Xing VBR files
 

@@ -132,6 +132,7 @@ public:
 			   unsigned short& rtpSeqNum,
 			   unsigned& rtpTimestamp) = 0;
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
+  virtual void seekStream(unsigned clientSessionId, void* streamToken, float seekNPT);
   virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 
   virtual float duration() const;

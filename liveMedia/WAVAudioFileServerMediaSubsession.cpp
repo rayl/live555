@@ -42,27 +42,44 @@ WAVAudioFileServerMediaSubsession
 ::~WAVAudioFileServerMediaSubsession() {
 }
 
+void WAVAudioFileServerMediaSubsession
+::seekStreamSource(FramedSource* inputSource, float seekNPT) {
+  WAVAudioFileSource* wavSource;
+  if (fBitsPerSample == 16) {
+    // "inputSource" is a filter; its input source is the original WAV file source:
+    wavSource = (WAVAudioFileSource*)(((FramedFilter*)inputSource)->inputSource());
+  } else {
+    // "inputSource" is the original WAV file source:
+    wavSource = (WAVAudioFileSource*)inputSource;
+  }
+
+  unsigned seekSampleNumber = (unsigned)(seekNPT*fSamplingFrequency);
+  unsigned seekByteNumber = (seekSampleNumber*fNumChannels*fBitsPerSample)/8;
+  
+  wavSource->seekToPCMByte(seekByteNumber);
+}
+
 FramedSource* WAVAudioFileServerMediaSubsession
 ::createNewStreamSource(unsigned /*clientSessionId*/, unsigned& estBitrate) {
   FramedSource* resultSource = NULL;
   do {
-    WAVAudioFileSource* pcmSource
+    WAVAudioFileSource* wavSource
       = WAVAudioFileSource::createNew(envir(), fFileName);
-    if (pcmSource == NULL) break;
+    if (wavSource == NULL) break;
 
     // Get attributes of the audio source:
-    fBitsPerSample = pcmSource->bitsPerSample();
+    fBitsPerSample = wavSource->bitsPerSample();
     if (fBitsPerSample != 8 && fBitsPerSample !=  16) {
       envir() << "The input file contains " << fBitsPerSample
 	      << " bit-per-sample audio, which we don't handle\n";
       break;
     }
-    fSamplingFrequency = pcmSource->samplingFrequency();
-    fNumChannels = pcmSource->numChannels();
+    fSamplingFrequency = wavSource->samplingFrequency();
+    fNumChannels = wavSource->numChannels();
     unsigned bitsPerSecond
       = fSamplingFrequency*fBitsPerSample*fNumChannels;
 
-    fFileDuration = (float)((8.0*pcmSource->numPCMBytes())
+    fFileDuration = (float)((8.0*wavSource->numPCMBytes())
       /(fSamplingFrequency*fNumChannels*fBitsPerSample));
 
     // Add in any filter necessary to transform the data prior to streaming:
@@ -72,15 +89,15 @@ FramedSource* WAVAudioFileServerMediaSubsession
 	// Add a filter that converts from raw 16-bit PCM audio
 	// to 8-bit u-law audio:
 	resultSource
-	  = uLawFromPCMAudioSource::createNew(envir(), pcmSource, 1/*little-endian*/);
+	  = uLawFromPCMAudioSource::createNew(envir(), wavSource, 1/*little-endian*/);
 	bitsPerSecond /= 2;
       } else {
 	// Add a filter that converts from little-endian to network (big-endian) order: 
-	resultSource = EndianSwap16::createNew(envir(), pcmSource);
+	resultSource = EndianSwap16::createNew(envir(), wavSource);
       }
     } else { // fBitsPerSample == 8
       // Don't do any transformation; send the 8-bit PCM data 'as is':
-      resultSource = pcmSource;
+      resultSource = wavSource;
     }
 
     estBitrate = (bitsPerSecond+500)/1000; // kbps

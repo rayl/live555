@@ -711,14 +711,41 @@ void RTSPServer::RTSPClientSession
   fSessionIsActive = False; // triggers deletion of ourself after responding
 }
 
+static void parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd) {
+  // Initialize the result parameters to default values:
+  rangeStart = rangeEnd = 0.0;
+
+  // First, find "Range:"
+  while (1) {
+    if (*buf == '\0') return; // not found
+    if (_strncasecmp(buf, "Range: ", 7) == 0) break;
+    ++buf;
+  }
+
+  // Then, run through each of the fields, looking for ones we handle:
+  char const* fields = buf + 7;
+  while (*fields == ' ') ++fields;
+  float start, end;
+  if (sscanf(fields, "npt = %f - %f", &start, &end) == 2) {
+    rangeStart = start;
+    rangeEnd = end;
+  } else if (sscanf(fields, "npt = %f -", &start) != 1) {
+    rangeStart = start;
+  }
+}
+
 void RTSPServer::RTSPClientSession
   ::handleCmd_PLAY(ServerMediaSubsession* subsession, char const* cseq,
 		   char const* fullRequestStr) {
   char* rtspURL = fOurServer.rtspURL(fOurServerMediaSession);
   unsigned rtspURLSize = strlen(rtspURL);
 
-  // Create a "Range:" line:
-  char* rangeHeader;
+  // Parse the client's "Range:" header, if any: 
+  float rangeStart, rangeEnd;
+  parseRangeHeader(fullRequestStr, rangeStart, rangeEnd);
+
+  // Use this information, plus the stream's duration (if known), to create
+  // our own "Range:" header, for the response:
   float duration = subsession == NULL /*aggregate op*/
     ? fOurServerMediaSession->duration() : subsession->duration();
   if (duration < 0.0) {
@@ -726,13 +753,22 @@ void RTSPServer::RTSPClientSession
     // Use the largest of these durations in our header
     duration = -duration;
   }
-  if (duration == 0.0) {
-    rangeHeader = strDup("Range: npt=0.00-\r\n");
-  } else {
-    char buf[100];
-    sprintf(buf, "Range: npt=0.00-%.3f\r\n", duration);
-    rangeHeader = strDup(buf);
+
+  if (rangeEnd < 0.0 || rangeEnd > duration) rangeEnd = duration;
+  if (rangeStart < 0.0) {
+    rangeStart = 0.0;
+  } else if (rangeStart > rangeEnd) {
+    rangeStart = rangeEnd;
   }
+
+  char buf[100];
+  char* rangeHeader;
+  if (rangeEnd == 0.0) {
+    sprintf(buf, "Range: npt=%.3f-\r\n", rangeStart);
+  } else {
+    sprintf(buf, "Range: npt=%.3f-%.3f\r\n", rangeStart, rangeEnd);
+  }
+  rangeHeader = strDup(buf);
 
   // Create a "RTP-Info:" line:
   char const* rtpInfoFmt =
@@ -753,6 +789,9 @@ void RTSPServer::RTSPClientSession
 	|| subsession == fStreamStates[i].subsession) {
       unsigned short rtpSeqNum = 0;
       unsigned rtpTimestamp = 0;
+      fStreamStates[i].subsession->seekStream(fOurSessionId,
+					      fStreamStates[i].streamToken,
+					      rangeStart);
       fStreamStates[i].subsession->startStream(fOurSessionId,
 					       fStreamStates[i].streamToken,
 					       rtpSeqNum, rtpTimestamp);

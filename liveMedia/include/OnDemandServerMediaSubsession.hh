@@ -53,13 +53,15 @@ private: // redefined virtual functions
 			   unsigned short& rtpSeqNum,
                            unsigned& rtpTimestamp);
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
+  virtual void seekStream(unsigned clientSessionId, void* streamToken, float seekNPT);
   virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 
-protected: // new virtual functions
+protected: // new virtual functions, possibly redefined by subclasses
   virtual char const* getAuxSDPLine(RTPSink* rtpSink,
 				    FramedSource* inputSource);
+  virtual void seekStreamSource(FramedSource* inputSource, float seekNPT);
 
-protected: // new virtual functions, defined by subclasses
+protected: // new virtual functions, defined by all subclasses
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
 					      unsigned& estBitrate) = 0;
       // "estBitrate" is the stream's estimated bitrate, in kbps

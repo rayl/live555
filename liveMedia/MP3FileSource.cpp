@@ -64,6 +64,10 @@ float MP3FileSource::filePlayTime() const {
   return fStreamState->filePlayTime();
 }
 
+void MP3FileSource::seekWithinFile(float seekNPT) {
+  fStreamState->seekWithinFile(seekNPT);
+}
+
 void MP3FileSource::getAttributes() const {
   char buffer[200];
   fStreamState->getAttributes(buffer, sizeof buffer);

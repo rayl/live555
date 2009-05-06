@@ -116,6 +116,8 @@ public:
 
   RTPSink const* rtpSink() const { return fRTPSink; }
 
+  FramedSource* mediaSource() const { return fMediaSource; }
+
 private:
   Boolean fAreCurrentlyPlaying;
   unsigned fReferenceCount;
@@ -241,6 +243,18 @@ void OnDemandServerMediaSubsession::pauseStream(unsigned /*clientSessionId*/,
   if (streamState != NULL) streamState->pause();
 }
 
+void OnDemandServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
+					       void* streamToken, float seekNPT) {
+  // Seeking isn't allowed if multiple clients are receiving data from
+  // the same source:
+  if (fReuseFirstSource) return;
+
+  StreamState* streamState = (StreamState*)streamToken; 
+  if (streamState != NULL && streamState->mediaSource() != NULL) {
+    seekStreamSource(streamState->mediaSource(), seekNPT);
+  }
+}
+
 void OnDemandServerMediaSubsession::deleteStream(unsigned clientSessionId,
 						 void*& streamToken) {
   // Look up (and remove) the destinations for this client session:
@@ -272,6 +286,11 @@ char const* OnDemandServerMediaSubsession
 ::getAuxSDPLine(RTPSink* rtpSink, FramedSource* /*inputSource*/) {
   // Default implementation:
   return rtpSink->auxSDPLine();
+}
+
+void OnDemandServerMediaSubsession::seekStreamSource(FramedSource* /*inputSource*/,
+						     float /*seekNPT*/) {
+  // Default implementation: Do nothing
 }
 
 void OnDemandServerMediaSubsession
@@ -317,8 +336,13 @@ void OnDemandServerMediaSubsession
 ////////// StreamState implementation //////////
 
 static void afterPlayingStreamState(void* clientData) {
+  // When the input stream ends, keep it alive, in case the client wants to
+  // subsequently re-play the stream starting from somewhere other than the end.
+  // If, instead, you want to terminate the stream, enable the following code.
+#if 0
   StreamState* streamState = (StreamState*)clientData;
   streamState->reclaim();
+#endif
 }
 
 StreamState::StreamState(Port const& serverRTPPort, Port const& serverRTCPPort,

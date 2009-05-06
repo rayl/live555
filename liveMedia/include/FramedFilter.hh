@@ -26,6 +26,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 class FramedFilter: public FramedSource {
+public:
+  FramedSource* inputSource() const { return fInputSource; }
+
 protected:
   FramedFilter(UsageEnvironment& env, FramedSource* inputSource);
 	 // abstract base class

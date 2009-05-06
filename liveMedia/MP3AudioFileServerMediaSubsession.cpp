@@ -47,6 +47,28 @@ MP3AudioFileServerMediaSubsession
   delete fInterleaving;
 }
 
+void MP3AudioFileServerMediaSubsession
+::seekStreamSource(FramedSource* inputSource, float seekNPT) {
+  MP3FileSource* mp3Source;
+  if (fUseADUs) {
+    // "inputSource" is a filter; use its input source instead.
+    FramedFilter* filter;
+    if (fInterleaving != NULL) {
+      // There's another filter as well.
+      filter = (FramedFilter*)(((FramedFilter*)inputSource)->inputSource());
+    } else {
+      filter = (FramedFilter*)inputSource;
+    }
+    mp3Source = (MP3FileSource*)(filter->inputSource());
+  } else {
+    // "inputSource" is the original MP3 source:
+    mp3Source = (MP3FileSource*)inputSource;
+  }
+
+  mp3Source->seekWithinFile(seekNPT);
+}
+
+
 FramedSource* MP3AudioFileServerMediaSubsession
 ::createNewStreamSource(unsigned /*clientSessionId*/, unsigned& estBitrate) {
   estBitrate = 128; // kbps, estimate

@@ -282,6 +282,10 @@ void ServerMediaSubsession::pauseStream(unsigned /*clientSessionId*/,
 					void* /*streamToken*/) {
   // default implementation: do nothing
 }
+void ServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
+				       void* /*streamToken*/, float /*seekNPT*/) {
+  // default implementation: do nothing
+}
 void ServerMediaSubsession::deleteStream(unsigned /*clientSessionId*/,
 					 void*& /*streamToken*/) {
   // default implementation: do nothing

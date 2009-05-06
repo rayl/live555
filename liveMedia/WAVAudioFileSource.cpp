@@ -18,11 +18,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A WAV audio file source
 // Implementation
 
-#if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
-#include <io.h>
-#include <fcntl.h>
-#endif
-
 #include "WAVAudioFileSource.hh"
 #include "InputFile.hh"
 #include "GroupsockHelper.hh"
@@ -52,6 +47,13 @@ WAVAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
 unsigned WAVAudioFileSource::numPCMBytes() const {
   if (fFileSize < fWAVHeaderSize) return 0;
   return fFileSize - fWAVHeaderSize;
+}
+
+void WAVAudioFileSource::seekToPCMByte(unsigned byteNumber) {
+  byteNumber += fWAVHeaderSize;
+  if (byteNumber > fFileSize) byteNumber = fFileSize;
+
+  fseek(fFid, byteNumber, SEEK_SET);
 }
 
 #define nextc fgetc(fid)

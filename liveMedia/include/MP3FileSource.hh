@@ -32,6 +32,7 @@ public:
   static MP3FileSource* createNew(UsageEnvironment& env, char const* fileName);
 
   float filePlayTime() const;
+  void seekWithinFile(float seekNPT);
 
 protected:
   MP3FileSource(UsageEnvironment& env, FILE* fid);
