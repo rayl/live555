@@ -437,12 +437,15 @@ Boolean MediaSession
       continue;
     }
 
-    // Try to create a source for this subsession:
-    if (!subsession->initiate(useSpecialRTPoffset)) return False;
+    Boolean wasAlreadyInitiated = subsession->readSource() != NULL;
+    if (!wasAlreadyInitiated) {
+      // Try to create a source for this subsession:
+      if (!subsession->initiate(useSpecialRTPoffset)) return False;
+    }
 
     // Make sure the source's MIME type is one that we handle:
     if (strcmp(subsession->readSource()->MIMEtype(), mimeType) != 0) {
-      subsession->deInitiate();
+      if (!wasAlreadyInitiated) subsession->deInitiate();
       continue;
     }
 
