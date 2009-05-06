@@ -529,6 +529,7 @@ int main(int argc, char** argv) {
     if (outputQuickTimeFile) {
       // Create a "QuickTimeFileSink", to write to 'stdout':
       qtOut = QuickTimeFileSink::createNew(*env, *session, "stdout",
+					   fileSinkBufferSize,
 					   movieWidth, movieHeight,
 					   movieFPS,
 					   packetLossCompensate,

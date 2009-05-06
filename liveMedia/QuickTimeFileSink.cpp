@@ -28,6 +28,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "QuickTimeGenericRTPSource.hh"
 #include "GroupsockHelper.hh"
 #include "H263plusVideoRTPSource.hh"
+#include "MPEG4LATMAudioRTPSource.hh" // for "parseGeneralConfigStr()"
 
 #define fourChar(x,y,z,w) ( ((x)<<24)|((y)<<16)|((z)<<8)|(w) )
 
@@ -57,14 +58,19 @@ public:
 
 class SubsessionBuffer {
 public:
-  SubsessionBuffer() { reset(); }
+  SubsessionBuffer(unsigned bufferSize)
+    : fBufferSize(bufferSize) {
+    reset();
+    fData = new unsigned char[bufferSize];
+  }
+  virtual ~SubsessionBuffer() { delete fData; }
   void reset() { fBytesInUse = 0; }
   void addBytes(unsigned numBytes) { fBytesInUse += numBytes; }
 
   unsigned char* dataStart() { return &fData[0]; }
   unsigned char* dataEnd() { return &fData[fBytesInUse]; }
   unsigned bytesInUse() const { return fBytesInUse; }
-  unsigned bytesAvailable() const { return sizeof fData - fBytesInUse; }
+  unsigned bytesAvailable() const { return fBufferSize - fBytesInUse; }
   
   void setPresentationTime(struct timeval const& presentationTime) {
     fPresentationTime = presentationTime;
@@ -72,8 +78,9 @@ public:
   struct timeval const& presentationTime() const {return fPresentationTime;}
 
 private:
+  unsigned fBufferSize;
   struct timeval fPresentationTime;
-  unsigned char fData[20000];
+  unsigned char* fData;
   unsigned fBytesInUse;
 };
 
@@ -205,6 +212,7 @@ static int Idunno;
 QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
 				     MediaSession& inputSession,
 				     FILE* outFid,
+				     unsigned bufferSize,
 				     unsigned short movieWidth,
 				     unsigned short movieHeight,
 				     unsigned movieFPS,
@@ -212,7 +220,7 @@ QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
 				     Boolean syncStreams,
 				     Boolean generateHintTracks)
   : Medium(env), fInputSession(inputSession), fOutFid(outFid),
-    fPacketLossCompensate(packetLossCompensate),
+    fBufferSize(bufferSize), fPacketLossCompensate(packetLossCompensate),
     fSyncStreams(syncStreams), fAreCurrentlyBeingPlayed(False),
     fLargestRTPtimestampFrequency(0),
     fNumSubsessions(0), fNumSyncedSubsessions(0),
@@ -312,6 +320,7 @@ QuickTimeFileSink*
 QuickTimeFileSink::createNew(UsageEnvironment& env,
 			     MediaSession& inputSession,
 			     char const* outputFileName,
+			     unsigned bufferSize,
 			     unsigned short movieWidth,
 			     unsigned short movieHeight,
 			     unsigned movieFPS,
@@ -324,7 +333,7 @@ QuickTimeFileSink::createNew(UsageEnvironment& env,
     FILE* fid = openFileByName(env, outputFileName);
     if (fid == NULL) break;
 
-    return new QuickTimeFileSink(env, inputSession, fid,
+    return new QuickTimeFileSink(env, inputSession, fid, bufferSize,
 				 movieWidth, movieHeight, movieFPS,
 				 packetLossCompensate, syncStreams,
 				 generateHintTracks);
@@ -530,8 +539,9 @@ SubsessionIOState::SubsessionIOState(QuickTimeFileSink& sink,
     fHeadChunk(NULL), fTailChunk(NULL), fNumChunks(0) {
   fTrackID = ++fCurrentTrackNumber;
 
-  fBuffer = new SubsessionBuffer;
-  fPrevBuffer = sink.fPacketLossCompensate ? new SubsessionBuffer : NULL;
+  fBuffer = new SubsessionBuffer(fOurSink.fBufferSize);
+  fPrevBuffer = sink.fPacketLossCompensate
+    ? new SubsessionBuffer(fOurSink.fBufferSize) : NULL;
 
   FramedSource* subsessionSource = subsession.readSource();
   fOurSourceIsActive = subsessionSource != NULL;
@@ -1586,7 +1596,7 @@ addAtom(wave);
     size += addWord(0x0000000c); // ???
     size += add4ByteString("mp4a"); // ???
     size += addWord(0x00000000); // ???
-    size += addAtom_esds(); // ESDescriptor ??? #####
+    size += addAtom_esds(); // ESDescriptor
     size += addAtom_srcq(); // ??? #####
     size += addWord(0x00000008); // ???
     size += addWord(0x00000000); // ???
@@ -1630,17 +1640,43 @@ addAtomEnd;
 
 addAtom(esds);
   //#####
-  size += addWord(0x00000000); // ???
-  size += addWord(0x03808080); // ???
-  size += addWord(0x22000000); // ???
-  size += addWord(0x04808080); // ???
-  size += addWord(0x14401500); // ???
-  size += addWord(0x18000001); // ???
-  size += addWord(0xf4000001); // ???
-  size += addWord(0xf4000580); // ???
-  size += addWord(0x80800212); // ???
-  size += addWord(0x10068080); // ???
-  size += addByte(0x80); size += addByte(0x01); size += addByte(0x02); // ???
+  MediaSubsession& subsession = fCurrentIOState->fOurSubsession;
+  if (strcmp(subsession.mediumName(), "audio") == 0) {
+    // MPEG-4 audio
+    size += addWord(0x00000000); // ???
+    size += addWord(0x03808080); // ???
+    size += addWord(0x22000000); // ???
+    size += addWord(0x04808080); // ???
+    size += addWord(0x14401500); // ???
+    size += addWord(0x18000001); // ???
+    size += addWord(0xf4000001); // ???
+    size += addWord(0xf4000580); // ???
+    size += addWord(0x80800212); // ???
+    size += addWord(0x10068080); // ???
+    size += addByte(0x80); size += addByte(0x01); size += addByte(0x02); // ???
+  } else if (strcmp(subsession.mediumName(), "video") == 0) {
+    // MPEG-4 video
+    size += addWord(0x00000000); // ???
+    size += addWord(0x03370000); // ???
+    size += addWord(0x1f042f20); // ???
+    size += addWord(0x1104fd46); // ???
+    size += addWord(0x000d4e10); // ???
+    size += addWord(0x000d4e10); // ???
+    size += addByte(0x05); // ???
+
+    // Add the source's 'config' information (the VOSH header):
+    unsigned configSize;
+    unsigned char* config
+      = parseGeneralConfigStr(subsession.fmtp_config(), configSize);
+    if (configSize > 0) --configSize; // remove trailing '\0';
+    size += addByte(configSize);
+    for (unsigned i = 0; i < configSize; ++i) {
+      size += addByte(config[i]);
+    }
+
+    size += addHalfWord(0x0601); // ???
+    size += addByte(0x02); // ???
+  }
   //#####
 addAtomEnd;
 
@@ -1693,27 +1729,9 @@ addAtom(mp4v);
   size += addWord(0x64656f00); // Compressor name (continued)
   size += addZeroWords(4); // Compressor name (continued - zero)
   size += addWord(0x00000018); // Compressor name (final)+Depth
-  //#####  size += addHalfWord(0xffff); // Color table id
-  size += addWord(0xffff0000); // ???
-  size += addWord(0x00456573); // ???
-  size += addWord(0x64730000); // ???
-  size += addWord(0x00000337); // ???
-  size += addWord(0x00001f04); // ???
-  size += addWord(0x2f201104); // ???
-  size += addWord(0xfd46000d); // ???
-  size += addWord(0x4e10000d); // ???
-  size += addWord(0x4e100520); // ???
-  size += addWord(0x000001b0); // ???
-  size += addWord(0xf3000001); // ???
-  size += addWord(0xb50ee040); // ???
-  size += addWord(0xc0cf0000); // ???
-  size += addWord(0x01000000); // ???
-  size += addWord(0x01200084); // ???
-  size += addWord(0x40fa2850); // ???
-  size += addWord(0x20f0a31f); // ???
-  size += addWord(0x06010200); // ???
-  size += addByte(0); size += addByte(0); size += addByte(0); // ???
-  //#####
+  size += addHalfWord(0xffff); // Color table id
+  size += addAtom_esds(); // ESDescriptor
+  size += addWord(0x00000000); // ???
 addAtomEnd;
 
 unsigned QuickTimeFileSink::addAtom_rtp() {

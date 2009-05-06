@@ -30,6 +30,7 @@ public:
   static QuickTimeFileSink* createNew(UsageEnvironment& env,
 				      MediaSession& inputSession,
 				      char const* outputFileName,
+				      unsigned bufferSize = 20000,
 				      unsigned short movieWidth = 240,
 				      unsigned short movieHeight = 180,
 				      unsigned movieFPS = 15,
@@ -45,7 +46,7 @@ public:
 
 private:
   QuickTimeFileSink(UsageEnvironment& env, MediaSession& inputSession,
-		    FILE* outFid,
+		    FILE* outFid, unsigned bufferSize,
 		    unsigned short movieWidth, unsigned short movieHeight,
 		    unsigned movieFPS, Boolean packetLossCompensate,
 		    Boolean syncStreams, Boolean generateHintTracks);
@@ -66,6 +67,7 @@ private:
   friend class SubsessionIOState;
   MediaSession& fInputSession;
   FILE* fOutFid;
+  unsigned fBufferSize;
   Boolean fPacketLossCompensate;
   Boolean fSyncStreams;
   struct timeval fNewestSyncTime, fFirstDataTime;

@@ -100,7 +100,6 @@ void StreamParser::afterGettingBytes(void* clientData,
 
   // Sanity check: Make sure we didn't get too many bytes for our bank:
   if (buffer->fTotNumValidBytes + numBytesRead > BANK_SIZE) {
-    numBytesRead = BANK_SIZE - buffer->fTotNumValidBytes;
     buffer->fInputSource->envir()
       << "StreamParser::afterGettingBytes() warning: read "
       << numBytesRead << " bytes; expected no more than "
