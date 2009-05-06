@@ -584,6 +584,7 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
 	AudioInputPort& port = ports[portIndex];
         
     MIXERCONTROL mc;
+	mc.cMultipleItems = 1; // in case it doesn't get set below
     MIXERLINECONTROLS mlc;
 #if 0 // the following doesn't seem to be needed, and can fail:
     mlc.cbStruct = sizeof mlc;
@@ -683,9 +684,11 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
     mcd.cbDetails = sizeof (MIXERCONTROLDETAILS_BOOLEAN);
         
     if ((errCode = mixerGetControlDetails(hMixer, &mcd, MIXER_GETCONTROLDETAILSF_VALUE/*|MIXER_OBJECTF_HMIXER*/)) != MMSYSERR_NOERROR) {
+#if 0 // Some cards fail here, for some odd reason; ignore
 		delete[] mcdbState;
 		errReason = "mixerGetControlDetails()3";
 		return False;
+#endif
     }
         
     for (unsigned j = 0; j < mcd.cMultipleItems; ++j) {
@@ -693,9 +696,11 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
     }
         
     if ((errCode = mixerSetControlDetails(hMixer, &mcd, MIXER_OBJECTF_HMIXER)) != MMSYSERR_NOERROR) {
+#if 0 // Some cards fail here, for some odd reason; ignore
 		delete[] mcdbState;
 		errReason = "mixerSetControlDetails()";
 		return False;
+#endif
     }
 	delete[] mcdbState;
         
