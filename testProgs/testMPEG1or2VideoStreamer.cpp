@@ -35,7 +35,7 @@ Boolean const isSSM = False;
 #endif
 
 // To set up an internal RTSP server, uncomment the following:
-#define IMPLEMENT_RTSP_SERVER 1
+//#define IMPLEMENT_RTSP_SERVER 1
 // (Note that this RTSP server works for multicast only)
 
 // To stream *only* MPEG "I" frames (e.g., to reduce network bandwidth),

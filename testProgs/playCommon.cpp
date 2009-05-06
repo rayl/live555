@@ -96,7 +96,7 @@ void usage() {
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "")
-       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-S <file-sink-buffer-size>] <url> (or " << progName << " -o [-V] <url>)\n";
+       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] <url> (or " << progName << " -o [-V] <url>)\n";
   //##### Add "-R <dest-rtsp-url>" #####
   shutdown();
 }
@@ -288,7 +288,7 @@ int main(int argc, char** argv) {
       break;
     }
 
-    case 'S': { // specify the size of buffers for "FileSink"s
+    case 'b': { // specify the size of buffers for "FileSink"s
       if (sscanf(argv[2], "%u", &fileSinkBufferSize) != 1) {
 	usage();
       }
