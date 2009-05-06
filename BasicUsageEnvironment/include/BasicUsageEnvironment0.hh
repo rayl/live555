@@ -37,11 +37,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // An abstract base class, useful for subclassing
 // (e.g., to redefine the implementation of "operator<<")
 class BasicUsageEnvironment0: public UsageEnvironment {
-public:
-  virtual ~BasicUsageEnvironment0();
-  
 protected:
   BasicUsageEnvironment0(TaskScheduler& taskScheduler);
+  virtual ~BasicUsageEnvironment0();
 
 protected:
   // redefined virtual functions:

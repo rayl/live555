@@ -62,6 +62,8 @@ void DeviceSource::deliverFrame() {
   // using the following parameters (class members):
   // 'in' parameters (these should *not* be modified by this function):
   //     fTo: The frame data is copied to this address.
+  //         (Note that the variable "fTo" is *not* modified.  Instead,
+  //          the frame data is copied to the address pointed to by "fTo".)
   //     fMaxSize: This is the maximum number of bytes that can be copied
   //         (If the actual frame is larger than this, then it should
   //          be truncated, and "fNumTruncatedBytes" set accordingly.)

@@ -206,23 +206,27 @@ static unsigned samplingFrequencyFromIndex[16] = {
 };
 
 unsigned samplingFrequencyFromAudioSpecificConfig(char const* configStr) {
+  unsigned char* config = NULL;
+  unsigned result = 0; // if returned, indicates an error
+
   do {
     // Begin by parsing the config string:
     unsigned configSize;
-    unsigned char* config = parseGeneralConfigStr(configStr, configSize);
+    config = parseGeneralConfigStr(configStr, configSize);
     if (config == NULL) break;
 
     if (configSize < 2) break;
     unsigned char samplingFrequencyIndex = ((config[0]&0x07)<<1) | (config[1]>>7);
     if (samplingFrequencyIndex < 15) {
-      return samplingFrequencyFromIndex[samplingFrequencyIndex];
+      result = samplingFrequencyFromIndex[samplingFrequencyIndex];
+      break;
     }
     
     // Index == 15 means that the actual frequency is next (24 bits):
     if (configSize < 5) break;
-    return ((config[1]&0x7F)<<17) | (config[2]<<9) | (config[3]<<1) | (config[4]>>7);
+    result = ((config[1]&0x7F)<<17) | (config[2]<<9) | (config[3]<<1) | (config[4]>>7);
   } while (0);
 
-  // An error occurred:
-  return 0;
+  delete[] config;
+  return result;
 }
