@@ -164,7 +164,7 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 
       if (frameSize >= fMaxSize || fCurrentPacketCompletesFrame) {
 	// We have all the data that the client wants.
-	if (frameSize >= fMaxSize) {
+	if (frameSize >= fMaxSize && frameSize > 1000) {
 	  envir() << "MultiFramedRTPSource::doGetNextFrame1(): The total received frame size exceeds the client's buffer size ("
 		  << fSavedMaxSize << ").  Trailing data will be dropped!\n";
 	}
