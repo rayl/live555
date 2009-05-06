@@ -1,0 +1,2979 @@
+
+"mpeg4ESVideoTest" stream, from the file "test.m4v"
+Play this stream using the URL "rtsp://66.80.62.34:8554/mpeg4ESVideoTest"
+
+"mpeg1or2AudioVideoTest" stream, from the file "test.mpg"
+Play this stream using the URL "rtsp://66.80.62.34:8554/mpeg1or2AudioVideoTest"
+
+"mpeg1or2ESVideoTest" stream, from the file "testv.mpg"
+Play this stream using the URL "rtsp://66.80.62.34:8554/mpeg1or2ESVideoTest"
+
+"mp3AudioTest" stream, from the file "test.mp3"
+Play this stream using the URL "rtsp://66.80.62.34:8554/mp3AudioTest"
+
+"wavAudioTest" stream, from the file "test.wav"
+Play this stream using the URL "rtsp://66.80.62.34:8554/wavAudioTest"
+
+"amrAudioTest" stream, from the file "test.amr"
+Play this stream using the URL "rtsp://66.80.62.34:8554/amrAudioTest"
+
+"vobTest" stream, from the file "test.vob"
+Play this stream using the URL "rtsp://66.80.62.34:8554/vobTest"
+
+"mpeg2TransportStreamTest" stream, from the file "test.ts"
+Play this stream using the URL "rtsp://66.80.62.34:8554/mpeg2TransportStreamTest"
+parsing VisualObjectSequence
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+parsing VisualObjectSequence
+profile_and_level_indication: f5
+MPEGVideoStreamFramer::computePresentationTime(0) -> 1118904757.084454 [0.000000]
+fDurationInMicroseconds: 0 ((0*1000000)/0.000000)
+parsing VisualObject
+visual_object_type: 0x1
+saw a video_object_start_code: 0x00000100
+MPEGVideoStreamFramer::computePresentationTime(0) -> 1118904757.084454 [0.000000]
+fDurationInMicroseconds: 0 ((0*1000000)/0.000000)
+parsing VideoObjectLayer
+vop_time_increment_resolution: 30000
+fixed_vop_rate: 0; 'frame' (really tick) rate: 30000.000000
+MPEGVideoStreamFramer::computePresentationTime(0) -> 1118904757.084454 [0.000000]
+fDurationInMicroseconds: 0 ((0*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 0, vop_time_increment: 0
+MPEGVideoStreamFramer::computePresentationTime(0) -> 1118904757.084454 [0.000000]
+fDurationInMicroseconds: 33 ((1*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3003
+MPEGVideoStreamFramer::computePresentationTime(3003) -> 1118904757.184554 [0.100100]
+fDurationInMicroseconds: 100100 ((3003*1000000)/30000.000000)
+parsing VisualObjectSequence
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+parsing VisualObjectSequence
+profile_and_level_indication: f5
+MPEGVideoStreamFramer::computePresentationTime(0) -> 1118904757.218221 [0.133767]
+fDurationInMicroseconds: 0 ((0*1000000)/0.000000)
+parsing VisualObject
+visual_object_type: 0x1
+saw a video_object_start_code: 0x00000100
+MPEGVideoStreamFramer::computePresentationTime(0) -> 1118904757.218221 [0.133767]
+fDurationInMicroseconds: 0 ((0*1000000)/0.000000)
+parsing VideoObjectLayer
+vop_time_increment_resolution: 30000
+fixed_vop_rate: 0; 'frame' (really tick) rate: 30000.000000
+MPEGVideoStreamFramer::computePresentationTime(0) -> 1118904757.218221 [0.133767]
+fDurationInMicroseconds: 0 ((0*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 0, vop_time_increment: 0
+MPEGVideoStreamFramer::computePresentationTime(0) -> 1118904757.218221 [0.133767]
+fDurationInMicroseconds: 33 ((1*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3003
+MPEGVideoStreamFramer::computePresentationTime(3003) -> 1118904757.318321 [0.233867]
+fDurationInMicroseconds: 100100 ((3003*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1001
+MPEGVideoStreamFramer::computePresentationTime(1001) -> 1118904757.251587 [0.167133]
+fDurationInMicroseconds: 100100 ((3003*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2002
+MPEGVideoStreamFramer::computePresentationTime(2002) -> 1118904757.284954 [0.200500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6006
+MPEGVideoStreamFramer::computePresentationTime(6006) -> 1118904757.418421 [0.333967]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4004
+MPEGVideoStreamFramer::computePresentationTime(4004) -> 1118904757.351687 [0.267233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5005
+MPEGVideoStreamFramer::computePresentationTime(5005) -> 1118904757.385054 [0.300600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9009
+MPEGVideoStreamFramer::computePresentationTime(9009) -> 1118904757.518521 [0.434067]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7007
+MPEGVideoStreamFramer::computePresentationTime(7007) -> 1118904757.451787 [0.367333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8008
+MPEGVideoStreamFramer::computePresentationTime(8008) -> 1118904757.485154 [0.400700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12012
+MPEGVideoStreamFramer::computePresentationTime(12012) -> 1118904757.618621 [0.534167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10010
+MPEGVideoStreamFramer::computePresentationTime(10010) -> 1118904757.551887 [0.467433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11011
+MPEGVideoStreamFramer::computePresentationTime(11011) -> 1118904757.585254 [0.500800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15015
+MPEGVideoStreamFramer::computePresentationTime(15015) -> 1118904757.718720 [0.634266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13013
+MPEGVideoStreamFramer::computePresentationTime(13013) -> 1118904757.651987 [0.567533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14014
+MPEGVideoStreamFramer::computePresentationTime(14014) -> 1118904757.685354 [0.600900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18018
+MPEGVideoStreamFramer::computePresentationTime(18018) -> 1118904757.818821 [0.734367]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16016
+MPEGVideoStreamFramer::computePresentationTime(16016) -> 1118904757.752087 [0.667633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17017
+MPEGVideoStreamFramer::computePresentationTime(17017) -> 1118904757.785454 [0.701000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21021
+MPEGVideoStreamFramer::computePresentationTime(21021) -> 1118904757.918921 [0.834467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19019
+MPEGVideoStreamFramer::computePresentationTime(19019) -> 1118904757.852187 [0.767733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20020
+MPEGVideoStreamFramer::computePresentationTime(20020) -> 1118904757.885554 [0.801100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24024
+MPEGVideoStreamFramer::computePresentationTime(24024) -> 1118904758.019021 [0.934567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22022
+MPEGVideoStreamFramer::computePresentationTime(22022) -> 1118904757.952287 [0.867833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23023
+MPEGVideoStreamFramer::computePresentationTime(23023) -> 1118904757.985654 [0.901200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27027
+MPEGVideoStreamFramer::computePresentationTime(27027) -> 1118904758.119121 [1.034667]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25025
+MPEGVideoStreamFramer::computePresentationTime(25025) -> 1118904758.052387 [0.967933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26026
+MPEGVideoStreamFramer::computePresentationTime(26026) -> 1118904758.085754 [1.001300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 30
+MPEGVideoStreamFramer::computePresentationTime(30030) -> 1118904758.219220 [1.134766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28028
+MPEGVideoStreamFramer::computePresentationTime(58028) -> 1118904759.152487 [2.068033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29029
+MPEGVideoStreamFramer::computePresentationTime(59029) -> 1118904759.185854 [2.101400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3033
+MPEGVideoStreamFramer::computePresentationTime(33033) -> 1118904758.319320 [1.234866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1031
+MPEGVideoStreamFramer::computePresentationTime(31031) -> 1118904758.252587 [1.168133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2032
+MPEGVideoStreamFramer::computePresentationTime(32032) -> 1118904758.285954 [1.201500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6036
+MPEGVideoStreamFramer::computePresentationTime(36036) -> 1118904758.419421 [1.334967]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4034
+MPEGVideoStreamFramer::computePresentationTime(34034) -> 1118904758.352687 [1.268233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5035
+MPEGVideoStreamFramer::computePresentationTime(35035) -> 1118904758.386054 [1.301600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9039
+MPEGVideoStreamFramer::computePresentationTime(39039) -> 1118904758.519520 [1.435066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7037
+MPEGVideoStreamFramer::computePresentationTime(37037) -> 1118904758.452787 [1.368333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8038
+MPEGVideoStreamFramer::computePresentationTime(38038) -> 1118904758.486154 [1.401700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12042
+MPEGVideoStreamFramer::computePresentationTime(42042) -> 1118904758.619621 [1.535167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10040
+MPEGVideoStreamFramer::computePresentationTime(40040) -> 1118904758.552887 [1.468433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11041
+MPEGVideoStreamFramer::computePresentationTime(41041) -> 1118904758.586254 [1.501800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15045
+MPEGVideoStreamFramer::computePresentationTime(45045) -> 1118904758.719721 [1.635267]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13043
+MPEGVideoStreamFramer::computePresentationTime(43043) -> 1118904758.652987 [1.568533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14044
+MPEGVideoStreamFramer::computePresentationTime(44044) -> 1118904758.686354 [1.601900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18048
+MPEGVideoStreamFramer::computePresentationTime(48048) -> 1118904758.819820 [1.735366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16046
+MPEGVideoStreamFramer::computePresentationTime(46046) -> 1118904758.753087 [1.668633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17047
+MPEGVideoStreamFramer::computePresentationTime(47047) -> 1118904758.786454 [1.702000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21051
+MPEGVideoStreamFramer::computePresentationTime(51051) -> 1118904758.919921 [1.835467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19049
+MPEGVideoStreamFramer::computePresentationTime(49049) -> 1118904758.853187 [1.768733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20050
+MPEGVideoStreamFramer::computePresentationTime(50050) -> 1118904758.886554 [1.802100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24054
+MPEGVideoStreamFramer::computePresentationTime(54054) -> 1118904759.020021 [1.935567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22052
+MPEGVideoStreamFramer::computePresentationTime(52052) -> 1118904758.953287 [1.868833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23053
+MPEGVideoStreamFramer::computePresentationTime(53053) -> 1118904758.986654 [1.902200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27057
+MPEGVideoStreamFramer::computePresentationTime(57057) -> 1118904759.120120 [2.035666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25055
+MPEGVideoStreamFramer::computePresentationTime(55055) -> 1118904759.053387 [1.968933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26056
+MPEGVideoStreamFramer::computePresentationTime(56056) -> 1118904759.086754 [2.002300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 60
+MPEGVideoStreamFramer::computePresentationTime(60060) -> 1118904759.220220 [2.135766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28058
+MPEGVideoStreamFramer::computePresentationTime(88058) -> 1118904760.153487 [3.069033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29059
+MPEGVideoStreamFramer::computePresentationTime(89059) -> 1118904760.186854 [3.102400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3063
+MPEGVideoStreamFramer::computePresentationTime(63063) -> 1118904759.320321 [2.235867]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1061
+MPEGVideoStreamFramer::computePresentationTime(61061) -> 1118904759.253587 [2.169133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2062
+MPEGVideoStreamFramer::computePresentationTime(62062) -> 1118904759.286954 [2.202500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6066
+MPEGVideoStreamFramer::computePresentationTime(66066) -> 1118904759.420420 [2.335966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4064
+MPEGVideoStreamFramer::computePresentationTime(64064) -> 1118904759.353687 [2.269233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5065
+MPEGVideoStreamFramer::computePresentationTime(65065) -> 1118904759.387054 [2.302600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9069
+MPEGVideoStreamFramer::computePresentationTime(69069) -> 1118904759.520520 [2.436066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7067
+MPEGVideoStreamFramer::computePresentationTime(67067) -> 1118904759.453787 [2.369333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8068
+MPEGVideoStreamFramer::computePresentationTime(68068) -> 1118904759.487154 [2.402700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12072
+MPEGVideoStreamFramer::computePresentationTime(72072) -> 1118904759.620621 [2.536167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10070
+MPEGVideoStreamFramer::computePresentationTime(70070) -> 1118904759.553887 [2.469433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11071
+MPEGVideoStreamFramer::computePresentationTime(71071) -> 1118904759.587254 [2.502800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15075
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15075
+MPEGVideoStreamFramer::computePresentationTime(75075) -> 1118904759.720720 [2.636266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13073
+MPEGVideoStreamFramer::computePresentationTime(73073) -> 1118904759.653987 [2.569533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14074
+MPEGVideoStreamFramer::computePresentationTime(74074) -> 1118904759.687354 [2.602900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18078
+MPEGVideoStreamFramer::computePresentationTime(78078) -> 1118904759.820820 [2.736366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16076
+MPEGVideoStreamFramer::computePresentationTime(76076) -> 1118904759.754087 [2.669633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17077
+MPEGVideoStreamFramer::computePresentationTime(77077) -> 1118904759.787454 [2.703000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21081
+MPEGVideoStreamFramer::computePresentationTime(81081) -> 1118904759.920921 [2.836467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19079
+MPEGVideoStreamFramer::computePresentationTime(79079) -> 1118904759.854187 [2.769733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20080
+MPEGVideoStreamFramer::computePresentationTime(80080) -> 1118904759.887554 [2.803100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24084
+MPEGVideoStreamFramer::computePresentationTime(84084) -> 1118904760.021021 [2.936567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22082
+MPEGVideoStreamFramer::computePresentationTime(82082) -> 1118904759.954287 [2.869833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23083
+MPEGVideoStreamFramer::computePresentationTime(83083) -> 1118904759.987654 [2.903200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27087
+MPEGVideoStreamFramer::computePresentationTime(87087) -> 1118904760.121120 [3.036666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25085
+MPEGVideoStreamFramer::computePresentationTime(85085) -> 1118904760.054387 [2.969933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26086
+MPEGVideoStreamFramer::computePresentationTime(86086) -> 1118904760.087754 [3.003300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 90
+MPEGVideoStreamFramer::computePresentationTime(90090) -> 1118904760.221221 [3.136767]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28088
+MPEGVideoStreamFramer::computePresentationTime(118088) -> 1118904761.154487 [4.070033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29089
+MPEGVideoStreamFramer::computePresentationTime(119089) -> 1118904761.187854 [4.103400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3093
+MPEGVideoStreamFramer::computePresentationTime(93093) -> 1118904760.321320 [3.236866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1091
+MPEGVideoStreamFramer::computePresentationTime(91091) -> 1118904760.254587 [3.170133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2092
+MPEGVideoStreamFramer::computePresentationTime(92092) -> 1118904760.287954 [3.203500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6096
+MPEGVideoStreamFramer::computePresentationTime(96096) -> 1118904760.421420 [3.336966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4094
+MPEGVideoStreamFramer::computePresentationTime(94094) -> 1118904760.354687 [3.270233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5095
+MPEGVideoStreamFramer::computePresentationTime(95095) -> 1118904760.388054 [3.303600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9099
+MPEGVideoStreamFramer::computePresentationTime(99099) -> 1118904760.521521 [3.437067]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7097
+MPEGVideoStreamFramer::computePresentationTime(97097) -> 1118904760.454787 [3.370333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8098
+MPEGVideoStreamFramer::computePresentationTime(98098) -> 1118904760.488154 [3.403700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12102
+MPEGVideoStreamFramer::computePresentationTime(102102) -> 1118904760.621621 [3.537167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10100
+MPEGVideoStreamFramer::computePresentationTime(100100) -> 1118904760.554887 [3.470433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11101
+MPEGVideoStreamFramer::computePresentationTime(101101) -> 1118904760.588254 [3.503800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15105
+MPEGVideoStreamFramer::computePresentationTime(105105) -> 1118904760.721720 [3.637266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13103
+MPEGVideoStreamFramer::computePresentationTime(103103) -> 1118904760.654987 [3.570533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14104
+MPEGVideoStreamFramer::computePresentationTime(104104) -> 1118904760.688354 [3.603900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18108
+MPEGVideoStreamFramer::computePresentationTime(108108) -> 1118904760.821821 [3.737367]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16106
+MPEGVideoStreamFramer::computePresentationTime(106106) -> 1118904760.755087 [3.670633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17107
+MPEGVideoStreamFramer::computePresentationTime(107107) -> 1118904760.788454 [3.704000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21111
+MPEGVideoStreamFramer::computePresentationTime(111111) -> 1118904760.921921 [3.837467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19109
+MPEGVideoStreamFramer::computePresentationTime(109109) -> 1118904760.855187 [3.770733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20110
+MPEGVideoStreamFramer::computePresentationTime(110110) -> 1118904760.888554 [3.804100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24114
+MPEGVideoStreamFramer::computePresentationTime(114114) -> 1118904761.022020 [3.937566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22112
+MPEGVideoStreamFramer::computePresentationTime(112112) -> 1118904760.955287 [3.870833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23113
+MPEGVideoStreamFramer::computePresentationTime(113113) -> 1118904760.988654 [3.904200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27117
+MPEGVideoStreamFramer::computePresentationTime(117117) -> 1118904761.122121 [4.037667]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25115
+MPEGVideoStreamFramer::computePresentationTime(115115) -> 1118904761.055387 [3.970933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26116
+MPEGVideoStreamFramer::computePresentationTime(116116) -> 1118904761.088754 [4.004300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 120
+MPEGVideoStreamFramer::computePresentationTime(120120) -> 1118904761.222220 [4.137766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28118
+MPEGVideoStreamFramer::computePresentationTime(148118) -> 1118904762.155487 [5.071033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29119
+MPEGVideoStreamFramer::computePresentationTime(149119) -> 1118904762.188854 [5.104400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3123
+MPEGVideoStreamFramer::computePresentationTime(123123) -> 1118904761.322320 [4.237866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1121
+MPEGVideoStreamFramer::computePresentationTime(121121) -> 1118904761.255587 [4.171133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2122
+MPEGVideoStreamFramer::computePresentationTime(122122) -> 1118904761.288954 [4.204500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6126
+MPEGVideoStreamFramer::computePresentationTime(126126) -> 1118904761.422421 [4.337967]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4124
+MPEGVideoStreamFramer::computePresentationTime(124124) -> 1118904761.355687 [4.271233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5125
+MPEGVideoStreamFramer::computePresentationTime(125125) -> 1118904761.389054 [4.304600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9129
+MPEGVideoStreamFramer::computePresentationTime(129129) -> 1118904761.522520 [4.438066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7127
+MPEGVideoStreamFramer::computePresentationTime(127127) -> 1118904761.455787 [4.371333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8128
+MPEGVideoStreamFramer::computePresentationTime(128128) -> 1118904761.489154 [4.404700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12132
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12132
+MPEGVideoStreamFramer::computePresentationTime(132132) -> 1118904761.622620 [4.538166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10130
+MPEGVideoStreamFramer::computePresentationTime(130130) -> 1118904761.555887 [4.471433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11131
+MPEGVideoStreamFramer::computePresentationTime(131131) -> 1118904761.589254 [4.504800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15135
+MPEGVideoStreamFramer::computePresentationTime(135135) -> 1118904761.722721 [4.638267]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13133
+MPEGVideoStreamFramer::computePresentationTime(133133) -> 1118904761.655987 [4.571533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14134
+MPEGVideoStreamFramer::computePresentationTime(134134) -> 1118904761.689354 [4.604900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18138
+MPEGVideoStreamFramer::computePresentationTime(138138) -> 1118904761.822820 [4.738366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16136
+MPEGVideoStreamFramer::computePresentationTime(136136) -> 1118904761.756087 [4.671633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17137
+MPEGVideoStreamFramer::computePresentationTime(137137) -> 1118904761.789454 [4.705000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21141
+MPEGVideoStreamFramer::computePresentationTime(141141) -> 1118904761.922920 [4.838466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19139
+MPEGVideoStreamFramer::computePresentationTime(139139) -> 1118904761.856187 [4.771733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20140
+MPEGVideoStreamFramer::computePresentationTime(140140) -> 1118904761.889554 [4.805100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24144
+MPEGVideoStreamFramer::computePresentationTime(144144) -> 1118904762.023021 [4.938567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22142
+MPEGVideoStreamFramer::computePresentationTime(142142) -> 1118904761.956287 [4.871833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23143
+MPEGVideoStreamFramer::computePresentationTime(143143) -> 1118904761.989654 [4.905200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27147
+MPEGVideoStreamFramer::computePresentationTime(147147) -> 1118904762.123120 [5.038666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25145
+MPEGVideoStreamFramer::computePresentationTime(145145) -> 1118904762.056387 [4.971933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26146
+MPEGVideoStreamFramer::computePresentationTime(146146) -> 1118904762.089754 [5.005300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 150
+MPEGVideoStreamFramer::computePresentationTime(150150) -> 1118904762.223220 [5.138766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28148
+MPEGVideoStreamFramer::computePresentationTime(178148) -> 1118904763.156487 [6.072033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29149
+MPEGVideoStreamFramer::computePresentationTime(179149) -> 1118904763.189854 [6.105400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3153
+MPEGVideoStreamFramer::computePresentationTime(153153) -> 1118904762.323321 [5.238867]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1151
+MPEGVideoStreamFramer::computePresentationTime(151151) -> 1118904762.256587 [5.172133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2152
+MPEGVideoStreamFramer::computePresentationTime(152152) -> 1118904762.289954 [5.205500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6156
+MPEGVideoStreamFramer::computePresentationTime(156156) -> 1118904762.423420 [5.338966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4154
+MPEGVideoStreamFramer::computePresentationTime(154154) -> 1118904762.356687 [5.272233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5155
+MPEGVideoStreamFramer::computePresentationTime(155155) -> 1118904762.390054 [5.305600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9159
+MPEGVideoStreamFramer::computePresentationTime(159159) -> 1118904762.523520 [5.439066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7157
+MPEGVideoStreamFramer::computePresentationTime(157157) -> 1118904762.456787 [5.372333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8158
+MPEGVideoStreamFramer::computePresentationTime(158158) -> 1118904762.490154 [5.405700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12162
+MPEGVideoStreamFramer::computePresentationTime(162162) -> 1118904762.623621 [5.539167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10160
+MPEGVideoStreamFramer::computePresentationTime(160160) -> 1118904762.556887 [5.472433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11161
+MPEGVideoStreamFramer::computePresentationTime(161161) -> 1118904762.590254 [5.505800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15165
+MPEGVideoStreamFramer::computePresentationTime(165165) -> 1118904762.723720 [5.639266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13163
+MPEGVideoStreamFramer::computePresentationTime(163163) -> 1118904762.656987 [5.572533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14164
+MPEGVideoStreamFramer::computePresentationTime(164164) -> 1118904762.690354 [5.605900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18168
+MPEGVideoStreamFramer::computePresentationTime(168168) -> 1118904762.823820 [5.739366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16166
+MPEGVideoStreamFramer::computePresentationTime(166166) -> 1118904762.757087 [5.672633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17167
+MPEGVideoStreamFramer::computePresentationTime(167167) -> 1118904762.790454 [5.706000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21171
+MPEGVideoStreamFramer::computePresentationTime(171171) -> 1118904762.923921 [5.839467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19169
+MPEGVideoStreamFramer::computePresentationTime(169169) -> 1118904762.857187 [5.772733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20170
+MPEGVideoStreamFramer::computePresentationTime(170170) -> 1118904762.890554 [5.806100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24174
+MPEGVideoStreamFramer::computePresentationTime(174174) -> 1118904763.024020 [5.939566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22172
+MPEGVideoStreamFramer::computePresentationTime(172172) -> 1118904762.957287 [5.872833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23173
+MPEGVideoStreamFramer::computePresentationTime(173173) -> 1118904762.990654 [5.906200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27177
+MPEGVideoStreamFramer::computePresentationTime(177177) -> 1118904763.124120 [6.039666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25175
+MPEGVideoStreamFramer::computePresentationTime(175175) -> 1118904763.057387 [5.972933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26176
+MPEGVideoStreamFramer::computePresentationTime(176176) -> 1118904763.090754 [6.006300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 180
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 180
+MPEGVideoStreamFramer::computePresentationTime(180180) -> 1118904763.224221 [6.139767]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28178
+MPEGVideoStreamFramer::computePresentationTime(208178) -> 1118904764.157487 [7.073033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29179
+MPEGVideoStreamFramer::computePresentationTime(209179) -> 1118904764.190854 [7.106400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3183
+MPEGVideoStreamFramer::computePresentationTime(183183) -> 1118904763.324320 [6.239866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1181
+MPEGVideoStreamFramer::computePresentationTime(181181) -> 1118904763.257587 [6.173133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2182
+MPEGVideoStreamFramer::computePresentationTime(182182) -> 1118904763.290954 [6.206500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6186
+MPEGVideoStreamFramer::computePresentationTime(186186) -> 1118904763.424420 [6.339966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4184
+MPEGVideoStreamFramer::computePresentationTime(184184) -> 1118904763.357687 [6.273233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5185
+MPEGVideoStreamFramer::computePresentationTime(185185) -> 1118904763.391054 [6.306600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9189
+MPEGVideoStreamFramer::computePresentationTime(189189) -> 1118904763.524521 [6.440067]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7187
+MPEGVideoStreamFramer::computePresentationTime(187187) -> 1118904763.457787 [6.373333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8188
+MPEGVideoStreamFramer::computePresentationTime(188188) -> 1118904763.491154 [6.406700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12192
+MPEGVideoStreamFramer::computePresentationTime(192192) -> 1118904763.624620 [6.540166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10190
+MPEGVideoStreamFramer::computePresentationTime(190190) -> 1118904763.557887 [6.473433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11191
+MPEGVideoStreamFramer::computePresentationTime(191191) -> 1118904763.591254 [6.506800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15195
+MPEGVideoStreamFramer::computePresentationTime(195195) -> 1118904763.724720 [6.640266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13193
+MPEGVideoStreamFramer::computePresentationTime(193193) -> 1118904763.657987 [6.573533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14194
+MPEGVideoStreamFramer::computePresentationTime(194194) -> 1118904763.691354 [6.606900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18198
+MPEGVideoStreamFramer::computePresentationTime(198198) -> 1118904763.824821 [6.740367]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16196
+MPEGVideoStreamFramer::computePresentationTime(196196) -> 1118904763.758087 [6.673633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17197
+MPEGVideoStreamFramer::computePresentationTime(197197) -> 1118904763.791454 [6.707000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21201
+MPEGVideoStreamFramer::computePresentationTime(201201) -> 1118904763.924920 [6.840466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19199
+MPEGVideoStreamFramer::computePresentationTime(199199) -> 1118904763.858187 [6.773733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20200
+MPEGVideoStreamFramer::computePresentationTime(200200) -> 1118904763.891554 [6.807100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24204
+MPEGVideoStreamFramer::computePresentationTime(204204) -> 1118904764.025021 [6.940567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22202
+MPEGVideoStreamFramer::computePresentationTime(202202) -> 1118904763.958287 [6.873833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23203
+MPEGVideoStreamFramer::computePresentationTime(203203) -> 1118904763.991654 [6.907200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27207
+MPEGVideoStreamFramer::computePresentationTime(207207) -> 1118904764.125121 [7.040667]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25205
+MPEGVideoStreamFramer::computePresentationTime(205205) -> 1118904764.058387 [6.973933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26206
+MPEGVideoStreamFramer::computePresentationTime(206206) -> 1118904764.091754 [7.007300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 210
+MPEGVideoStreamFramer::computePresentationTime(210210) -> 1118904764.225220 [7.140766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28208
+MPEGVideoStreamFramer::computePresentationTime(238208) -> 1118904765.158487 [8.074033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29209
+MPEGVideoStreamFramer::computePresentationTime(239209) -> 1118904765.191854 [8.107400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3213
+MPEGVideoStreamFramer::computePresentationTime(213213) -> 1118904764.325320 [7.240866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1211
+MPEGVideoStreamFramer::computePresentationTime(211211) -> 1118904764.258587 [7.174133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2212
+MPEGVideoStreamFramer::computePresentationTime(212212) -> 1118904764.291954 [7.207500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6216
+MPEGVideoStreamFramer::computePresentationTime(216216) -> 1118904764.425421 [7.340967]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4214
+MPEGVideoStreamFramer::computePresentationTime(214214) -> 1118904764.358687 [7.274233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5215
+MPEGVideoStreamFramer::computePresentationTime(215215) -> 1118904764.392054 [7.307600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9219
+MPEGVideoStreamFramer::computePresentationTime(219219) -> 1118904764.525520 [7.441066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7217
+MPEGVideoStreamFramer::computePresentationTime(217217) -> 1118904764.458787 [7.374333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8218
+MPEGVideoStreamFramer::computePresentationTime(218218) -> 1118904764.492154 [7.407700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12222
+MPEGVideoStreamFramer::computePresentationTime(222222) -> 1118904764.625621 [7.541167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10220
+MPEGVideoStreamFramer::computePresentationTime(220220) -> 1118904764.558887 [7.474433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11221
+MPEGVideoStreamFramer::computePresentationTime(221221) -> 1118904764.592254 [7.507800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15225
+MPEGVideoStreamFramer::computePresentationTime(225225) -> 1118904764.725721 [7.641267]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13223
+MPEGVideoStreamFramer::computePresentationTime(223223) -> 1118904764.658987 [7.574533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14224
+MPEGVideoStreamFramer::computePresentationTime(224224) -> 1118904764.692354 [7.607900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18228
+MPEGVideoStreamFramer::computePresentationTime(228228) -> 1118904764.825820 [7.741366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16226
+MPEGVideoStreamFramer::computePresentationTime(226226) -> 1118904764.759087 [7.674633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17227
+MPEGVideoStreamFramer::computePresentationTime(227227) -> 1118904764.792454 [7.708000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21231
+MPEGVideoStreamFramer::computePresentationTime(231231) -> 1118904764.925921 [7.841467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19229
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19229
+MPEGVideoStreamFramer::computePresentationTime(229229) -> 1118904764.859187 [7.774733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20230
+MPEGVideoStreamFramer::computePresentationTime(230230) -> 1118904764.892554 [7.808100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24234
+MPEGVideoStreamFramer::computePresentationTime(234234) -> 1118904765.026021 [7.941567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22232
+MPEGVideoStreamFramer::computePresentationTime(232232) -> 1118904764.959287 [7.874833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23233
+MPEGVideoStreamFramer::computePresentationTime(233233) -> 1118904764.992654 [7.908200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27237
+MPEGVideoStreamFramer::computePresentationTime(237237) -> 1118904765.126120 [8.041666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25235
+MPEGVideoStreamFramer::computePresentationTime(235235) -> 1118904765.059387 [7.974933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26236
+MPEGVideoStreamFramer::computePresentationTime(236236) -> 1118904765.092754 [8.008300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 240
+MPEGVideoStreamFramer::computePresentationTime(240240) -> 1118904765.226220 [8.141766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28238
+MPEGVideoStreamFramer::computePresentationTime(268238) -> 1118904766.159487 [9.075033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29239
+MPEGVideoStreamFramer::computePresentationTime(269239) -> 1118904766.192854 [9.108400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3243
+MPEGVideoStreamFramer::computePresentationTime(243243) -> 1118904765.326321 [8.241867]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1241
+MPEGVideoStreamFramer::computePresentationTime(241241) -> 1118904765.259587 [8.175133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2242
+MPEGVideoStreamFramer::computePresentationTime(242242) -> 1118904765.292954 [8.208500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6246
+MPEGVideoStreamFramer::computePresentationTime(246246) -> 1118904765.426420 [8.341966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4244
+MPEGVideoStreamFramer::computePresentationTime(244244) -> 1118904765.359687 [8.275233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5245
+MPEGVideoStreamFramer::computePresentationTime(245245) -> 1118904765.393054 [8.308600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9249
+MPEGVideoStreamFramer::computePresentationTime(249249) -> 1118904765.526520 [8.442066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7247
+MPEGVideoStreamFramer::computePresentationTime(247247) -> 1118904765.459787 [8.375333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8248
+MPEGVideoStreamFramer::computePresentationTime(248248) -> 1118904765.493154 [8.408700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12252
+MPEGVideoStreamFramer::computePresentationTime(252252) -> 1118904765.626621 [8.542167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10250
+MPEGVideoStreamFramer::computePresentationTime(250250) -> 1118904765.559887 [8.475433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11251
+MPEGVideoStreamFramer::computePresentationTime(251251) -> 1118904765.593254 [8.508800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15255
+MPEGVideoStreamFramer::computePresentationTime(255255) -> 1118904765.726720 [8.642266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13253
+MPEGVideoStreamFramer::computePresentationTime(253253) -> 1118904765.659987 [8.575533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14254
+MPEGVideoStreamFramer::computePresentationTime(254254) -> 1118904765.693354 [8.608900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18258
+MPEGVideoStreamFramer::computePresentationTime(258258) -> 1118904765.826820 [8.742366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16256
+MPEGVideoStreamFramer::computePresentationTime(256256) -> 1118904765.760087 [8.675633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17257
+MPEGVideoStreamFramer::computePresentationTime(257257) -> 1118904765.793454 [8.709000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21261
+MPEGVideoStreamFramer::computePresentationTime(261261) -> 1118904765.926921 [8.842467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19259
+MPEGVideoStreamFramer::computePresentationTime(259259) -> 1118904765.860187 [8.775733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20260
+MPEGVideoStreamFramer::computePresentationTime(260260) -> 1118904765.893554 [8.809100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24264
+MPEGVideoStreamFramer::computePresentationTime(264264) -> 1118904766.027020 [8.942566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22262
+MPEGVideoStreamFramer::computePresentationTime(262262) -> 1118904765.960287 [8.875833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23263
+MPEGVideoStreamFramer::computePresentationTime(263263) -> 1118904765.993654 [8.909200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27267
+MPEGVideoStreamFramer::computePresentationTime(267267) -> 1118904766.127120 [9.042666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25265
+MPEGVideoStreamFramer::computePresentationTime(265265) -> 1118904766.060387 [8.975933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26266
+MPEGVideoStreamFramer::computePresentationTime(266266) -> 1118904766.093754 [9.009300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 270
+MPEGVideoStreamFramer::computePresentationTime(270270) -> 1118904766.227221 [9.142767]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28268
+MPEGVideoStreamFramer::computePresentationTime(298268) -> 1118904767.160487 [10.076033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29269
+MPEGVideoStreamFramer::computePresentationTime(299269) -> 1118904767.193854 [10.109400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3273
+MPEGVideoStreamFramer::computePresentationTime(273273) -> 1118904766.327320 [9.242866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1271
+MPEGVideoStreamFramer::computePresentationTime(271271) -> 1118904766.260587 [9.176133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2272
+MPEGVideoStreamFramer::computePresentationTime(272272) -> 1118904766.293954 [9.209500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6276
+MPEGVideoStreamFramer::computePresentationTime(276276) -> 1118904766.427420 [9.342966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4274
+MPEGVideoStreamFramer::computePresentationTime(274274) -> 1118904766.360687 [9.276233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5275
+MPEGVideoStreamFramer::computePresentationTime(275275) -> 1118904766.394054 [9.309600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9279
+MPEGVideoStreamFramer::computePresentationTime(279279) -> 1118904766.527521 [9.443067]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7277
+MPEGVideoStreamFramer::computePresentationTime(277277) -> 1118904766.460787 [9.376333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8278
+MPEGVideoStreamFramer::computePresentationTime(278278) -> 1118904766.494154 [9.409700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12282
+MPEGVideoStreamFramer::computePresentationTime(282282) -> 1118904766.627620 [9.543166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10280
+MPEGVideoStreamFramer::computePresentationTime(280280) -> 1118904766.560887 [9.476433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11281
+MPEGVideoStreamFramer::computePresentationTime(281281) -> 1118904766.594254 [9.509800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15285
+MPEGVideoStreamFramer::computePresentationTime(285285) -> 1118904766.727720 [9.643266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13283
+MPEGVideoStreamFramer::computePresentationTime(283283) -> 1118904766.660987 [9.576533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14284
+MPEGVideoStreamFramer::computePresentationTime(284284) -> 1118904766.694354 [9.609900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18288
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18288
+MPEGVideoStreamFramer::computePresentationTime(288288) -> 1118904766.827821 [9.743367]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16286
+MPEGVideoStreamFramer::computePresentationTime(286286) -> 1118904766.761087 [9.676633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17287
+MPEGVideoStreamFramer::computePresentationTime(287287) -> 1118904766.794454 [9.710000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21291
+MPEGVideoStreamFramer::computePresentationTime(291291) -> 1118904766.927920 [9.843466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19289
+MPEGVideoStreamFramer::computePresentationTime(289289) -> 1118904766.861187 [9.776733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20290
+MPEGVideoStreamFramer::computePresentationTime(290290) -> 1118904766.894554 [9.810100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24294
+MPEGVideoStreamFramer::computePresentationTime(294294) -> 1118904767.028020 [9.943566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22292
+MPEGVideoStreamFramer::computePresentationTime(292292) -> 1118904766.961287 [9.876833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23293
+MPEGVideoStreamFramer::computePresentationTime(293293) -> 1118904766.994654 [9.910200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27297
+MPEGVideoStreamFramer::computePresentationTime(297297) -> 1118904767.128121 [10.043667]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25295
+MPEGVideoStreamFramer::computePresentationTime(295295) -> 1118904767.061387 [9.976933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26296
+MPEGVideoStreamFramer::computePresentationTime(296296) -> 1118904767.094754 [10.010300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 300
+MPEGVideoStreamFramer::computePresentationTime(300300) -> 1118904767.228220 [10.143766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28298
+MPEGVideoStreamFramer::computePresentationTime(328298) -> 1118904768.161487 [11.077033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29299
+MPEGVideoStreamFramer::computePresentationTime(329299) -> 1118904768.194854 [11.110400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3303
+MPEGVideoStreamFramer::computePresentationTime(303303) -> 1118904767.328320 [10.243866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1301
+MPEGVideoStreamFramer::computePresentationTime(301301) -> 1118904767.261587 [10.177133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2302
+MPEGVideoStreamFramer::computePresentationTime(302302) -> 1118904767.294954 [10.210500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6306
+MPEGVideoStreamFramer::computePresentationTime(306306) -> 1118904767.428421 [10.343967]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4304
+MPEGVideoStreamFramer::computePresentationTime(304304) -> 1118904767.361687 [10.277233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5305
+MPEGVideoStreamFramer::computePresentationTime(305305) -> 1118904767.395054 [10.310600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9309
+MPEGVideoStreamFramer::computePresentationTime(309309) -> 1118904767.528520 [10.444066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7307
+MPEGVideoStreamFramer::computePresentationTime(307307) -> 1118904767.461787 [10.377333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8308
+MPEGVideoStreamFramer::computePresentationTime(308308) -> 1118904767.495154 [10.410700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12312
+MPEGVideoStreamFramer::computePresentationTime(312312) -> 1118904767.628620 [10.544166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10310
+MPEGVideoStreamFramer::computePresentationTime(310310) -> 1118904767.561887 [10.477433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11311
+MPEGVideoStreamFramer::computePresentationTime(311311) -> 1118904767.595254 [10.510800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15315
+MPEGVideoStreamFramer::computePresentationTime(315315) -> 1118904767.728721 [10.644267]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13313
+MPEGVideoStreamFramer::computePresentationTime(313313) -> 1118904767.661987 [10.577533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14314
+MPEGVideoStreamFramer::computePresentationTime(314314) -> 1118904767.695354 [10.610900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18318
+MPEGVideoStreamFramer::computePresentationTime(318318) -> 1118904767.828820 [10.744366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16316
+MPEGVideoStreamFramer::computePresentationTime(316316) -> 1118904767.762087 [10.677633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17317
+MPEGVideoStreamFramer::computePresentationTime(317317) -> 1118904767.795454 [10.711000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21321
+MPEGVideoStreamFramer::computePresentationTime(321321) -> 1118904767.928920 [10.844466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19319
+MPEGVideoStreamFramer::computePresentationTime(319319) -> 1118904767.862187 [10.777733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20320
+MPEGVideoStreamFramer::computePresentationTime(320320) -> 1118904767.895554 [10.811100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24324
+MPEGVideoStreamFramer::computePresentationTime(324324) -> 1118904768.029021 [10.944567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22322
+MPEGVideoStreamFramer::computePresentationTime(322322) -> 1118904767.962287 [10.877833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23323
+MPEGVideoStreamFramer::computePresentationTime(323323) -> 1118904767.995654 [10.911200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27327
+MPEGVideoStreamFramer::computePresentationTime(327327) -> 1118904768.129120 [11.044666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25325
+MPEGVideoStreamFramer::computePresentationTime(325325) -> 1118904768.062387 [10.977933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26326
+MPEGVideoStreamFramer::computePresentationTime(326326) -> 1118904768.095754 [11.011300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 330
+MPEGVideoStreamFramer::computePresentationTime(330330) -> 1118904768.229220 [11.144766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28328
+MPEGVideoStreamFramer::computePresentationTime(358328) -> 1118904769.162487 [12.078033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29329
+MPEGVideoStreamFramer::computePresentationTime(359329) -> 1118904769.195854 [12.111400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3333
+MPEGVideoStreamFramer::computePresentationTime(333333) -> 1118904768.329321 [11.244867]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1331
+MPEGVideoStreamFramer::computePresentationTime(331331) -> 1118904768.262587 [11.178133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2332
+MPEGVideoStreamFramer::computePresentationTime(332332) -> 1118904768.295954 [11.211500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6336
+MPEGVideoStreamFramer::computePresentationTime(336336) -> 1118904768.429420 [11.344966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4334
+MPEGVideoStreamFramer::computePresentationTime(334334) -> 1118904768.362687 [11.278233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5335
+MPEGVideoStreamFramer::computePresentationTime(335335) -> 1118904768.396054 [11.311600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9339
+MPEGVideoStreamFramer::computePresentationTime(339339) -> 1118904768.529520 [11.445066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7337
+MPEGVideoStreamFramer::computePresentationTime(337337) -> 1118904768.462787 [11.378333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8338
+MPEGVideoStreamFramer::computePresentationTime(338338) -> 1118904768.496154 [11.411700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12342
+MPEGVideoStreamFramer::computePresentationTime(342342) -> 1118904768.629621 [11.545167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10340
+MPEGVideoStreamFramer::computePresentationTime(340340) -> 1118904768.562887 [11.478433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11341
+MPEGVideoStreamFramer::computePresentationTime(341341) -> 1118904768.596254 [11.511800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15345
+MPEGVideoStreamFramer::computePresentationTime(345345) -> 1118904768.729720 [11.645266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13343
+MPEGVideoStreamFramer::computePresentationTime(343343) -> 1118904768.662987 [11.578533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14344
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14344
+MPEGVideoStreamFramer::computePresentationTime(344344) -> 1118904768.696354 [11.611900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18348
+MPEGVideoStreamFramer::computePresentationTime(348348) -> 1118904768.829820 [11.745366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16346
+MPEGVideoStreamFramer::computePresentationTime(346346) -> 1118904768.763087 [11.678633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17347
+MPEGVideoStreamFramer::computePresentationTime(347347) -> 1118904768.796454 [11.712000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21351
+MPEGVideoStreamFramer::computePresentationTime(351351) -> 1118904768.929921 [11.845467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19349
+MPEGVideoStreamFramer::computePresentationTime(349349) -> 1118904768.863187 [11.778733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20350
+MPEGVideoStreamFramer::computePresentationTime(350350) -> 1118904768.896554 [11.812100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24354
+MPEGVideoStreamFramer::computePresentationTime(354354) -> 1118904769.030020 [11.945566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22352
+MPEGVideoStreamFramer::computePresentationTime(352352) -> 1118904768.963287 [11.878833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23353
+MPEGVideoStreamFramer::computePresentationTime(353353) -> 1118904768.996654 [11.912200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27357
+MPEGVideoStreamFramer::computePresentationTime(357357) -> 1118904769.130120 [12.045666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25355
+MPEGVideoStreamFramer::computePresentationTime(355355) -> 1118904769.063387 [11.978933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26356
+MPEGVideoStreamFramer::computePresentationTime(356356) -> 1118904769.096754 [12.012300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 360
+MPEGVideoStreamFramer::computePresentationTime(360360) -> 1118904769.230221 [12.145767]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28358
+MPEGVideoStreamFramer::computePresentationTime(388358) -> 1118904770.163487 [13.079033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29359
+MPEGVideoStreamFramer::computePresentationTime(389359) -> 1118904770.196854 [13.112400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3363
+MPEGVideoStreamFramer::computePresentationTime(363363) -> 1118904769.330320 [12.245866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1361
+MPEGVideoStreamFramer::computePresentationTime(361361) -> 1118904769.263587 [12.179133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2362
+MPEGVideoStreamFramer::computePresentationTime(362362) -> 1118904769.296954 [12.212500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6366
+MPEGVideoStreamFramer::computePresentationTime(366366) -> 1118904769.430420 [12.345966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4364
+MPEGVideoStreamFramer::computePresentationTime(364364) -> 1118904769.363687 [12.279233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5365
+MPEGVideoStreamFramer::computePresentationTime(365365) -> 1118904769.397054 [12.312600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9369
+MPEGVideoStreamFramer::computePresentationTime(369369) -> 1118904769.530521 [12.446067]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7367
+MPEGVideoStreamFramer::computePresentationTime(367367) -> 1118904769.463787 [12.379333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8368
+MPEGVideoStreamFramer::computePresentationTime(368368) -> 1118904769.497154 [12.412700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12372
+MPEGVideoStreamFramer::computePresentationTime(372372) -> 1118904769.630620 [12.546166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10370
+MPEGVideoStreamFramer::computePresentationTime(370370) -> 1118904769.563887 [12.479433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11371
+MPEGVideoStreamFramer::computePresentationTime(371371) -> 1118904769.597254 [12.512800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15375
+MPEGVideoStreamFramer::computePresentationTime(375375) -> 1118904769.730720 [12.646266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13373
+MPEGVideoStreamFramer::computePresentationTime(373373) -> 1118904769.663987 [12.579533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14374
+MPEGVideoStreamFramer::computePresentationTime(374374) -> 1118904769.697354 [12.612900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18378
+MPEGVideoStreamFramer::computePresentationTime(378378) -> 1118904769.830821 [12.746367]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16376
+MPEGVideoStreamFramer::computePresentationTime(376376) -> 1118904769.764087 [12.679633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17377
+MPEGVideoStreamFramer::computePresentationTime(377377) -> 1118904769.797454 [12.713000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21381
+MPEGVideoStreamFramer::computePresentationTime(381381) -> 1118904769.930920 [12.846466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19379
+MPEGVideoStreamFramer::computePresentationTime(379379) -> 1118904769.864187 [12.779733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20380
+MPEGVideoStreamFramer::computePresentationTime(380380) -> 1118904769.897554 [12.813100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24384
+MPEGVideoStreamFramer::computePresentationTime(384384) -> 1118904770.031020 [12.946566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22382
+MPEGVideoStreamFramer::computePresentationTime(382382) -> 1118904769.964287 [12.879833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23383
+MPEGVideoStreamFramer::computePresentationTime(383383) -> 1118904769.997654 [12.913200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27387
+MPEGVideoStreamFramer::computePresentationTime(387387) -> 1118904770.131121 [13.046667]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25385
+MPEGVideoStreamFramer::computePresentationTime(385385) -> 1118904770.064387 [12.979933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26386
+MPEGVideoStreamFramer::computePresentationTime(386386) -> 1118904770.097754 [13.013300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 390
+MPEGVideoStreamFramer::computePresentationTime(390390) -> 1118904770.231220 [13.146766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28388
+MPEGVideoStreamFramer::computePresentationTime(418388) -> 1118904771.164487 [14.080033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29389
+MPEGVideoStreamFramer::computePresentationTime(419389) -> 1118904771.197854 [14.113400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3393
+MPEGVideoStreamFramer::computePresentationTime(393393) -> 1118904770.331320 [13.246866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1391
+MPEGVideoStreamFramer::computePresentationTime(391391) -> 1118904770.264587 [13.180133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2392
+MPEGVideoStreamFramer::computePresentationTime(392392) -> 1118904770.297954 [13.213500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6396
+MPEGVideoStreamFramer::computePresentationTime(396396) -> 1118904770.431421 [13.346967]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4394
+MPEGVideoStreamFramer::computePresentationTime(394394) -> 1118904770.364687 [13.280233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5395
+MPEGVideoStreamFramer::computePresentationTime(395395) -> 1118904770.398054 [13.313600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9399
+MPEGVideoStreamFramer::computePresentationTime(399399) -> 1118904770.531520 [13.447066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7397
+MPEGVideoStreamFramer::computePresentationTime(397397) -> 1118904770.464787 [13.380333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8398
+MPEGVideoStreamFramer::computePresentationTime(398398) -> 1118904770.498154 [13.413700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12402
+MPEGVideoStreamFramer::computePresentationTime(402402) -> 1118904770.631620 [13.547166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10400
+MPEGVideoStreamFramer::computePresentationTime(400400) -> 1118904770.564887 [13.480433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11401
+MPEGVideoStreamFramer::computePresentationTime(401401) -> 1118904770.598254 [13.513800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15405
+MPEGVideoStreamFramer::computePresentationTime(405405) -> 1118904770.731721 [13.647267]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13403
+MPEGVideoStreamFramer::computePresentationTime(403403) -> 1118904770.664987 [13.580533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14404
+MPEGVideoStreamFramer::computePresentationTime(404404) -> 1118904770.698354 [13.613900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18408
+MPEGVideoStreamFramer::computePresentationTime(408408) -> 1118904770.831820 [13.747366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16406
+MPEGVideoStreamFramer::computePresentationTime(406406) -> 1118904770.765087 [13.680633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17407
+MPEGVideoStreamFramer::computePresentationTime(407407) -> 1118904770.798454 [13.714000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21411
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21411
+MPEGVideoStreamFramer::computePresentationTime(411411) -> 1118904770.931920 [13.847466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19409
+MPEGVideoStreamFramer::computePresentationTime(409409) -> 1118904770.865187 [13.780733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20410
+MPEGVideoStreamFramer::computePresentationTime(410410) -> 1118904770.898554 [13.814100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24414
+MPEGVideoStreamFramer::computePresentationTime(414414) -> 1118904771.032021 [13.947567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22412
+MPEGVideoStreamFramer::computePresentationTime(412412) -> 1118904770.965287 [13.880833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23413
+MPEGVideoStreamFramer::computePresentationTime(413413) -> 1118904770.998654 [13.914200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27417
+MPEGVideoStreamFramer::computePresentationTime(417417) -> 1118904771.132120 [14.047666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25415
+MPEGVideoStreamFramer::computePresentationTime(415415) -> 1118904771.065387 [13.980933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26416
+MPEGVideoStreamFramer::computePresentationTime(416416) -> 1118904771.098754 [14.014300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 420
+MPEGVideoStreamFramer::computePresentationTime(420420) -> 1118904771.232220 [14.147766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28418
+MPEGVideoStreamFramer::computePresentationTime(448418) -> 1118904772.165487 [15.081033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29419
+MPEGVideoStreamFramer::computePresentationTime(449419) -> 1118904772.198854 [15.114400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3423
+MPEGVideoStreamFramer::computePresentationTime(423423) -> 1118904771.332321 [14.247867]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1421
+MPEGVideoStreamFramer::computePresentationTime(421421) -> 1118904771.265587 [14.181133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2422
+MPEGVideoStreamFramer::computePresentationTime(422422) -> 1118904771.298954 [14.214500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6426
+MPEGVideoStreamFramer::computePresentationTime(426426) -> 1118904771.432420 [14.347966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4424
+MPEGVideoStreamFramer::computePresentationTime(424424) -> 1118904771.365687 [14.281233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5425
+MPEGVideoStreamFramer::computePresentationTime(425425) -> 1118904771.399054 [14.314600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9429
+MPEGVideoStreamFramer::computePresentationTime(429429) -> 1118904771.532520 [14.448066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7427
+MPEGVideoStreamFramer::computePresentationTime(427427) -> 1118904771.465787 [14.381333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8428
+MPEGVideoStreamFramer::computePresentationTime(428428) -> 1118904771.499154 [14.414700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12432
+MPEGVideoStreamFramer::computePresentationTime(432432) -> 1118904771.632621 [14.548167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10430
+MPEGVideoStreamFramer::computePresentationTime(430430) -> 1118904771.565887 [14.481433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11431
+MPEGVideoStreamFramer::computePresentationTime(431431) -> 1118904771.599254 [14.514800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15435
+MPEGVideoStreamFramer::computePresentationTime(435435) -> 1118904771.732720 [14.648266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13433
+MPEGVideoStreamFramer::computePresentationTime(433433) -> 1118904771.665987 [14.581533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14434
+MPEGVideoStreamFramer::computePresentationTime(434434) -> 1118904771.699354 [14.614900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18438
+MPEGVideoStreamFramer::computePresentationTime(438438) -> 1118904771.832820 [14.748366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16436
+MPEGVideoStreamFramer::computePresentationTime(436436) -> 1118904771.766087 [14.681633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17437
+MPEGVideoStreamFramer::computePresentationTime(437437) -> 1118904771.799454 [14.715000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21441
+MPEGVideoStreamFramer::computePresentationTime(441441) -> 1118904771.932921 [14.848467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19439
+MPEGVideoStreamFramer::computePresentationTime(439439) -> 1118904771.866187 [14.781733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20440
+MPEGVideoStreamFramer::computePresentationTime(440440) -> 1118904771.899554 [14.815100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24444
+MPEGVideoStreamFramer::computePresentationTime(444444) -> 1118904772.033021 [14.948567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22442
+MPEGVideoStreamFramer::computePresentationTime(442442) -> 1118904771.966287 [14.881833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23443
+MPEGVideoStreamFramer::computePresentationTime(443443) -> 1118904771.999654 [14.915200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27447
+MPEGVideoStreamFramer::computePresentationTime(447447) -> 1118904772.133120 [15.048666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25445
+MPEGVideoStreamFramer::computePresentationTime(445445) -> 1118904772.066387 [14.981933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26446
+MPEGVideoStreamFramer::computePresentationTime(446446) -> 1118904772.099754 [15.015300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 450
+MPEGVideoStreamFramer::computePresentationTime(450450) -> 1118904772.233221 [15.148767]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28448
+MPEGVideoStreamFramer::computePresentationTime(478448) -> 1118904773.166487 [16.082033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29449
+MPEGVideoStreamFramer::computePresentationTime(479449) -> 1118904773.199854 [16.115400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3453
+MPEGVideoStreamFramer::computePresentationTime(453453) -> 1118904772.333320 [15.248866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1451
+MPEGVideoStreamFramer::computePresentationTime(451451) -> 1118904772.266587 [15.182133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2452
+MPEGVideoStreamFramer::computePresentationTime(452452) -> 1118904772.299954 [15.215500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6456
+MPEGVideoStreamFramer::computePresentationTime(456456) -> 1118904772.433420 [15.348966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4454
+MPEGVideoStreamFramer::computePresentationTime(454454) -> 1118904772.366687 [15.282233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5455
+MPEGVideoStreamFramer::computePresentationTime(455455) -> 1118904772.400054 [15.315600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9459
+MPEGVideoStreamFramer::computePresentationTime(459459) -> 1118904772.533521 [15.449067]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7457
+MPEGVideoStreamFramer::computePresentationTime(457457) -> 1118904772.466787 [15.382333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8458
+MPEGVideoStreamFramer::computePresentationTime(458458) -> 1118904772.500154 [15.415700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12462
+MPEGVideoStreamFramer::computePresentationTime(462462) -> 1118904772.633621 [15.549167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10460
+MPEGVideoStreamFramer::computePresentationTime(460460) -> 1118904772.566887 [15.482433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11461
+MPEGVideoStreamFramer::computePresentationTime(461461) -> 1118904772.600254 [15.515800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15465
+MPEGVideoStreamFramer::computePresentationTime(465465) -> 1118904772.733720 [15.649266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13463
+MPEGVideoStreamFramer::computePresentationTime(463463) -> 1118904772.666987 [15.582533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14464
+MPEGVideoStreamFramer::computePresentationTime(464464) -> 1118904772.700354 [15.615900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18468
+MPEGVideoStreamFramer::computePresentationTime(468468) -> 1118904772.833821 [15.749367]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16466
+MPEGVideoStreamFramer::computePresentationTime(466466) -> 1118904772.767087 [15.682633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17467
+MPEGVideoStreamFramer::computePresentationTime(467467) -> 1118904772.800454 [15.716000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21471
+MPEGVideoStreamFramer::computePresentationTime(471471) -> 1118904772.933921 [15.849467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19469
+MPEGVideoStreamFramer::computePresentationTime(469469) -> 1118904772.867187 [15.782733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20470
+MPEGVideoStreamFramer::computePresentationTime(470470) -> 1118904772.900554 [15.816100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24474
+MPEGVideoStreamFramer::computePresentationTime(474474) -> 1118904773.034020 [15.949566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22472
+MPEGVideoStreamFramer::computePresentationTime(472472) -> 1118904772.967287 [15.882833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23473
+MPEGVideoStreamFramer::computePresentationTime(473473) -> 1118904773.000654 [15.916200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27477
+MPEGVideoStreamFramer::computePresentationTime(477477) -> 1118904773.134121 [16.049667]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25475
+MPEGVideoStreamFramer::computePresentationTime(475475) -> 1118904773.067387 [15.982933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26476
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26476
+MPEGVideoStreamFramer::computePresentationTime(476476) -> 1118904773.100754 [16.016300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 480
+MPEGVideoStreamFramer::computePresentationTime(480480) -> 1118904773.234220 [16.149766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28478
+MPEGVideoStreamFramer::computePresentationTime(508478) -> 1118904774.167487 [17.083033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29479
+MPEGVideoStreamFramer::computePresentationTime(509479) -> 1118904774.200854 [17.116400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3483
+MPEGVideoStreamFramer::computePresentationTime(483483) -> 1118904773.334320 [16.249866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1481
+MPEGVideoStreamFramer::computePresentationTime(481481) -> 1118904773.267587 [16.183133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2482
+MPEGVideoStreamFramer::computePresentationTime(482482) -> 1118904773.300954 [16.216500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6486
+MPEGVideoStreamFramer::computePresentationTime(486486) -> 1118904773.434421 [16.349967]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4484
+MPEGVideoStreamFramer::computePresentationTime(484484) -> 1118904773.367687 [16.283233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5485
+MPEGVideoStreamFramer::computePresentationTime(485485) -> 1118904773.401054 [16.316600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9489
+MPEGVideoStreamFramer::computePresentationTime(489489) -> 1118904773.534520 [16.450066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7487
+MPEGVideoStreamFramer::computePresentationTime(487487) -> 1118904773.467787 [16.383333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8488
+MPEGVideoStreamFramer::computePresentationTime(488488) -> 1118904773.501154 [16.416700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12492
+MPEGVideoStreamFramer::computePresentationTime(492492) -> 1118904773.634620 [16.550166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10490
+MPEGVideoStreamFramer::computePresentationTime(490490) -> 1118904773.567887 [16.483433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11491
+MPEGVideoStreamFramer::computePresentationTime(491491) -> 1118904773.601254 [16.516800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15495
+MPEGVideoStreamFramer::computePresentationTime(495495) -> 1118904773.734721 [16.650267]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13493
+MPEGVideoStreamFramer::computePresentationTime(493493) -> 1118904773.667987 [16.583533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14494
+MPEGVideoStreamFramer::computePresentationTime(494494) -> 1118904773.701354 [16.616900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18498
+MPEGVideoStreamFramer::computePresentationTime(498498) -> 1118904773.834820 [16.750366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16496
+MPEGVideoStreamFramer::computePresentationTime(496496) -> 1118904773.768087 [16.683633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17497
+MPEGVideoStreamFramer::computePresentationTime(497497) -> 1118904773.801454 [16.717000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21501
+MPEGVideoStreamFramer::computePresentationTime(501501) -> 1118904773.934920 [16.850466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19499
+MPEGVideoStreamFramer::computePresentationTime(499499) -> 1118904773.868187 [16.783733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20500
+MPEGVideoStreamFramer::computePresentationTime(500500) -> 1118904773.901554 [16.817100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24504
+MPEGVideoStreamFramer::computePresentationTime(504504) -> 1118904774.035021 [16.950567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22502
+MPEGVideoStreamFramer::computePresentationTime(502502) -> 1118904773.968287 [16.883833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23503
+MPEGVideoStreamFramer::computePresentationTime(503503) -> 1118904774.001654 [16.917200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27507
+MPEGVideoStreamFramer::computePresentationTime(507507) -> 1118904774.135120 [17.050666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25505
+MPEGVideoStreamFramer::computePresentationTime(505505) -> 1118904774.068387 [16.983933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26506
+MPEGVideoStreamFramer::computePresentationTime(506506) -> 1118904774.101754 [17.017300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 510
+MPEGVideoStreamFramer::computePresentationTime(510510) -> 1118904774.235220 [17.150766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28508
+MPEGVideoStreamFramer::computePresentationTime(538508) -> 1118904775.168487 [18.084033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29509
+MPEGVideoStreamFramer::computePresentationTime(539509) -> 1118904775.201854 [18.117400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3513
+MPEGVideoStreamFramer::computePresentationTime(513513) -> 1118904774.335321 [17.250867]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1511
+MPEGVideoStreamFramer::computePresentationTime(511511) -> 1118904774.268587 [17.184133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2512
+MPEGVideoStreamFramer::computePresentationTime(512512) -> 1118904774.301954 [17.217500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6516
+MPEGVideoStreamFramer::computePresentationTime(516516) -> 1118904774.435420 [17.350966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4514
+MPEGVideoStreamFramer::computePresentationTime(514514) -> 1118904774.368687 [17.284233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5515
+MPEGVideoStreamFramer::computePresentationTime(515515) -> 1118904774.402054 [17.317600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9519
+MPEGVideoStreamFramer::computePresentationTime(519519) -> 1118904774.535520 [17.451066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7517
+MPEGVideoStreamFramer::computePresentationTime(517517) -> 1118904774.468787 [17.384333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8518
+MPEGVideoStreamFramer::computePresentationTime(518518) -> 1118904774.502154 [17.417700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12522
+MPEGVideoStreamFramer::computePresentationTime(522522) -> 1118904774.635621 [17.551167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10520
+MPEGVideoStreamFramer::computePresentationTime(520520) -> 1118904774.568887 [17.484433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11521
+MPEGVideoStreamFramer::computePresentationTime(521521) -> 1118904774.602254 [17.517800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15525
+MPEGVideoStreamFramer::computePresentationTime(525525) -> 1118904774.735720 [17.651266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13523
+MPEGVideoStreamFramer::computePresentationTime(523523) -> 1118904774.668987 [17.584533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14524
+MPEGVideoStreamFramer::computePresentationTime(524524) -> 1118904774.702354 [17.617900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18528
+MPEGVideoStreamFramer::computePresentationTime(528528) -> 1118904774.835820 [17.751366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16526
+MPEGVideoStreamFramer::computePresentationTime(526526) -> 1118904774.769087 [17.684633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17527
+MPEGVideoStreamFramer::computePresentationTime(527527) -> 1118904774.802454 [17.718000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21531
+MPEGVideoStreamFramer::computePresentationTime(531531) -> 1118904774.935921 [17.851467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19529
+MPEGVideoStreamFramer::computePresentationTime(529529) -> 1118904774.869187 [17.784733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20530
+MPEGVideoStreamFramer::computePresentationTime(530530) -> 1118904774.902554 [17.818100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24534
+MPEGVideoStreamFramer::computePresentationTime(534534) -> 1118904775.036020 [17.951566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22532
+MPEGVideoStreamFramer::computePresentationTime(532532) -> 1118904774.969287 [17.884833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23533
+MPEGVideoStreamFramer::computePresentationTime(533533) -> 1118904775.002654 [17.918200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27537
+MPEGVideoStreamFramer::computePresentationTime(537537) -> 1118904775.136120 [18.051666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25535
+MPEGVideoStreamFramer::computePresentationTime(535535) -> 1118904775.069387 [17.984933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26536
+MPEGVideoStreamFramer::computePresentationTime(536536) -> 1118904775.102754 [18.018300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 540
+MPEGVideoStreamFramer::computePresentationTime(540540) -> 1118904775.236221 [18.151767]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28538
+MPEGVideoStreamFramer::computePresentationTime(568538) -> 1118904776.169487 [19.085033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29539
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29539
+MPEGVideoStreamFramer::computePresentationTime(569539) -> 1118904776.202854 [19.118400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3543
+MPEGVideoStreamFramer::computePresentationTime(543543) -> 1118904775.336320 [18.251866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1541
+MPEGVideoStreamFramer::computePresentationTime(541541) -> 1118904775.269587 [18.185133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2542
+MPEGVideoStreamFramer::computePresentationTime(542542) -> 1118904775.302954 [18.218500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6546
+MPEGVideoStreamFramer::computePresentationTime(546546) -> 1118904775.436420 [18.351966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4544
+MPEGVideoStreamFramer::computePresentationTime(544544) -> 1118904775.369687 [18.285233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5545
+MPEGVideoStreamFramer::computePresentationTime(545545) -> 1118904775.403054 [18.318600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9549
+MPEGVideoStreamFramer::computePresentationTime(549549) -> 1118904775.536521 [18.452067]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7547
+MPEGVideoStreamFramer::computePresentationTime(547547) -> 1118904775.469787 [18.385333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8548
+MPEGVideoStreamFramer::computePresentationTime(548548) -> 1118904775.503154 [18.418700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12552
+MPEGVideoStreamFramer::computePresentationTime(552552) -> 1118904775.636620 [18.552166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10550
+MPEGVideoStreamFramer::computePresentationTime(550550) -> 1118904775.569887 [18.485433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11551
+MPEGVideoStreamFramer::computePresentationTime(551551) -> 1118904775.603254 [18.518800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15555
+MPEGVideoStreamFramer::computePresentationTime(555555) -> 1118904775.736720 [18.652266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13553
+MPEGVideoStreamFramer::computePresentationTime(553553) -> 1118904775.669987 [18.585533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14554
+MPEGVideoStreamFramer::computePresentationTime(554554) -> 1118904775.703354 [18.618900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18558
+MPEGVideoStreamFramer::computePresentationTime(558558) -> 1118904775.836821 [18.752367]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16556
+MPEGVideoStreamFramer::computePresentationTime(556556) -> 1118904775.770087 [18.685633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17557
+MPEGVideoStreamFramer::computePresentationTime(557557) -> 1118904775.803454 [18.719000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21561
+MPEGVideoStreamFramer::computePresentationTime(561561) -> 1118904775.936920 [18.852466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19559
+MPEGVideoStreamFramer::computePresentationTime(559559) -> 1118904775.870187 [18.785733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20560
+MPEGVideoStreamFramer::computePresentationTime(560560) -> 1118904775.903554 [18.819100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24564
+MPEGVideoStreamFramer::computePresentationTime(564564) -> 1118904776.037020 [18.952566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22562
+MPEGVideoStreamFramer::computePresentationTime(562562) -> 1118904775.970287 [18.885833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23563
+MPEGVideoStreamFramer::computePresentationTime(563563) -> 1118904776.003654 [18.919200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27567
+MPEGVideoStreamFramer::computePresentationTime(567567) -> 1118904776.137121 [19.052667]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25565
+MPEGVideoStreamFramer::computePresentationTime(565565) -> 1118904776.070387 [18.985933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26566
+MPEGVideoStreamFramer::computePresentationTime(566566) -> 1118904776.103754 [19.019300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 570
+MPEGVideoStreamFramer::computePresentationTime(570570) -> 1118904776.237220 [19.152766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28568
+MPEGVideoStreamFramer::computePresentationTime(598568) -> 1118904777.170487 [20.086033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29569
+MPEGVideoStreamFramer::computePresentationTime(599569) -> 1118904777.203854 [20.119400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3573
+MPEGVideoStreamFramer::computePresentationTime(573573) -> 1118904776.337320 [19.252866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1571
+MPEGVideoStreamFramer::computePresentationTime(571571) -> 1118904776.270587 [19.186133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2572
+MPEGVideoStreamFramer::computePresentationTime(572572) -> 1118904776.303954 [19.219500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6576
+MPEGVideoStreamFramer::computePresentationTime(576576) -> 1118904776.437421 [19.352967]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4574
+MPEGVideoStreamFramer::computePresentationTime(574574) -> 1118904776.370687 [19.286233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5575
+MPEGVideoStreamFramer::computePresentationTime(575575) -> 1118904776.404054 [19.319600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9579
+MPEGVideoStreamFramer::computePresentationTime(579579) -> 1118904776.537520 [19.453066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7577
+MPEGVideoStreamFramer::computePresentationTime(577577) -> 1118904776.470787 [19.386333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8578
+MPEGVideoStreamFramer::computePresentationTime(578578) -> 1118904776.504154 [19.419700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12582
+MPEGVideoStreamFramer::computePresentationTime(582582) -> 1118904776.637620 [19.553166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10580
+MPEGVideoStreamFramer::computePresentationTime(580580) -> 1118904776.570887 [19.486433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11581
+MPEGVideoStreamFramer::computePresentationTime(581581) -> 1118904776.604254 [19.519800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15585
+MPEGVideoStreamFramer::computePresentationTime(585585) -> 1118904776.737721 [19.653267]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13583
+MPEGVideoStreamFramer::computePresentationTime(583583) -> 1118904776.670987 [19.586533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14584
+MPEGVideoStreamFramer::computePresentationTime(584584) -> 1118904776.704354 [19.619900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18588
+MPEGVideoStreamFramer::computePresentationTime(588588) -> 1118904776.837820 [19.753366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16586
+MPEGVideoStreamFramer::computePresentationTime(586586) -> 1118904776.771087 [19.686633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17587
+MPEGVideoStreamFramer::computePresentationTime(587587) -> 1118904776.804454 [19.720000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21591
+MPEGVideoStreamFramer::computePresentationTime(591591) -> 1118904776.937920 [19.853466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19589
+MPEGVideoStreamFramer::computePresentationTime(589589) -> 1118904776.871187 [19.786733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20590
+MPEGVideoStreamFramer::computePresentationTime(590590) -> 1118904776.904554 [19.820100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24594
+MPEGVideoStreamFramer::computePresentationTime(594594) -> 1118904777.038021 [19.953567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22592
+MPEGVideoStreamFramer::computePresentationTime(592592) -> 1118904776.971287 [19.886833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23593
+MPEGVideoStreamFramer::computePresentationTime(593593) -> 1118904777.004654 [19.920200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27597
+MPEGVideoStreamFramer::computePresentationTime(597597) -> 1118904777.138120 [20.053666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25595
+MPEGVideoStreamFramer::computePresentationTime(595595) -> 1118904777.071387 [19.986933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26596
+MPEGVideoStreamFramer::computePresentationTime(596596) -> 1118904777.104754 [20.020300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 600
+MPEGVideoStreamFramer::computePresentationTime(600600) -> 1118904777.238220 [20.153766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28598
+MPEGVideoStreamFramer::computePresentationTime(628598) -> 1118904778.171487 [21.087033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29599
+MPEGVideoStreamFramer::computePresentationTime(629599) -> 1118904778.204854 [21.120400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3603
+MPEGVideoStreamFramer::computePresentationTime(603603) -> 1118904777.338321 [20.253867]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1601
+MPEGVideoStreamFramer::computePresentationTime(601601) -> 1118904777.271587 [20.187133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2602
+MPEGVideoStreamFramer::computePresentationTime(602602) -> 1118904777.304954 [20.220500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6606
+MPEGVideoStreamFramer::computePresentationTime(606606) -> 1118904777.438420 [20.353966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4604
+MPEGVideoStreamFramer::computePresentationTime(604604) -> 1118904777.371687 [20.287233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5605
+MPEGVideoStreamFramer::computePresentationTime(605605) -> 1118904777.405054 [20.320600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9609
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9609
+MPEGVideoStreamFramer::computePresentationTime(609609) -> 1118904777.538520 [20.454066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7607
+MPEGVideoStreamFramer::computePresentationTime(607607) -> 1118904777.471787 [20.387333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8608
+MPEGVideoStreamFramer::computePresentationTime(608608) -> 1118904777.505154 [20.420700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12612
+MPEGVideoStreamFramer::computePresentationTime(612612) -> 1118904777.638621 [20.554167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10610
+MPEGVideoStreamFramer::computePresentationTime(610610) -> 1118904777.571887 [20.487433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11611
+MPEGVideoStreamFramer::computePresentationTime(611611) -> 1118904777.605254 [20.520800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15615
+MPEGVideoStreamFramer::computePresentationTime(615615) -> 1118904777.738720 [20.654266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13613
+MPEGVideoStreamFramer::computePresentationTime(613613) -> 1118904777.671987 [20.587533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14614
+MPEGVideoStreamFramer::computePresentationTime(614614) -> 1118904777.705354 [20.620900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18618
+MPEGVideoStreamFramer::computePresentationTime(618618) -> 1118904777.838820 [20.754366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16616
+MPEGVideoStreamFramer::computePresentationTime(616616) -> 1118904777.772087 [20.687633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17617
+MPEGVideoStreamFramer::computePresentationTime(617617) -> 1118904777.805454 [20.721000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21621
+MPEGVideoStreamFramer::computePresentationTime(621621) -> 1118904777.938921 [20.854467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19619
+MPEGVideoStreamFramer::computePresentationTime(619619) -> 1118904777.872187 [20.787733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20620
+MPEGVideoStreamFramer::computePresentationTime(620620) -> 1118904777.905554 [20.821100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24624
+MPEGVideoStreamFramer::computePresentationTime(624624) -> 1118904778.039020 [20.954566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22622
+MPEGVideoStreamFramer::computePresentationTime(622622) -> 1118904777.972287 [20.887833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23623
+MPEGVideoStreamFramer::computePresentationTime(623623) -> 1118904778.005654 [20.921200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27627
+MPEGVideoStreamFramer::computePresentationTime(627627) -> 1118904778.139120 [21.054666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25625
+MPEGVideoStreamFramer::computePresentationTime(625625) -> 1118904778.072387 [20.987933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26626
+MPEGVideoStreamFramer::computePresentationTime(626626) -> 1118904778.105754 [21.021300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 630
+MPEGVideoStreamFramer::computePresentationTime(630630) -> 1118904778.239221 [21.154767]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28628
+MPEGVideoStreamFramer::computePresentationTime(658628) -> 1118904779.172487 [22.088033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29629
+MPEGVideoStreamFramer::computePresentationTime(659629) -> 1118904779.205854 [22.121400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3633
+MPEGVideoStreamFramer::computePresentationTime(633633) -> 1118904778.339320 [21.254866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1631
+MPEGVideoStreamFramer::computePresentationTime(631631) -> 1118904778.272587 [21.188133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2632
+MPEGVideoStreamFramer::computePresentationTime(632632) -> 1118904778.305954 [21.221500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6636
+MPEGVideoStreamFramer::computePresentationTime(636636) -> 1118904778.439420 [21.354966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4634
+MPEGVideoStreamFramer::computePresentationTime(634634) -> 1118904778.372687 [21.288233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5635
+MPEGVideoStreamFramer::computePresentationTime(635635) -> 1118904778.406054 [21.321600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9639
+MPEGVideoStreamFramer::computePresentationTime(639639) -> 1118904778.539521 [21.455067]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7637
+MPEGVideoStreamFramer::computePresentationTime(637637) -> 1118904778.472787 [21.388333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8638
+MPEGVideoStreamFramer::computePresentationTime(638638) -> 1118904778.506154 [21.421700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12642
+MPEGVideoStreamFramer::computePresentationTime(642642) -> 1118904778.639620 [21.555166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10640
+MPEGVideoStreamFramer::computePresentationTime(640640) -> 1118904778.572887 [21.488433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11641
+MPEGVideoStreamFramer::computePresentationTime(641641) -> 1118904778.606254 [21.521800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15645
+MPEGVideoStreamFramer::computePresentationTime(645645) -> 1118904778.739720 [21.655266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13643
+MPEGVideoStreamFramer::computePresentationTime(643643) -> 1118904778.672987 [21.588533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14644
+MPEGVideoStreamFramer::computePresentationTime(644644) -> 1118904778.706354 [21.621900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18648
+MPEGVideoStreamFramer::computePresentationTime(648648) -> 1118904778.839821 [21.755367]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16646
+MPEGVideoStreamFramer::computePresentationTime(646646) -> 1118904778.773087 [21.688633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17647
+MPEGVideoStreamFramer::computePresentationTime(647647) -> 1118904778.806454 [21.722000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21651
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21651
+MPEGVideoStreamFramer::computePresentationTime(651651) -> 1118904778.939920 [21.855466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19649
+MPEGVideoStreamFramer::computePresentationTime(649649) -> 1118904778.873187 [21.788733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20650
+MPEGVideoStreamFramer::computePresentationTime(650650) -> 1118904778.906554 [21.822100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24654
+MPEGVideoStreamFramer::computePresentationTime(654654) -> 1118904779.040020 [21.955566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22652
+MPEGVideoStreamFramer::computePresentationTime(652652) -> 1118904778.973287 [21.888833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23653
+MPEGVideoStreamFramer::computePresentationTime(653653) -> 1118904779.006654 [21.922200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27657
+MPEGVideoStreamFramer::computePresentationTime(657657) -> 1118904779.140121 [22.055667]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25655
+MPEGVideoStreamFramer::computePresentationTime(655655) -> 1118904779.073387 [21.988933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26656
+MPEGVideoStreamFramer::computePresentationTime(656656) -> 1118904779.106754 [22.022300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 660
+MPEGVideoStreamFramer::computePresentationTime(660660) -> 1118904779.240220 [22.155766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28658
+MPEGVideoStreamFramer::computePresentationTime(688658) -> 1118904780.173487 [23.089033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29659
+MPEGVideoStreamFramer::computePresentationTime(689659) -> 1118904780.206854 [23.122400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3663
+MPEGVideoStreamFramer::computePresentationTime(663663) -> 1118904779.340320 [22.255866]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1661
+MPEGVideoStreamFramer::computePresentationTime(661661) -> 1118904779.273587 [22.189133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2662
+MPEGVideoStreamFramer::computePresentationTime(662662) -> 1118904779.306954 [22.222500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6666
+MPEGVideoStreamFramer::computePresentationTime(666666) -> 1118904779.440421 [22.355967]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4664
+MPEGVideoStreamFramer::computePresentationTime(664664) -> 1118904779.373687 [22.289233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5665
+MPEGVideoStreamFramer::computePresentationTime(665665) -> 1118904779.407054 [22.322600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9669
+MPEGVideoStreamFramer::computePresentationTime(669669) -> 1118904779.540520 [22.456066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7667
+MPEGVideoStreamFramer::computePresentationTime(667667) -> 1118904779.473787 [22.389333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8668
+MPEGVideoStreamFramer::computePresentationTime(668668) -> 1118904779.507154 [22.422700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12672
+MPEGVideoStreamFramer::computePresentationTime(672672) -> 1118904779.640620 [22.556166]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10670
+MPEGVideoStreamFramer::computePresentationTime(670670) -> 1118904779.573887 [22.489433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11671
+MPEGVideoStreamFramer::computePresentationTime(671671) -> 1118904779.607254 [22.522800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15675
+MPEGVideoStreamFramer::computePresentationTime(675675) -> 1118904779.740721 [22.656267]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13673
+MPEGVideoStreamFramer::computePresentationTime(673673) -> 1118904779.673987 [22.589533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14674
+MPEGVideoStreamFramer::computePresentationTime(674674) -> 1118904779.707354 [22.622900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18678
+MPEGVideoStreamFramer::computePresentationTime(678678) -> 1118904779.840820 [22.756366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16676
+MPEGVideoStreamFramer::computePresentationTime(676676) -> 1118904779.774087 [22.689633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17677
+MPEGVideoStreamFramer::computePresentationTime(677677) -> 1118904779.807454 [22.723000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21681
+MPEGVideoStreamFramer::computePresentationTime(681681) -> 1118904779.940920 [22.856466]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19679
+MPEGVideoStreamFramer::computePresentationTime(679679) -> 1118904779.874187 [22.789733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20680
+MPEGVideoStreamFramer::computePresentationTime(680680) -> 1118904779.907554 [22.823100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24684
+MPEGVideoStreamFramer::computePresentationTime(684684) -> 1118904780.041021 [22.956567]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22682
+MPEGVideoStreamFramer::computePresentationTime(682682) -> 1118904779.974287 [22.889833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23683
+MPEGVideoStreamFramer::computePresentationTime(683683) -> 1118904780.007654 [22.923200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27687
+MPEGVideoStreamFramer::computePresentationTime(687687) -> 1118904780.141120 [23.056666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25685
+MPEGVideoStreamFramer::computePresentationTime(685685) -> 1118904780.074387 [22.989933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26686
+MPEGVideoStreamFramer::computePresentationTime(686686) -> 1118904780.107754 [23.023300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 1, vop_time_increment: 690
+MPEGVideoStreamFramer::computePresentationTime(690690) -> 1118904780.241220 [23.156766]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28688
+MPEGVideoStreamFramer::computePresentationTime(718688) -> 1118904781.174487 [24.090033]
+fDurationInMicroseconds: 74273 ((27998*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 29689
+MPEGVideoStreamFramer::computePresentationTime(719689) -> 1118904781.207854 [24.123400]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 3693
+MPEGVideoStreamFramer::computePresentationTime(693693) -> 1118904780.341321 [23.256867]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 1691
+MPEGVideoStreamFramer::computePresentationTime(691691) -> 1118904780.274587 [23.190133]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 2692
+MPEGVideoStreamFramer::computePresentationTime(692692) -> 1118904780.307954 [23.223500]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 6696
+MPEGVideoStreamFramer::computePresentationTime(696696) -> 1118904780.441420 [23.356966]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 4694
+MPEGVideoStreamFramer::computePresentationTime(694694) -> 1118904780.374687 [23.290233]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 5695
+MPEGVideoStreamFramer::computePresentationTime(695695) -> 1118904780.408054 [23.323600]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 9699
+MPEGVideoStreamFramer::computePresentationTime(699699) -> 1118904780.541520 [23.457066]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 7697
+MPEGVideoStreamFramer::computePresentationTime(697697) -> 1118904780.474787 [23.390333]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 8698
+MPEGVideoStreamFramer::computePresentationTime(698698) -> 1118904780.508154 [23.423700]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 12702
+MPEGVideoStreamFramer::computePresentationTime(702702) -> 1118904780.641621 [23.557167]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 10700
+MPEGVideoStreamFramer::computePresentationTime(700700) -> 1118904780.574887 [23.490433]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 11701
+MPEGVideoStreamFramer::computePresentationTime(701701) -> 1118904780.608254 [23.523800]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 15705
+MPEGVideoStreamFramer::computePresentationTime(705705) -> 1118904780.741720 [23.657266]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 13703
+MPEGVideoStreamFramer::computePresentationTime(703703) -> 1118904780.674987 [23.590533]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 14704
+MPEGVideoStreamFramer::computePresentationTime(704704) -> 1118904780.708354 [23.623900]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 18708
+MPEGVideoStreamFramer::computePresentationTime(708708) -> 1118904780.841820 [23.757366]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 16706
+MPEGVideoStreamFramer::computePresentationTime(706706) -> 1118904780.775087 [23.690633]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 17707
+MPEGVideoStreamFramer::computePresentationTime(707707) -> 1118904780.808454 [23.724000]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 21711
+MPEGVideoStreamFramer::computePresentationTime(711711) -> 1118904780.941921 [23.857467]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 19709
+MPEGVideoStreamFramer::computePresentationTime(709709) -> 1118904780.875187 [23.790733]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 20710
+MPEGVideoStreamFramer::computePresentationTime(710710) -> 1118904780.908554 [23.824100]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 24714
+MPEGVideoStreamFramer::computePresentationTime(714714) -> 1118904781.042020 [23.957566]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 22712
+MPEGVideoStreamFramer::computePresentationTime(712712) -> 1118904780.975287 [23.890833]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 23713
+MPEGVideoStreamFramer::computePresentationTime(713713) -> 1118904781.008654 [23.924200]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 1(P), modulo_time_base: 0, vop_time_increment: 27717
+MPEGVideoStreamFramer::computePresentationTime(717717) -> 1118904781.142120 [24.057666]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25715
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 25715
+MPEGVideoStreamFramer::computePresentationTime(715715) -> 1118904781.075387 [23.990933]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 26716
+MPEGVideoStreamFramer::computePresentationTime(716716) -> 1118904781.108754 [24.024300]
+fDurationInMicroseconds: 33366 ((1001*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 0(I), modulo_time_base: 1, vop_time_increment: 720
+MPEGVideoStreamFramer::computePresentationTime(720720) -> 1118904781.242221 [24.157767]
+fDurationInMicroseconds: 133466 ((4004*1000000)/30000.000000)
+#parsing VideoObjectPlane
+vop_coding_type: 2(B), modulo_time_base: 0, vop_time_increment: 28718
+MPEG4VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)

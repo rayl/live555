@@ -155,6 +155,7 @@ void MPEGVideoStreamFramer::continueReadProcessing() {
     fNumTruncatedBytes = fParser->numTruncatedBytes();
     
     // "fPresentationTime" should have already been computed.
+
     // Compute "fDurationInMicroseconds" now:
     fDurationInMicroseconds
       = (fFrameRate == 0.0 || ((int)fPictureCount) < 0) ? 0

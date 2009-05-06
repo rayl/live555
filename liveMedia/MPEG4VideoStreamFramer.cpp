@@ -592,13 +592,13 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
 	newTotalTicks += vop_time_increment_resolution;
       }
       fPrevNewTotalTicks = newTotalTicks;
-      int pictureCountDelta = newTotalTicks - fTotalTicksSinceLastTimeCode;
-      if (pictureCountDelta <= 0) pictureCountDelta = fPrevPictureCountDelta;
-          // ensures that the picture count always increases
-      usingSource()->fPictureCount += pictureCountDelta;
-      fPrevPictureCountDelta = pictureCountDelta;
-      fTotalTicksSinceLastTimeCode = newTotalTicks;
       if (vop_coding_type != 2/*B*/) {
+	int pictureCountDelta = newTotalTicks - fTotalTicksSinceLastTimeCode;
+	if (pictureCountDelta <= 0) pictureCountDelta = fPrevPictureCountDelta;
+	    // ensures that the picture count is always increasing
+	usingSource()->fPictureCount += pictureCountDelta;
+	fPrevPictureCountDelta = pictureCountDelta;
+	fTotalTicksSinceLastTimeCode = newTotalTicks;
 	fSecondsSinceLastTimeCode += modulo_time_base;
       }
     }
