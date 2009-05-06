@@ -23,11 +23,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTPInterface.hh"
 #include <GroupsockHelper.hh>
 #include <stdio.h>
-#if defined(__WIN32__) || defined(_WIN32)
-#else
-#include <sys/socket.h>
-#include <unistd.h>
-#endif
 
 ////////// Helper Functions - Definition //////////
 

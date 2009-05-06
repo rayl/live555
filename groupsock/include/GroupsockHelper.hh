@@ -29,13 +29,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "UsageEnvironment.hh"
 #endif
 
-#include <string.h>
-#if defined(__WIN32__) || defined(_WIN32)
-#else
-#include <strings.h>
-#include <sys/time.h>
-#endif
-
 #ifndef SOCKLEN_T
 #define SOCKLEN_T int
 #endif

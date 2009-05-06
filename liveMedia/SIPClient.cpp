@@ -23,38 +23,36 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupsockHelper.hh"
 
 #if defined(__WIN32__) || defined(_WIN32)
-#include <windows.h>
 #define _strncasecmp strncmp
 #define snprintf _snprintf
-#if defined(_WINNT)
-#include <ws2tcpip.h>
-#endif
 #else
-#include <unistd.h>
 #if defined(_QNX4)
 #define _strncasecmp strncmp
 #else
 #define _strncasecmp strncasecmp
 #endif
-#include <netinet/in.h>
-#include <string.h>
-#include <sys/socket.h>
 #endif
 
 ////////// SIPClient //////////
 
-SIPClient* SIPClient::createNew(UsageEnvironment& env,
-				int verbosityLevel,
-				char const* applicationName) {
-  return new SIPClient(env, verbosityLevel, applicationName);
+SIPClient* SIPClient
+::createNew(UsageEnvironment& env,
+	    unsigned char desiredAudioRTPPayloadFormat,
+	    int verbosityLevel, char const* applicationName) {
+  return new SIPClient(env, desiredAudioRTPPayloadFormat,
+		       verbosityLevel, applicationName);
 }
 
 SIPClient::SIPClient(UsageEnvironment& env,
+		     unsigned char desiredAudioRTPPayloadFormat,
 		     int verbosityLevel, char const* applicationName)
   : Medium(env),
-    fVerbosityLevel(verbosityLevel), fCSeq(0), fOurPortNum(5060),
-    fURL(NULL), fURLSize(0), fToTagStr(NULL), fToTagStrSize(0),
-    fCurrentAuthenticator(NULL) {
+    fT1(500000 /* 500 ms */),
+    fDesiredAudioRTPPayloadFormat(desiredAudioRTPPayloadFormat),
+    fVerbosityLevel(verbosityLevel),
+    fCSeq(0), fOurPortNum(5060), fURL(NULL), fURLSize(0),
+    fToTagStr(NULL), fToTagStrSize(0), fValidAuthenticator(NULL),
+    fInviteSDPDescription(NULL), fInviteCmd(NULL), fInviteCmdSize(0){
   if (applicationName == NULL) applicationName = "";
   fApplicationName = strdup(applicationName);
   fApplicationNameSize = strlen(fApplicationName);
@@ -106,10 +104,14 @@ SIPClient::~SIPClient() {
 }
 
 void SIPClient::reset() {
+  fWorkingAuthenticator = NULL;
+  delete fInviteCmd; fInviteCmd = NULL; fInviteCmdSize = 0;
+  delete fInviteSDPDescription; fInviteSDPDescription = NULL;
+
   delete (char*)fUserName; fUserName = strdup(fApplicationName);
   fUserNameSize = strlen(fUserName);
 
-  resetCurrentAuthenticator();
+  resetValidAuthenticator();
 
   delete (char*)fToTagStr; fToTagStr = NULL; fToTagStrSize = 0;
   fServerPortNum = 0;
@@ -158,9 +160,10 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
     // Send the INVITE command:
 
     // First, construct an authenticator string:
-    resetCurrentAuthenticator();
+    resetValidAuthenticator();
+    fWorkingAuthenticator = authenticator;
     char* authenticatorStr
-      = createAuthenticatorString(authenticator, "INVITE", fURL);
+      = createAuthenticatorString(fWorkingAuthenticator, "INVITE", fURL);
 
     // Then, construct the SDP description to be sent in the INVITE:
     char* const inviteSDPFmt = 
@@ -169,19 +172,21 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
       "s=%s session\r\n"
       "c=IN IP4 %s\r\n"
       "t=0 0\r\n"
-      "m=audio %u RTP/AVP 0\r\n";// PCMU HARDWIRED - TRY GSM ALSO #####
+      "m=audio %u RTP/AVP %u\r\n";
     unsigned inviteSDPFmtSize = strlen(inviteSDPFmt)
       + 20 /* max int len */ + 20 * fOurAddressStrSize
       + fApplicationNameSize
       + fOurAddressStrSize
-      + 5 /* max short len */;
-    char* inviteSDPDescription = new char[inviteSDPFmtSize];
-    sprintf(inviteSDPDescription, inviteSDPFmt,
+      + 5 /* max short len */ + 3 /* max char len */;
+    delete fInviteSDPDescription;
+    fInviteSDPDescription = new char[inviteSDPFmtSize];
+    sprintf(fInviteSDPDescription, inviteSDPFmt,
 	    fCallId, fCSeq, fOurAddressStr,
 	    fApplicationName,
 	    fOurAddressStr,
-	    fClientStartPortNum);
-    unsigned inviteSDPSize = strlen(inviteSDPDescription);
+	    fClientStartPortNum, 
+	    fDesiredAudioRTPPayloadFormat);
+    unsigned inviteSDPSize = strlen(fInviteSDPDescription);
 
     char* const cmdFmt =
       "INVITE %s SIP/2.0\r\n"
@@ -196,7 +201,7 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
       "%s" /* User-Agent: line */
       "Content-length: %d\r\n\r\n"
       "%s";
-    unsigned writeBufSize = strlen(cmdFmt)
+    unsigned inviteCmdSize = strlen(cmdFmt)
       + fURLSize
       + 2*fUserNameSize + fOurAddressStrSize + 20 /* max int len */
       + fOurAddressStrSize + 5 /* max port len */
@@ -208,8 +213,8 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
       + fUserAgentHeaderStrSize
       + 20
       + inviteSDPSize;
-    char* writeBuf = new char[writeBufSize];
-    sprintf(writeBuf, cmdFmt,
+    delete fInviteCmd; fInviteCmd = new char[inviteCmdSize];
+    sprintf(fInviteCmd, cmdFmt,
 	    fURL,
 	    fUserName, fUserName, fOurAddressStr, fFromTag,
 	    fOurAddressStr, fOurPortNum,
@@ -220,50 +225,206 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
 	    authenticatorStr,
 	    fUserAgentHeaderStr,
 	    inviteSDPSize,
-	    inviteSDPDescription);
-    // NOTE: We return this SDP description, not the one from the server:
-    char* resultSDPDescription = strdup(inviteSDPDescription);
-    // ##### Later: match the codecs in the response (offer, answer) #####
-    delete inviteSDPDescription;
+	    fInviteSDPDescription);
+    fInviteCmdSize = strlen(fInviteCmd);
     delete authenticatorStr;
 
-    if (!sendRequest(writeBuf)) {
-      envir().setResultErrMsg("INVITE send() failed: ");
+    // Before sending the "INVITE", arrange to handle any response packets,
+    // and set up timers:
+    fInviteClientState = Calling;
+    fEventLoopStopFlag = 0;
+    TaskScheduler& sched = envir().taskScheduler(); // abbrev.
+    sched.turnOnBackgroundReadHandling(fOurSocket->socketNum(),
+				       &inviteResponseHandler, this);
+    fTimerALen = 1*fT1; // initially
+    fTimerACount = 0; // initially
+    fTimerA = sched.scheduleDelayedTask(fTimerALen, timerAHandler, this);
+    fTimerB = sched.scheduleDelayedTask(64*fT1, timerBHandler, this);
+    fTimerD = NULL; // for now
+
+    if (!sendINVITE()) break;
+
+    // Enter the event loop, to handle response packets, and timeouts:
+    envir().taskScheduler().doEventLoop(&fEventLoopStopFlag);
+
+    // We're finished with this "INVITE".
+    // Turn off response handling and timers:
+    sched.turnOffBackgroundReadHandling(fOurSocket->socketNum());
+    sched.unscheduleDelayedTask(fTimerA);
+    sched.unscheduleDelayedTask(fTimerB);
+    sched.unscheduleDelayedTask(fTimerD);
+
+    // NOTE: We return the SDP description that we used in the "INVITE",
+    // not the one that we got from the server.
+    // ##### Later: match the codecs in the response (offer, answer) #####
+    if (fInviteSDPDescription != NULL) {
+      return strdup(fInviteSDPDescription);
+    }
+  } while (0);
+
+  return NULL;
+}
+
+void SIPClient::inviteResponseHandler(void* clientData, int /*mask*/) {
+  SIPClient* client = (SIPClient*)clientData;
+  unsigned responseCode = client->getResponseCode();
+  client->doInviteStateMachine(responseCode);
+}
+
+// Special 'response codes' that represent timers expiring:
+unsigned const timerAFires = 0xAAAAAAAA;
+unsigned const timerBFires = 0xBBBBBBBB;
+unsigned const timerDFires = 0xDDDDDDDD;
+
+void SIPClient::timerAHandler(void* clientData) {
+  SIPClient* client = (SIPClient*)clientData;
+  if (client->fVerbosityLevel >= 1) {
+    fprintf(stderr, "RETRANSMISSION %d, after %.1f additional seconds\n",
+	    ++client->fTimerACount, client->fTimerALen/1000000.0);
+    fflush(stderr);
+  }
+  client->doInviteStateMachine(timerAFires);
+}
+
+void SIPClient::timerBHandler(void* clientData) {
+  SIPClient* client = (SIPClient*)clientData;
+  if (client->fVerbosityLevel >= 1) {
+    fprintf(stderr, "RETRANSMISSION TIMEOUT, after %.1f seconds\n",
+	    64*client->fT1/1000000.0);
+    fflush(stderr);
+  }
+  client->doInviteStateMachine(timerBFires);
+}
+
+void SIPClient::timerDHandler(void* clientData) {
+  SIPClient* client = (SIPClient*)clientData;
+  if (client->fVerbosityLevel >= 1) {
+    fprintf(stderr, "TIMER D EXPIRED\n");
+    fflush(stderr);
+  }
+  client->doInviteStateMachine(timerDFires);
+}
+
+void SIPClient::doInviteStateMachine(unsigned responseCode) {
+  // Implement the state transition diagram (RFC 3261, Figure 5)
+  TaskScheduler& sched = envir().taskScheduler(); // abbrev.
+  switch (fInviteClientState) {
+    case Calling: {
+      if (responseCode == timerAFires) {
+	// Restart timer A (with double the timeout interval):
+	fTimerALen *= 2;
+	fTimerA
+	  = sched.scheduleDelayedTask(fTimerALen, timerAHandler, this);
+
+	fInviteClientState = Calling;
+	if (!sendINVITE()) doInviteStateTerminated(0);
+      } else {
+	// Turn off timers A & B before moving to a new state: 
+	sched.unscheduleDelayedTask(fTimerA);
+	sched.unscheduleDelayedTask(fTimerB);
+	
+	if (responseCode == timerBFires) {
+	  envir().setResultMsg("No response from server");
+	  doInviteStateTerminated(0);
+	} else if (responseCode >= 100 && responseCode <= 199) {
+	  fInviteClientState = Proceeding;
+	} else if (responseCode >= 200 && responseCode <= 299) {
+	  doInviteStateTerminated(responseCode);
+	} else if (responseCode >= 400 && responseCode <= 499) {
+	  doInviteStateTerminated(responseCode);
+	      // this isn't what the spec says, but it seems right...
+	} else if (responseCode >= 300 && responseCode <= 699) {
+	  fInviteClientState = Completed;
+	  fTimerD
+	    = sched.scheduleDelayedTask(32000000, timerDHandler, this);
+	  if (!sendACK()) doInviteStateTerminated(0);
+	}
+      }
       break;
     }
 
+    case Proceeding: {
+      if (responseCode >= 100 && responseCode <= 199) {
+	fInviteClientState = Proceeding;
+      } else if (responseCode >= 200 && responseCode <= 299) {
+	doInviteStateTerminated(responseCode);
+      } else if (responseCode >= 400 && responseCode <= 499) {
+	doInviteStateTerminated(responseCode);
+	    // this isn't what the spec says, but it seems right...
+      } else if (responseCode >= 300 && responseCode <= 699) {
+	fInviteClientState = Completed;
+	fTimerD = sched.scheduleDelayedTask(32000000, timerDHandler, this);
+	if (!sendACK()) doInviteStateTerminated(0);
+      }
+      break;
+    }
+
+    case Completed: {
+      if (responseCode == timerDFires) {
+	envir().setResultMsg("Transaction terminated");
+	doInviteStateTerminated(0);
+      } else if (responseCode >= 300 && responseCode <= 699) {
+	fInviteClientState = Completed;
+	if (!sendACK()) doInviteStateTerminated(0);
+      }
+      break;
+    }
+
+    case Terminated: {
+	doInviteStateTerminated(responseCode);
+	break;
+    }
+  }
+}
+
+void SIPClient::doInviteStateTerminated(unsigned responseCode) {
+  fInviteClientState = Terminated; // FWIW...
+  if (responseCode < 200 || responseCode > 299) {
+    // We failed, so return NULL;
+    delete fInviteSDPDescription; fInviteSDPDescription = NULL;
+  }
+
+  // Unblock the event loop:
+  fEventLoopStopFlag = ~0;
+}
+
+Boolean SIPClient::sendINVITE() {
+  if (!sendRequest(fInviteCmd, fInviteCmdSize)) {
+    envir().setResultErrMsg("INVITE send() failed: ");
+    return False;
+  }
+  return True;
+}
+
+unsigned SIPClient::getResponseCode() {
+  unsigned responseCode = 0;
+  do {
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuf[readBufSize+1];
-    //#####SHOULD CHECK FOR UDP RECEIVE TIMEOUT
+
     char* firstLine = NULL;
     char* nextLineStart = NULL;
-    unsigned responseCode = 0;
-    int bytesRead;
-    Boolean responseSuccess = False;
-    do {
-      bytesRead = getResponse(readBuf, readBufSize);
-      if (bytesRead < 0) break;
-      if (fVerbosityLevel >= 1) {
-	fprintf(stderr, "Received INVITE response: %s\n", readBuf);
-	fflush(stderr);
-      }
+    int bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead < 0) break;
+    if (fVerbosityLevel >= 1) {
+      fprintf(stderr, "Received INVITE response: %s\n", readBuf);
+      fflush(stderr);
+    }
 
-      // Inspect the first line to check whether it's a result code 200
-      firstLine = readBuf;
-      nextLineStart = getLine(firstLine);
-      if (!parseResponseCode(firstLine, responseCode)) break;
-      responseSuccess = True;
-    }  while (responseCode >= 100 && responseCode < 200);
-    if (!responseSuccess) break;
+    // Inspect the first line to get the response code:
+    firstLine = readBuf;
+    nextLineStart = getLine(firstLine);
+    if (!parseResponseCode(firstLine, responseCode)) break;
 
     if (responseCode != 200) {
-      if ((responseCode == 401 || responseCode == 407)
-	  && authenticator != NULL) {
-	// We have an authentication failure, so fill in "authenticator"
-	// using the contents of a following "Proxy-Authenticate:" line.
-	// (Once we compute a 'response' for "authenticator", it can be
-	//  used in a subsequent request - that will hopefully succeed.)
+      if (responseCode >= 400 && responseCode <= 499
+	  && fWorkingAuthenticator != NULL) {
+	// We have an authentication failure, so fill in
+	// "*fWorkingAuthenticator" using the contents of a following
+	// "Proxy-Authenticate:" line.  (Once we compute a 'response' for
+	// "fWorkingAuthenticator", it can be used in a subsequent request
+	// - that will hopefully succeed.)
 	char* lineStart;
 	while (1) {
 	  lineStart = nextLineStart;
@@ -275,7 +436,7 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
 	  char* realm = strdup(lineStart); char* nonce = strdup(lineStart);
 	  // ##### Check for the format of "Proxy-Authenticate:" lines from
 	  // ##### known server types.
-	  // ##### This is a crock! We need to make the parsing more general
+	  // ##### This is a crock! We should make the parsing more general
 	  if (
 	      // Asterisk #####
 	      sscanf(lineStart, "Proxy-Authenticate: DIGEST realm=\"%[^\"]\", nonce=\"%[^\"]\"",
@@ -283,8 +444,8 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
 	      // Cisco ATA #####
 	      sscanf(lineStart, "Proxy-Authenticate: Digest algorithm=MD5,domain=\"%*[^\"]\",nonce=\"%[^\"]\", realm=\"%[^\"]\"",
 		     nonce, realm) == 2) {
-	    authenticator->realm = realm;
-	    authenticator->nonce = nonce;
+	    fWorkingAuthenticator->realm = realm;
+	    fWorkingAuthenticator->nonce = nonce;
 	    break;
 	  } else {
 	    delete realm; delete nonce;
@@ -343,6 +504,8 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
         // We need to read more data.  First, make sure we have enough
         // space for it:
         unsigned numExtraBytesNeeded = contentLength - numBodyBytes;
+#ifdef USING_TCP
+	// THIS CODE WORKS ONLY FOR TCP: #####
         unsigned remainingBufferSize = readBufSize - bytesRead;
         if (numExtraBytesNeeded > remainingBufferSize) {
           char tmpBuf[200];
@@ -369,23 +532,22 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
           if (!readSuccess) break;
           ptr[bytesRead2] = '\0';
           if (fVerbosityLevel >= 1) {
-            fprintf(stderr, "Read %d extra bytes: %s\n", bytesRead2, ptr); fflush(stderr);
+            fprintf(stderr, "Read %d extra bytes: %s\n", bytesRead2, ptr);
+	    fflush(stderr);
           }
 
           bytesRead += bytesRead2;
           numExtraBytesNeeded -= bytesRead2;
         }
+#endif
         if (numExtraBytesNeeded > 0) break; // one of the reads failed
       }
 
       bodyStart[contentLength] = '\0'; // trims any extra data
     }
-
-    //#####return strdup(bodyStart);
-    return resultSDPDescription;
   } while (0);
 
-  return NULL;
+  return responseCode;
 }
 
 static char* computeDigestResponse(AuthRecord const& authenticator,
@@ -451,69 +613,84 @@ char* SIPClient::inviteWithPassword(char const* url, char const* username,
 }
 
 Boolean SIPClient::sendACK() {
-  char* const cmdFmt =
-    "ACK %s SIP/2.0\r\n"
-    "From: %s <sip:%s@%s>;tag=%u\r\n"
-    "Via: SIP/2.0/UDP %s:%u\r\n"
-    "To: %s;tag=%s\r\n"
-    "Call-ID: %u@%s\r\n"
-    "CSeq: %d ACK\r\n"
-    "Content-length: 0\r\n\r\n";
-    unsigned writeBufSize = strlen(cmdFmt)
+  char* cmd = NULL;
+  do {
+    char* const cmdFmt =
+      "ACK %s SIP/2.0\r\n"
+      "From: %s <sip:%s@%s>;tag=%u\r\n"
+      "Via: SIP/2.0/UDP %s:%u\r\n"
+      "To: %s;tag=%s\r\n"
+      "Call-ID: %u@%s\r\n"
+      "CSeq: %d ACK\r\n"
+      "Content-length: 0\r\n\r\n";
+    unsigned cmdSize = strlen(cmdFmt)
       + fURLSize
       + 2*fUserNameSize + fOurAddressStrSize + 20 /* max int len */
       + fOurAddressStrSize + 5 /* max port len */
       + fURLSize + fToTagStrSize
       + 20 + fOurAddressStrSize
       + 20;
-    char* writeBuf = new char[writeBufSize];
-    sprintf(writeBuf, cmdFmt,
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
 	    fURL,
 	    fUserName, fUserName, fOurAddressStr, fFromTag,
 	    fOurAddressStr, fOurPortNum,
 	    fURL, fToTagStr,
 	    fCallId, fOurAddressStr,
 	    fCSeq /* note: it's the same as before; not incremented */);
-
-    if (!sendRequest(writeBuf)) {
+    
+    if (!sendRequest(cmd, strlen(cmd))) {
       envir().setResultErrMsg("ACK send() failed: ");
-      return False;
+      break;
     }
 
-  return True;
+    delete cmd;
+    return True;
+  } while (0);
+
+  delete cmd;
+  return False;
 }
 
 Boolean SIPClient::sendBYE() {
-  char* const cmdFmt =
-    "BYE %s SIP/2.0\r\n"
-    "From: %s <sip:%s@%s>;tag=%u\r\n"
-    "Via: SIP/2.0/UDP %s:%u\r\n"
-    "To: %s;tag=%s\r\n"
-    "Call-ID: %u@%s\r\n"
-    "CSeq: %d ACK\r\n"
-    "Content-length: 0\r\n\r\n";
-    unsigned writeBufSize = strlen(cmdFmt)
+  // NOTE: This should really be retransmitted, for reliability #####
+  char* cmd = NULL;
+  do {
+    char* const cmdFmt =
+      "BYE %s SIP/2.0\r\n"
+      "From: %s <sip:%s@%s>;tag=%u\r\n"
+      "Via: SIP/2.0/UDP %s:%u\r\n"
+      "To: %s;tag=%s\r\n"
+      "Call-ID: %u@%s\r\n"
+      "CSeq: %d ACK\r\n"
+      "Content-length: 0\r\n\r\n";
+    unsigned cmdSize = strlen(cmdFmt)
       + fURLSize
       + 2*fUserNameSize + fOurAddressStrSize + 20 /* max int len */
       + fOurAddressStrSize + 5 /* max port len */
       + fURLSize + fToTagStrSize
       + 20 + fOurAddressStrSize
       + 20;
-    char* writeBuf = new char[writeBufSize];
-    sprintf(writeBuf, cmdFmt,
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
 	    fURL,
 	    fUserName, fUserName, fOurAddressStr, fFromTag,
 	    fOurAddressStr, fOurPortNum,
 	    fURL, fToTagStr,
 	    fCallId, fOurAddressStr,
 	    ++fCSeq);
-
-    if (!sendRequest(writeBuf)) {
+    
+    if (!sendRequest(cmd, strlen(cmd))) {
       envir().setResultErrMsg("BYE send() failed: ");
-      return False;
+      break;
     }
 
-  return True;
+    delete cmd;
+    return True;
+  } while (0);
+
+  delete cmd;
+  return False;
 }
 
 Boolean SIPClient::processURL(char const* url) {
@@ -634,36 +811,39 @@ SIPClient::createAuthenticatorString(AuthRecord const* authenticator,
 }
 
 void SIPClient::useAuthenticator(AuthRecord const* authenticator) {
-  resetCurrentAuthenticator();
+  resetValidAuthenticator();
   if (authenticator != NULL && authenticator->realm != NULL
       && authenticator->nonce != NULL && authenticator->username != NULL
       && authenticator->password != NULL) {
-    fCurrentAuthenticator = new AuthRecord;
-    fCurrentAuthenticator->realm = strdup(authenticator->realm);
-    fCurrentAuthenticator->nonce = strdup(authenticator->nonce);
-    fCurrentAuthenticator->username = strdup(authenticator->username);
-    fCurrentAuthenticator->password = strdup(authenticator->password);
+    fValidAuthenticator = new AuthRecord;
+    fValidAuthenticator->realm = strdup(authenticator->realm);
+    fValidAuthenticator->nonce = strdup(authenticator->nonce);
+    fValidAuthenticator->username = strdup(authenticator->username);
+    fValidAuthenticator->password = strdup(authenticator->password);
   }
 }
 
-void SIPClient::resetCurrentAuthenticator() {
-  if (fCurrentAuthenticator == NULL) return;
+void SIPClient::resetValidAuthenticator() {
+  if (fValidAuthenticator == NULL) return;
 
-  delete (char*)fCurrentAuthenticator->realm;
-  delete (char*)fCurrentAuthenticator->nonce;
-  delete (char*)fCurrentAuthenticator->username;
-  delete (char*)fCurrentAuthenticator->password;
+  delete (char*)fValidAuthenticator->realm;
+  delete (char*)fValidAuthenticator->nonce;
+  delete (char*)fValidAuthenticator->username;
+  delete (char*)fValidAuthenticator->password;
 
-  delete fCurrentAuthenticator; fCurrentAuthenticator = NULL;
+  delete fValidAuthenticator; fValidAuthenticator = NULL;
 }
 
-Boolean SIPClient::sendRequest(char const* requestString) {
+Boolean SIPClient::sendRequest(char const* requestString,
+			       unsigned requestLength) {
   if (fVerbosityLevel >= 1) {
     fprintf(stderr, "Sending request: %s\n", requestString);
     fflush(stderr);
   }
+  // NOTE: We should really check that "requestLength" is not #####
+  // too large for UDP (see RFC 3261, section 18.1.1) #####
   return fOurSocket->output(envir(), 255, (unsigned char*)requestString,
-			    strlen(requestString));
+			    requestLength);
 }
 
 int SIPClient::getResponse(char* responseBuffer,

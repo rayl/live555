@@ -70,4 +70,5 @@ Boolean clientTearDownSession(Medium* /*client*/,
 
 Boolean allowProxyServers = False;
 Boolean controlConnectionUsesTCP = True;
+Boolean supportCodecSelection = False;
 char const* clientProtocolName = "RTSP";

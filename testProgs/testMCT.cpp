@@ -22,12 +22,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "BasicUsageEnvironment.hh"
 #include "GroupsockHelper.hh"
 
-#include <string.h>
-#if defined(__WIN32__) || defined(_WIN32)
-#else
-#include <unistd.h>
-#endif
-
 void afterPlaying(void* clientData); // forward
 
 // A structure to hold the state of the current session.

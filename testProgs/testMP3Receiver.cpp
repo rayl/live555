@@ -23,13 +23,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "BasicUsageEnvironment.hh"
 
-#include <string.h>
-#if defined(__WIN32__) || defined(_WIN32)
-#else
-#include <unistd.h>
-#include <stdlib.h>
-#endif
-
 // To receive a stream of 'ADUs' rather than raw MP3 frames, uncomment this:
 //#define STREAM_USING_ADUS 1
 // (For more information about ADUs and interleaving,

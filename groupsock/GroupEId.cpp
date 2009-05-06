@@ -20,7 +20,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupEId.hh"
 
 #include <string.h>
-#include <stdlib.h>
 
 ////////// Scope //////////
 

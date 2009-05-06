@@ -22,19 +22,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupsockHelper.hh"
 
 #if defined(__WIN32__) || defined(_WIN32)
-#include <windows.h>
 #define _close closesocket
 #define snprintf _snprintf
-#if defined(_WINNT)
-#include <ws2tcpip.h>
-#endif
 #else
-#include <unistd.h>
 #define _close close
-#include <netinet/in.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <stdlib.h>
 #endif
 
 #define MILLION 1000000

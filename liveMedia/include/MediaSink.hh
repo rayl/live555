@@ -25,11 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "FramedSource.hh"
 #endif
 
-#if defined(__WIN32__) || defined(_WIN32)
-#else
-#include <sys/time.h>
-#endif
-
 class MediaSink: public Medium {
 public:
   static Boolean lookupByName(UsageEnvironment& env, char const* sinkName,

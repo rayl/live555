@@ -26,7 +26,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <io.h>
 #include <fcntl.h>
 #endif
-#include <ctype.h>
 
 #define fourChar(x,y,z,w) ( ((x)<<24)|((y)<<16)|((z)<<8)|(w) )
 

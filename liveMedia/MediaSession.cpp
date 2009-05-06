@@ -22,20 +22,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "liveMedia.hh"
 #include "GroupsockHelper.hh"
 
-#if defined(__WIN32__) || defined(_WIN32)
-#include <windows.h>
-#if defined(_WINNT)
-#include <ws2tcpip.h>
-#endif
-#else
-#include <ctype.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#if defined(_QNX4)
-#include <unix.h>
-#endif
-#endif
-
 ////////// MediaSession //////////
 
 MediaSession* MediaSession::createNew(UsageEnvironment& env,

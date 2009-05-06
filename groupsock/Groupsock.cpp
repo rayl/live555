@@ -26,11 +26,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #if defined(__WIN32__) || defined(_WIN32)
 #include <strstrea.h>
 #else
-#include <stdarg.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-
-#include <unistd.h>
 #include <strstream.h>
 #endif
 #include <stdio.h>

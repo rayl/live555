@@ -24,24 +24,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <time.h>
 extern "C" int initializeWinsockIfNecessary();
 #define _close closesocket
-#if defined(_WINNT) || defined(__BORLANDC__)
-#include <ws2tcpip.h>
-#endif
 #else
 #include <stdarg.h>
 #include <time.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netdb.h>
 #include <fcntl.h>
-#include <errno.h>
 #define initializeWinsockIfNecessary() 1
 #define _close close
-#if defined(_QNX4)
-#include <sys/select.h>
-#include <unix.h>
-#endif
 #endif
 #include <stdio.h>
 

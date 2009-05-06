@@ -32,7 +32,12 @@ Medium* createClient(UsageEnvironment& env,
     --suffix;
   }
 
-  return SIPClient::createNew(env, verbosityLevel, applicationName);
+  extern unsigned char desiredAudioRTPPayloadFormat;
+  if (desiredAudioRTPPayloadFormat == 0xFF) {
+    desiredAudioRTPPayloadFormat = 0; // PCMU
+  }
+  return SIPClient::createNew(env, desiredAudioRTPPayloadFormat,
+			      verbosityLevel, applicationName);
 }
 
 char* getSDPDescriptionFromURL(Medium* client, char const* url,
@@ -84,6 +89,9 @@ Boolean clientStartPlayingSession(Medium* client,
 				  MediaSession* /*session*/) {
   SIPClient* sipClient = (SIPClient*)client;
   return sipClient->sendACK();
+  //##### This isn't quite right, because we should really be allowing
+  //##### for the possibility of this ACK getting lost, by retransmitting
+  //##### it *each time* we get a 2xx response from the server.
 }
 
 Boolean clientTearDownSubsession(Medium* /*client*/,
@@ -100,4 +108,5 @@ Boolean clientTearDownSession(Medium* client,
 
 Boolean allowProxyServers = True;
 Boolean controlConnectionUsesTCP = False;
+Boolean supportCodecSelection = True;
 char const* clientProtocolName = "SIP";

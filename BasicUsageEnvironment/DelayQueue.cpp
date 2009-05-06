@@ -20,13 +20,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "DelayQueue.hh"
 #include "GroupsockHelper.hh"
-#if defined(__WIN32__) || defined(_WIN32)
-#ifdef __BORLANDC__
-#include <winsock.h> //struct timeval is here
-#endif
-#else
 #include <signal.h>
-#endif
 
 static const int MILLION = 1000000;
 

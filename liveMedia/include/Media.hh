@@ -33,15 +33,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "UsageEnvironment.hh"
 #endif
 
-#include <stdio.h>
 // Lots of files end up needing the following, so just #include them here:
-#include <stdlib.h>
-#include <string.h>
-#if defined(__WIN32__) || defined(_WIN32)
-#else
-#include <strings.h>
-#include <errno.h>
+#ifndef _NET_COMMON_H
+#include "NetCommon.h"
 #endif
+#include <stdio.h>
 
 #ifndef __BORLANDC__
 #ifndef errno

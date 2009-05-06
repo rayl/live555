@@ -23,11 +23,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _LOCK_HH
 #include "Lock.hh"
 #endif
-
-#if defined(__WIN32__) || defined(_WIN32)
-#include <windows.h>
-#else
-#include <sys/time.h>
+#ifndef _NET_COMMON_H
+#include "NetCommon.h"
 #endif
 
 #ifdef TIME_BASE

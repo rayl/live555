@@ -19,15 +19,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "BasicUsageEnvironment.hh"
 #include "GroupsockHelper.hh"
-#include <errno.h>
-#include <string.h>
-#if defined(__WIN32__) || defined(_WIN32)
-#else
-#include <unistd.h>
-#endif
 #include <signal.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 ////////// BasicUsageEnvironment //////////
 

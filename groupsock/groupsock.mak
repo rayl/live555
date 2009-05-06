@@ -6,7 +6,18 @@ NODEBUG=1
 # The following definition ensures that we link with "wsock32.lib"
 # rather than "ws2_32.lib".  For some reason, the standard Berkeley
 # socket calls for multicast don't work properly with "ws2_32.lib".
-TARGETOS = WIN95
+
+
+# The following definition ensures that we are properly matching
+# the WinSock2 library file with the correct header files.
+# (will link with "ws2_32.lib" and include "winsock2.h" & "Ws2tcpip.h")
+TARGETOS = WINNT
+
+# If for some reason you wish to use WinSock1 instead, uncomment the
+# following two definitions.
+# (will link with "wsock32.lib" and include "winsock.h")
+#TARGETOS = WIN95
+#APPVER = 4.0
 
 !include    <ntwin32.mak>
 
@@ -55,7 +66,10 @@ GROUPSOCK_LIB_OBJS = GroupsockHelper.$(OBJ) GroupEId.$(OBJ) inet.$(OBJ) Groupsoc
 
 GroupsockHelper.$(CPP):	include/GroupsockHelper.hh
 include/GroupsockHelper.hh:	include/NetAddress.hh
+include/NetAddress.hh:	include/NetCommon.h
 GroupEId.$(CPP):	include/GroupEId.hh
+include/GroupEId.hh:	include/NetCommon.h
+inet.$(C):		include/NetCommon.h
 Groupsock.$(CPP):	include/Groupsock.hh include/GroupsockHelper.hh include/TunnelEncaps.hh
 include/Groupsock.hh:	include/groupsock_version.hh include/NetInterface.hh include/GroupEId.hh
 include/NetInterface.hh:	include/NetAddress.hh

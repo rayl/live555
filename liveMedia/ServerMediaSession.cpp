@@ -25,7 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupsockHelper.hh"
 
 #if defined(__WIN32__) || defined(_WIN32)
-#include <windows.h>
 #define snprintf _snprintf
 #endif
 

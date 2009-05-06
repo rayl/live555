@@ -25,7 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <strstrea.h>
 #define _close closesocket
 #else
-#include <unistd.h>
 #include <strstream.h>
 #define _close close
 #endif

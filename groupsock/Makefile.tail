@@ -13,7 +13,10 @@ GROUPSOCK_LIB_OBJS = GroupsockHelper.$(OBJ) GroupEId.$(OBJ) inet.$(OBJ) Groupsoc
 
 GroupsockHelper.$(CPP):	include/GroupsockHelper.hh
 include/GroupsockHelper.hh:	include/NetAddress.hh
+include/NetAddress.hh:	include/NetCommon.h
 GroupEId.$(CPP):	include/GroupEId.hh
+include/GroupEId.hh:	include/NetCommon.h
+inet.$(C):		include/NetCommon.h
 Groupsock.$(CPP):	include/Groupsock.hh include/GroupsockHelper.hh include/TunnelEncaps.hh
 include/Groupsock.hh:	include/groupsock_version.hh include/NetInterface.hh include/GroupEId.hh
 include/NetInterface.hh:	include/NetAddress.hh

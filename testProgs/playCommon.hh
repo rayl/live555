@@ -45,4 +45,5 @@ extern Boolean clientTearDownSession(Medium* client,
 
 extern Boolean allowProxyServers;
 extern Boolean controlConnectionUsesTCP;
+extern Boolean supportCodecSelection;
 extern char const* clientProtocolName;

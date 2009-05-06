@@ -24,9 +24,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <stddef.h>
 #if defined(__WIN32__) || defined(_WIN32)
 #else
-#include <netdb.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xFFFFFFFF
 #endif

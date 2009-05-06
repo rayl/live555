@@ -1,6 +1,3 @@
-// Comment out the following to stop this program expiring:
-#define EXPIRATION 1046505600 /* 3/1/2003 */
-
 /**********
 This library is free software; you can redistribute it and/or modify it under
 the terms of the GNU Lesser General Public License as published by the
@@ -28,8 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #define snprintf _snprintf
 #else
 #include <signal.h>
-#include <sys/types.h>
-#include <unistd.h>
 #define USE_SIGNALS 1
 #endif
 
@@ -67,6 +62,7 @@ char* username = NULL;
 char* password = NULL;
 char* proxyServerName = NULL;
 unsigned short proxyServerPortNum = 0;
+unsigned char desiredAudioRTPPayloadFormat = 0xFF;
 unsigned short movieWidth = 240;
 unsigned short movieHeight = 180;
 unsigned movieFPS = 15;
@@ -82,11 +78,13 @@ static int Idunno;
 struct timeval startTime;
 
 void usage() {
-  fprintf(stderr, "Usage: %s [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-c] [-s <offset>] [-n]%s [-u <username> <password>%s] [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] <url>\n",
+  fprintf(stderr, "Usage: %s [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-c] [-s <offset>] [-n]%s [-u <username> <password>%s]%s [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] <url>\n",
 	  progName,
 	  controlConnectionUsesTCP ? " [-t]" : "",
 	  allowProxyServers
-	  ? " [<proxy-server> [<proxy-server-port>]]" : "");
+	  ? " [<proxy-server> [<proxy-server-port>]]" : "",
+	  supportCodecSelection
+	  ? " [-A <audio-codec-rtp-payload-format-code>]" : "");
   shutdown();
 }
 
@@ -94,12 +92,6 @@ int main(int argc, char** argv) {
   progName = argv[0];
 
   gettimeofday(&startTime, &Idunno);
-#ifdef EXPIRATION
-  if (startTime.tv_sec > EXPIRATION) {
-    fprintf(stderr, "\007This version of \"%s\" is out-of-date.  To download an up-to-date\nversion, visit <http://www.live.com/%s/>, or build a new version from\nthe \"LIVE.COM Streaming Media\" source code at <http://www.live.com/liveMedia/>.  (To stop the program from expiring, comment out the '#define' at the start of \"playCommon.cpp\".)\n", progName, progName);
-    exit(0);
-  }
-#endif
 
 #ifdef USE_SIGNALS
   // Allow ourselves to be shut down gracefully by a SIGHUP or a SIGUSR1:
@@ -223,6 +215,17 @@ int main(int argc, char** argv) {
 	  ++argv; --argc;
 	}
       }
+      break;
+    }
+
+    case 'A': { // specify a desired audio RTP payload format
+      unsigned formatArg;
+      if (sscanf(argv[2], "%u", &formatArg) != 1
+	  || formatArg >= 96) {
+	usage();
+      }
+      desiredAudioRTPPayloadFormat = (unsigned char)formatArg;
+      ++argv; --argc;
       break;
     }
 

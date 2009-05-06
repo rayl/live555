@@ -25,12 +25,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "Boolean.hh"
 #endif
 
-#if defined(__WIN32__) || defined(_WIN32)
-#include <windows.h>
-#else
-#include <stddef.h>
-#include <sys/types.h>
-#include <netinet/in.h>
+#ifndef _NET_COMMON_H
+#include "NetCommon.h"
 #endif
 
 const unsigned char MAX_TTL = 255;

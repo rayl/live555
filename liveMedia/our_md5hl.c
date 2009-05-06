@@ -8,16 +8,9 @@
  * ----------------------------------------------------------------------------
  */
 
-#if defined(__WIN32__) || defined(_WIN32)
-#else
-#include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
-#endif
-
+#include "NetCommon.h"
 #include <fcntl.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include "our_md5.h"
 
 char *

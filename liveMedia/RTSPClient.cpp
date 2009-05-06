@@ -23,24 +23,16 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "our_md5.h"
 
 #if defined(__WIN32__) || defined(_WIN32)
-#include <windows.h>
 #define _close closesocket
 #define _strncasecmp strncmp
 #define snprintf _snprintf
-#if defined(_WINNT)
-#include <ws2tcpip.h>
-#endif
 #else
-#include <unistd.h>
 #define _close close
 #if defined(_QNX4)
 #define _strncasecmp strncmp
 #else
 #define _strncasecmp strncasecmp
 #endif
-#include <netinet/in.h>
-#include <string.h>
-#include <sys/socket.h>
 #endif
 
 ////////// RTSPClient //////////

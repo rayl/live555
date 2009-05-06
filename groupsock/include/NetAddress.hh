@@ -25,17 +25,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "HashTable.hh"
 #endif
 
-#if defined(__WIN32__) || defined(_WIN32)
-#include <windows.h>
-#else
-#include <sys/types.h>
-#include <netinet/in.h>
-#if defined(_QNX4)
-#include <netdb.h>
+#ifndef _NET_COMMON_H
+#include "NetCommon.h"
 #endif
-#endif
-#include <iostream.h>
 
+#include <iostream.h>
 
 class NetAddress {
     public:

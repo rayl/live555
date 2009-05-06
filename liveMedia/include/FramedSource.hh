@@ -21,14 +21,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _FRAMED_SOURCE_HH
 #define _FRAMED_SOURCE_HH
 
+#ifndef _NET_COMMON_H
+#include "NetCommon.h"
+#endif
 #ifndef _MEDIA_SOURCE_HH
 #include "MediaSource.hh"
-#endif
-
-#if defined(__WIN32__) || defined(_WIN32)
-#include <windows.h>
-#else
-#include <sys/time.h>
 #endif
 
 class FramedSource: public MediaSource {

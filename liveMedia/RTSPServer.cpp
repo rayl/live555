@@ -21,16 +21,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPServer.hh"
 #include "GroupsockHelper.hh"
 
-#include <string.h>
 #if defined(__WIN32__) || defined(_WIN32)
 #define _close closesocket
 #define snprintf _snprintf
-#if defined(_WINNT)
-#include <ws2tcpip.h>
-#endif
 #else
-#include <unistd.h>
-#include <sys/socket.h>
 #define _close close
 #endif
 

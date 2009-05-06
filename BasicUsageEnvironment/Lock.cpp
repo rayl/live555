@@ -18,11 +18,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "Lock.hh"
-#if defined(__WIN32__) || defined(_WIN32)
-#else
-#include <stddef.h>
+#include "NetCommon.h"
 #include <signal.h>
-#endif
 
 ///// Read-Write Locks /////
 
