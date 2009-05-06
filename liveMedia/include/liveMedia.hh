@@ -52,6 +52,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "PrioritizedRTPStreamSelector.hh"
 #include "RTSPServer.hh"
 #include "RTSPClient.hh"
+#include "SIPClient.hh"
 #include "QuickTimeFileSink.hh"
 #include "QuickTimeGenericRTPSource.hh"
 #include "PassiveServerMediaSession.hh"

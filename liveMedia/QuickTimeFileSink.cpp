@@ -118,7 +118,6 @@ public:
 
   unsigned short fLastPacketRTPSeqNum;
   Boolean fOurSourceIsActive;
-  Boolean fUseRTPMarkerBitForFrameEnd;
 
   Boolean fHaveBeenSynced; // used in synchronizing with other streams
   struct timeval fSyncTime;
@@ -519,8 +518,7 @@ SubsessionIOState::SubsessionIOState(QuickTimeFileSink& sink,
 				     MediaSubsession& subsession)
   : fHintTrackForUs(NULL), fTrackHintedByUs(NULL),
     fOurSink(sink), fOurSubsession(subsession),
-    fLastPacketRTPSeqNum(0), fUseRTPMarkerBitForFrameEnd(False),
-    fHaveBeenSynced(False), fQTTotNumSamples(0),
+    fLastPacketRTPSeqNum(0), fHaveBeenSynced(False), fQTTotNumSamples(0),
     fHeadChunk(NULL), fTailChunk(NULL), fNumChunks(0) {
   fTrackID = ++fCurrentTrackNumber;
 
@@ -687,9 +685,6 @@ void SubsessionIOState::afterGettingFrame(unsigned packetDataSize,
     if (qtState.height != 0) {
       fOurSink.fMovieHeight = qtState.height;
     }
-    if (qtState.PCK == 3) { // frames can be split over multiple packets
-      fUseRTPMarkerBitForFrameEnd = True;
-    }
 
     // Also, if the media type in the "sdAtom" is one that we recognize
     // to have a special parameters, then fix this here:
@@ -714,7 +709,6 @@ void SubsessionIOState::afterGettingFrame(unsigned packetDataSize,
       }
       case fourChar('h','2','6','3'): {
 	fQTTimeUnitsPerSample = fQTTimeScale/fOurSink.fMovieFPS;
-	fUseRTPMarkerBitForFrameEnd = True;
 	break;
       }
       }
@@ -727,25 +721,14 @@ void SubsessionIOState::afterGettingFrame(unsigned packetDataSize,
     fQTBytesPerFrame = packetDataSize;
   }
 
-  // Check whether we have a complete frame:
-  Boolean haveCompleteFrame = True;
-  if (fUseRTPMarkerBitForFrameEnd) {
-    RTPSource* rtpSource = fOurSubsession.rtpSource();
-    if (rtpSource != NULL && !rtpSource->curPacketMarkerBit()) {
-      haveCompleteFrame = False;
-    }
+  useFrame(*fBuffer);
+  if (fOurSink.fPacketLossCompensate) {
+    // Save this frame, in case we need it for recovery:
+    SubsessionBuffer* tmp = fPrevBuffer; // assert: != NULL
+    fPrevBuffer = fBuffer;
+    fBuffer = tmp;
   }
-
-  if (haveCompleteFrame) {
-    useFrame(*fBuffer);
-    if (fOurSink.fPacketLossCompensate) {
-      // Save this frame, in case we need it for recovery:
-      SubsessionBuffer* tmp = fPrevBuffer; // assert: != NULL
-      fPrevBuffer = fBuffer;
-      fBuffer = tmp;
-    }
-    fBuffer->reset(); // for the next input
-  }
+  fBuffer->reset(); // for the next input
 
   // Now, try getting more frames:
   fOurSink.continuePlaying();
