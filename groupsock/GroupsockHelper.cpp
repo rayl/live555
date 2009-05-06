@@ -66,7 +66,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEADDR) error: ");
-    _close(newSocket);
+    closeSocket(newSocket);
     return -1;
   }
   
@@ -77,7 +77,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEPORT,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEPORT) error: ");
-    _close(newSocket);
+    closeSocket(newSocket);
     return -1;
   }
 #endif
@@ -87,7 +87,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
   if (setsockopt(newSocket, IPPROTO_IP, IP_MULTICAST_LOOP,
 		 (const char*)&loop, sizeof loop) < 0) {
     socketErr(env, "setsockopt(IP_MULTICAST_LOOP) error: ");
-    _close(newSocket);
+    closeSocket(newSocket);
     return -1;
   }
 #endif
@@ -107,7 +107,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
       sprintf(tmpBuffer, "bind() error (port number: %d): ",
 	      ntohs(port.num()));
       socketErr(env, tmpBuffer);
-      _close(newSocket);
+      closeSocket(newSocket);
       return -1;
     }
 #if defined(__WIN32__) || defined(_WIN32)
@@ -123,7 +123,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
     if (setsockopt(newSocket, IPPROTO_IP, IP_MULTICAST_IF,
 		   (const char*)&addr, sizeof addr) < 0) {
       socketErr(env, "error setting outgoing multicast interface: ");
-      _close(newSocket);
+      closeSocket(newSocket);
       return -1;
     }
   }
@@ -148,7 +148,7 @@ int setupStreamSocket(UsageEnvironment& env,
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEADDR) error: ");
-    _close(newSocket);
+    closeSocket(newSocket);
     return -1;
   }
   
@@ -163,7 +163,7 @@ int setupStreamSocket(UsageEnvironment& env,
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEPORT,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEPORT) error: ");
-    _close(newSocket);
+    closeSocket(newSocket);
     return -1;
   }
 #endif
@@ -184,7 +184,7 @@ int setupStreamSocket(UsageEnvironment& env,
       sprintf(tmpBuffer, "bind() error (port number: %d): ",
 	      ntohs(port.num()));
       socketErr(env, tmpBuffer);
-      _close(newSocket);
+      closeSocket(newSocket);
       return -1;
     }
 #if defined(__WIN32__) || defined(_WIN32)
@@ -207,7 +207,7 @@ int setupStreamSocket(UsageEnvironment& env,
     if (fcntl(newSocket, F_SETFL, curFlags|O_NONBLOCK) < 0) {
 #endif
       socketErr(env, "failed to make non-blocking: ");
-      _close(newSocket);
+      closeSocket(newSocket);
       return -1;
     }
   }
@@ -653,7 +653,7 @@ netAddressBits ourSourceAddressForMulticast(UsageEnvironment& env) {
     
     if (sock >= 0) {
       socketLeaveGroup(env, sock, testAddr.s_addr);
-      _close(sock);
+      closeSocket(sock);
     }
     
     // Use our newly-discovered IP address, and the current time,

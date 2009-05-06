@@ -108,8 +108,8 @@ Boolean RTSPClient::isRTSPClient() const {
 
 void RTSPClient::resetTCPSockets() {
   if (fInputSocketNum >= 0) {
-    ::_close(fInputSocketNum);
-    if (fOutputSocketNum != fInputSocketNum) ::_close(fOutputSocketNum);
+    ::closeSocket(fInputSocketNum);
+    if (fOutputSocketNum != fInputSocketNum) ::closeSocket(fOutputSocketNum);
   }
   fInputSocketNum = fOutputSocketNum = -1;
 }

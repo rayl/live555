@@ -81,7 +81,7 @@ MP3HTTPSource* MP3HTTPSource::createNew(UsageEnvironment& env,
     return newSource;
   } while (0);
 
-  if (ourSocket != -1) ::_close(ourSocket);
+  if (ourSocket != -1) ::closeSocket(ourSocket);
   delete newSource;
   return NULL;
 }

@@ -51,7 +51,7 @@ RTSPServer::createNew(UsageEnvironment& env, Port ourPort,
     return new RTSPServer(env, ourSocket, ourPort, authDatabase);
   } while (0);
 
-  if (ourSocket != -1) ::_close(ourSocket);
+  if (ourSocket != -1) ::closeSocket(ourSocket);
   delete newServer;
   return NULL;
 }
@@ -154,7 +154,7 @@ int RTSPServer::setUpOurSocket(UsageEnvironment& env, Port& ourPort) {
     return ourSocket;
   } while (0);  
 
-  if (ourSocket != -1) ::_close(ourSocket);
+  if (ourSocket != -1) ::closeSocket(ourSocket);
   return -1;
 }
 
@@ -182,7 +182,7 @@ RTSPServer::~RTSPServer() {
   // Turn off background read handling:
   envir().taskScheduler().turnOffBackgroundReadHandling(fServerSocket);
 
-  ::_close(fServerSocket);
+  ::closeSocket(fServerSocket);
 
   // Remove all server media sessions (they'll get deleted when they're finished):
   while (1) {
@@ -250,7 +250,7 @@ RTSPServer::RTSPClientSession::~RTSPClientSession() {
   // Turn off background read handling:
   envir().taskScheduler().turnOffBackgroundReadHandling(fClientSocket);
 
-  ::_close(fClientSocket);
+  ::closeSocket(fClientSocket);
 
   reclaimStreamStates();
 

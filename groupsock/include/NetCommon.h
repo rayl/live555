@@ -34,7 +34,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <windows.h>
 #include <string.h>
 
-#define _close closesocket
+#define closeSocket closesocket
 #define EWOULDBLOCK WSAEWOULDBLOCK
 
 #if defined(_WIN32_WCE)
@@ -79,7 +79,7 @@ typedef unsigned char u_int8_t;
 #include <unix.h>
 #endif
 
-#define _close close
+#define closeSocket close
 
 #ifdef SOLARIS
 #define u_int32_t uint32_t

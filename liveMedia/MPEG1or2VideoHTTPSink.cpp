@@ -38,7 +38,7 @@ MPEG1or2VideoHTTPSink* MPEG1or2VideoHTTPSink::createNew(UsageEnvironment& env, P
     return newSink;
   } while (0);
 
-  if (ourSocket != -1) ::_close(ourSocket);
+  if (ourSocket != -1) ::closeSocket(ourSocket);
   delete newSink;
   return NULL;
 }

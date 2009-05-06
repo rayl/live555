@@ -44,7 +44,7 @@ HTTPSink* HTTPSink::createNew(UsageEnvironment& env, Port ourPort) {
     return newSink;
   } while (0);
 
-  if (ourSocket != -1) ::_close(ourSocket);
+  if (ourSocket != -1) ::closeSocket(ourSocket);
   delete newSink;
   return NULL;
 }
@@ -72,7 +72,7 @@ int HTTPSink::setUpOurSocket(UsageEnvironment& env, Port& ourPort) {
     return ourSocket;
   } while (0);  
 
-  if (ourSocket != -1) ::_close(ourSocket);
+  if (ourSocket != -1) ::closeSocket(ourSocket);
   return -1;
 }
 
@@ -89,7 +89,7 @@ HTTPSink::HTTPSink(UsageEnvironment& env, int ourSocket)
 }
 
 HTTPSink::~HTTPSink() {
-  ::_close(fSocket);
+  ::closeSocket(fSocket);
 }
 
  Boolean HTTPSink::isUseableFrame(unsigned char* /*framePtr*/,
@@ -140,7 +140,7 @@ Boolean HTTPSink::continuePlaying() {
 void HTTPSink::ourOnSourceClosure(void* clientData) {
   // No more input frames - we're done:
   HTTPSink* sink = (HTTPSink*) clientData;
-  ::_close(sink->fClientSocket);
+  ::closeSocket(sink->fClientSocket);
   sink->fClientSocket = -1;
   onSourceClosure(sink);
 }

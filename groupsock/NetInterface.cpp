@@ -98,7 +98,7 @@ Socket::Socket(UsageEnvironment& env, Port port, Boolean setLoopback)
 }
 
 Socket::~Socket() {
-	_close(fSocketNum);
+	closeSocket(fSocketNum);
 }
 
 UsageEnvironment& operator<<(UsageEnvironment& s, const Socket& sock) {

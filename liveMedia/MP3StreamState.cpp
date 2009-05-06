@@ -36,7 +36,7 @@ MP3StreamState::~MP3StreamState() {
   if (fFid != NULL && fFid != stdin) {
     if (fFidIsReallyASocket) {
       long fid_long = (long)fFid;
-      _close((int)fid_long);
+      closeSocket((int)fid_long);
     } else {
       fclose(fFid);
     }
