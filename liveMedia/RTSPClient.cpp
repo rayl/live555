@@ -146,10 +146,15 @@ void RTSPClient::reset() {
 static char* getLine(char* startOfLine) {
   // returns the start of the next line, or NULL if none
   for (char* ptr = startOfLine; *ptr != '\0'; ++ptr) {
+    // Check for the end of line: \r\n (but also accept \r or \n by itself):
     if (*ptr == '\r' || *ptr == '\n') {
       // We found the end of the line
-      *ptr++ = '\0';
-      if (*ptr == '\n') ++ptr;
+      if (*ptr == '\r') {
+	*ptr++ = '\0';
+	if (*ptr == '\n') ++ptr;
+      } else {
+        *ptr++ = '\0';
+      }
       return ptr;
     }
   }
@@ -926,6 +931,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     // For now, ignore other headers.
     char* lineStart;
     char* sessionId = new char[fResponseBufferSize]; // ensures we have enough space
+    unsigned cLength = 0;
     while (1) {
       lineStart = nextLineStart;
       if (lineStart == NULL) break;
@@ -959,12 +965,24 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 	subsession.rtcpChannelId = rtcpChannelId;
 	continue;
       }
+
+      // Also check for a "Content-Length:" header.  Some weird servers include this
+      // in the RTSP "SETUP" response.
+      if (sscanf(lineStart, "Content-Length: %d", &cLength) == 1) continue;
     } 
     delete[] sessionId;
 
     if (subsession.sessionId == NULL) {
       envir().setResultMsg("\"Session:\" header is missing in the response");
       break;
+    }
+
+    // If we saw a "Content-Length:" header in the response, then discard whatever
+    // included data it refers to:
+    if (cLength > 0) {
+      char* dummyBuf = new char[cLength];
+      getResponse1(dummyBuf, cLength);
+      delete[] dummyBuf;
     }
 
     if (streamUsingTCP) {
@@ -979,8 +997,10 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     } else {
       // Normal case.
       // Set the RTP and RTCP sockets' destination address and port
-      // from the information in the SETUP response: 
-      subsession.setDestinations(subsession.connectionEndpointAddress());
+      // from the information in the SETUP response (if present): 
+      netAddressBits destAddress = subsession.connectionEndpointAddress();
+      if (destAddress == 0) destAddress = fServerAddress;
+      subsession.setDestinations(destAddress);
     }
 
     delete[] cmd;
@@ -2139,13 +2159,14 @@ unsigned RTSPClient::getResponse1(char*& responseBuffer,
     }
     bytesRead += bytesReadNow;
     
-    // Check whether we have "\r\n\r\n":
+    // Check whether we have "\r\n\r\n" (or "\r\r" or "\n\n"):
     char* lastToCheck = responseBuffer+bytesRead-4;
     if (lastToCheck < responseBuffer) continue;
     for (; p <= lastToCheck; ++p) {
       if (haveSeenNonCRLF) {
-	if (*p == '\r' && *(p+1) == '\n' &&
-	    *(p+2) == '\r' && *(p+3) == '\n') {
+	if ((*p == '\r' && *(p+1) == '\n' && *(p+2) == '\r' && *(p+3) == '\n')
+	    || (*(p+2) == '\r' && *(p+3) == '\r')
+	    || (*(p+2) == '\n' && *(p+3) == '\n')) {
 	  responseBuffer[bytesRead] = '\0';
 
 	  // Before returning, trim any \r or \n from the start:

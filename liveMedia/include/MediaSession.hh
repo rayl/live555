@@ -199,9 +199,9 @@ public:
   char const* fmtp_mode() const { return fMode; }
   char const* fmtp_spropparametersets() const { return fSpropParameterSets; }
 
-  unsigned connectionEndpointAddress() const;
+  netAddressBits connectionEndpointAddress() const;
       // Converts "fConnectionEndpointName" to an address (or 0 if unknown)
-  void setDestinations(unsigned defaultDestAddress);
+  void setDestinations(netAddressBits defaultDestAddress);
       // Uses "fConnectionEndpointName" and "serverPortNum" to set
       // the destination address and port of the RTP and RTCP objects.
       // This is typically called by RTSP clients after doing "SETUP".

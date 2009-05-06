@@ -183,11 +183,10 @@ Boolean ServerMediaSession::isServerMediaSession() const {
 }
 
 char* ServerMediaSession::generateSDPDescription() {
-  struct in_addr ourIPAddress;
-  ourIPAddress.s_addr = ourSourceAddressForMulticast(envir());
-  char* const ourIPAddressStr
-    = strDup(our_inet_ntoa(ourIPAddress));
-  unsigned ourIPAddressStrSize = strlen(ourIPAddressStr);
+  struct in_addr ipAddress;
+  ipAddress.s_addr = ourIPAddress(envir());
+  char* const ipAddressStr = strDup(our_inet_ntoa(ipAddress));
+  unsigned ipAddressStrSize = strlen(ipAddressStr);
 
   // For a SSM sessions, we need a "a=source-filter: incl ..." line also:
   char* sourceFilterLine;
@@ -196,11 +195,11 @@ char* ServerMediaSession::generateSDPDescription() {
       "a=source-filter: incl IN IP4 * %s\r\n"
       "a=rtcp-unicast: reflection\r\n";
     unsigned sourceFilterFmtSize = strlen(sourceFilterFmt)
-      + ourIPAddressStrSize;
+      + ipAddressStrSize;
 
     sourceFilterLine = new char[sourceFilterFmtSize];
     sprintf(sourceFilterLine, sourceFilterFmt,
-            ourIPAddressStr);
+            ipAddressStr);
   } else {
     sourceFilterLine = strDup("");
   }
@@ -249,7 +248,7 @@ char* ServerMediaSession::generateSDPDescription() {
       "a=x-qt-text-inf:%s\r\n"
       "%s";
     sdpLength += strlen(sdpPrefixFmt)
-      + 20 + 6 + 20 + ourIPAddressStrSize
+      + 20 + 6 + 20 + ipAddressStrSize
       + strlen(fDescriptionSDPString)
       + strlen(fInfoSDPString)
       + strlen(libNameStr) + strlen(libVersionStr)
@@ -265,7 +264,7 @@ char* ServerMediaSession::generateSDPDescription() {
     sprintf(sdp, sdpPrefixFmt,
 	    fCreationTime.tv_sec, fCreationTime.tv_usec, // o= <session id>
 	    1, // o= <version> // (needs to change if params are modified)
-	    ourIPAddressStr, // o= <address>
+	    ipAddressStr, // o= <address>
 	    fDescriptionSDPString, // s= <description>
 	    fInfoSDPString, // i= <info>
 	    libNameStr, libVersionStr, // a=tool:
@@ -284,7 +283,7 @@ char* ServerMediaSession::generateSDPDescription() {
     }
   } while (0);
 
-  delete[] rangeLine; delete[] sourceFilterLine; delete[] ourIPAddressStr;
+  delete[] rangeLine; delete[] sourceFilterLine; delete[] ipAddressStr;
   return sdp;
 }
 

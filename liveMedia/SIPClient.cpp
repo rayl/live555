@@ -59,7 +59,7 @@ SIPClient::SIPClient(UsageEnvironment& env,
   fApplicationNameSize = strlen(fApplicationName);
 
   struct in_addr ourAddress;
-  ourAddress.s_addr = ourSourceAddressForMulticast(env); // hack
+  ourAddress.s_addr = ourIPAddress(env); // hack
   fOurAddressStr = strDup(our_inet_ntoa(ourAddress));
   fOurAddressStrSize = strlen(fOurAddressStr);
 

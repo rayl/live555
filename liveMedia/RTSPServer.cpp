@@ -105,7 +105,7 @@ char* RTSPServer::rtspURLPrefix(int clientSocket) const {
     // Use our default IP address in the URL:
     ourAddress.sin_addr.s_addr = ReceivingInterfaceAddr != 0
       ? ReceivingInterfaceAddr
-      : ourSourceAddressForMulticast(envir()); // hack
+      : ourIPAddress(envir()); // hack
   } else {
     SOCKLEN_T namelen = sizeof ourAddress;
     getsockname(clientSocket, (struct sockaddr*)&ourAddress, &namelen);

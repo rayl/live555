@@ -888,7 +888,7 @@ Boolean MediaSubsession::setClientPortNum(unsigned short portNum) {
   return True;
 }
 
-unsigned MediaSubsession::connectionEndpointAddress() const {
+netAddressBits MediaSubsession::connectionEndpointAddress() const {
   do {
     // Get the endpoint name from with us, or our parent session:
     char const* endpointString = connectionEndpointName();
@@ -901,17 +901,17 @@ unsigned MediaSubsession::connectionEndpointAddress() const {
     NetAddressList addresses(endpointString);
     if (addresses.numAddresses() == 0) break;
 
-    return *(unsigned*)(addresses.firstAddress()->data());
+    return *(netAddressBits*)(addresses.firstAddress()->data());
   } while (0);
 
   // No address known:
   return 0;
 }
 
-void MediaSubsession::setDestinations(unsigned defaultDestAddress) {
+void MediaSubsession::setDestinations(netAddressBits defaultDestAddress) {
   // Get the destination address from the connection endpoint name
   // (This will be 0 if it's not known, in which case we use the default)
-  unsigned destAddress = connectionEndpointAddress();
+  netAddressBits destAddress = connectionEndpointAddress();
   if (destAddress == 0) destAddress = defaultDestAddress;
   struct in_addr destAddr; destAddr.s_addr = destAddress;
 
