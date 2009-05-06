@@ -288,8 +288,6 @@ void play() {
   }
 
   // Finally, start playing each sink.
-  // (Start playing video first, to ensure that any video sequence header
-  // at the start of the file gets read.)
   *env << "Beginning to read from \"" << *curInputFileName << "\"...\n";
   if (videoSink != NULL) {
     videoSink->startPlaying(*videoSource, afterPlaying, videoSink);

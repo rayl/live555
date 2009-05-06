@@ -33,11 +33,12 @@ public:
   static MPEG1or2FileServerDemux*
   createNew(UsageEnvironment& env, char const* fileName);
 
-  ServerMediaSubsession* newAudioServerMediaSubsession();
+  ServerMediaSubsession* newAudioServerMediaSubsession(); // MPEG-1 or 2 audio
   ServerMediaSubsession* newVideoServerMediaSubsession(Boolean iFramesOnly = False,
 						       double vshPeriod = 5.0
 		       /* how often (in seconds) to inject a Video_Sequence_Header,
 			  if one doesn't already appear in the stream */);
+  ServerMediaSubsession* newAC3AudioServerMediaSubsession(); // AC-3 audio (from VOB)
 
 private:
   MPEG1or2FileServerDemux(UsageEnvironment& env, char const* fileName);

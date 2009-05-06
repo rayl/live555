@@ -73,6 +73,11 @@ private:
 			    FramedSource::onCloseFunc* onCloseFunc,
 			    void* onCloseClientData);
 
+  Boolean useSavedData(u_int8_t streamIdTag,
+		       unsigned char* to, unsigned maxSize,
+		       FramedSource::afterGettingFunc* afterGettingFunc,
+		       void* afterGettingClientData);
+
   static void continueReadProcessing(void* clientData,
 				     unsigned char* ptr, unsigned size);
   void continueReadProcessing();
@@ -100,8 +105,13 @@ private:
 
     // output parameters
     unsigned frameSize; struct timeval presentationTime;
+    class SavedData; // forward
+    SavedData* savedDataHead;
+    SavedData* savedDataTail;
+    unsigned savedDataTotalSize;
 
     // status parameters
+    Boolean isPotentiallyReadable;
     Boolean isCurrentlyActive;
     Boolean isCurrentlyAwaitingData;
   } OutputDescriptor_t;

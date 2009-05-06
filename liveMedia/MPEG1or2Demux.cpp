@@ -59,6 +59,24 @@ private:
 };
 
 
+////////// MPEG1or2Demux::OutputDescriptor::SavedData definition/implementation //////////
+
+class MPEG1or2Demux::OutputDescriptor::SavedData {
+public:
+  SavedData(unsigned char* buf, unsigned size)
+    : next(NULL), data(buf), dataSize(size), numBytesUsed(0) {
+  }
+  virtual ~SavedData() {
+    delete[] data;
+    delete next;
+  }
+
+  SavedData* next;
+  unsigned char* data;
+  unsigned dataSize, numBytesUsed;
+};
+
+
 ////////// MPEG1or2Demux implementation //////////
 
 MPEG1or2Demux
@@ -70,6 +88,8 @@ MPEG1or2Demux
     fNumPendingReads(0), fHaveUndeliveredData(False) {
   fParser = new MPEGProgramStreamParser(this, inputSource);
   for (unsigned i = 0; i < 256; ++i) {
+    fOutput[i].savedDataHead = fOutput[i].savedDataTail = NULL;
+    fOutput[i].isPotentiallyReadable = False;
     fOutput[i].isCurrentlyActive = False;
     fOutput[i].isCurrentlyAwaitingData = False;
   } 
@@ -77,6 +97,7 @@ MPEG1or2Demux
 
 MPEG1or2Demux::~MPEG1or2Demux() {
   delete fParser;
+  for (unsigned i = 0; i < 256; ++i) delete fOutput[i].savedDataHead;
   Medium::close(fInputSource);
 }
 
@@ -98,6 +119,7 @@ void MPEG1or2Demux
 MPEG1or2DemuxedElementaryStream*
 MPEG1or2Demux::newElementaryStream(u_int8_t streamIdTag) {
   ++fNumOutstandingESs;
+  fOutput[streamIdTag].isPotentiallyReadable = True;
   return new MPEG1or2DemuxedElementaryStream(envir(), streamIdTag, *this);
 }
 
@@ -140,6 +162,43 @@ void MPEG1or2Demux::registerReadInterest(u_int8_t streamIdTag,
   ++fNumPendingReads;
 }
 
+Boolean MPEG1or2Demux::useSavedData(u_int8_t streamIdTag,
+				    unsigned char* to, unsigned maxSize,
+				    FramedSource::afterGettingFunc* afterGettingFunc,
+				    void* afterGettingClientData) {
+  struct OutputDescriptor& out = fOutput[streamIdTag];
+  if (out.savedDataHead == NULL) return False; // common case
+
+  unsigned totNumBytesCopied = 0;
+  while (maxSize > 0 && out.savedDataHead != NULL) {
+    OutputDescriptor::SavedData& savedData = *(out.savedDataHead);
+    unsigned char* from = &savedData.data[savedData.numBytesUsed];
+    unsigned numBytesToCopy = savedData.dataSize - savedData.numBytesUsed;
+    if (numBytesToCopy > maxSize) numBytesToCopy = maxSize;
+    memmove(to, from, numBytesToCopy);
+    to += numBytesToCopy;
+    maxSize -= numBytesToCopy;
+    out.savedDataTotalSize -= numBytesToCopy;
+    totNumBytesCopied += numBytesToCopy;
+    savedData.numBytesUsed += numBytesToCopy;
+    if (savedData.numBytesUsed == savedData.dataSize) {
+      out.savedDataHead = savedData.next;
+      if (out.savedDataHead == NULL) out.savedDataTail = NULL;
+      savedData.next = NULL;
+      delete &savedData;
+    }
+  }
+
+  out.isCurrentlyActive = True;
+  if (afterGettingFunc != NULL) {
+    struct timeval presentationTime; // value? #####
+    (*afterGettingFunc)(afterGettingClientData, totNumBytesCopied,
+			0 /* numTruncatedBytes */, presentationTime,
+			0 /* durationInMicroseconds ?????#####*/);
+  }
+  return True;
+}
+
 void MPEG1or2Demux::continueReadProcessing(void* clientData,
 				       unsigned char* /*ptr*/,
 				       unsigned /*size*/) {
@@ -180,12 +239,18 @@ void MPEG1or2Demux::continueReadProcessing() {
 }
 
 void MPEG1or2Demux::getNextFrame(u_int8_t streamIdTag,
-			     unsigned char* to, unsigned maxSize,
-			     FramedSource::afterGettingFunc* afterGettingFunc,
-			     void* afterGettingClientData,
-			     FramedSource::onCloseFunc* onCloseFunc,
-			     void* onCloseClientData) {
-  // Begin by saving the parameters of the specified stream id:
+				 unsigned char* to, unsigned maxSize,
+				 FramedSource::afterGettingFunc* afterGettingFunc,
+				 void* afterGettingClientData,
+				 FramedSource::onCloseFunc* onCloseFunc,
+				 void* onCloseClientData) {
+  // First, check whether we have saved data for this stream id:
+  if (useSavedData(streamIdTag, to, maxSize,
+		   afterGettingFunc, afterGettingClientData)) {
+    return;
+  }
+
+  // Then save the parameters of the specified stream id:
   registerReadInterest(streamIdTag, to, maxSize,
 		       afterGettingFunc, afterGettingClientData,
 		       onCloseFunc, onCloseClientData);
@@ -225,7 +290,10 @@ void MPEG1or2Demux::handleClosure(void* clientData) {
 	++numPending;
       }
     }
-    out.isCurrentlyActive = out.isCurrentlyAwaitingData = False;
+    delete out.savedDataHead; out.savedDataHead = out.savedDataTail = NULL;
+    out.savedDataTotalSize = 0;
+    out.isPotentiallyReadable = out.isCurrentlyActive = out.isCurrentlyAwaitingData
+      = False;
   } 
   for (i = 0; i < numPending; ++i) {
     (*savedPending[i].fOnCloseFunc)(savedPending[i].onCloseClientData);
@@ -627,6 +695,22 @@ unsigned char MPEGProgramStreamParser::parsePESPacket() {
       restoreSavedParserState(); // so we read from the beginning next time
       fUsingSource->fHaveUndeliveredData = True;
       throw READER_NOT_READY;
+    } else if (out.isPotentiallyReadable &&
+	       out.savedDataTotalSize + PES_packet_length < 1000000 /*limit*/) {
+      // Someone is interested in this stream, but hasn't begun reading it yet.
+      // Save this data, so that the reader will get it when he later asks for it.
+      unsigned char* buf = new unsigned char[PES_packet_length];
+      getBytes(buf, PES_packet_length);
+      MPEG1or2Demux::OutputDescriptor::SavedData* savedData
+	= new MPEG1or2Demux::OutputDescriptor::SavedData(buf, PES_packet_length);
+      if (out.savedDataHead == NULL) {
+	out.savedDataHead = out.savedDataTail = savedData;
+      } else {
+	out.savedDataTail->next = savedData;
+	out.savedDataTail = savedData;
+      }
+      out.savedDataTotalSize += PES_packet_length;
+      PES_packet_length = 0;
     }
     skipBytes(PES_packet_length);
   }

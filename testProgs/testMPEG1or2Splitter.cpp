@@ -66,8 +66,6 @@ int main(int argc, char** argv) {
   sessionState.audioSink = FileSink::createNew(*env, outputFileName_audio);
 
   // Finally, start playing each sink.
-  // (Start playing video first, to ensure that any video sequence header
-  // at the start of the file gets read.)
   *env << "Beginning to read...\n";
   sessionState.videoSink->startPlaying(*sessionState.videoSource,
 				       afterPlaying, sessionState.videoSink);

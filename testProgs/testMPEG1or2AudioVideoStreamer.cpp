@@ -196,8 +196,6 @@ void play() {
     = MPEG1or2VideoStreamFramer::createNew(*env, videoES, iFramesOnly);
 
   // Finally, start playing each sink.
-  // (Start playing video first, to ensure that any video sequence header
-  // at the start of the file gets read.)
   *env << "Beginning to read from file...\n";
   videoSink->startPlaying(*videoSource, afterPlaying, videoSink);
   audioSink->startPlaying(*audioSource, afterPlaying, audioSink);
