@@ -24,7 +24,7 @@ MPEGVideoStreamParser
 ::MPEGVideoStreamParser(MPEGVideoStreamFramer* usingSource,
 			FramedSource* inputSource)
   : StreamParser(inputSource, FramedSource::handleClosure, usingSource,
-		 &MPEGVideoStreamFramer::continueReadProcessing, usingSource),
+		 usingSource->continueReadProcessing, usingSource),
   fUsingSource(usingSource) {
 }
 
