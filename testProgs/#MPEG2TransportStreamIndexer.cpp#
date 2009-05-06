@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
-// Copyright (c) 1996-2007, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A program that reads an existing MPEG-2 Transport Stream file,
 // and generates a separate index file that can be used - by our RTSP server
 // implementation - to support 'trick play' operations when streaming the

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // A simple HTTP server that acts solely to implement RTSP-over-HTTP tunneling
 // (to a separate RTSP server), as described in
 // http://developer.apple.com/documentation/QuickTime/QTSS/Concepts/chapter_2_section_14.html

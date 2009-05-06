@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // Common routines for opening/closing named input files
 // Implementation
 
@@ -61,7 +61,7 @@ u_int64_t GetFileSize(char const* fileName, FILE* fid) {
     if (fileName == NULL) {
 #endif
       if (fid != NULL && SeekFile64(fid, 0, SEEK_END) >= 0) {
-	fileSize = TellFile64(fid);
+	fileSize = (u_int64_t)TellFile64(fid);
 	if (fileSize == (u_int64_t)-1) fileSize = 0; // TellFile64() failed
 	SeekFile64(fid, 0, SEEK_SET);
       }
@@ -78,7 +78,7 @@ u_int64_t GetFileSize(char const* fileName, FILE* fid) {
   return fileSize;
 }
 
-u_int64_t SeekFile64(FILE *fid, int64_t offset, int whence) {
+int64_t SeekFile64(FILE *fid, int64_t offset, int whence) {
   clearerr(fid);
   fflush(fid);
 #if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
@@ -92,7 +92,7 @@ u_int64_t SeekFile64(FILE *fid, int64_t offset, int whence) {
 #endif
 }
 
-u_int64_t TellFile64(FILE *fid) {
+int64_t TellFile64(FILE *fid) {
   clearerr(fid);
   fflush(fid);
 #if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
 // on demand.
 // Implementation
@@ -313,7 +313,7 @@ void OnDemandServerMediaSubsession::deleteStream(unsigned clientSessionId,
   }
 
   // Delete the "StreamState" structure if it's no longer being used:
-  if (streamState != NULL && streamState->referenceCount() >= 0) {
+  if (streamState != NULL) {
     if (streamState->referenceCount() > 0) --streamState->referenceCount();
     if (streamState->referenceCount() == 0) {
       delete streamState;

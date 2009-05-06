@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // A generic SIP client
 // Implementation
 
@@ -458,7 +458,7 @@ unsigned SIPClient::getResponseCode() {
     char* firstLine = NULL;
     char* nextLineStart = NULL;
     unsigned bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received INVITE response: " << readBuf << "\n";
     }
@@ -549,7 +549,7 @@ unsigned SIPClient::getResponseCode() {
     // the "Content-length:" header (if any) that we saw.  We may need to
     // read more data, or we may have extraneous data in the buffer.
     char* bodyStart = nextLineStart;
-    if (contentLength >= 0) {
+    if (bodyStart != NULL && contentLength >= 0) {
       // We saw a "Content-length:" header
       unsigned numBodyBytes = &readBuf[bytesRead] - bodyStart;
       if (contentLength > (int)numBodyBytes) {

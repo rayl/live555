@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // A sink that generates a QuickTime file from a composite media session
 // Implementation
 
@@ -529,7 +529,6 @@ Boolean SubsessionIOState::setQTstate() {
   char const* noCodecWarning1 = "Warning: We don't implement a QuickTime ";
   char const* noCodecWarning2 = " Media Data Type for the \"";
   char const* noCodecWarning3 = "\" track, so we'll insert a dummy \"????\" Media Data Atom instead.  A separate, codec-specific editing pass will be needed before this track can be played.\n";
-  Boolean supportPartiallyOnly = False;
 
   do {
     fQTEnableTrack = True; // enable this track in the movie by default
@@ -622,13 +621,12 @@ Boolean SubsessionIOState::setQTstate() {
       break;
     }
 
-    if (supportPartiallyOnly) {
-      envir() << "Warning: We don't have sufficient codec-specific information (e.g., sample sizes) to fully generate the \""
-	      << fOurSubsession.mediumName() << "/"
-	      << fOurSubsession.codecName()
-	      << "\" track, so we'll disable this track in the movie.  A separate, codec-specific editing pass will be needed before this track can be played\n";
-      fQTEnableTrack = False; // disable this track in the movie
-    }
+#ifdef QT_SUPPORT_PARTIALLY_ONLY
+    envir() << "Warning: We don't have sufficient codec-specific information (e.g., sample sizes) to fully generate the \""
+	    << fOurSubsession.mediumName() << "/" << fOurSubsession.codecName()
+	    << "\" track, so we'll disable this track in the movie.  A separate, codec-specific editing pass will be needed before this track can be played\n";
+    fQTEnableTrack = False; // disable this track in the movie
+#endif
 
     return True;
   } while (0);
@@ -1710,6 +1708,7 @@ addAtom(esds);
   for (unsigned i = 0; i < configSize; ++i) {
     size += addByte(config[i]);
   }
+  delete[] config;
 
   if (strcmp(subsession.mediumName(), "audio") == 0) {
     // MPEG-4 audio

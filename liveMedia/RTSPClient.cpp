@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // A generic RTSP client
 // Implementation
 
@@ -286,6 +286,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
 	  char* result = describeURL(redirectionURL, authenticator, allowKasennaProtocol);
 	  delete[] redirectionURL;
 	  delete[] serverType;
+	  delete[] cmd;
 	  return result;
 	}
       }
@@ -507,9 +508,9 @@ char* RTSPClient::sendOptionsCmd(char const* url,
       // (and no username,password pair was supplied separately):
       if (username == NULL && password == NULL
 	  && parseRTSPURLUsernamePassword(url, username, password)) {
-	Authenticator authenticator;
-	authenticator.setUsernameAndPassword(username, password);
-	result = sendOptionsCmd(url, username, password, &authenticator);
+	Authenticator newAuthenticator;
+	newAuthenticator.setUsernameAndPassword(username, password);
+	result = sendOptionsCmd(url, username, password, &newAuthenticator);
 	delete[] username; delete[] password; // they were dynamically allocated
 	break;
       } else if (username != NULL && password != NULL) {
@@ -762,7 +763,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       sessionStr = new char[20+strlen(fLastSessionId)];
       sprintf(sessionStr, "Session: %s\r\n", fLastSessionId);
     } else {
-      sessionStr = "";
+      sessionStr = strDup("");
     }
 
     char* transportStr = NULL;
@@ -877,6 +878,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 	rtpNumber = subsession.clientPortNum();
 	if (rtpNumber == 0) {
 	  envir().setResultMsg("Client port number unknown\n");
+	  delete[] authenticatorStr; delete[] sessionStr; delete[] setupStr;
 	  break;
 	}
 	rtcpNumber = rtpNumber + 1;
@@ -914,9 +916,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 	    sessionStr,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
-    delete[] authenticatorStr;
-    if (sessionStr[0] != '\0') delete[] sessionStr;
-    delete[] setupStr; delete[] transportStr;
+    delete[] authenticatorStr; delete[] sessionStr; delete[] setupStr; delete[] transportStr;
 
     // And then send it:
     if (!sendRequest(cmd, "SETUP")) break;

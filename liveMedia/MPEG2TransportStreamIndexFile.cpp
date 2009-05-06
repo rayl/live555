@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // A class that encapsulates MPEG-2 Transport Stream 'index files'/
 // These index files are used to implement 'trick play' operations
 // (seek-by-time, fast forward, reverse play) on Transport Stream files.

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // A RTSP server
 // Implementation
 
@@ -530,7 +530,7 @@ typedef enum StreamingMode {
   RTP_UDP,
   RTP_TCP,
   RAW_UDP
-};
+} StreamingMode;
 
 static void parseTransportHeader(char const* buf,
 				 StreamingMode& streamingMode,
@@ -681,7 +681,7 @@ void RTSPServer::RTSPClientSession
   // Look for a "Transport:" header in the request string,
   // to extract client parameters:
   StreamingMode streamingMode;
-  char* streamingModeString; // set when RAW_UDP streaming is specified
+  char* streamingModeString = NULL; // set when RAW_UDP streaming is specified
   char* clientsDestinationAddressStr;
   u_int8_t clientsDestinationTTL;
   portNumBits clientRTPPortNum, clientRTCPPortNum;
@@ -765,7 +765,6 @@ void RTSPServer::RTSPClientSession
                  dateHeader(),
                  streamingModeString, destAddrStr, sourceAddrStr, ntohs(serverRTPPort.num()), destinationTTL,
                  fOurSessionId);
-        delete[] streamingModeString;
         break;
     }
   } else {
@@ -807,12 +806,11 @@ void RTSPServer::RTSPClientSession
 	       dateHeader(),
 	       streamingModeString, destAddrStr, sourceAddrStr, ntohs(clientRTPPort.num()), ntohs(serverRTPPort.num()),
 	       fOurSessionId);
-      delete[] streamingModeString;
       break;
     }
     }
-    delete[] destAddrStr; delete[] sourceAddrStr;
   }
+  delete[] destAddrStr; delete[] sourceAddrStr; delete[] streamingModeString;
 }
 
 void RTSPServer::RTSPClientSession

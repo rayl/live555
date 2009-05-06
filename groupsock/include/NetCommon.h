@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 /* "groupsock" interface
- * Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+ * Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
  * Common include files, typically used for networking
  */
 

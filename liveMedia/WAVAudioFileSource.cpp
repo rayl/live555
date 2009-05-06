@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // A WAV audio file source
 // Implementation
 
@@ -75,26 +75,25 @@ unsigned char WAVAudioFileSource::getAudioFormat() {
 
 
 #define nextc fgetc(fid)
-#define ucEOF ((unsigned char)EOF)
 
 static Boolean get4Bytes(FILE* fid, unsigned& result) { // little-endian
-  unsigned char c0, c1, c2, c3;
-  if ((c0 = nextc) == ucEOF || (c1 = nextc) == ucEOF ||
-      (c2 = nextc) == ucEOF || (c3 = nextc) == ucEOF) return False;
+  int c0, c1, c2, c3;
+  if ((c0 = nextc) == EOF || (c1 = nextc) == EOF ||
+      (c2 = nextc) == EOF || (c3 = nextc) == EOF) return False;
   result = (c3<<24)|(c2<<16)|(c1<<8)|c0;
   return True;
 }
 
 static Boolean get2Bytes(FILE* fid, unsigned short& result) {//little-endian
-  unsigned char c0, c1;
-  if ((c0 = nextc) == ucEOF || (c1 = nextc) == ucEOF) return False;
+  int c0, c1;
+  if ((c0 = nextc) == EOF || (c1 = nextc) == EOF) return False;
   result = (c1<<8)|c0;
   return True;
 }
 
 static Boolean skipBytes(FILE* fid, int num) {
   while (num-- > 0) {
-    if (nextc == ucEOF) return False;
+    if (nextc == EOF) return False;
   }
   return True;
 }
@@ -157,7 +156,7 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
     if (!skipBytes(fid, formatLength - 16)) break;
 
     // FACT chunk (optional):
-    unsigned char c = nextc;
+    int c = nextc;
     if (c == 'f') {
       if (nextc != 'a' || nextc != 'c' || nextc != 't') break;
       unsigned factLength;
