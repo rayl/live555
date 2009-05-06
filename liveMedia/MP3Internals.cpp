@@ -27,7 +27,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 // This is crufty old code that needs to be cleaned up #####
 
-unsigned tabsel_123[2][3][16] = {
+static unsigned live_tabsel[2][3][16] = {
    { {32,32,64,96,128,160,192,224,256,288,320,352,384,416,448,448},
      {32,32,48,56, 64, 80, 96,112,128,160,192,224,256,320,384,384},
      {32,32,40,48, 56, 64, 80, 96,112,128,160,192,224,256,320,320} },
@@ -36,9 +36,10 @@ unsigned tabsel_123[2][3][16] = {
      {8,8,16,24,32,40,48,56,64,80,96,112,128,144,160,160},
      {8,8,16,24,32,40,48,56,64,80,96,112,128,144,160,160} }
 };
-/* Note: tabsel_123[*][*][0 or 15] shouldn't occur; use dummy values there */
+/* Note: live_tabsel[*][*][0 or 15] shouldn't occur; use dummy values there */
 
-long freqs[7] = { 44100, 48000, 32000, 22050, 24000, 16000 , 11025 };
+static long live_freqs[7]
+= { 44100, 48000, 32000, 22050, 24000, 16000 , 11025 };
 
 static double ispow[8207];
 static double aa_ca[8], aa_cs[8];
@@ -369,8 +370,8 @@ void MP3FrameParams::setParamsFromHeader() {
 #endif
   }
 
-  bitrate = tabsel_123[isMPEG2][layer-1][bitrateIndex];
-  samplingFreq = freqs[samplingFreqIndex];
+  bitrate = live_tabsel[isMPEG2][layer-1][bitrateIndex];
+  samplingFreq = live_freqs[samplingFreqIndex];
   isStereo = (stereo > 1);
   isFreeFormat = (bitrateIndex == 0);
   frameSize
@@ -831,7 +832,7 @@ Boolean ZeroOutMP3SideInfo(unsigned char* framePtr, unsigned totFrameSize,
 static unsigned MP3BitrateToBitrateIndex(unsigned bitrate /* in kbps */,
 					 Boolean isMPEG2) {
   for (unsigned i = 1; i < 15; ++i) {
-    if (tabsel_123[isMPEG2][2][i] >= bitrate)
+    if (live_tabsel[isMPEG2][2][i] >= bitrate)
       return i;
   }
 

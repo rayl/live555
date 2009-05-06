@@ -199,8 +199,11 @@ Boolean DarwinInjector::setDestination(char const* remoteRTSPServerNameOrAddress
     }
     if (subsession != NULL) break; // an error occurred above
 
-    // Finally, tell the RTSP server to start:
+    // Tell the RTSP server to start:
     if (!fRTSPClient->playMediaSession(*session)) break;
+
+    // Finally, make sure that the output TCP buffer is a reasonable size:
+    increaseSendBufferTo(envir(), fRTSPClient->socketNum(), 100*1024);
 
     success = True;
   } while (0);
