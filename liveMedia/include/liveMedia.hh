@@ -41,6 +41,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "SimpleRTPSource.hh"
 #include "MPEG1or2AudioRTPSource.hh"
 #include "MPEG4LATMAudioRTPSource.hh"
+#include "MPEG4LATMAudioRTPSink.hh"
 #include "MPEG4ESVideoRTPSource.hh"
 #include "MPEG4GenericRTPSource.hh"
 #include "MP3ADURTPSource.hh"
