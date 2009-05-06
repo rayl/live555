@@ -834,6 +834,15 @@ public:
       totNumPacketsReceived(0), totNumPacketsExpected(0) {
     measurementEndTime = measurementStartTime = startTime;
 
+#ifdef SUPPORT_REAL_RTSP
+    if (isRealNetworksSession) { // hack for RealMedia sessions (RDT, not RTP)
+      RealRDTSource* rdt = (RealRDTSource*)src;
+      kBytesTotal = rdt->totNumKBytesReceived();
+      totNumPacketsReceived = rdt->totNumPacketsReceived();
+      totNumPacketsExpected = totNumPacketsReceived; // because we use TCP
+      return;
+    }
+#endif
     RTPReceptionStatsDB::Iterator statsIter(src->receptionStatsDB());
     // Assume that there's only one SSRC source (usually the case):
     RTPReceptionStats* stats = statsIter.next(True);
@@ -897,6 +906,24 @@ void qosMeasurementRecord
   double timeDiff = secsDiff + usecsDiff/1000000.0;
   measurementEndTime = timeNow;
 
+#ifdef SUPPORT_REAL_RTSP
+  if (isRealNetworksSession) { // hack for RealMedia sessions (RDT, not RTP)
+    RealRDTSource* rdt = (RealRDTSource*)fSource;
+    double kBytesTotalNow = rdt->totNumKBytesReceived();
+    double kBytesDeltaNow = kBytesTotalNow - kBytesTotal;
+    kBytesTotal = kBytesTotalNow;
+
+    double kbpsNow = timeDiff == 0.0 ? 0.0 : 8*kBytesDeltaNow/timeDiff;
+    if (kbpsNow < 0.0) kbpsNow = 0.0; // in case of roundoff error
+    if (kbpsNow < kbits_per_second_min) kbits_per_second_min = kbpsNow;
+    if (kbpsNow > kbits_per_second_max) kbits_per_second_max = kbpsNow;
+
+    totNumPacketsReceived = rdt->totNumPacketsReceived();
+    totNumPacketsExpected = totNumPacketsReceived; // because we use TCP
+    packet_loss_fraction_min = packet_loss_fraction_max = 0.0; // ditto
+    return;
+  }
+#endif
   RTPReceptionStatsDB::Iterator statsIter(fSource->receptionStatsDB());
   // Assume that there's only one SSRC source (usually the case):
   RTPReceptionStats* stats = statsIter.next(True);
@@ -939,6 +966,9 @@ void beginQOSMeasurement() {
   MediaSubsession* subsession;
   while ((subsession = iter.next()) != NULL) {
     RTPSource* src = subsession->rtpSource();
+#ifdef SUPPORT_REAL_RTSP
+    if (isRealNetworksSession) src = (RTPSource*)(subsession->readSource()); // hack
+#endif
     if (src == NULL) continue;
 
     qosMeasurementRecord* qosRecord
@@ -965,67 +995,85 @@ void printQOSData(int exitCode) {
     MediaSubsession* subsession;
     while ((subsession = iter.next()) != NULL) {
       RTPSource* src = subsession->rtpSource();
+#ifdef SUPPORT_REAL_RTSP
+      if (isRealNetworksSession) src = (RTPSource*)(subsession->readSource()); // hack
+#endif
       if (src == NULL) continue;
 
       *env << "subsession\t" << subsession->mediumName()
-		<< "/" << subsession->codecName() << "\n";
-
+	   << "/" << subsession->codecName() << "\n";
+      
       unsigned numPacketsReceived = 0, numPacketsExpected = 0;
-
+      
       if (curQOSRecord != NULL) {
-		numPacketsReceived = curQOSRecord->totNumPacketsReceived;
-		numPacketsExpected = curQOSRecord->totNumPacketsExpected;
+	numPacketsReceived = curQOSRecord->totNumPacketsReceived;
+	numPacketsExpected = curQOSRecord->totNumPacketsExpected;
       }
       *env << "num_packets_received\t" << numPacketsReceived << "\n";
       *env << "num_packets_lost\t" << numPacketsExpected - numPacketsReceived << "\n";
       
       if (curQOSRecord != NULL) {
-		unsigned secsDiff = curQOSRecord->measurementEndTime.tv_sec
-		 - curQOSRecord->measurementStartTime.tv_sec;
-		int usecsDiff = curQOSRecord->measurementEndTime.tv_usec
-		 - curQOSRecord->measurementStartTime.tv_usec;
-		double measurementTime = secsDiff + usecsDiff/1000000.0;
-		*env << "elapsed_measurement_time\t" << measurementTime << "\n";
+	unsigned secsDiff = curQOSRecord->measurementEndTime.tv_sec
+	  - curQOSRecord->measurementStartTime.tv_sec;
+	int usecsDiff = curQOSRecord->measurementEndTime.tv_usec
+	  - curQOSRecord->measurementStartTime.tv_usec;
+	double measurementTime = secsDiff + usecsDiff/1000000.0;
+	*env << "elapsed_measurement_time\t" << measurementTime << "\n";
 	
-		*env << "kBytes_received_total\t" << curQOSRecord->kBytesTotal << "\n";
+	*env << "kBytes_received_total\t" << curQOSRecord->kBytesTotal << "\n";
 	
-		*env << "measurement_sampling_interval_ms\t" << qosMeasurementIntervalMS << "\n";
+	*env << "measurement_sampling_interval_ms\t" << qosMeasurementIntervalMS << "\n";
 	
-		if (curQOSRecord->kbits_per_second_max == 0) {
-			// special case: we didn't receive any data:
-			*env <<
-			"kbits_per_second_min\tunavailable\n"
-			"kbits_per_second_ave\tunavailable\n"
-			"kbits_per_second_max\tunavailable\n";
-		} else {
-			*env << "kbits_per_second_min\t" << curQOSRecord->kbits_per_second_min << "\n";
-			*env << "kbits_per_second_ave\t"
-				<< (measurementTime == 0.0 ? 0.0 : 8*curQOSRecord->kBytesTotal/measurementTime) << "\n";
-			*env << "kbits_per_second_max\t" << curQOSRecord->kbits_per_second_max << "\n";
-		}
+	if (curQOSRecord->kbits_per_second_max == 0) {
+	  // special case: we didn't receive any data:
+	  *env <<
+	    "kbits_per_second_min\tunavailable\n"
+	    "kbits_per_second_ave\tunavailable\n"
+	    "kbits_per_second_max\tunavailable\n";
+	} else {
+	  *env << "kbits_per_second_min\t" << curQOSRecord->kbits_per_second_min << "\n";
+	  *env << "kbits_per_second_ave\t"
+	       << (measurementTime == 0.0 ? 0.0 : 8*curQOSRecord->kBytesTotal/measurementTime) << "\n";
+	  *env << "kbits_per_second_max\t" << curQOSRecord->kbits_per_second_max << "\n";
+	}
 	
-		*env << "packet_loss_percentage_min\t" << 100*curQOSRecord->packet_loss_fraction_min << "\n";
-		double packetLossFraction = numPacketsExpected == 0 ? 1.0
-			: 1.0 - numPacketsReceived/(double)numPacketsExpected;
-		if (packetLossFraction < 0.0) packetLossFraction = 0.0;
-		*env << "packet_loss_percentage_ave\t" << 100*packetLossFraction << "\n";
-		*env << "packet_loss_percentage_max\t"
-			<< (packetLossFraction == 1.0 ? 100.0 : 100*curQOSRecord->packet_loss_fraction_max) << "\n";
+	*env << "packet_loss_percentage_min\t" << 100*curQOSRecord->packet_loss_fraction_min << "\n";
+	double packetLossFraction = numPacketsExpected == 0 ? 1.0
+	  : 1.0 - numPacketsReceived/(double)numPacketsExpected;
+	if (packetLossFraction < 0.0) packetLossFraction = 0.0;
+	*env << "packet_loss_percentage_ave\t" << 100*packetLossFraction << "\n";
+	*env << "packet_loss_percentage_max\t"
+	     << (packetLossFraction == 1.0 ? 100.0 : 100*curQOSRecord->packet_loss_fraction_max) << "\n";
 	
-		RTPReceptionStatsDB::Iterator statsIter(src->receptionStatsDB());
-		// Assume that there's only one SSRC source (usually the case):
-		RTPReceptionStats* stats = statsIter.next(True);
-		if (stats != NULL) {
-			*env << "inter_packet_gap_ms_min\t" << stats->minInterPacketGapUS()/1000.0 << "\n";
-			struct timeval totalGaps = stats->totalInterPacketGaps();
-			double totalGapsMS = totalGaps.tv_sec*1000.0 + totalGaps.tv_usec/1000.0;
-			unsigned totNumPacketsReceived = stats->totNumPacketsReceived();
-			*env << "inter_packet_gap_ms_ave\t"
-				<< (totNumPacketsReceived == 0 ? 0.0 : totalGapsMS/totNumPacketsReceived) << "\n";
-			*env << "inter_packet_gap_ms_max\t" << stats->maxInterPacketGapUS()/1000.0 << "\n";
-		}
-
-		curQOSRecord = curQOSRecord->fNext;
+#ifdef SUPPORT_REAL_RTSP
+	if (isRealNetworksSession) {
+	  RealRDTSource* rdt = (RealRDTSource*)src;
+	  *env << "inter_packet_gap_ms_min\t" << rdt->minInterPacketGapUS()/1000.0 << "\n";
+	  struct timeval totalGaps = rdt->totalInterPacketGaps();
+	  double totalGapsMS = totalGaps.tv_sec*1000.0 + totalGaps.tv_usec/1000.0;
+	  unsigned totNumPacketsReceived = rdt->totNumPacketsReceived();
+	  *env << "inter_packet_gap_ms_ave\t"
+	       << (totNumPacketsReceived == 0 ? 0.0 : totalGapsMS/totNumPacketsReceived) << "\n";
+	  *env << "inter_packet_gap_ms_max\t" << rdt->maxInterPacketGapUS()/1000.0 << "\n";
+	} else {
+#endif
+	  RTPReceptionStatsDB::Iterator statsIter(src->receptionStatsDB());
+	  // Assume that there's only one SSRC source (usually the case):
+	  RTPReceptionStats* stats = statsIter.next(True);
+	  if (stats != NULL) {
+	    *env << "inter_packet_gap_ms_min\t" << stats->minInterPacketGapUS()/1000.0 << "\n";
+	    struct timeval totalGaps = stats->totalInterPacketGaps();
+	    double totalGapsMS = totalGaps.tv_sec*1000.0 + totalGaps.tv_usec/1000.0;
+	    unsigned totNumPacketsReceived = stats->totNumPacketsReceived();
+	    *env << "inter_packet_gap_ms_ave\t"
+		 << (totNumPacketsReceived == 0 ? 0.0 : totalGapsMS/totNumPacketsReceived) << "\n";
+	    *env << "inter_packet_gap_ms_max\t" << stats->maxInterPacketGapUS()/1000.0 << "\n";
+	  }
+#ifdef SUPPORT_REAL_RTSP
+	}
+#endif
+	
+	curQOSRecord = curQOSRecord->fNext;
       }
     }
   }    

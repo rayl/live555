@@ -276,7 +276,7 @@ void RTPReceptionStats
     fTotalInterPacketGaps.tv_usec += gap;
     if (fTotalInterPacketGaps.tv_usec >= MILLION) {
       ++fTotalInterPacketGaps.tv_sec;
-      fTotalInterPacketGaps.tv_usec -= 1000000;
+      fTotalInterPacketGaps.tv_usec -= MILLION;
     }
   }
   fLastPacketReceptionTime = timeNow;
