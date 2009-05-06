@@ -24,7 +24,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <stdlib.h>
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
-#define _strncasecmp strncmp
+#define _strncasecmp _strnicmp
 #else
 #define _strncasecmp strncasecmp
 #endif
@@ -406,7 +406,7 @@ char* RTSPClient::sendOptionsCmd(char const* url) {
 
       nextLineStart = getLine(lineStart);
 
-      if (_strncasecmp(lineStart, "public: ", 8) == 0) {
+      if (_strncasecmp(lineStart, "Public: ", 8) == 0) {
 	result = strDup(&lineStart[8]);
 	break;
       }
@@ -1566,7 +1566,7 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
   unsigned rtpCid, rtcpCid;
 
   // First, check for "Transport:"
-  if (_strncasecmp(line, "transport: ", 11) != 0) return False;
+  if (_strncasecmp(line, "Transport: ", 11) != 0) return False;
   line += 11;
 
   // Then, run through each of the fields, looking for ones we handle:
@@ -1607,7 +1607,7 @@ Boolean RTSPClient::parseRTPInfoHeader(char const* line,
 				       unsigned& trackId,
 				       u_int16_t& seqNum,
 				       u_int32_t& timestamp) {
-  if (_strncasecmp(line, "rtp-info: ", 10) != 0) return False;
+  if (_strncasecmp(line, "RTP-Info: ", 10) != 0) return False;
   line += 10;
   char const* fields = line;
   char* field = strDupSize(fields);

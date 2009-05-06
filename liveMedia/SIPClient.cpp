@@ -23,14 +23,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupsockHelper.hh"
 #include <stdlib.h>
 
-#if defined(__WIN32__) || defined(_WIN32)
-#define _strncasecmp strncmp
-#else
-#if defined(_QNX4)
-#define _strncasecmp strncmp
+#if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
+#define _strncasecmp _strnicmp
 #else
 #define _strncasecmp strncasecmp
-#endif
 #endif
 
 ////////// SIPClient //////////

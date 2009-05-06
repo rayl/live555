@@ -406,7 +406,7 @@ void QCELPDeinterleavingBuffer
       || frameIndex == 0 || frameIndex > QCELP_MAX_FRAMES_PER_PACKET) {
 #ifdef DEBUG
     fprintf(stderr, "QCELPDeinterleavingBuffer::deliverIncomingFrame() param sanity check failed (%d,%d,%d,%d)\n", frameSize, interleaveL, interleaveN, frameIndex);
-#endif DEBUG
+#endif
     exit(1);
   }
 
