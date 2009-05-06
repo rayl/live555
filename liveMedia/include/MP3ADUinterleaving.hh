@@ -59,7 +59,8 @@ protected:
 				struct timeval presentationTime,
 				unsigned durationInMicroseconds);
   virtual void afterGettingFrame(unsigned numBytesRead,
-				 struct timeval presentationTime) = 0;
+				 struct timeval presentationTime,
+				 unsigned durationInMicroseconds) = 0;
 };
 
 // This class is used to convert an ADU sequence from non-interleaved
@@ -82,7 +83,8 @@ private:
   // redefined virtual functions:
   virtual void doGetNextFrame();
   virtual void afterGettingFrame(unsigned numBytesRead,
-				 struct timeval presentationTime);
+				 struct timeval presentationTime,
+				 unsigned durationInMicroseconds);
 
 private:
   void releaseOutgoingFrame();
@@ -112,7 +114,8 @@ private:
   // redefined virtual functions:
   virtual void doGetNextFrame();
   virtual void afterGettingFrame(unsigned numBytesRead,
-				 struct timeval presentationTime);
+				 struct timeval presentationTime,
+				 unsigned durationInMicroseconds);
 
 private:
   void releaseOutgoingFrame();

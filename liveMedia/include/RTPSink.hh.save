@@ -28,8 +28,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTPInterface.hh"
 #endif
 
-class RTPTransmissionStatsDB; // forward
-
 class RTPSink: public MediaSink {
 public:
   static Boolean lookupByName(UsageEnvironment& env, char const* sinkName,
@@ -61,10 +59,6 @@ public:
 
   unsigned short currentSeqNo() const { return fSeqNo; }
   unsigned currentTimestamp() const { return fCurrentTimestamp; }
-
-  RTPTransmissionStatsDB& transmissionStatsDB() const {
-    return *fTransmissionStatsDB;
-  }
 
   void setStreamSocket(int sockNum, unsigned char streamChannelId) {
     // hack to allow sending RTP over TCP (RFC 2236, section 10.12)
@@ -101,98 +95,6 @@ private:
   char const* fRTPPayloadFormatName;
   unsigned fNumChannels;
   struct timeval fCreationTime;
-
-  RTPTransmissionStatsDB* fTransmissionStatsDB;
-};
-
-
-class RTPTransmissionStats; // forward
-
-class RTPTransmissionStatsDB {
-public:
-  unsigned numReceivers() const { return fNumReceivers; }
-
-  class Iterator {
-  public:
-    Iterator(RTPTransmissionStatsDB& receptionStatsDB);
-    virtual ~Iterator();
-
-    RTPTransmissionStats* next();
-        // NULL if none
-
-  private:
-    HashTable::Iterator* fIter;
-  };
-
-  // The following is called whenever a RTCP RR packet is received: 
-  void noteIncomingRR(unsigned SSRC,
-                      unsigned lossStats, unsigned lastPacketNumReceived,
-                      unsigned jitter, unsigned lastSRTime, unsigned diffSR_RRTime);
-
-private: // constructor and destructor, called only by RTPSink:
-  friend class RTPSink;
-  RTPTransmissionStatsDB(RTPSink& rtpSink);
-  virtual ~RTPTransmissionStatsDB();
-
-private:
-  RTPTransmissionStats* lookup(unsigned SSRC) const;
-  void add(unsigned SSRC, RTPTransmissionStats* stats);
-
-private:
-  friend class Iterator;
-  unsigned fNumReceivers;
-  RTPSink& fOurRTPSink;
-  HashTable* fTable;
-};
-
-class RTPTransmissionStats {
-public:
-  unsigned SSRC() const {return fSSRC;}
-  unsigned lastPacketNumReceived() const {return fLastPacketNumReceived;}
-  unsigned firstPacketNumReported() const {return fFirstPacketNumReported;}
-  unsigned totNumPacketsLost() const {return fTotNumPacketsLost;}
-  unsigned jitter() const {return fJitter;}
-  unsigned roundTripDelay() const;
-      // The round-trip delay (in units of 1/65536 seconds) computed from
-      // the most recently-received RTCP RR packet.
-  struct timeval lastTimeReceived() const {return fTimeReceived;}
-
-  // Information which requires at least two RRs to have been received:
-  Boolean oldValid() const {return fOldValid;} // Have two RRs been received?
-  unsigned packetsReceivedSinceLastRR() const;
-  u_int8_t packetLossRatio() const; // as an 8-bit fixed-point number
-  unsigned timeDiffBetweenRR() const;
-  int packetsLostBetweenRR() const;
-
-private:
-  // called only by RTPTransmissionStatsDB:
-  friend class RTPTransmissionStatsDB;
-  RTPTransmissionStats(RTPSink& rtpSink, unsigned SSRC);
-  virtual ~RTPTransmissionStats();
-
-  void noteIncomingRR(unsigned lossStats, unsigned lastPacketNumReceived,
-                      unsigned jitter, unsigned lastSRTime, unsigned diffSR_RRTime);
-
-private:
-  RTPSink& fOurRTPSink;
-  unsigned fSSRC;
-  unsigned fLastPacketNumReceived;
-  u_int8_t fPacketLossRatio;
-  unsigned fTotNumPacketsLost;
-  unsigned fJitter;
-  unsigned fLastSRTime;
-  unsigned fDiffSR_RRTime;
-  struct timeval fTimeReceived;
-  Boolean fOldValid;
-  unsigned fOldLastPacketNumReceived;
-  u_int8_t fOldPacketLossRatio;
-  unsigned fOldTotNumPacketsLost;
-  unsigned fOldJitter; // needed???
-  unsigned fOldLastSRTime;
-  unsigned fOldDiffSR_RRTime;
-  struct timeval fOldTimeReceived;
-  Boolean fFirstPacket;
-  unsigned fFirstPacketNumReported;
 };
 
 #endif

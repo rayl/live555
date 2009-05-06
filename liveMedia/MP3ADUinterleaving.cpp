@@ -67,10 +67,11 @@ void MP3ADUinterleaverBase::afterGettingFrame(void* clientData,
 					      unsigned numBytesRead,
 					      unsigned /*numTruncatedBytes*/,
 					      struct timeval presentationTime,
-					      unsigned /*durationInMicroseconds*/) {
+					      unsigned durationInMicroseconds) {
   MP3ADUinterleaverBase* interleaverBase = (MP3ADUinterleaverBase*)clientData;
   // Finish up after reading:
-  interleaverBase->afterGettingFrame(numBytesRead, presentationTime);
+  interleaverBase->afterGettingFrame(numBytesRead,
+				     presentationTime, durationInMicroseconds);
 
   // Then, continue to deliver an outgoing frame:
   interleaverBase->doGetNextFrame();
@@ -91,10 +92,12 @@ public:
   void getReleasingFrameParams(unsigned char index,
 			       unsigned char*& dataPtr,
 			       unsigned& bytesInUse,
-			       struct timeval& presentationTime);
+			       struct timeval& presentationTime,
+			       unsigned& durationInMicroseconds);
   void setFrameParams(unsigned char index,
 		      unsigned char icc, unsigned char ii,
-		      unsigned frameSize, struct timeval presentationTime);
+		      unsigned frameSize, struct timeval presentationTime,
+		      unsigned durationInMicroseconds);
   unsigned nextIndexToRelease() {return fNextIndexToRelease;}
   void releaseNext();
 
@@ -152,7 +155,8 @@ void MP3ADUinterleaver::doGetNextFrame() {
 void MP3ADUinterleaver::releaseOutgoingFrame() {
   unsigned char* fromPtr;
   fFrames->getReleasingFrameParams(fFrames->nextIndexToRelease(),
-				   fromPtr, fFrameSize, fPresentationTime);
+				   fromPtr, fFrameSize,
+				   fPresentationTime, fDurationInMicroseconds);
 
   if (fFrameSize > fMaxSize) {
     fNumTruncatedBytes = fFrameSize - fMaxSize;
@@ -164,10 +168,12 @@ void MP3ADUinterleaver::releaseOutgoingFrame() {
 }
 
 void MP3ADUinterleaver::afterGettingFrame(unsigned numBytesRead,
-					  struct timeval presentationTime) {
+					  struct timeval presentationTime,
+					  unsigned durationInMicroseconds) {
   // Set the (icc,ii) and frame size of the newly-read frame:
   fFrames->setFrameParams(fPositionOfNextIncomingFrame,
-			  fICC, fII, numBytesRead, presentationTime);
+			  fICC, fII, numBytesRead,
+			  presentationTime, durationInMicroseconds);
 
   // Prepare our counters for the next frame:
   if (++fII == fInterleaving.cycleSize()) {
@@ -188,10 +194,12 @@ public:
 			      unsigned& bytesAvailable);
   void getIncomingFrameParamsAfter(unsigned frameSize,
 				   struct timeval presentationTime,
+				   unsigned durationInMicroseconds,
 				   unsigned char& icc, unsigned char& ii);
   void getReleasingFrameParams(unsigned char*& dataPtr,
 			       unsigned& bytesInUse,
-			       struct timeval& presentationTime);
+			       struct timeval& presentationTime,
+			       unsigned& durationInMicroseconds);
   void moveIncomingFrameIntoPlace();
   void releaseNext();
   void startNewCycle();
@@ -269,10 +277,12 @@ void MP3ADUdeinterleaver::doGetNextFrame() {
 }
 
 void MP3ADUdeinterleaver::afterGettingFrame(unsigned numBytesRead,
-					    struct timeval presentationTime) {
+					    struct timeval presentationTime,
+					    unsigned durationInMicroseconds) {
   // Get the (icc,ii) and set the frame size of the newly-read frame:
   unsigned char icc, ii;
-  fFrames->getIncomingFrameParamsAfter(numBytesRead, presentationTime,
+  fFrames->getIncomingFrameParamsAfter(numBytesRead,
+				       presentationTime, durationInMicroseconds,
 				       icc, ii);
 
   // Compare these to the values we saw last:
@@ -293,7 +303,8 @@ void MP3ADUdeinterleaver::afterGettingFrame(unsigned numBytesRead,
 
 void MP3ADUdeinterleaver::releaseOutgoingFrame() {
   unsigned char* fromPtr;
-  fFrames->getReleasingFrameParams(fromPtr, fFrameSize, fPresentationTime);
+  fFrames->getReleasingFrameParams(fromPtr, fFrameSize,
+				   fPresentationTime, fDurationInMicroseconds);
 
   if (fFrameSize > fMaxSize) {
     fNumTruncatedBytes = fFrameSize - fMaxSize;
@@ -314,6 +325,7 @@ public:
 
   unsigned frameDataSize; // includes ADU descriptor and (modified) MPEG hdr
   struct timeval presentationTime;
+  unsigned durationInMicroseconds;
   unsigned char frameData[MAX_FRAME_SIZE]; // ditto
 };
 
@@ -340,21 +352,25 @@ void InterleavingFrames::getIncomingFrameParams(unsigned char index,
 void InterleavingFrames::getReleasingFrameParams(unsigned char index,
 						 unsigned char*& dataPtr,
 						 unsigned& bytesInUse,
-						 struct timeval& presentationTime) {
+						 struct timeval& presentationTime,
+						 unsigned& durationInMicroseconds) {
   InterleavingFrameDescriptor& desc = fDescriptors[index];
   dataPtr = &desc.frameData[0];
   bytesInUse = desc.frameDataSize;
   presentationTime = desc.presentationTime;
+  durationInMicroseconds = desc.durationInMicroseconds;
 }
 
 void InterleavingFrames::setFrameParams(unsigned char index,
 					unsigned char icc,
 					unsigned char ii,
 					unsigned frameSize,
-					struct timeval presentationTime) {
+					struct timeval presentationTime,
+					unsigned durationInMicroseconds) {
   InterleavingFrameDescriptor& desc = fDescriptors[index];
   desc.frameDataSize = frameSize;
   desc.presentationTime = presentationTime;
+  desc.durationInMicroseconds = durationInMicroseconds;
 
   // Advance over the ADU descriptor, to get to the MPEG 'syncword':
   unsigned char* ptr = &desc.frameData[0];
@@ -380,6 +396,7 @@ public:
 
   unsigned frameDataSize; // includes ADU descriptor and (modified) MPEG hdr
   struct timeval presentationTime;
+  unsigned durationInMicroseconds;
   unsigned char* frameData;
 };
 
@@ -439,13 +456,15 @@ void DeinterleavingFrames::getIncomingFrameParams(unsigned char*& dataPtr,
   bytesAvailable = MAX_FRAME_SIZE;
 }
 
-void DeinterleavingFrames::getIncomingFrameParamsAfter(unsigned frameSize,
-						       struct timeval presentationTime,
-						       unsigned char& icc,
-						       unsigned char& ii) {
+void DeinterleavingFrames
+::getIncomingFrameParamsAfter(unsigned frameSize,
+			      struct timeval presentationTime,
+			      unsigned durationInMicroseconds,
+			      unsigned char& icc, unsigned char& ii) {
   DeinterleavingFrameDescriptor& desc = fDescriptors[MAX_CYCLE_SIZE];
   desc.frameDataSize = frameSize;
   desc.presentationTime = presentationTime;
+  desc.durationInMicroseconds = durationInMicroseconds;
   
   // Advance over the ADU descriptor, to get to the MPEG 'syncword':
   unsigned char* ptr = desc.frameData;
@@ -458,11 +477,13 @@ void DeinterleavingFrames::getIncomingFrameParamsAfter(unsigned frameSize,
 
 void DeinterleavingFrames::getReleasingFrameParams(unsigned char*& dataPtr,
 						   unsigned& bytesInUse,
-						   struct timeval& presentationTime) {
+						   struct timeval& presentationTime,
+						   unsigned& durationInMicroseconds) {
   DeinterleavingFrameDescriptor& desc = fDescriptors[fNextIndexToRelease];
   dataPtr = desc.frameData;
   bytesInUse = desc.frameDataSize;
   presentationTime = desc.presentationTime;
+  durationInMicroseconds = desc.durationInMicroseconds;
 }
 
 void DeinterleavingFrames::moveIncomingFrameIntoPlace() {

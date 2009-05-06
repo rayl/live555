@@ -342,31 +342,10 @@ void RTCPInstance::incomingReportHandler1() {
 	  fprintf(stderr, "RR\n");
 #endif
 	  unsigned reportBlocksSize = rc*(6*4);
-	  if (length < reportBlocksSize) break;
-	  length -= reportBlocksSize;
-
-          if (fSink != NULL) {
-	    // Use this information to update stats about our transmissions:
-            RTPTransmissionStatsDB& transmissionStats = fSink->transmissionStatsDB();
-            for (unsigned i = 0; i < rc; ++i) {
-              unsigned senderSSRC = ntohl(*(unsigned*)pkt); ADVANCE(4);
-              // We care only about reports about our own transmission, not others'
-              if (senderSSRC == fSink->SSRC()) {
-                unsigned lossStats = ntohl(*(unsigned*)pkt); ADVANCE(4);
-                unsigned highestReceived = ntohl(*(unsigned*)pkt); ADVANCE(4);
-                unsigned jitter = ntohl(*(unsigned*)pkt); ADVANCE(4);
-                unsigned timeLastSR = ntohl(*(unsigned*)pkt); ADVANCE(4);
-                unsigned timeSinceLastSR = ntohl(*(unsigned*)pkt); ADVANCE(4);
-                transmissionStats.noteIncomingRR(reportSenderSSRC, lossStats,
-						 highestReceived, jitter,
-						 timeLastSR, timeSinceLastSR);
-              } else {
-                ADVANCE(4*5);
-              }
-            }
-          } else {
-            ADVANCE(reportBlocksSize);
-          }
+	  if (length < reportBlocksSize) break; length -= reportBlocksSize;
+	  ADVANCE(reportBlocksSize);
+	  // later process these (including perhaps using the bw #s to #####
+	  // give us a more accurate estimate of the session bandwidth) #####
 
 	  subPacketOK = True;
 	  typeOfPacket = PACKET_RTCP_REPORT;
