@@ -80,7 +80,7 @@ public:
   
 public:
   // Redefined virtual functions:
-  virtual TaskToken scheduleDelayedTask(int microseconds, TaskFunc* proc,
+  virtual TaskToken scheduleDelayedTask(int64_t microseconds, TaskFunc* proc,
 				void* clientData);
   virtual void unscheduleDelayedTask(TaskToken& prevTask);
   

@@ -49,7 +49,7 @@ MP3FileSource* MP3FileSource::createNew(UsageEnvironment& env, char const* fileN
     newSource = new MP3FileSource(env, fid);
     if (newSource == NULL) break;
 
-    unsigned fileSize = GetFileSize(fileName, fid);
+    unsigned fileSize = (unsigned)GetFileSize(fileName, fid);
     newSource->assignStream(fid, fileSize);
     if (!newSource->initializeStream()) break;
 

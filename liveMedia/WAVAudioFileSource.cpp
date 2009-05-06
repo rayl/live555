@@ -37,7 +37,7 @@ WAVAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
       break;
     }
 
-    newSource->fFileSize = GetFileSize(fileName, fid);
+    newSource->fFileSize = (unsigned)GetFileSize(fileName, fid);
 
     return newSource;
   } while (0);

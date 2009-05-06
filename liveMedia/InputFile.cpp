@@ -53,17 +53,17 @@ void CloseInputFile(FILE* fid) {
   if (fid != NULL && fid != stdin) fclose(fid);
 }
 
-unsigned GetFileSize(char const* fileName, FILE* fid) {
-  unsigned fileSize = 0; // by default
+u_int64_t GetFileSize(char const* fileName, FILE* fid) {
+  u_int64_t fileSize = 0; // by default
 
   if (fid != stdin) {
 #if !defined(_WIN32_WCE)
     if (fileName == NULL) {
 #endif
-      if (fseek(fid, 0, SEEK_END) >= 0) {
-	fileSize = ftell(fid);
-	if (fileSize == (unsigned)-1) fileSize = 0; // ftell() failed
-	fseek(fid, 0, SEEK_SET);
+      if (SeekFile64(fid, 0, SEEK_END) >= 0) {
+	fileSize = TellFile64(fid);
+	if (fileSize == (u_int64_t)-1) fileSize = 0; // TellFile64() failed
+	SeekFile64(fid, 0, SEEK_SET);
       }
 #if !defined(_WIN32_WCE)
     } else {
@@ -76,4 +76,32 @@ unsigned GetFileSize(char const* fileName, FILE* fid) {
   }
 
   return fileSize;
+}
+
+u_int64_t SeekFile64(FILE *fid, int64_t offset, int whence) {
+  clearerr(fid);
+  fflush(fid);
+#if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
+  return _lseeki64(_fileno(fid), offset, whence) == (int64_t)-1 ? -1 : 0;
+#else
+#if defined(_WIN32_WCE)
+  return fseek(fid, (long)(offset), whence);
+#else
+  return fseeko(fid, (off_t)(offset), whence);
+#endif
+#endif
+}
+
+u_int64_t TellFile64(FILE *fid) {
+  clearerr(fid);
+  fflush(fid);
+#if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
+  return _telli64(_fileno(fid));
+#else
+#if defined(_WIN32_WCE)
+  return ftell(fid);
+#else
+  return ftello(fid);
+#endif
+#endif
 }

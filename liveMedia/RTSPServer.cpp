@@ -19,15 +19,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "RTSPServer.hh"
+#include "RTSPCommon.hh"
 #include <GroupsockHelper.hh>
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
-#define _strncasecmp _strnicmp
-#define snprintf _snprintf
 #else
 #include <signal.h>
 #define USE_SIGNALS 1
-#define _strncasecmp strncasecmp
 #endif
 #include <time.h> // for "strftime()" and "gmtime()"
 
@@ -207,8 +205,6 @@ void RTSPServer::incomingConnectionHandler(void* instance, int /*mask*/) {
   server->incomingConnectionHandler1();
 }
 
-#define PARAM_STRING_MAX 100
-
 void RTSPServer::incomingConnectionHandler1() {
   struct sockaddr_in clientAddr;
   SOCKLEN_T clientAddrLen = sizeof clientAddr;
@@ -335,22 +331,22 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
 
   // Parse the request string into command name and 'CSeq',
   // then handle the command:
-  char cmdName[PARAM_STRING_MAX];
-  char urlPreSuffix[PARAM_STRING_MAX];
-  char urlSuffix[PARAM_STRING_MAX];
-  char cseq[PARAM_STRING_MAX];
-  if (!parseRequestString((char*)fBuffer, totalBytes,
-			  cmdName, sizeof cmdName,
-			  urlPreSuffix, sizeof urlPreSuffix,
-			  urlSuffix, sizeof urlSuffix,
-			  cseq, sizeof cseq)) {
+  char cmdName[RTSP_PARAM_STRING_MAX];
+  char urlPreSuffix[RTSP_PARAM_STRING_MAX];
+  char urlSuffix[RTSP_PARAM_STRING_MAX];
+  char cseq[RTSP_PARAM_STRING_MAX];
+  if (!parseRTSPRequestString((char*)fBuffer, totalBytes,
+			      cmdName, sizeof cmdName,
+			      urlPreSuffix, sizeof urlPreSuffix,
+			      urlSuffix, sizeof urlSuffix,
+			      cseq, sizeof cseq)) {
 #ifdef DEBUG
-    fprintf(stderr, "parseRequestString() failed!\n");
+    fprintf(stderr, "parseRTSPRequestString() failed!\n");
 #endif
     handleCmd_bad(cseq);
   } else {
 #ifdef DEBUG
-    fprintf(stderr, "parseRequestString() returned cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\"\n", cmdName, urlPreSuffix, urlSuffix);
+    fprintf(stderr, "parseRTSPRequestString() returned cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\"\n", cmdName, urlPreSuffix, urlSuffix);
 #endif
     if (strcmp(cmdName, "OPTIONS") == 0) {
       handleCmd_OPTIONS(cseq);
@@ -1155,119 +1151,6 @@ Boolean RTSPServer::RTSPClientSession
 	   dateHeader(),
 	   fCurrentAuthenticator.realm(), fCurrentAuthenticator.nonce());
   return False;
-}
-
-Boolean
-RTSPServer::RTSPClientSession
-  ::parseRequestString(char const* reqStr,
-		       unsigned reqStrSize,
-		       char* resultCmdName,
-		       unsigned resultCmdNameMaxSize,
-		       char* resultURLPreSuffix,
-		       unsigned resultURLPreSuffixMaxSize,
-		       char* resultURLSuffix,
-		       unsigned resultURLSuffixMaxSize,
-		       char* resultCSeq,
-		       unsigned resultCSeqMaxSize) {
-  // This parser is currently rather dumb; it should be made smarter #####
-
-  // Read everything up to the first space as the command name:
-  Boolean parseSucceeded = False;
-  unsigned i;
-  for (i = 0; i < resultCmdNameMaxSize-1 && i < reqStrSize; ++i) {
-    char c = reqStr[i];
-    if (c == ' ' || c == '\t') {
-      parseSucceeded = True;
-      break;
-    }
-
-    resultCmdName[i] = c;
-  }
-  resultCmdName[i] = '\0';
-  if (!parseSucceeded) return False;
-      
-  // Skip over the prefix of any "rtsp://" or "rtsp:/" URL that follows:
-  unsigned j = i+1;
-  while (j < reqStrSize && (reqStr[j] == ' ' || reqStr[j] == '\t')) ++j; // skip over any additional white space
-  for (j = i+1; j < reqStrSize-8; ++j) {
-    if ((reqStr[j] == 'r' || reqStr[j] == 'R')
-	&& (reqStr[j+1] == 't' || reqStr[j+1] == 'T')
-	&& (reqStr[j+2] == 's' || reqStr[j+2] == 'S')
-	&& (reqStr[j+3] == 'p' || reqStr[j+3] == 'P')
-	&& reqStr[j+4] == ':' && reqStr[j+5] == '/') {
-      j += 6;
-      if (reqStr[j] == '/') {
-	// This is a "rtsp://" URL; skip over the host:port part that follows:
-	++j;
-	while (j < reqStrSize && reqStr[j] != '/' && reqStr[j] != ' ') ++j;
-      } else {
-	// This is a "rtsp:/" URL; back up to the "/":
-	--j;
-      }
-      i = j;
-      break;
-    }
-  }
-
-  // Look for the URL suffix (before the following "RTSP/"):
-  parseSucceeded = False;
-  for (unsigned k = i+1; k < reqStrSize-5; ++k) {
-    if (reqStr[k] == 'R' && reqStr[k+1] == 'T' &&
-	reqStr[k+2] == 'S' && reqStr[k+3] == 'P' && reqStr[k+4] == '/') {
-      while (--k >= i && reqStr[k] == ' ') {} // go back over all spaces before "RTSP/"
-      unsigned k1 = k;
-      while (k1 > i && reqStr[k1] != '/' && reqStr[k1] != ' ') --k1;
-      // the URL suffix comes from [k1+1,k]
-
-      // Copy "resultURLSuffix":
-      if (k - k1 + 1 > resultURLSuffixMaxSize) return False; // there's no room
-      unsigned n = 0, k2 = k1+1;
-      while (k2 <= k) resultURLSuffix[n++] = reqStr[k2++];
-      resultURLSuffix[n] = '\0';
-
-      // Also look for the URL 'pre-suffix' before this:
-      unsigned k3 = --k1;
-      while (k3 > i && reqStr[k3] != '/' && reqStr[k3] != ' ') --k3;
-      // the URL pre-suffix comes from [k3+1,k1]
-
-      // Copy "resultURLPreSuffix":
-      if (k1 - k3 + 1 > resultURLPreSuffixMaxSize) return False; // there's no room
-      n = 0; k2 = k3+1;
-      while (k2 <= k1) resultURLPreSuffix[n++] = reqStr[k2++];
-      resultURLPreSuffix[n] = '\0';
-
-      i = k + 7; // to go past " RTSP/"
-      parseSucceeded = True;
-      break;
-    }
-  }
-  if (!parseSucceeded) return False;
-
-  // Look for "CSeq:", skip whitespace,
-  // then read everything up to the next \r or \n as 'CSeq':
-  parseSucceeded = False;
-  for (j = i; j < reqStrSize-5; ++j) {
-    if (reqStr[j] == 'C' && reqStr[j+1] == 'S' && reqStr[j+2] == 'e' &&
-	reqStr[j+3] == 'q' && reqStr[j+4] == ':') {
-      j += 5;
-      unsigned n;
-      while (j < reqStrSize && (reqStr[j] ==  ' ' || reqStr[j] == '\t')) ++j;
-      for (n = 0; n < resultCSeqMaxSize-1 && j < reqStrSize; ++n,++j) {
-	char c = reqStr[j];
-	if (c == '\r' || c == '\n') {
-	  parseSucceeded = True;
-	  break;
-	}
-
-	resultCSeq[n] = c;
-      }
-      resultCSeq[n] = '\0';
-      break;
-    }
-  }
-  if (!parseSucceeded) return False;
-
-  return True;
 }
 
 void RTSPServer::RTSPClientSession::noteLiveness() {

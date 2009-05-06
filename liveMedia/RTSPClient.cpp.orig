@@ -19,12 +19,17 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "RTSPClient.hh"
-#include "RTSPCommon.hh"
 #include "Base64.hh"
 #include <GroupsockHelper.hh>
 #include "our_md5.h"
 #ifdef SUPPORT_REAL_RTSP
 #include "../RealRTSP/include/RealRTSP.hh"
+#endif
+
+#if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
+#define _strncasecmp _strnicmp
+#else
+#define _strncasecmp strncasecmp
 #endif
 
 // Experimental support for temporarily setting the locale (e.g., to POSIX,
@@ -144,7 +149,6 @@ void RTSPClient::setUserAgentString(char const* userAgentStr) {
 
 RTSPClient::~RTSPClient() {
   reset();
-  envir().taskScheduler().turnOffBackgroundReadHandling(fInputSocketNum);
   delete[] fResponseBuffer;
   delete[] fUserAgentHeaderStr;
 }
@@ -1120,11 +1124,6 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
     }
 
     delete[] cmd;
-
-    // Arrange to handle incoming requests:
-    envir().taskScheduler().turnOnBackgroundReadHandling(fInputSocketNum,
-     (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
-
     return True;
   } while (0);
 
@@ -1333,11 +1332,6 @@ Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession) {
     }
       
     delete[] cmd;
-
-    // Arrange to handle incoming requests:
-    envir().taskScheduler().turnOnBackgroundReadHandling(fInputSocketNum,
-     (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
-
     return True;
   } while (0);
   
@@ -2430,44 +2424,4 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix,
   // An error occurred:
   delete[] cmd;
   return False;
-}
-
-void RTSPClient::incomingRequestHandler(void* instance, int /*mask*/) {
-  RTSPClient* session = (RTSPClient*)instance;
-  session->incomingRequestHandler1();
-}
-
-void RTSPClient::incomingRequestHandler1() {
-  unsigned bytesRead;
-  char* readBuf = fResponseBuffer;
-  bytesRead = getResponse1(readBuf, fResponseBufferSize);
-  if (bytesRead == 0) {
-    envir().setResultErrMsg("Failed to read response: ");
-    return;
-  }
-  // Parse the request string into command name and 'CSeq',
-  // then handle the command:
-  char cmdName[RTSP_PARAM_STRING_MAX];
-  char urlPreSuffix[RTSP_PARAM_STRING_MAX];
-  char urlSuffix[RTSP_PARAM_STRING_MAX];
-  char cseq[RTSP_PARAM_STRING_MAX];
-  if (!parseRTSPRequestString((char*)readBuf, bytesRead,
-			      cmdName, sizeof cmdName,
-			      urlPreSuffix, sizeof urlPreSuffix,
-			      urlSuffix, sizeof urlSuffix,
-			      cseq, sizeof cseq)) {
-    return;
-  } else {
-    if (fVerbosityLevel >= 1) {
-      envir() << "Received request: " << readBuf << "\n";
-    }
-    handleCmd_notSupported(cseq);
-  }
-}
-
-void RTSPClient::handleCmd_notSupported(char const* cseq) {
-  char tmpBuf[512];
-  snprintf((char*)tmpBuf, sizeof tmpBuf,
-	   "RTSP/1.0 405 Method Not Allowed\r\nCSeq: %s\r\n\r\n", cseq);
-  send(fOutputSocketNum, tmpBuf, strlen(tmpBuf), 0);
 }

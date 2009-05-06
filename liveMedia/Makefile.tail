@@ -29,7 +29,7 @@ RTP_INTERFACE_OBJS = RTPInterface.$(OBJ)
 RTP_OBJS = $(RTP_SOURCE_OBJS) $(RTP_SINK_OBJS) $(RTP_INTERFACE_OBJS)
 
 RTCP_OBJS = RTCP.$(OBJ) rtcp_from_spec.$(OBJ)
-RTSP_OBJS = RTSPServer.$(OBJ) RTSPClient.$(OBJ)
+RTSP_OBJS = RTSPServer.$(OBJ) RTSPClient.$(OBJ) RTSPCommon.$(OBJ)
 SIP_OBJS = SIPClient.$(OBJ)
 
 SESSION_OBJS = MediaSession.$(OBJ) ServerMediaSession.$(OBJ) PassiveServerMediaSubsession.$(OBJ) OnDemandServerMediaSubsession.$(OBJ) FileServerMediaSubsession.$(OBJ) MPEG4VideoFileServerMediaSubsession.$(OBJ) H263plusVideoFileServerMediaSubsession.$(OBJ) WAVAudioFileServerMediaSubsession.$(OBJ) AMRAudioFileServerMediaSubsession.$(OBJ) MP3AudioFileServerMediaSubsession.$(OBJ) MPEG1or2VideoFileServerMediaSubsession.$(OBJ) MPEG1or2FileServerDemux.$(OBJ) MPEG1or2DemuxedServerMediaSubsession.$(OBJ) MPEG2TransportFileServerMediaSubsession.$(OBJ) ADTSAudioFileServerMediaSubsession.$(OBJ)
@@ -217,10 +217,11 @@ RTCP.$(CPP):		include/RTCP.hh rtcp_from_spec.h
 include/RTCP.hh:		include/RTPSink.hh include/RTPSource.hh
 rtcp_from_spec.$(C):	rtcp_from_spec.h
 RTSPServer.$(CPP):	include/RTSPServer.hh
-include/RTSPServer.hh:		include/ServerMediaSession.hh include/DigestAuthentication.hh
-include/ServerMediaSession.hh:	include/Media.hh
+include/RTSPServer.hh:		include/ServerMediaSession.hh include/DigestAuthentication.hh include/RTSPCommon.hh
+include/ServerMediaSession.hh:	include/Media.hh include/RTSPCommon.hh
 RTSPClient.$(CPP):	include/RTSPClient.hh  include/Base64.hh our_md5.h
 include/RTSPClient.hh:		include/MediaSession.hh include/DigestAuthentication.hh
+RTSPCommon.$(CPP):	include/RTSPCommon.hh
 SIPClient.$(CPP):	include/SIPClient.hh
 include/SIPClient.hh:		include/MediaSession.hh include/DigestAuthentication.hh
 MediaSession.$(CPP):	include/liveMedia.hh

@@ -15,26 +15,32 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
-// A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
-// on demand, from a file.
+// Common routines used by both RTSP clients and servers
 // C++ header
 
-#ifndef _FILE_SERVER_MEDIA_SUBSESSION_HH
-#define _FILE_SERVER_MEDIA_SUBSESSION_HH
+#ifndef _RTSP_COMMON_HH
+#define _RTSP_COMMON_HH
 
-#ifndef _ON_DEMAND_SERVER_MEDIA_SUBSESSION_HH
-#include "OnDemandServerMediaSubsession.hh"
+#ifndef _BOOLEAN_HH
+#include "Boolean.hh"
 #endif
 
-class FileServerMediaSubsession: public OnDemandServerMediaSubsession {
-protected: // we're a virtual base class
-  FileServerMediaSubsession(UsageEnvironment& env, char const* fileName,
-			    Boolean reuseFirstSource);
-  virtual ~FileServerMediaSubsession();
+#if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
+#define _strncasecmp _strnicmp
+#define snprintf _snprintf
+#else
+#define _strncasecmp strncasecmp
+#endif
 
-protected:
-  char const* fFileName;
-  u_int64_t fFileSize; // if known
-};
+#define RTSP_PARAM_STRING_MAX 100
 
+Boolean parseRTSPRequestString(char const *reqStr, unsigned reqStrSize,
+			       char *resultCmdName,
+			       unsigned resultCmdNameMaxSize, 
+			       char* resultURLPreSuffix,
+			       unsigned resultURLPreSuffixMaxSize, 
+			       char* resultURLSuffix,
+			       unsigned resultURLSuffixMaxSize, 
+			       char* resultCSeq,
+			       unsigned resultCSeqMaxSize); 
 #endif

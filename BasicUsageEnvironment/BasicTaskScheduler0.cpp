@@ -52,11 +52,11 @@ BasicTaskScheduler0::~BasicTaskScheduler0() {
   delete fReadHandlers;
 }
 
-TaskToken BasicTaskScheduler0::scheduleDelayedTask(int microseconds,
+TaskToken BasicTaskScheduler0::scheduleDelayedTask(int64_t microseconds,
 						 TaskFunc* proc,
 						 void* clientData) {
   if (microseconds < 0) microseconds = 0;
-  DelayInterval timeToDelay(microseconds/1000000, microseconds%1000000);
+  DelayInterval timeToDelay((long)(microseconds/1000000), (long)(microseconds%1000000));
   AlarmHandler* alarmHandler = new AlarmHandler(proc, clientData, timeToDelay);
   fDelayQueue.addEntry(alarmHandler);
 

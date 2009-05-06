@@ -127,7 +127,7 @@ static float MPEG1or2ProgramStreamFileDuration(UsageEnvironment& env,
     if (fileSource == NULL) break;
     dataSource = fileSource;
 
-    fileSize = fileSource->fileSize();
+    fileSize = (unsigned)(fileSource->fileSize());
     if (fileSize == 0) break;
 
     // Create a MPEG demultiplexor that reads from that source.

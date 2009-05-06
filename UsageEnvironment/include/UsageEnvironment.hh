@@ -24,6 +24,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "UsageEnvironment_version.hh"
 #endif
 
+#ifndef _NETCOMMON_H
+#include "NetCommon.h"
+#endif
+
 #ifndef _STRDUP_HH
 // "strDup()" is used often, so include this here, so everyone gets it:
 #include "strDup.hh"
@@ -95,7 +99,7 @@ class TaskScheduler {
 public:
   virtual ~TaskScheduler();
 
-  virtual TaskToken scheduleDelayedTask(int microseconds, TaskFunc* proc,
+  virtual TaskToken scheduleDelayedTask(int64_t microseconds, TaskFunc* proc,
 					void* clientData) = 0;
 	// Schedules a task to occur (after a delay) when we next
 	// reach a scheduling point.

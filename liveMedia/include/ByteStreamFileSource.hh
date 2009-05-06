@@ -42,7 +42,7 @@ public:
       // an alternative version of "createNew()" that's used if you already have
       // an open file.
 
-  unsigned fileSize() const { return fFileSize; }
+  u_int64_t fileSize() const { return fFileSize; }
       // 0 means zero-length, unbounded, or unknown
 
   void seekToByteAbsolute(u_int64_t byteNumber);
@@ -65,7 +65,7 @@ private:
   unsigned fPreferredFrameSize;
   unsigned fPlayTimePerFrame;
   unsigned fLastPlayTime;
-  unsigned fFileSize;
+  u_int64_t fFileSize;
   Boolean fDeleteFidOnClose;
 };
 

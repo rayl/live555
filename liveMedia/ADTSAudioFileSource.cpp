@@ -132,8 +132,8 @@ void ADTSAudioFileSource::doGetNextFrame() {
 
   // If there's a 'crc_check' field, skip it:
   if (!protection_absent) {
-    fseek(fFid, 16, SEEK_CUR);
-    numBytesToRead = numBytesToRead > 16 ? numBytesToRead - 16 : 0;
+    fseek(fFid, 2, SEEK_CUR);
+    numBytesToRead = numBytesToRead > 2 ? numBytesToRead - 2 : 0;
   }
 
   // Next, read the raw frame data into the buffer provided:

@@ -29,6 +29,7 @@ class ReorderingPacketBuffer {
 public:
   ReorderingPacketBuffer(BufferedPacketFactory* packetFactory);
   virtual ~ReorderingPacketBuffer();
+  void reset();
 
   BufferedPacket* getFreePacket(MultiFramedRTPSource* ourSource);
   void storePacket(BufferedPacket* bPacket);
@@ -91,6 +92,7 @@ Boolean MultiFramedRTPSource
 
 void MultiFramedRTPSource::doStopGettingFrames() {
   fRTPInterface.stopNetworkReading();
+  fReorderingBuffer->reset();
   fAreDoingNetworkReads = False;
 }
 
@@ -414,7 +416,7 @@ BufferedPacket* BufferedPacketFactory
 }
 
 
-////////// ReorderingPacketBuffer definition //////////
+////////// ReorderingPacketBuffer implementation //////////
 
 ReorderingPacketBuffer
 ::ReorderingPacketBuffer(BufferedPacketFactory* packetFactory)
@@ -426,12 +428,19 @@ ReorderingPacketBuffer
 }
 
 ReorderingPacketBuffer::~ReorderingPacketBuffer() {
+  reset();
+  delete fPacketFactory;
+}
+
+void ReorderingPacketBuffer::reset() {
   if (fHeadPacket == NULL) {
     delete fSavedPacket;
   } else {
     delete fHeadPacket; // will also delete fSavedPacket, because it's on the list
   }
-  delete fPacketFactory;
+  fHaveSeenFirstPacket = False;
+  fHeadPacket = NULL;
+  fSavedPacket = NULL;
 }
 
 BufferedPacket* ReorderingPacketBuffer
