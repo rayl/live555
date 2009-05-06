@@ -91,6 +91,10 @@ void RTSPServer::removeServerMediaSession(ServerMediaSession* serverMediaSession
   }
 }
 
+void RTSPServer::removeServerMediaSession(char const* streamName) {
+  removeServerMediaSession((ServerMediaSession*)(fServerMediaSessions->Lookup(streamName)));
+}
+
 char* RTSPServer
 ::rtspURL(ServerMediaSession const* serverMediaSession) const {
   struct in_addr ourAddress;

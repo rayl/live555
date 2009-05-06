@@ -28,8 +28,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class MultiFramedRTPSink: public RTPSink {
 public:
-  static void setPacketSizes(unsigned preferredPacketSize,
-			     unsigned maxPacketSize);
+  void setPacketSizes(unsigned preferredPacketSize, unsigned maxPacketSize);
 
 protected:
   MultiFramedRTPSink(UsageEnvironment& env,

@@ -69,6 +69,7 @@ public:
 
   void addServerMediaSession(ServerMediaSession* serverMediaSession);
   void removeServerMediaSession(ServerMediaSession* serverMediaSession);
+  void removeServerMediaSession(char const* streamName);
 
   char* rtspURL(ServerMediaSession const* serverMediaSession) const;
       // returns a "rtsp://" URL that could be used to access the

@@ -24,18 +24,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// MultiFramedRTPSink //////////
 
-static unsigned _maxPacketSize = 1448;
-	// bytes (1500, minus some allowance for IP, UDP, UMTP headers)
-        // (Also, make it a multiple of 4 bytes, just in case that matters.)
-static unsigned _preferredPacketSize = 1000; // bytes
-
 void MultiFramedRTPSink::setPacketSizes(unsigned preferredPacketSize,
 					unsigned maxPacketSize) {
   if (preferredPacketSize > maxPacketSize || preferredPacketSize == 0) return;
       // sanity check
 
-  _preferredPacketSize = preferredPacketSize;
-  _maxPacketSize = maxPacketSize; 
+  delete fOutBuf;
+  fOutBuf = new OutPacketBuffer(preferredPacketSize, maxPacketSize);
 }
 
 MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,
@@ -46,8 +41,10 @@ MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,
 				       unsigned numChannels)
   : RTPSink(env, rtpGS, rtpPayloadType, rtpTimestampFrequency,
 	    rtpPayloadFormatName, numChannels),
-    fCurFragmentationOffset(0), fPreviousFrameEndedFragmentation(False) {
-  fOutBuf = new OutPacketBuffer(_preferredPacketSize, _maxPacketSize);
+  fOutBuf(NULL), fCurFragmentationOffset(0), fPreviousFrameEndedFragmentation(False) {
+  setPacketSizes(1000, 1448);
+      // Default max packet size (1500, minus allowance for IP, UDP, UMTP headers)
+      // (Also, make it a multiple of 4 bytes, just in case that matters.)
 }
 
 MultiFramedRTPSink::~MultiFramedRTPSink() {
