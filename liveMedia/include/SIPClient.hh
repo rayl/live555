@@ -36,6 +36,7 @@ class SIPClient: public Medium {
 public:
   static SIPClient* createNew(UsageEnvironment& env,
 			      unsigned char desiredAudioRTPPayloadFormat,
+			      char const* mimeSubtype = NULL,
 			      int verbosityLevel = 0,
 			      char const* applicationName = NULL);
 
@@ -67,6 +68,7 @@ protected:
 private:
   SIPClient(UsageEnvironment& env,
 	    unsigned char desiredAudioRTPPayloadFormat,
+	    char const* mimeSubtype,
 	    int verbosityLevel,
 	    char const* applicationName);
       // called only by createNew();
@@ -102,12 +104,13 @@ private:
 private:
   // Set for all calls:
   unsigned char fDesiredAudioRTPPayloadFormat;
+  char* fMIMESubtype;
+      unsigned fMIMESubtypeSize;
   int fVerbosityLevel;
   unsigned fCSeq; // sequence number, used in consecutive requests
   char const* fApplicationName;
       unsigned fApplicationNameSize;
-  struct in_addr fOurAddress;
-      char const* fOurAddressStr;
+  char const* fOurAddressStr;
       unsigned fOurAddressStrSize;
   portNumBits fOurPortNum;
   Groupsock* fOurSocket;

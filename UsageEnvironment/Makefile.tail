@@ -4,7 +4,7 @@ USAGE_ENVIRONMENT_LIB = libUsageEnvironment.$(LIB_SUFFIX)
 ALL = $(USAGE_ENVIRONMENT_LIB)
 all:	$(ALL)
 
-OBJS = UsageEnvironment.$(OBJ) HashTable.$(OBJ)
+OBJS = UsageEnvironment.$(OBJ) HashTable.$(OBJ) strDup.$(OBJ)
 
 $(USAGE_ENVIRONMENT_LIB): $(OBJS)
 	$(LIBRARY_LINK)$@ $(LIBRARY_LINK_OPTS) $(OBJS)
@@ -16,9 +16,10 @@ $(USAGE_ENVIRONMENT_LIB): $(OBJS)
 	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS) $<
 
 UsageEnvironment.$(CPP):	include/UsageEnvironment.hh
-include/UsageEnvironment.hh:	include/UsageEnvironment_version.hh
+include/UsageEnvironment.hh:	include/UsageEnvironment_version.hh include/strDup.hh
 HashTable.$(CPP):		include/HashTable.hh
 include/HashTable.hh:		include/Boolean.hh
+strDup.$(CPP):			include/strDup.hh
 
 clean:
 	-rm -rf *.$(OBJ) $(ALL) core *.core *~ include/*~

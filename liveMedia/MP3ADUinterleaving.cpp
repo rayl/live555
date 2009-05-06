@@ -320,7 +320,7 @@ InterleavingFrames::InterleavingFrames(unsigned maxCycleSize)
     fDescriptors(new InterleavingFrameDescriptor[maxCycleSize]) {
 }
 InterleavingFrames::~InterleavingFrames() {
-  delete fDescriptors;
+  delete[] fDescriptors;
 }
 
 Boolean InterleavingFrames::haveReleaseableFrame() {
@@ -374,7 +374,7 @@ void InterleavingFrames::releaseNext() {
 class DeinterleavingFrameDescriptor {
 public:
   DeinterleavingFrameDescriptor() {frameDataSize = 0; frameData = NULL;}
-  virtual ~DeinterleavingFrameDescriptor() {delete frameData;}
+  virtual ~DeinterleavingFrameDescriptor() {delete[] frameData;}
 
   unsigned frameDataSize; // includes ADU descriptor and (modified) MPEG hdr
   struct timeval presentationTime;
@@ -387,7 +387,7 @@ DeinterleavingFrames::DeinterleavingFrames()
     fDescriptors(new DeinterleavingFrameDescriptor[MAX_CYCLE_SIZE+1]) {
 }
 DeinterleavingFrames::~DeinterleavingFrames() {
-  delete fDescriptors;
+  delete[] fDescriptors;
 }
 
 Boolean DeinterleavingFrames::haveReleaseableFrame() {

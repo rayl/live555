@@ -18,6 +18,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "BasicHashTable.hh"
+#include "strDup.hh"
 
 #if defined(__WIN32__) || defined(_WIN32)
 #else
@@ -49,7 +50,7 @@ BasicHashTable::~BasicHashTable() {
   }
 
   // Also free the bucket array, if it was dynamically allocated:
-  if (fBuckets != fStaticBuckets) delete fBuckets;
+  if (fBuckets != fStaticBuckets) delete[] fBuckets;
 }
 
 void* BasicHashTable::Add(char const* key, void* value) {
@@ -170,7 +171,7 @@ BasicHashTable::TableEntry* BasicHashTable
 void BasicHashTable::assignKey(TableEntry* entry, char const* key) {
   // The way we assign the key depends upon its type:
   if (fKeyType == STRING_HASH_KEYS) {
-    entry->key = strdup(key);
+    entry->key = strDup(key);
   } else if (fKeyType == ONE_WORD_HASH_KEYS) {
     entry->key = key;
   } else if (fKeyType > 0) {
@@ -207,7 +208,7 @@ void BasicHashTable::deleteKey(TableEntry* entry) {
   if (fKeyType == ONE_WORD_HASH_KEYS) {
     entry->key = NULL;
   } else {
-    delete (char*)entry->key;
+    delete[] (char*)entry->key;
     entry->key = NULL;
   }
 }
@@ -242,7 +243,7 @@ void BasicHashTable::rebuild() {
   }
 
   // Free the old bucket array, if it was dynamically allocated:
-  if (oldBuckets != fStaticBuckets) delete oldBuckets;
+  if (oldBuckets != fStaticBuckets) delete[] oldBuckets;
 }
 
 unsigned BasicHashTable::hashIndexFromKey(char const* key) const {

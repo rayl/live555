@@ -24,6 +24,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "UsageEnvironment_version.hh"
 #endif
 
+#ifndef _STRDUP_HH
+// "strDup()" is used often, so include this here, so everyone gets it:
+#include "strDup.hh"
+#endif
+
 #ifndef NULL
 #define NULL 0
 #endif

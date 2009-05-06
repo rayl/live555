@@ -38,7 +38,7 @@ ByteStreamMultiFileSource
     if (fFileNameArray == NULL) return;
     unsigned i;
     for (i = 0; i < fNumSources; ++i) {
-      fFileNameArray[i] = strdup(fileNameArray[i]);
+      fFileNameArray[i] = strDup(fileNameArray[i]);
     }
 
     // Next, set up our array of component ByteStreamFileSources
@@ -55,12 +55,12 @@ ByteStreamMultiFileSource::~ByteStreamMultiFileSource() {
   for (i = 0; i < fNumSources; ++i) {
     Medium::close(fSourceArray[i]);
   }
-  delete fSourceArray;
+  delete[] fSourceArray;
 
   for (i = 0; i < fNumSources; ++i) {
-    delete fFileNameArray[i];
+    delete[] fFileNameArray[i];
   }
-  delete fFileNameArray;
+  delete[] fFileNameArray;
 }
 
 ByteStreamMultiFileSource* ByteStreamMultiFileSource

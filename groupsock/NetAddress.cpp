@@ -70,7 +70,7 @@ void NetAddress::assign(u_int8_t const* data, unsigned length) {
 }
 
 void NetAddress::clean() {
-	delete fData;
+	delete[] fData;
 	fLength = 0;
 }
 
@@ -156,7 +156,7 @@ void NetAddressList::assign(unsigned numAddresses, NetAddress** addressArray) {
 void NetAddressList::clean() {
 	while (fNumAddresses-- > 0)
 		delete fAddressArray[fNumAddresses];
-	delete fAddressArray;
+	delete[] fAddressArray;
 }
 
 NetAddress const* NetAddressList::firstAddress() const {

@@ -33,7 +33,7 @@ MP3HuffmanEncodingInfo
 }
 
 MP3HuffmanEncodingInfo::~MP3HuffmanEncodingInfo() {
-  delete decodedValues;
+  delete[] decodedValues;
 }
 
 // This is crufty old code that needs to be cleaned up #####

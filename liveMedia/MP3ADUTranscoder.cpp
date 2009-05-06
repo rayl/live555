@@ -32,7 +32,7 @@ MP3ADUTranscoder::MP3ADUTranscoder(UsageEnvironment& env,
 }
 
 MP3ADUTranscoder::~MP3ADUTranscoder() {
-  delete fOrigADU;
+  delete[] fOrigADU;
 }
 
 MP3ADUTranscoder* MP3ADUTranscoder::createNew(UsageEnvironment& env,

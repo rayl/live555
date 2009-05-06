@@ -62,13 +62,13 @@ MediaSession::MediaSession(UsageEnvironment& env)
   char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
   CNAME[maxCNAMElen] = '\0'; // just in case
-  fCNAME = strdup(CNAME);
+  fCNAME = strDup(CNAME);
 }
 
 MediaSession::~MediaSession() {
   delete fSubsessionsHead;
-  delete fCNAME;
-  delete fConnectionEndpointName;
+  delete[] fCNAME;
+  delete[] fConnectionEndpointName;
 }
 
 Boolean MediaSession::isMediaSession() const {
@@ -114,7 +114,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
 
     // Parse the line as "m=<medium_name> <client_portNum> RTP/AVP <fmt>"
     // (Should we be checking for >1 payload format number here??)#####
-    char* mediumName = strdup(sdpLine); // ensures we have enough space
+    char* mediumName = strDupSize(sdpLine); // ensures we have enough space
     unsigned payloadFormat;
     if (sscanf(sdpLine, "m=%s %hu RTP/AVP %u",
 	       mediumName, &subsession->fClientPortNum, &payloadFormat) != 3
@@ -123,21 +123,21 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
       if (nextSDPLine == NULL) {
 	sdpLineStr = (char*)sdpLine;
       } else {
-	sdpLineStr = strdup(sdpLine);
+	sdpLineStr = strDup(sdpLine);
 	sdpLineStr[nextSDPLine-sdpLine] = '\0';
       }
       envir().setResultMsg("Bad SDP \"m=\" line: ", sdpLineStr);
-      if (sdpLineStr != (char*)sdpLine) delete sdpLineStr;
-      delete mediumName;
+      if (sdpLineStr != (char*)sdpLine) delete[] sdpLineStr;
+      delete[] mediumName;
       return False;
     }
     subsession->serverPortNum = subsession->fClientPortNum; // by default
 
     char const* mStart = sdpLine;
-    subsession->fSavedSDPLines = strdup(mStart);
+    subsession->fSavedSDPLines = strDup(mStart);
 
-    subsession->fMediumName = strdup(mediumName);
-    delete mediumName;
+    subsession->fMediumName = strDup(mediumName);
+    delete[] mediumName;
     subsession->fRTPPayloadFormat = payloadFormat;
 
     // Process the following SDP lines, up until the next "m=":
@@ -207,6 +207,8 @@ Boolean MediaSession::parseSDPLine(char const* inputLine,
   }
 
   // Then, check that this line is a SDP line of the form <char>=<etc>
+  // (However, we also accept blank lines in the input.)
+  if (inputLine[0] == '\r' || inputLine[0] == '\n') return True;
   if (strlen(inputLine) < 2 || inputLine[1] != '='
       || inputLine[0] < 'a' || inputLine[0] > 'z') {
     envir().setResultMsg("Invalid SDP line: ", inputLine);
@@ -218,12 +220,12 @@ Boolean MediaSession::parseSDPLine(char const* inputLine,
 
 static char* parseCLine(char const* sdpLine) {
   char* resultStr = NULL;
-  char* buffer = strdup(sdpLine); // ensures we have enough space
+  char* buffer = strDupSize(sdpLine); // ensures we have enough space
   if (sscanf(sdpLine, "c=IN IP4 %[^/ ]", buffer) == 1) {
     // Later, handle the optional /<ttl> and /<numAddresses> #####
-    resultStr = strdup(buffer);
+    resultStr = strDup(buffer);
   }
-  delete buffer;
+  delete[] buffer;
 
   return resultStr;
 }
@@ -234,7 +236,7 @@ Boolean MediaSession::parseSDPLine_c(char const* sdpLine) {
   // (Later, do something with <ttl+numAddresses> also #####)
   char* connectionEndpointName = parseCLine(sdpLine);
   if (connectionEndpointName != NULL) {
-    delete fConnectionEndpointName;
+    delete[] fConnectionEndpointName;
     fConnectionEndpointName = connectionEndpointName;
     return True;
   }
@@ -294,7 +296,7 @@ char* MediaSession::lookupPayloadFormat(unsigned char rtpPayloadType,
   case 34: {temp = "H263"; rtpTimestampFrequency = 90000; break;}
   };
 
-  if (temp != NULL) return strdup(temp);
+  if (temp != NULL) return strDup(temp);
   else return NULL;
 }
 
@@ -445,9 +447,9 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
 MediaSubsession::~MediaSubsession() {
   deInitiate();
 
-  delete fConnectionEndpointName;
-  delete fSavedSDPLines; delete fMediumName; delete fCodecName;
-  delete fControlPath; delete fConfig; delete fMode;
+  delete[] fConnectionEndpointName;
+  delete[] fSavedSDPLines; delete[] fMediumName; delete[] fCodecName;
+  delete[] fControlPath; delete[] fConfig; delete[] fMode;
 
   delete fNext;
 }
@@ -594,6 +596,11 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	= MPEGVideoRTPSource::createNew(env(), fRTPSocket,
 					fRTPPayloadFormat,
 					fRTPTimestampFrequency);
+    } else if (strcmp(fCodecName, "H261") == 0) { // H.261
+      fReadSource = fRTPSource
+	= H261VideoRTPSource::createNew(env(), fRTPSocket,
+					fRTPPayloadFormat,
+					fRTPTimestampFrequency);
     } else if (strcmp(fCodecName, "H263-1998") == 0) { // H.263+
       fReadSource = fRTPSource
 	= H263plusVideoRTPSource::createNew(env(), fRTPSocket,
@@ -616,7 +623,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 					       fRTPPayloadFormat,
 					       fRTPTimestampFrequency,
 					       mimeType);
-      delete mimeType;
+      delete[] mimeType;
     } else if (strcmp(fCodecName, "X-MCT-TEXT") == 0) {
       // A UDP-packetized text stream (*not* a RTP stream)
       fReadSource = BasicUDPSource::createNew(env(), fRTPSocket);
@@ -627,6 +634,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	       || strcmp(fCodecName, "MP1S") == 0 // MPEG-1 System Stream
 	       || strcmp(fCodecName, "MP2T") == 0 // MPEG-2 Transport Str
 	       || strcmp(fCodecName, "MP2P") == 0 // MPEG-2 Program Stream
+	       || strcmp(fCodecName, "SPEEX") == 0 // SPEEX audio
 	      ) {
       createSimpleRTPSource = True;
       useSpecialRTPoffset = 0;
@@ -647,7 +655,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	= SimpleRTPSource::createNew(env(), fRTPSocket, fRTPPayloadFormat,
 				     fRTPTimestampFrequency, mimeType,
 				     (unsigned)useSpecialRTPoffset);
-      delete mimeType;
+      delete[] mimeType;
     }
 
     if (fReadSource == NULL) {
@@ -749,7 +757,7 @@ Boolean MediaSubsession::parseSDPLine_c(char const* sdpLine) {
   // (Later, do something with <ttl+numAddresses> also #####)
   char* connectionEndpointName = parseCLine(sdpLine);
   if (connectionEndpointName != NULL) {
-    delete fConnectionEndpointName;
+    delete[] fConnectionEndpointName;
     fConnectionEndpointName = connectionEndpointName;
     return True;
   }
@@ -764,7 +772,7 @@ Boolean MediaSubsession::parseSDPAttribute_rtpmap(char const* sdpLine) {
   Boolean parseSuccess = False;
 
   unsigned rtpmapPayloadFormat;
-  char* codecName = strdup(sdpLine); // ensures we have enough space
+  char* codecName = strDupSize(sdpLine); // ensures we have enough space
   unsigned rtpTimestampFrequency = 0;
   unsigned numChannels = 1;
   if (sscanf(sdpLine, "a=rtpmap: %u %[^/]/%u/%u",
@@ -782,12 +790,12 @@ Boolean MediaSubsession::parseSDPAttribute_rtpmap(char const* sdpLine) {
       for (char* p = codecName; *p != '\0'; ++p) {
 	*p = toupper(*p);
       }
-      delete fCodecName; fCodecName = strdup(codecName);
+      delete[] fCodecName; fCodecName = strDup(codecName);
       fRTPTimestampFrequency = rtpTimestampFrequency;
       fNumChannels = numChannels;
     }
   }
-  delete codecName;
+  delete[] codecName;
 
   return parseSuccess;
 }
@@ -796,12 +804,12 @@ Boolean MediaSubsession::parseSDPAttribute_control(char const* sdpLine) {
   // Check for a "a=control:<control-path>" line:
   Boolean parseSuccess = False;
 
-  char* controlPath = strdup(sdpLine); // ensures we have enough space
+  char* controlPath = strDupSize(sdpLine); // ensures we have enough space
   if (sscanf(sdpLine, "a=control: %s", controlPath) == 1) {
     parseSuccess = True;
-    delete fControlPath; fControlPath = strdup(controlPath);
+    delete[] fControlPath; fControlPath = strDup(controlPath);
   }
-  delete controlPath;
+  delete[] controlPath;
 
   return parseSuccess;
 }
@@ -838,11 +846,11 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
     //     <name>=<value>;
     // parameter assignments.  Look at each of these.
     // First, convert the line to lower-case, to ease comparison:
-    char* const lineCopy = strdup(sdpLine); char* line = lineCopy;
+    char* const lineCopy = strDup(sdpLine); char* line = lineCopy;
     for (char* c = line; *c != '\0'; ++c) *c = tolower(*c);
     while (*line != '\0' && *line != '\r' && *line != '\n') {
       unsigned u;
-      char* valueStr = strdup(line);
+      char* valueStr = strDupSize(line);
       if (sscanf(line, " auxiliarydatasizelength = %u", &u) == 1) {
 	fAuxiliarydatasizelength = u;
       } else if (sscanf(line, " constantduration = %u", &u) == 1) {
@@ -876,18 +884,18 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
       } else if (sscanf(line, " randomaccessindication = %u", &u) == 1) {
 	fRandomaccessindication = u != 0;
       } else if (sscanf(line, " config = %[^; \t\r\n]", valueStr) == 1) {
-	delete fConfig; fConfig = strdup(valueStr);
+	delete[] fConfig; fConfig = strDup(valueStr);
       } else if (sscanf(line, " mode = %[^; \t\r\n]", valueStr) == 1) {
-	delete fMode; fMode = strdup(valueStr);
+	delete[] fMode; fMode = strDup(valueStr);
       }
-      delete valueStr;
+      delete[] valueStr;
 
       // Move to the next parameter assignment string:
       while (*line != '\0' && *line != '\r' && *line != '\n'
 	     && *line != ';') ++line;
       while (*line == ';') ++line;
     }
-    delete lineCopy;
+    delete[] lineCopy;
     return True;
   } while (0);
 

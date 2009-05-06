@@ -38,36 +38,62 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 SIPClient* SIPClient
 ::createNew(UsageEnvironment& env,
 	    unsigned char desiredAudioRTPPayloadFormat,
+	    char const* mimeSubtype,
 	    int verbosityLevel, char const* applicationName) {
-  return new SIPClient(env, desiredAudioRTPPayloadFormat,
+  return new SIPClient(env, desiredAudioRTPPayloadFormat, mimeSubtype,
 		       verbosityLevel, applicationName);
 }
 
 SIPClient::SIPClient(UsageEnvironment& env,
 		     unsigned char desiredAudioRTPPayloadFormat,
+		     char const* mimeSubtype,
 		     int verbosityLevel, char const* applicationName)
   : Medium(env),
     fT1(500000 /* 500 ms */),
     fDesiredAudioRTPPayloadFormat(desiredAudioRTPPayloadFormat),
     fVerbosityLevel(verbosityLevel),
-    fCSeq(0), fOurPortNum(5060), fURL(NULL), fURLSize(0),
+    fCSeq(0), fURL(NULL), fURLSize(0),
     fToTagStr(NULL), fToTagStrSize(0), fValidAuthenticator(NULL),
     fInviteSDPDescription(NULL), fInviteCmd(NULL), fInviteCmdSize(0){
+  if (mimeSubtype == NULL) mimeSubtype = "";
+  fMIMESubtype = strDup(mimeSubtype);
+  fMIMESubtypeSize = strlen(fMIMESubtype);
+
   if (applicationName == NULL) applicationName = "";
-  fApplicationName = strdup(applicationName);
+  fApplicationName = strDup(applicationName);
   fApplicationNameSize = strlen(fApplicationName);
 
-  fOurAddress.s_addr = ourSourceAddressForMulticast(env); // hack
-  fOurAddressStr = strdup(our_inet_ntoa(fOurAddress));
+  struct in_addr ourAddress;
+  ourAddress.s_addr = ourSourceAddressForMulticast(env); // hack
+  fOurAddressStr = strDup(our_inet_ntoa(ourAddress));
   fOurAddressStrSize = strlen(fOurAddressStr);
 
-  fOurSocket = new Groupsock(env, fOurAddress, fOurPortNum, 255);
+  fOurSocket = new Groupsock(env, ourAddress, 0, 255);
   if (fOurSocket == NULL) {
     fprintf(stderr,
-	    "ERROR: Failed to create socket for addr %s, port %d: %s\n",
-	    our_inet_ntoa(fOurAddress), fOurPortNum, env.getResultMsg());
+	    "ERROR: Failed to create socket for addr %s: %s\n",
+	    our_inet_ntoa(ourAddress), env.getResultMsg());
   }
 
+  // Now, find out our source port number.  Hack: Do this by first trying to
+  // send a 0-length packet, so that the "getSourcePort()" call will work.
+  fOurSocket->output(envir(), 255, (unsigned char*)"", 0);
+  Port srcPort(0);
+  getSourcePort(env, fOurSocket->socketNum(), srcPort);
+  if (srcPort.num() != 0) {
+    fOurPortNum = ntohs(srcPort.num());
+  } else {
+    // No luck.  Try again using a default port number:
+    fOurPortNum = 5060;
+    delete fOurSocket;
+    fOurSocket = new Groupsock(env, ourAddress, fOurPortNum, 255);
+    if (fOurSocket == NULL) {
+      fprintf(stderr,
+	      "ERROR: Failed to create socket for addr %s, port %d: %s\n",
+	      our_inet_ntoa(ourAddress), fOurPortNum, env.getResultMsg());
+    }
+  }
+      
   // Set various headers to be used in each request:
   char const* formatStr;
   unsigned headerSize;
@@ -97,26 +123,27 @@ SIPClient::SIPClient(UsageEnvironment& env,
 SIPClient::~SIPClient() {
   reset();
 
-  delete fUserAgentHeaderStr;
+  delete[] fUserAgentHeaderStr;
   delete fOurSocket;
-  delete (char*)fOurAddressStr;
-  delete (char*)fApplicationName;
+  delete[] (char*)fOurAddressStr;
+  delete[] (char*)fApplicationName;
+  delete[] (char*)fMIMESubtype;
 }
 
 void SIPClient::reset() {
   fWorkingAuthenticator = NULL;
-  delete fInviteCmd; fInviteCmd = NULL; fInviteCmdSize = 0;
-  delete fInviteSDPDescription; fInviteSDPDescription = NULL;
+  delete[] fInviteCmd; fInviteCmd = NULL; fInviteCmdSize = 0;
+  delete[] fInviteSDPDescription; fInviteSDPDescription = NULL;
 
-  delete (char*)fUserName; fUserName = strdup(fApplicationName);
+  delete[] (char*)fUserName; fUserName = strDup(fApplicationName);
   fUserNameSize = strlen(fUserName);
 
   resetValidAuthenticator();
 
-  delete (char*)fToTagStr; fToTagStr = NULL; fToTagStrSize = 0;
+  delete[] (char*)fToTagStr; fToTagStr = NULL; fToTagStrSize = 0;
   fServerPortNum = 0;
   fServerAddress.s_addr = 0;
-  delete (char*)fURL; fURL = NULL; fURLSize = 0;
+  delete[] (char*)fURL; fURL = NULL; fURLSize = 0;
 }
 
 void SIPClient::setProxyServer(unsigned proxyServerAddress,
@@ -146,7 +173,7 @@ static char* getLine(char* startOfLine) {
 char* SIPClient::invite(char const* url, AuthRecord* authenticator) {
   if (!processURL(url)) return NULL;
 
-  delete (char*)fURL; fURL = strdup(url);
+  delete[] (char*)fURL; fURL = strDup(url);
   fURLSize = strlen(fURL);
 
   fCallId = our_random();
@@ -166,26 +193,46 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
       = createAuthenticatorString(fWorkingAuthenticator, "INVITE", fURL);
 
     // Then, construct the SDP description to be sent in the INVITE:
+    char* rtpmapLine;
+    unsigned rtpmapLineSize;
+    if (fMIMESubtypeSize > 0) {
+      char* const rtpmapFmt = 
+	"a=rtpmap:%u %s/8000\r\n";
+      unsigned rtpmapFmtSize = strlen(rtpmapFmt)
+	+ 3 /* max char len */ + fMIMESubtypeSize;
+      rtpmapLine = new char[rtpmapFmtSize];
+      sprintf(rtpmapLine, rtpmapFmt,
+	      fDesiredAudioRTPPayloadFormat, fMIMESubtype);
+      rtpmapLineSize = strlen(rtpmapLine);
+    } else {
+      // Static payload type => no "a=rtpmap:" line
+      rtpmapLine = strDup("");
+      rtpmapLineSize = 0;
+    }
     char* const inviteSDPFmt = 
       "v=0\r\n"
       "o=- %u %u IN IP4 %s\r\n"
       "s=%s session\r\n"
       "c=IN IP4 %s\r\n"
       "t=0 0\r\n"
-      "m=audio %u RTP/AVP %u\r\n";
+      "m=audio %u RTP/AVP %u\r\n"
+      "%s";
     unsigned inviteSDPFmtSize = strlen(inviteSDPFmt)
       + 20 /* max int len */ + 20 + fOurAddressStrSize
       + fApplicationNameSize
       + fOurAddressStrSize
-      + 5 /* max short len */ + 3 /* max char len */;
-    delete fInviteSDPDescription;
+      + 5 /* max short len */ + 3 /* max char len */
+      + rtpmapLineSize;
+    delete[] fInviteSDPDescription;
     fInviteSDPDescription = new char[inviteSDPFmtSize];
     sprintf(fInviteSDPDescription, inviteSDPFmt,
 	    fCallId, fCSeq, fOurAddressStr,
 	    fApplicationName,
 	    fOurAddressStr,
-	    fClientStartPortNum, fDesiredAudioRTPPayloadFormat);
+	    fClientStartPortNum, fDesiredAudioRTPPayloadFormat,
+	    rtpmapLine);
     unsigned inviteSDPSize = strlen(fInviteSDPDescription);
+    delete[] rtpmapLine;
 
     char* const cmdFmt =
       "INVITE %s SIP/2.0\r\n"
@@ -212,7 +259,7 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
       + fUserAgentHeaderStrSize
       + 20
       + inviteSDPSize;
-    delete fInviteCmd; fInviteCmd = new char[inviteCmdSize];
+    delete[] fInviteCmd; fInviteCmd = new char[inviteCmdSize];
     sprintf(fInviteCmd, cmdFmt,
 	    fURL,
 	    fUserName, fUserName, fOurAddressStr, fFromTag,
@@ -226,7 +273,7 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
 	    inviteSDPSize,
 	    fInviteSDPDescription);
     fInviteCmdSize = strlen(fInviteCmd);
-    delete authenticatorStr;
+    delete[] authenticatorStr;
 
     // Before sending the "INVITE", arrange to handle any response packets,
     // and set up timers:
@@ -257,7 +304,7 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
     // not the one that we got from the server.
     // ##### Later: match the codecs in the response (offer, answer) #####
     if (fInviteSDPDescription != NULL) {
-      return strdup(fInviteSDPDescription);
+      return strDup(fInviteSDPDescription);
     }
   } while (0);
 
@@ -380,7 +427,7 @@ void SIPClient::doInviteStateTerminated(unsigned responseCode) {
   fInviteClientState = Terminated; // FWIW...
   if (responseCode < 200 || responseCode > 299) {
     // We failed, so return NULL;
-    delete fInviteSDPDescription; fInviteSDPDescription = NULL;
+    delete[] fInviteSDPDescription; fInviteSDPDescription = NULL;
   }
 
   // Unblock the event loop:
@@ -432,7 +479,8 @@ unsigned SIPClient::getResponseCode() {
 	  nextLineStart = getLine(lineStart);
 	  if (lineStart[0] == '\0') break; // this is a blank line
 
-	  char* realm = strdup(lineStart); char* nonce = strdup(lineStart);
+	  char* realm = strDupSize(lineStart);
+	  char* nonce = strDupSize(lineStart);
 	  // ##### Check for the format of "Proxy-Authenticate:" lines from
 	  // ##### known server types.
 	  // ##### This is a crock! We should make the parsing more general
@@ -447,7 +495,7 @@ unsigned SIPClient::getResponseCode() {
 	    fWorkingAuthenticator->nonce = nonce;
 	    break;
 	  } else {
-	    delete realm; delete nonce;
+	    delete[] realm; delete[] nonce;
 	  }
 	} 
       }
@@ -460,7 +508,7 @@ unsigned SIPClient::getResponseCode() {
     // The remaining data is assumed to be the SDP descriptor that we want.
     // We should really do some more checking on the headers here - e.g., to
     // check for "Content-type: application/sdp", "CSeq", etc. #####
-    char* toTagStr = strdup(readBuf);
+    char* toTagStr = strDupSize(readBuf);
     int contentLength = -1;
     char* lineStart;
     while (1) {
@@ -471,7 +519,7 @@ unsigned SIPClient::getResponseCode() {
       if (lineStart[0] == '\0') break; // this is a blank line
 
       if (sscanf(lineStart, "To:%*[^;]; tag=%s", toTagStr) == 1) {
-	delete (char*)fToTagStr; fToTagStr = strdup(toTagStr);
+	delete[] (char*)fToTagStr; fToTagStr = strDupSize(toTagStr);
 	fToTagStrSize = strlen(fToTagStr);
       }
  
@@ -484,7 +532,7 @@ unsigned SIPClient::getResponseCode() {
         }
       }
     }
-    delete toTagStr;
+    delete[] toTagStr;
 
     // We're now at the end of the response header lines
     if (lineStart == NULL) {
@@ -579,7 +627,7 @@ static char* computeDigestResponse(AuthRecord const& authenticator,
 
 char* SIPClient::inviteWithPassword(char const* url, char const* username,
 				    char const* password) {
-  delete (char*)fUserName; fUserName = strdup(username);
+  delete[] (char*)fUserName; fUserName = strDup(username);
   fUserNameSize = strlen(fUserName);
 
   AuthRecord authenticator;
@@ -606,8 +654,8 @@ char* SIPClient::inviteWithPassword(char const* url, char const* username,
 
   // The "realm" and "nonce" fields were dynamically
   // allocated; free them now:
-  delete (char*)authenticator.realm;
-  delete (char*)authenticator.nonce;
+  delete[] (char*)authenticator.realm;
+  delete[] (char*)authenticator.nonce;
 
   return inviteResult;
 }
@@ -644,11 +692,11 @@ Boolean SIPClient::sendACK() {
       break;
     }
 
-    delete cmd;
+    delete[] cmd;
     return True;
   } while (0);
 
-  delete cmd;
+  delete[] cmd;
   return False;
 }
 
@@ -685,11 +733,11 @@ Boolean SIPClient::sendBYE() {
       break;
     }
 
-    delete cmd;
+    delete[] cmd;
     return True;
   } while (0);
 
-  delete cmd;
+  delete[] cmd;
   return False;
 }
 
@@ -802,12 +850,12 @@ SIPClient::createAuthenticatorString(AuthRecord const* authenticator,
 	     authenticator->username, authenticator->realm,
 	     authenticator->nonce, response, url);
 #endif
-    delete (char*)response;
+    free((char*)response); // NOT delete, because it was malloc-allocated
 
     return authenticatorStr;
   }
 
-  return strdup("");
+  return strDup("");
 }
 
 void SIPClient::useAuthenticator(AuthRecord const* authenticator) {
@@ -816,20 +864,20 @@ void SIPClient::useAuthenticator(AuthRecord const* authenticator) {
       && authenticator->nonce != NULL && authenticator->username != NULL
       && authenticator->password != NULL) {
     fValidAuthenticator = new AuthRecord;
-    fValidAuthenticator->realm = strdup(authenticator->realm);
-    fValidAuthenticator->nonce = strdup(authenticator->nonce);
-    fValidAuthenticator->username = strdup(authenticator->username);
-    fValidAuthenticator->password = strdup(authenticator->password);
+    fValidAuthenticator->realm = strDup(authenticator->realm);
+    fValidAuthenticator->nonce = strDup(authenticator->nonce);
+    fValidAuthenticator->username = strDup(authenticator->username);
+    fValidAuthenticator->password = strDup(authenticator->password);
   }
 }
 
 void SIPClient::resetValidAuthenticator() {
   if (fValidAuthenticator == NULL) return;
 
-  delete (char*)fValidAuthenticator->realm;
-  delete (char*)fValidAuthenticator->nonce;
-  delete (char*)fValidAuthenticator->username;
-  delete (char*)fValidAuthenticator->password;
+  delete[] (char*)fValidAuthenticator->realm;
+  delete[] (char*)fValidAuthenticator->nonce;
+  delete[] (char*)fValidAuthenticator->username;
+  delete[] (char*)fValidAuthenticator->password;
 
   delete fValidAuthenticator; fValidAuthenticator = NULL;
 }

@@ -1820,7 +1820,7 @@ unsigned QuickTimeFileSink::addAtom_sdp() {
   }
 
   size += addArbitraryString(newSDPLines, False);
-  delete newSDPLines;
+  delete[] newSDPLines;
 addAtomEnd;
 
 addAtom(hinf);
@@ -1910,7 +1910,7 @@ addAtom(payt);
   sprintf(rtpmapString, "%s/%d",
 	  ourSubsession.codecName(), rtpSource->timestampFrequency());
   size += addArbitraryString(rtpmapString);
-  delete rtpmapString;
+  delete[] rtpmapString;
 addAtomEnd;
 
 // A dummy atom (with name '????'):

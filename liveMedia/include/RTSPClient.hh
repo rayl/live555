@@ -53,7 +53,7 @@ public:
       // Issues a RTSP "DESCRIBE" command
       // Returns the SDP description of a session, or NULL if none
       // (This is dynamically allocated, and must later be freed
-      //  by the caller)
+      //  by the caller - using "delete[]")
   char* describeWithPassword(char const* url,
 			       char const* username, char const* password);
       // Uses "describeURL()" to do a "DESCRIBE" - first

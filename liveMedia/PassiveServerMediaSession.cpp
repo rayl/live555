@@ -114,8 +114,7 @@ void PassiveServerMediaSession
   // Finally, create a new subsession description:
   GroupEId const groupEId(ipAddress, portNum, ttl);
   ServerMediaSubsession* subsession
-    = new ServerMediaSubsession(groupEId,
-				strdup(trackIdBuffer), strdup(sdpBuffer));
+    = new ServerMediaSubsession(groupEId, trackIdBuffer, sdpBuffer);
   if (subsession == NULL) return;
 
   if (fSubsessionsHead == NULL) {

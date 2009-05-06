@@ -15,62 +15,39 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
-// MPEG4-GENERIC ("audio", "video", or "application") RTP stream sources
+// H.261 Video RTP Sources
 // C++ header
 
-#ifndef _MPEG4_GENERIC_RTP_SOURCE_HH
-#define _MPEG4_GENERIC_RTP_SOURCE_HH
+#ifndef _H261_VIDEO_RTP_SOURCE_HH
+#define _H261_VIDEO_RTP_SOURCE_HH
 
 #ifndef _MULTI_FRAMED_RTP_SOURCE_HH
 #include "MultiFramedRTPSource.hh"
 #endif
 
-class MPEG4GenericRTPSource: public MultiFramedRTPSource {
+class H261VideoRTPSource: public MultiFramedRTPSource {
 public:
-  static MPEG4GenericRTPSource*
+  static H261VideoRTPSource*
   createNew(UsageEnvironment& env, Groupsock* RTPgs,
-	    unsigned char rtpPayloadFormat,
-	    unsigned rtpTimestampFrequency,
-	    char const* mediumName,
-	    char const* mode, unsigned sizeLength, unsigned indexLength,
-	    unsigned indexDeltaLength
-	    // add other parameters later
-	    );
-  // mediumName is "audio", "video", or "application"
-  // it *cannot* be NULL
+	    unsigned char rtpPayloadFormat = 31,
+	    unsigned rtpTimestampFrequency = 90000);
 
 protected:
-  virtual ~MPEG4GenericRTPSource();
+  virtual ~H261VideoRTPSource();
 
 private:
-  MPEG4GenericRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
-			unsigned char rtpPayloadFormat,
-			unsigned rtpTimestampFrequency,
-			char const* mediumName,
-			char const* mode,
-			unsigned sizeLength, unsigned indexLength,
-			unsigned indexDeltaLength
-			);
+  H261VideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
+			 unsigned char rtpPayloadFormat,
+			 unsigned rtpTimestampFrequency);
       // called only by createNew()
 
 private:
   // redefined virtual functions:
   virtual Boolean processSpecialHeader(unsigned char* headerStart,
                                        unsigned packetSize,
-                                       Boolean rtpMarkerBit,
+				       Boolean rtpMarkerBit,
                                        unsigned& resultSpecialHeaderSize);
   virtual char const* MIMEtype() const; 
-
-private:
-  char* fMIMEType;
-
-  char* fMode;
-  unsigned fSizeLength, fIndexLength, fIndexDeltaLength;
-  unsigned fNumAUHeaders; // in the most recently read packet
-  unsigned fNextAUHeader; // index of the next AU Header to read
-  struct AUHeader* fAUHeaders;
-
-  friend class MPEG4GenericBufferedPacket;
 };
 
 #endif

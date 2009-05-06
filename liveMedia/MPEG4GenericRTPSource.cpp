@@ -90,7 +90,7 @@ MPEG4GenericRTPSource
       sprintf(fMIMEType, "%s/MPEG4-GENERIC", mediumName);
     }
 
-    fMode = mode == NULL ? NULL : strdup(mode);
+    fMode = mode == NULL ? NULL : strDup(mode);
     // Check for a "mode" that we don't yet support: //#####
     if (mode == NULL || strcmp(mode, "aac-hbr") != 0) {
       fprintf(stderr, "MPEG4GenericRTPSource Warning: Unknown or unsupported \"mode\": %s\n", mode);
@@ -98,8 +98,8 @@ MPEG4GenericRTPSource
 }
 
 MPEG4GenericRTPSource::~MPEG4GenericRTPSource() {
-  delete fAUHeaders;
-  delete fMIMEType;
+  delete[] fAUHeaders;
+  delete[] fMIMEType;
 }
 
 Boolean MPEG4GenericRTPSource
@@ -137,7 +137,7 @@ Boolean MPEG4GenericRTPSource
       fNumAUHeaders = 1 + bitsAvail/(fSizeLength + fIndexDeltaLength);
     }
     if (fNumAUHeaders > 0) {
-      delete fAUHeaders; fAUHeaders = new AUHeader[fNumAUHeaders];
+      delete[] fAUHeaders; fAUHeaders = new AUHeader[fNumAUHeaders];
       // Fill in each header:
       BitVector bv(&headerStart[2], 0, AU_headers_length);
       fAUHeaders[0].size = bv.getBits(fSizeLength);

@@ -41,11 +41,11 @@ SimpleRTPSource::SimpleRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 				 unsigned offset)
   : MultiFramedRTPSource(env, RTPgs,
 			 rtpPayloadFormat, rtpTimestampFrequency),
-    fMIMEtypeString(strdup(mimeTypeString)), fOffset(offset) {
+    fMIMEtypeString(strDup(mimeTypeString)), fOffset(offset) {
 }
 
 SimpleRTPSource::~SimpleRTPSource() {
-  delete (char*)fMIMEtypeString;
+  delete[] (char*)fMIMEtypeString;
 }
 
 Boolean SimpleRTPSource

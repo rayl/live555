@@ -387,7 +387,7 @@ QCELPDeinterleavingBuffer::QCELPDeinterleavingBuffer()
 }
 
 QCELPDeinterleavingBuffer::~QCELPDeinterleavingBuffer() {
-  delete fInputBuffer;
+  delete[] fInputBuffer;
 }
 
 static unsigned const uSecsPerFrame = 20000; // 20 ms
@@ -492,5 +492,5 @@ QCELPDeinterleavingBuffer::FrameDescriptor::FrameDescriptor()
 }
 
 QCELPDeinterleavingBuffer::FrameDescriptor::~FrameDescriptor() {
-  delete frameData;
+  delete[] frameData;
 }

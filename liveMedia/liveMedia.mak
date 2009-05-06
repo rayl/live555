@@ -66,7 +66,7 @@ MPEG_SINK_OBJS = MPEGAudioRTPSink.$(OBJ) $(MP3_SINK_OBJS) MPEGVideoRTPSink.$(OBJ
 MISC_SOURCE_OBJS = MediaSource.$(OBJ) FramedSource.$(OBJ) FramedFileSource.$(OBJ) FramedFilter.$(OBJ) ByteStreamFileSource.$(OBJ) BasicUDPSource.$(OBJ) DeviceSource.$(OBJ) $(MPEG_SOURCE_OBJS)
 MISC_SINK_OBJS = MediaSink.$(OBJ) FileSink.$(OBJ) HTTPSink.$(OBJ) $(MPEG_SINK_OBJS) GSMAudioRTPSink.$(OBJ) H263plusVideoRTPSink.$(OBJ) SimpleRTPSink.$(OBJ)
 
-RTP_SOURCE_OBJS = RTPSource.$(OBJ) MultiFramedRTPSource.$(OBJ) SimpleRTPSource.$(OBJ) PrioritizedRTPStreamSelector.$(OBJ) H263plusVideoRTPSource.$(OBJ) QCELPAudioRTPSource.$(OBJ) JPEGVideoRTPSource.$(OBJ)
+RTP_SOURCE_OBJS = RTPSource.$(OBJ) MultiFramedRTPSource.$(OBJ) SimpleRTPSource.$(OBJ) PrioritizedRTPStreamSelector.$(OBJ) H261VideoRTPSource.$(OBJ) H263plusVideoRTPSource.$(OBJ) QCELPAudioRTPSource.$(OBJ) JPEGVideoRTPSource.$(OBJ)
 RTP_SINK_OBJS = RTPSink.$(OBJ) MultiFramedRTPSink.$(OBJ)
 RTP_INTERFACE_OBJS = RTPInterface.$(OBJ)
 RTP_OBJS = $(RTP_SOURCE_OBJS) $(RTP_SINK_OBJS) $(RTP_INTERFACE_OBJS)
@@ -107,6 +107,8 @@ SimpleRTPSource.$(CPP):	include/SimpleRTPSource.hh
 include/SimpleRTPSource.hh:	include/MultiFramedRTPSource.hh
 include/PrioritizedRTPStreamSelector.hh:        include/RTCP.hh
 PrioritizedRTPStreamSelector.$(CPP):    include/PrioritizedRTPStreamSelector.hh
+H261VideoRTPSource.$(CPP):	include/H261VideoRTPSource.hh
+include/H261VideoRTPSource.hh:	include/MultiFramedRTPSource.hh
 H263plusVideoRTPSource.$(CPP):	include/H263plusVideoRTPSource.hh
 include/H263plusVideoRTPSource.hh:	include/MultiFramedRTPSource.hh
 QCELPAudioRTPSource.$(CPP):	include/QCELPAudioRTPSource.hh include/MultiFramedRTPSource.hh include/FramedFilter.hh
@@ -209,7 +211,7 @@ StreamParser.$(CPP):	StreamParser.hh
 our_md5.$(C):		our_md5.h
 our_md5hl.$(C):		our_md5.h
 
-include/liveMedia.hh: include/MPEGAudioRTPSink.hh include/MP3ADURTPSink.hh include/MPEGVideoRTPSink.hh include/FileSink.hh include/MPEGVideoHTTPSink.hh include/GSMAudioRTPSink.hh include/H263plusVideoRTPSink.hh include/SimpleRTPSink.hh include/ByteStreamFileSource.hh include/BasicUDPSource.hh include/SimpleRTPSource.hh include/MPEGAudioRTPSource.hh include/MPEG4LATMAudioRTPSource.hh include/MPEG4ESVideoRTPSource.hh include/MPEG4GenericRTPSource.hh include/MP3ADURTPSource.hh include/QCELPAudioRTPSource.hh include/JPEGVideoRTPSource.hh include/MPEGVideoRTPSource.hh include/H263plusVideoRTPSource.hh include/MP3HTTPSource.hh include/MP3ADU.hh include/MP3ADUinterleaving.hh include/MP3Transcoder.hh include/MPEGDemuxedElementaryStream.hh include/MPEGAudioStreamFramer.hh include/MPEGVideoStreamFramer.hh include/DeviceSource.hh include/PrioritizedRTPStreamSelector.hh include/RTSPServer.hh include/RTSPClient.hh include/SIPClient.hh include/QuickTimeFileSink.hh include/QuickTimeGenericRTPSource.hh include/PassiveServerMediaSession.hh
+include/liveMedia.hh: include/MPEGAudioRTPSink.hh include/MP3ADURTPSink.hh include/MPEGVideoRTPSink.hh include/FileSink.hh include/MPEGVideoHTTPSink.hh include/GSMAudioRTPSink.hh include/H263plusVideoRTPSink.hh include/SimpleRTPSink.hh include/ByteStreamFileSource.hh include/BasicUDPSource.hh include/SimpleRTPSource.hh include/MPEGAudioRTPSource.hh include/MPEG4LATMAudioRTPSource.hh include/MPEG4ESVideoRTPSource.hh include/MPEG4GenericRTPSource.hh include/MP3ADURTPSource.hh include/QCELPAudioRTPSource.hh include/JPEGVideoRTPSource.hh include/MPEGVideoRTPSource.hh include/H261VideoRTPSource.hh include/H263plusVideoRTPSource.hh include/MP3HTTPSource.hh include/MP3ADU.hh include/MP3ADUinterleaving.hh include/MP3Transcoder.hh include/MPEGDemuxedElementaryStream.hh include/MPEGAudioStreamFramer.hh include/MPEGVideoStreamFramer.hh include/DeviceSource.hh include/PrioritizedRTPStreamSelector.hh include/RTSPServer.hh include/RTSPClient.hh include/SIPClient.hh include/QuickTimeFileSink.hh include/QuickTimeGenericRTPSource.hh include/PassiveServerMediaSession.hh
 
 clean:
 	-rm -rf *.$(OBJ) $(ALL) core *.core *~ include/*~

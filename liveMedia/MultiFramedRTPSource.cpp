@@ -283,7 +283,7 @@ BufferedPacket::BufferedPacket()
 
 BufferedPacket::~BufferedPacket() {
   delete fNextPacket;
-  delete fBuf;
+  delete[] fBuf;
 }
 
 void BufferedPacket::reset() {

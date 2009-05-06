@@ -71,7 +71,7 @@ QuickTimeGenericRTPSource
   : MultiFramedRTPSource(env, RTPgs,
 			 rtpPayloadFormat, rtpTimestampFrequency,
 			 new QTGenericBufferedPacketFactory(*this)),
-    fMIMEtypeString(strdup(mimeTypeString)) {
+    fMIMEtypeString(strDup(mimeTypeString)) {
   qtState.PCK = 0;
   qtState.timescale = 0;
   qtState.sdAtom = NULL;
@@ -79,7 +79,8 @@ QuickTimeGenericRTPSource
 }
 
 QuickTimeGenericRTPSource::~QuickTimeGenericRTPSource() {
-  delete qtState.sdAtom;
+  delete[] qtState.sdAtom;
+  delete[] (char*)fMIMEtypeString;
 }
 
 Boolean QuickTimeGenericRTPSource
@@ -168,7 +169,7 @@ Boolean QuickTimeGenericRTPSource
 	  |(headerStart[2]<<8)|(headerStart[3]);
 	if (atomLength != (unsigned)tlvLength) break;
 
-	delete qtState.sdAtom; qtState.sdAtom = new char[tlvLength];
+	delete[] qtState.sdAtom; qtState.sdAtom = new char[tlvLength];
 	memmove(qtState.sdAtom, headerStart, tlvLength);
 	qtState.sdAtomSize = tlvLength;
 	break;

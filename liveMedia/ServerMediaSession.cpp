@@ -61,15 +61,15 @@ ServerMediaSession::ServerMediaSession(UsageEnvironment& env,
   : Medium(env), fSubsessionsHead(NULL), fSubsessionsTail(NULL),
     fSubsessionCounter(0) {
   fDescriptionSDPString
-    = strdup(description == NULL ? libraryNameString : description);
-  fInfoSDPString = strdup(info == NULL ? libraryNameString : info);
+    = strDup(description == NULL ? libraryNameString : description);
+  fInfoSDPString = strDup(info == NULL ? libraryNameString : info);
 
   gettimeofday(&fCreationTime, &Idunno);
 }
 
 ServerMediaSession::~ServerMediaSession() {
   delete fSubsessionsHead;
-  delete fDescriptionSDPString; delete fInfoSDPString;
+  delete[] fDescriptionSDPString; delete[] fInfoSDPString;
 }
 
 Boolean ServerMediaSession::isServerMediaSession() const {
@@ -149,10 +149,10 @@ ServerMediaSubsession
 ::ServerMediaSubsession(GroupEId const& groupEId,
 			char const* trackId, char const* sdpLines)
   : fNext(NULL), fGroupEId(groupEId),
-    fTrackId(trackId), fSDPLines(sdpLines) {
+    fTrackId(strDup(trackId)), fSDPLines(strDup(sdpLines)) {
 }
 
 ServerMediaSubsession::~ServerMediaSubsession() {
-  delete (char*)fTrackId;
-  delete (char*)fSDPLines;
+  delete[] (char*)fTrackId;
+  delete[] (char*)fSDPLines;
 }

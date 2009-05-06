@@ -58,7 +58,7 @@ RTPSink::RTPSink(UsageEnvironment& env,
     fPacketCount(0), fOctetCount(0), fTotalOctetCount(0),
     fTimestampFrequency(rtpTimestampFrequency),
     fRTPPayloadFormatName(rtpPayloadFormatName == NULL
-			  ? NULL : strdup(rtpPayloadFormatName)) {
+			  ? NULL : strDup(rtpPayloadFormatName)) {
   gettimeofday(&fCreationTime, &Idunno);
   fTotalOctetCountStartTime = fCreationTime;
 
@@ -69,7 +69,7 @@ RTPSink::RTPSink(UsageEnvironment& env,
 }
 
 RTPSink::~RTPSink() {
-  delete (char*)fRTPPayloadFormatName;
+  delete[] (char*)fRTPPayloadFormatName;
 }
 
 unsigned RTPSink::convertToRTPTimestamp(struct timeval timestamp) const {

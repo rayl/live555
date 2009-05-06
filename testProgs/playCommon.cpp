@@ -65,6 +65,7 @@ char* password = NULL;
 char* proxyServerName = NULL;
 unsigned short proxyServerPortNum = 0;
 unsigned char desiredAudioRTPPayloadFormat = 0;
+char* mimeSubtype = NULL;
 unsigned short movieWidth = 240;
 unsigned short movieHeight = 180;
 unsigned movieFPS = 15;
@@ -87,8 +88,8 @@ void usage() {
 	  allowProxyServers
 	  ? " [<proxy-server> [<proxy-server-port>]]" : "",
 	  supportCodecSelection
-	  ? " [-A <audio-codec-rtp-payload-format-code>]" : "");
-  //##### Add "-D <dest-rtsp-url>" #####
+	  ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "");
+  //##### Add "-R <dest-rtsp-url>" #####
   shutdown();
 }
 
@@ -232,6 +233,13 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 'D': { // specify a MIME subtype for a dynamic RTP payload type
+      mimeSubtype = argv[2];
+      if (desiredAudioRTPPayloadFormat==0) desiredAudioRTPPayloadFormat =96;
+      ++argv; --argc;
+      break;
+    }
+
     case 'w': { // specify a width (pixels) for an output QuickTime movie
       if (sscanf(argv[2], "%hu", &movieWidth) != 1) {
 	usage();
@@ -334,7 +342,7 @@ int main(int argc, char** argv) {
 
   // Create a media session object from this SDP description:
   session = MediaSession::createNew(*env, sdpDescription);
-  delete sdpDescription;
+  delete[] sdpDescription;
   if (session == NULL) {
     fprintf(stderr, "Failed to create a MediaSession object from the SDP description: %s\n", env->getResultMsg());
     shutdown();
@@ -784,7 +792,7 @@ Boolean setupDestinationRTSPServer() {
     // First, get our own IP address, and that of the RTSP server:
     struct in_addr ourIPAddress;
     ourIPAddress.s_addr = ourSourceAddressForMulticast(*env);
-    char* ourIPAddressStr = strdup(our_inet_ntoa(ourIPAddress));
+    char* ourIPAddressStr = strDup(our_inet_ntoa(ourIPAddress));
 
     NetAddress serverAddress;
     portNumBits serverPortNum;
@@ -792,7 +800,7 @@ Boolean setupDestinationRTSPServer() {
 				  serverAddress, serverPortNum)) break;
     struct in_addr serverIPAddress;
     serverIPAddress.s_addr = *(unsigned*)(serverAddress.data());
-    char* serverIPAddressStr = strdup(our_inet_ntoa(serverIPAddress));
+    char* serverIPAddressStr = strDup(our_inet_ntoa(serverIPAddress));
 
     char const* destSDPFmt =
       "v=0\r\n"
@@ -827,13 +835,13 @@ Boolean setupDestinationRTSPServer() {
 	= rtspClientOutgoing->announceSDPDescription(destRTSPURL,
 						     destSDPDescription);
     }
-    delete serverIPAddressStr; delete ourIPAddressStr;
+    delete[] serverIPAddressStr; delete[] ourIPAddressStr;
     if (!announceResult) break;
     
     // Then, create a "MediaSession" object from this SDP description:
     MediaSession* destSession
       = MediaSession::createNew(*env, destSDPDescription);
-    delete destSDPDescription;
+    delete[] destSDPDescription;
     if (destSession == NULL) break;
 
     // Initiate, setup and play "destSession".

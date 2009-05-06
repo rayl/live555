@@ -107,7 +107,7 @@ OutPacketBuffer::OutPacketBuffer(unsigned preferredPacketSize,
 }
 
 OutPacketBuffer::~OutPacketBuffer() {
-  delete fBuf;
+  delete[] fBuf;
 }
 
 void OutPacketBuffer::enqueue(unsigned char const* from, unsigned numBytes) {

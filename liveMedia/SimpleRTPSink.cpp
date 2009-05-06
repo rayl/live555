@@ -29,12 +29,12 @@ SimpleRTPSink::SimpleRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 			     Boolean allowMultipleFramesPerPacket)
   : MultiFramedRTPSink(env, RTPgs, rtpPayloadFormat,
 		       rtpTimestampFrequency, rtpPayloadFormatName),
-    fSDPMediaTypeString(strdup(sdpMediaTypeString)),
+    fSDPMediaTypeString(strDup(sdpMediaTypeString)),
     fAllowMultipleFramesPerPacket(allowMultipleFramesPerPacket) {
 }
 
 SimpleRTPSink::~SimpleRTPSink() {
-  delete (char*)fSDPMediaTypeString;
+  delete[] (char*)fSDPMediaTypeString;
 }
 
 SimpleRTPSink*

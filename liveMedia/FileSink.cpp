@@ -106,6 +106,15 @@ void FileSink::afterGettingFrame(void* clientData, unsigned frameSize,
 #endif
   fwrite(sink->fBuffer, frameSize, 1, sink->fOutFid);
 
+  if (fflush(sink->fOutFid) == EOF) {
+    // The output file has closed.  Handle this the same way as if the
+    // input source had closed:
+    onSourceClosure(sink);
+
+    sink->stopPlaying();
+    return;
+  }
+ 
   // Then try getting the next frame:
   sink->continuePlaying();
 }

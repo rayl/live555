@@ -241,7 +241,7 @@ Boolean PrioritizedRTPStreamSelector
     if (fFrameSize > fMaxSize) fFrameSize = fMaxSize;
     memmove(fTo, buffer, fFrameSize);
 
-    delete buffer;
+    delete[] buffer;
     fWarehouse->fLastActionWasIncoming = False;
     return True;
   }
@@ -279,7 +279,7 @@ PrioritizedInputStreamDescriptor
 }
 
 PrioritizedInputStreamDescriptor::~PrioritizedInputStreamDescriptor() {
-  delete fBuffer;
+  delete[] fBuffer;
 }
 
 static void afterGettingFrame(void* clientData, unsigned frameSize,
@@ -349,9 +349,9 @@ PacketWarehouse::PacketWarehouse(unsigned seqNumStagger)
 PacketWarehouse::~PacketWarehouse() {
   // Delete each descriptor's buffer (if any), then delete the descriptors:
   for (unsigned i = 0; i < fNumDescriptors; ++i) {
-    delete fPacketDescriptors[i].buffer;
+    delete[] fPacketDescriptors[i].buffer;
   }
-  delete fPacketDescriptors;
+  delete[] fPacketDescriptors;
 }
 
 Boolean PacketWarehouse::isFull() {
@@ -399,7 +399,7 @@ void PacketWarehouse::addNewFrame(unsigned priority,
     if (desc.priority < priority) return; // lower than existing priority
 
     // Otherwise, use the new frame instead, so get rid of the existing one:
-    delete desc.buffer;
+    delete[] desc.buffer;
   }
 
   // Record this new frame:

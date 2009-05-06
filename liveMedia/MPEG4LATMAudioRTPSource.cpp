@@ -191,7 +191,7 @@ parseStreamMuxConfigStr(char const* configStr,
     return True; // parsing succeeded
   } while (0);
 
-  delete audioSpecificConfig;
+  delete[] audioSpecificConfig;
   return False; // parsing failed
 }
 
@@ -236,7 +236,7 @@ unsigned char* parseGeneralConfigStr(char const* configStr,
   } while (0);
 
   configSize = 0;
-  delete config; config = NULL;
+  delete[] config; config = NULL;
   return NULL;
 }
 

@@ -18,18 +18,18 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "GroupEId.hh"
-
+#include "strDup.hh"
 #include <string.h>
 
 ////////// Scope //////////
 
 void Scope::assign(unsigned char ttl, const char* publicKey) {
 	fTTL = ttl;
-	fPublicKey = strdup(publicKey == NULL ? "nokey" : publicKey);
+	fPublicKey = strDup(publicKey == NULL ? "nokey" : publicKey);
 }
 
 void Scope::clean() {
-	free(fPublicKey); // not "delete", because it was allocated using strdup()
+	delete[] fPublicKey;
 }
 
 

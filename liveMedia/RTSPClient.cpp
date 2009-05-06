@@ -88,7 +88,7 @@ RTSPClient::RTSPClient(UsageEnvironment& env,
 
 RTSPClient::~RTSPClient() {
   reset();
-  delete fUserAgentHeaderStr;
+  delete[] fUserAgentHeaderStr;
 }
 
 Boolean RTSPClient::isRTSPClient() const {
@@ -102,11 +102,11 @@ void RTSPClient::reset() {
   fSocketNum = -1;
   fServerAddress = 0;
 
-  delete fBaseURL; fBaseURL = NULL;
+  delete[] fBaseURL; fBaseURL = NULL;
 
   resetCurrentAuthenticator();
 
-  delete fLastSessionId; fLastSessionId = NULL;
+  delete[] fLastSessionId; fLastSessionId = NULL;
 }
 
 static char* getLine(char* startOfLine) {
@@ -157,7 +157,7 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 	    ++fCSeq,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
-    delete authenticatorStr;
+    delete[] authenticatorStr;
 
     if (!sendRequest(cmd)) {
       envir().setResultErrMsg("DESCRIBE send() failed: ");
@@ -199,14 +199,15 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 	  nextLineStart = getLine(lineStart);
 	  if (lineStart[0] == '\0') break; // this is a blank line
 
-	  char* realm = strdup(lineStart); char* nonce = strdup(lineStart);
+	  char* realm = strDupSize(lineStart);
+	  char* nonce = strDupSize(lineStart);
 	  if (sscanf(lineStart, "WWW-Authenticate: Digest realm=\"%[^\"]\", nonce=\"%[^\"]\"",
 		     realm, nonce) == 2) {
 	    authenticator->realm = realm;
 	    authenticator->nonce = nonce;
 	    break;
 	  } else {
-	    delete realm; delete nonce;
+	    delete[] realm; delete[] nonce;
 	  }
 	} 
       }
@@ -244,7 +245,7 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 	  }
 	  reset();
 	  char* result = describeURL(redirectionURL);
-	  delete redirectionURL;
+	  delete[] redirectionURL;
 	  return result;
 	}
       }
@@ -253,7 +254,7 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
     // We're now at the end of the response header lines
     if (wantRedirection) {
       envir().setResultMsg("Saw redirection response code, but not a \"Location:\" header");
-      delete redirectionURL;
+      delete[] redirectionURL;
       break;
     }
     if (lineStart == NULL) {
@@ -309,11 +310,11 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
       bodyStart[contentLength] = '\0'; // trims any extra data
     }
 
-    delete cmd;
-    return strdup(bodyStart);
+    delete[] cmd;
+    return strDup(bodyStart);
   } while (0);
 
-  delete cmd;
+  delete[] cmd;
   return NULL;
 }
 
@@ -344,8 +345,8 @@ char* RTSPClient
 
   // The "realm" and "nonce" fields were dynamically
   // allocated; free them now:
-  delete (char*)authenticator.realm;
-  delete (char*)authenticator.nonce;
+  delete[] (char*)authenticator.realm;
+  delete[] (char*)authenticator.nonce;
 
   return describeResult;
 }
@@ -383,11 +384,11 @@ Boolean RTSPClient::sendOptionsCmd() {
 
     // For now, don't bother looking at the response #####
 
-    delete cmd;
+    delete[] cmd;
     return True;
   } while (0);
 
-  delete cmd;
+  delete[] cmd;
   return False;
 }
 
@@ -457,7 +458,7 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
 	    authenticatorStr,
 	    sdpSize,
 	    sdpDescription);
-    delete authenticatorStr;
+    delete[] authenticatorStr;
 
     if (!sendRequest(cmd)) {
       envir().setResultErrMsg("ANNOUNCE send() failed: ");
@@ -493,14 +494,15 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
 	  nextLineStart = getLine(lineStart);
 	  if (lineStart[0] == '\0') break; // this is a blank line
 
-	  char* realm = strdup(lineStart); char* nonce = strdup(lineStart);
+	  char* realm = strDupSize(lineStart);
+	  char* nonce = strDupSize(lineStart);
 	  if (sscanf(lineStart, "WWW-Authenticate: Digest realm=\"%[^\"]\", nonce=\"%[^\"]\"",
 		     realm, nonce) == 2) {
 	    authenticator->realm = realm;
 	    authenticator->nonce = nonce;
 	    break;
 	  } else {
-	    delete realm; delete nonce;
+	    delete[] realm; delete[] nonce;
 	  }
 	} 
       }
@@ -509,11 +511,11 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
     }
     // (Later, check "CSeq" too #####)
 
-    delete cmd;
+    delete[] cmd;
     return True;
   } while (0);
 
-  delete cmd;
+  delete[] cmd;
   return False;
 }
 
@@ -572,8 +574,8 @@ Boolean RTSPClient
 
   // The "realm" and "nonce" fields were dynamically
   // allocated; free them now:
-  delete (char*)authenticator.realm;
-  delete (char*)authenticator.nonce;
+  delete[] (char*)authenticator.realm;
+  delete[] (char*)authenticator.nonce;
 
   return secondTrySuccess;
 }
@@ -651,8 +653,8 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 	    sessionStr,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
-    delete authenticatorStr;
-    if (sessionStr[0] != '\0') delete sessionStr;
+    delete[] authenticatorStr;
+    if (sessionStr[0] != '\0') delete[] sessionStr;
 
     // And then sent it:
     if (!sendRequest(cmd)) {
@@ -692,8 +694,8 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       nextLineStart = getLine(lineStart);
 
       if (sscanf(lineStart, "Session: %s", sessionId) == 1) {
-	subsession.sessionId = strdup(sessionId);
-	delete fLastSessionId; fLastSessionId = strdup(sessionId);
+	subsession.sessionId = strDup(sessionId);
+	delete[] fLastSessionId; fLastSessionId = strDup(sessionId);
 	continue;
       }
 
@@ -703,7 +705,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       if (parseTransportResponse(lineStart,
 				 serverAddressStr, serverPortNum,
 				 rtpChannelId, rtcpChannelId)) {
-	delete subsession.connectionEndpointName();
+	delete[] subsession.connectionEndpointName();
 	subsession.connectionEndpointName() = serverAddressStr;
 	subsession.serverPortNum = serverPortNum;
 	subsession.rtpChannelId = rtpChannelId;
@@ -711,7 +713,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 	continue;
       }
     } 
-    delete sessionId;
+    delete[] sessionId;
 
     if (subsession.sessionId == NULL) {
       envir().setResultMsg("\"Session:\" header is missing in the response");
@@ -732,11 +734,11 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       subsession.setDestinations(fServerAddress);
     }
 
-    delete cmd;
+    delete[] cmd;
     return True;
   } while (0);
 
-  delete cmd;
+  delete[] cmd;
   return False;
 }
 
@@ -776,7 +778,7 @@ Boolean RTSPClient::playMediaSession(MediaSession& session) {
 	    fLastSessionId,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
-    delete authenticatorStr;
+    delete[] authenticatorStr;
 
     if (!sendRequest(cmd)) {
       envir().setResultErrMsg("PLAY send() failed: ");
@@ -804,11 +806,11 @@ Boolean RTSPClient::playMediaSession(MediaSession& session) {
     }
     // (Later, check "CSeq" too #####)
 
-    delete cmd;
+    delete[] cmd;
     return True;
   } while (0);
 
-delete cmd;
+delete[] cmd;
   return False;
 }
 
@@ -859,7 +861,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
 	    subsession.sessionId,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
-    delete authenticatorStr;
+    delete[] authenticatorStr;
 
     if (!sendRequest(cmd)) {
       envir().setResultErrMsg("PLAY send() failed: ");
@@ -887,11 +889,11 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
     }
     // (Later, check "CSeq" too #####)
 
-    delete cmd;
+    delete[] cmd;
     return True;
   } while (0);
 
-delete cmd;
+  delete[] cmd;
   return False;
 }
 
@@ -935,7 +937,7 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
 	    subsession.sessionId,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
-    delete authenticatorStr;
+    delete[] authenticatorStr;
 
     if (!sendRequest(cmd)) {
       envir().setResultErrMsg("RECORD send() failed: ");
@@ -963,11 +965,11 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
     }
     // (Later, check "CSeq" too #####)
 
-    delete cmd;
+    delete[] cmd;
     return True;
   } while (0);
 
-  delete cmd;
+  delete[] cmd;
   return False;
 }
 
@@ -1010,7 +1012,7 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
 	    subsession.sessionId,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
-    delete authenticatorStr;
+    delete[] authenticatorStr;
 
     if (!sendRequest(cmd)) {
       envir().setResultErrMsg("TEARDOWN send() failed: ");
@@ -1042,22 +1044,22 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
     // (Later, check "CSeq" too #####)
 #endif
 
-    delete (char*)subsession.sessionId;
+    delete[] (char*)subsession.sessionId;
     subsession.sessionId = NULL;
     // we're done with this session
 
-    delete cmd;
+    delete[] cmd;
     return True;
   } while (0);
 
-  delete cmd;
+  delete[] cmd;
   return False;
 }
 
 Boolean RTSPClient::openConnectionFromURL(char const* url) {
   do {
     // Set this as our base URL:
-    delete fBaseURL; fBaseURL = strdup(url); if (fBaseURL == NULL) break;
+    delete[] fBaseURL; fBaseURL = strDup(url); if (fBaseURL == NULL) break;
 
     // Begin by parsing the URL:
     NetAddress destAddress;
@@ -1173,12 +1175,12 @@ RTSPClient::createAuthenticatorString(AuthRecord const* authenticator,
 	     authenticator->username, authenticator->realm,
 	     authenticator->nonce, url, response);
 #endif
-    delete (char*)response;
+    free((char*)response); // NOT delete, because it was malloc-allocated
 
     return authenticatorStr;
   }
 
-  return strdup("");
+  return strDup("");
 }
 
 void RTSPClient::useAuthenticator(AuthRecord const* authenticator) {
@@ -1187,20 +1189,20 @@ void RTSPClient::useAuthenticator(AuthRecord const* authenticator) {
       && authenticator->nonce != NULL && authenticator->username != NULL
       && authenticator->password != NULL) {
     fCurrentAuthenticator = new AuthRecord;
-    fCurrentAuthenticator->realm = strdup(authenticator->realm);
-    fCurrentAuthenticator->nonce = strdup(authenticator->nonce);
-    fCurrentAuthenticator->username = strdup(authenticator->username);
-    fCurrentAuthenticator->password = strdup(authenticator->password);
+    fCurrentAuthenticator->realm = strDup(authenticator->realm);
+    fCurrentAuthenticator->nonce = strDup(authenticator->nonce);
+    fCurrentAuthenticator->username = strDup(authenticator->username);
+    fCurrentAuthenticator->password = strDup(authenticator->password);
   }
 }
 
 void RTSPClient::resetCurrentAuthenticator() {
   if (fCurrentAuthenticator == NULL) return;
 
-  delete (char*)fCurrentAuthenticator->realm;
-  delete (char*)fCurrentAuthenticator->nonce;
-  delete (char*)fCurrentAuthenticator->username;
-  delete (char*)fCurrentAuthenticator->password;
+  delete[] (char*)fCurrentAuthenticator->realm;
+  delete[] (char*)fCurrentAuthenticator->nonce;
+  delete[] (char*)fCurrentAuthenticator->username;
+  delete[] (char*)fCurrentAuthenticator->password;
 
   delete fCurrentAuthenticator; fCurrentAuthenticator = NULL;
 }
@@ -1259,7 +1261,7 @@ int RTSPClient::getResponse(char*& responseBuffer,
 	if (bytesRead >= size) break;
 	bytesToRead -= curBytesRead;
       }
-      delete tmpBuffer;
+      delete[] tmpBuffer;
       if (bytesRead != size) break;
 
       success = True;
@@ -1337,13 +1339,13 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
 
   // Then, run through each of the fields, looking for ones we handle:
   char const* fields = line;
-  char* field = strdup(fields);
+  char* field = strDupSize(fields);
   while (sscanf(fields, "%[^;]", field) == 1) {
     if (sscanf(field, "server_port=%hu", &serverPortNum) == 1) {
       foundServerPortNum = True;
     } else if (strncmp(field, "source=", 7) == 0) {
-      delete foundServerAddressStr;
-      foundServerAddressStr = strdup(field+7);
+      delete[] foundServerAddressStr;
+      foundServerAddressStr = strDup(field+7);
     } else if (sscanf(field, "interleaved=%u-%u", &rtpCid, &rtcpCid) == 2) {
       rtpChannelId = (unsigned char)rtpCid;
       rtcpChannelId = (unsigned char)rtcpCid;
@@ -1356,7 +1358,7 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
     if (fields[0] == '\0') break;
     ++fields; // skip over the ';'
   }
-  delete field;
+  delete[] field;
 
   if (foundServerPortNum) {
     serverAddressStr = foundServerAddressStr;
@@ -1365,6 +1367,6 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
     return True;
   }
 
-  delete foundServerAddressStr;
+  delete[] foundServerAddressStr;
   return False;
 }
