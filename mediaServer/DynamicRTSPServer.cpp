@@ -134,8 +134,12 @@ static ServerMediaSession* createNewSMS(UsageEnvironment& env,
     sms->addSubsession(demux->newAudioServerMediaSubsession());
   } else if (strcmp(extension, ".ts") == 0) {
     // Assumed to be a MPEG Transport Stream file:
+    // Use an index file name that's the same as the TS file name, except with ".tsx":
+    unsigned indexFileNameLen = strlen(fileName) + 2; // allow for trailing "x\0"
+    char* indexFileName = new char[indexFileNameLen];
+    sprintf(indexFileName, "%sx", fileName);
     NEW_SMS("MPEG Transport Stream");
-    sms->addSubsession(MPEG2TransportFileServerMediaSubsession::createNew(env, fileName, reuseSource));
+    sms->addSubsession(MPEG2TransportFileServerMediaSubsession::createNew(env, fileName, indexFileName, reuseSource));
   } else if (strcmp(extension, ".wav") == 0) {
     // Assumed to be a WAV Audio file:
     NEW_SMS("WAV Audio Stream");

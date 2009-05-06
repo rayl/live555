@@ -31,7 +31,7 @@ MPEG2TransportStreamIndexFile
     fCachedPCR(0.0f), fCachedTSPacketNumber(0), fNumIndexRecords(0) {
   // Get the file size, to determine how many index records it contains:
   u_int64_t indexFileSize = GetFileSize(indexFileName, NULL);
-  if (indexFileSize == 0 || indexFileSize % INDEX_RECORD_SIZE != 0) {
+  if (indexFileSize % INDEX_RECORD_SIZE != 0) {
     env << "Warning: Size of the index file \"" << indexFileName
  	<< "\" (" << (unsigned)indexFileSize
 	<< ") is not a multiple of the index record size ("
@@ -42,7 +42,17 @@ MPEG2TransportStreamIndexFile
 
 MPEG2TransportStreamIndexFile* MPEG2TransportStreamIndexFile
 ::createNew(UsageEnvironment& env, char const* indexFileName) {
-  return new MPEG2TransportStreamIndexFile(env, indexFileName);
+  if (indexFileName == NULL) return NULL;
+  MPEG2TransportStreamIndexFile* indexFile
+    = new MPEG2TransportStreamIndexFile(env, indexFileName);
+
+  // Reject empty or non-existent index files:
+  if (indexFile->getPlayingDuration() == 0.0f) {
+    delete indexFile;
+    indexFile = NULL;
+  }
+
+  return indexFile;
 }
 
 MPEG2TransportStreamIndexFile::~MPEG2TransportStreamIndexFile() {

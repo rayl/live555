@@ -35,7 +35,7 @@ UsageEnvironment* env;
 char const* programName;
 
 void usage() {
-  *env << "usage: " << programName << " <input-transport-stream-file-name> <start-time> <scale> <output-transport-stream-name>\n";
+  *env << "usage: " << programName << " <input-transport-stream-file-name> <start-time> <scale> <output-transport-stream-file-name>\n";
   *env << "\twhere\t<transport-stream-file-name> ends with \".ts\"\n";
   *env << "\t\t<start-time> is the starting play time in seconds (0 for the start)\n";
   *env << "\t\t<scale> is a non-zero integer, representing the playing speed (use 1 for normal play; use a negative number for reverse play)\n";

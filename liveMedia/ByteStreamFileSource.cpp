@@ -122,7 +122,10 @@ void ByteStreamFileSource::doStopGettingFrames() {
 }
 
 void ByteStreamFileSource::fileReadableHandler(ByteStreamFileSource* source, int /*mask*/) {
-  if (!source->isCurrentlyAwaitingData()) return; // we're not ready for the data yet
+  if (!source->isCurrentlyAwaitingData()) {
+    source->doStopGettingFrames(); // we're not ready for the data yet
+    return;
+  }
   source->doReadFromFile();
 }
 

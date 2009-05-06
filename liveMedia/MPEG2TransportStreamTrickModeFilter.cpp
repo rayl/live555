@@ -207,7 +207,6 @@ void MPEG2TransportStreamTrickModeFilter::attemptDeliveryToClient() {
 void MPEG2TransportStreamTrickModeFilter::seekToTransportPacket(unsigned long tsPacketNum) {
   if (tsPacketNum == fNextTSPacketNum) return; // we're already there
   
-  // Use the regular file I/O interface:
   ByteStreamFileSource* tsFile = (ByteStreamFileSource*)fInputSource;
   u_int64_t tsPacketNum64 = (u_int64_t)tsPacketNum;
   tsFile->seekToByteAbsolute(tsPacketNum64*TRANSPORT_PACKET_SIZE);

@@ -45,6 +45,9 @@ public:
 
   unsigned long nextIndexRecordNum() const { return fNextIndexRecordNum; }
 
+  void forgetInputSource() { fInputSource = NULL; }
+      // this lets us delete this without also deleting the input Transport Stream
+
 protected:
   MPEG2TransportStreamTrickModeFilter(UsageEnvironment& env, FramedSource* inputSource,
 				      MPEG2TransportStreamIndexFile* indexFile, int scale);

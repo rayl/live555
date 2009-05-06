@@ -38,6 +38,8 @@ public:
 
   unsigned long tsPacketCount() const { return fTSPacketCount; }
 
+  void changeInputSource(FramedSource* newInputSource) { fInputSource = newInputSource; }
+
 protected:
   MPEG2TransportStreamFramer(UsageEnvironment& env, FramedSource* inputSource);
       // called only by createNew()

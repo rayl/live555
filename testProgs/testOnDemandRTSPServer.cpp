@@ -195,11 +195,12 @@ int main(int argc, char** argv) {
   {
     char const* streamName = "mpeg2TransportStreamTest";
     char const* inputFileName = "test.ts";
+    char const* indexFileName = "test.ts";
     ServerMediaSession* sms
       = ServerMediaSession::createNew(*env, streamName, streamName,
 				      descriptionString);
     sms->addSubsession(MPEG2TransportFileServerMediaSubsession
-		       ::createNew(*env, inputFileName, reuseFirstSource));
+		       ::createNew(*env, inputFileName, indexFileName, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, streamName, inputFileName);
