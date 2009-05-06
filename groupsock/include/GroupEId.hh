@@ -25,20 +25,20 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "Boolean.hh"
 #endif
 
-#ifndef _NET_COMMON_H
-#include "NetCommon.h"
+#ifndef _NET_ADDRESS_HH
+#include "NetAddress.hh"
 #endif
 
-const unsigned char MAX_TTL = 255;
+const u_int8_t MAX_TTL = 255;
 
 class Scope {
     public:
-    	Scope(unsigned char ttl = 0, const char* publicKey = NULL);
+    	Scope(u_int8_t ttl = 0, const char* publicKey = NULL);
     	Scope(const Scope& orig);
     	Scope& operator=(const Scope& rightSide);
 	~Scope();
 
-	unsigned char ttl() const
+	u_int8_t ttl() const
 		{ return fTTL; }
 
 	const char* publicKey() const
@@ -46,22 +46,22 @@ class Scope {
 	unsigned publicKeySize() const;
 
     private:
-    	void assign(unsigned char ttl, const char* publicKey);
+    	void assign(u_int8_t ttl, const char* publicKey);
     	void clean();
 
-    	unsigned char fTTL;
+    	u_int8_t fTTL;
     	char* fPublicKey;
 };
 
 class GroupEId {
 public:
   GroupEId(struct in_addr const& groupAddr,
-	   unsigned short portNum, Scope const& scope,
+	   portNumBits portNum, Scope const& scope,
 	   unsigned numSuccessiveGroupAddrs = 1);
       // used for a 'source-independent multicast' group
   GroupEId(struct in_addr const& groupAddr,
 	   struct in_addr const& sourceFilterAddr,
-	   unsigned short portNum,
+	   portNumBits portNum,
 	   unsigned numSuccessiveGroupAddrs = 1);
       // used for a 'source-specific multicast' group
   GroupEId(); // used only as a temp constructor prior to initialization 
@@ -76,14 +76,14 @@ public:
     return fNumSuccessiveGroupAddrs;
   }
 	
-  unsigned short portNum() const { return fPortNum; }
+  portNumBits portNum() const { return fPortNum; }
 
   const Scope& scope() const { return fScope; }
 
 private:
   void init(struct in_addr const& groupAddr,
 	    struct in_addr const& sourceFilterAddr,
-	    unsigned short portNum,
+	    portNumBits portNum,
 	    Scope const& scope,
 	    unsigned numSuccessiveGroupAddrs);
 
@@ -91,7 +91,7 @@ private:
   struct in_addr fGroupAddress;
   struct in_addr fSourceFilterAddress;
   unsigned fNumSuccessiveGroupAddrs;
-  unsigned short fPortNum;
+  portNumBits fPortNum;
   Scope fScope;
 };
 

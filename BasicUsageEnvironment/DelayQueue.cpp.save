@@ -202,17 +202,11 @@ void DelayQueue::handleAlarm() {
   DelayInterval timeSinceLastAlarm = timeNow - fLastAlarmTime;
   fLastAlarmTime = timeNow;
   
-  // Now adjust the delay queue for any entries that have expired.
-  // Also, handle the first such entry (if any).
-  DelayQueueEntry* curEntry = head();
-  while (timeSinceLastAlarm >= curEntry->fDeltaTimeRemaining) {
-    timeSinceLastAlarm -= curEntry->fDeltaTimeRemaining;
-    curEntry->fDeltaTimeRemaining = ZERO;
-    curEntry = curEntry->fNext;
-  }
-  curEntry->fDeltaTimeRemaining -= timeSinceLastAlarm;
-  
-  if (head()->fDeltaTimeRemaining == ZERO) {
+  // Now adjust the delay queue, handling any entries that have expired:
+  while (timeSinceLastAlarm >= head()->fDeltaTimeRemaining) {
+    timeSinceLastAlarm -= head()->fDeltaTimeRemaining;
+    head()->fDeltaTimeRemaining = ZERO;
+    
     DelayQueueEntry* toRemove = head();
     removeEntry1(toRemove);
     
@@ -220,7 +214,8 @@ void DelayQueue::handleAlarm() {
     toRemove->handleTimeout();
     fLock.rwLock();
   }
-
+  head()->fDeltaTimeRemaining -= timeSinceLastAlarm;
+  
   fLock.unlock();
 }
 

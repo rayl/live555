@@ -23,7 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// Scope //////////
 
-void Scope::assign(unsigned char ttl, const char* publicKey) {
+void Scope::assign(u_int8_t ttl, const char* publicKey) {
 	fTTL = ttl;
 	fPublicKey = strDup(publicKey == NULL ? "nokey" : publicKey);
 }
@@ -33,7 +33,7 @@ void Scope::clean() {
 }
 
 
-Scope::Scope(unsigned char ttl, const char* publicKey) {
+Scope::Scope(u_int8_t ttl, const char* publicKey) {
 	assign(ttl, publicKey);
 }
 
@@ -63,7 +63,7 @@ unsigned Scope::publicKeySize() const {
 ////////// GroupEId //////////
 
 GroupEId::GroupEId(struct in_addr const& groupAddr,
-		   unsigned short portNum, Scope const& scope,
+		   portNumBits portNum, Scope const& scope,
 		   unsigned numSuccessiveGroupAddrs) {
   struct in_addr sourceFilterAddr;
   sourceFilterAddr.s_addr = ~0; // indicates no source filter
@@ -73,7 +73,7 @@ GroupEId::GroupEId(struct in_addr const& groupAddr,
 
 GroupEId::GroupEId(struct in_addr const& groupAddr,
 		   struct in_addr const& sourceFilterAddr,
-		   unsigned short portNum,
+		   portNumBits portNum,
 		   unsigned numSuccessiveGroupAddrs) {
   init(groupAddr, sourceFilterAddr, portNum, 1, numSuccessiveGroupAddrs);
 }
@@ -82,13 +82,13 @@ GroupEId::GroupEId() {
 }
 
 Boolean GroupEId::isSSM() const {
-  return fSourceFilterAddress.s_addr != unsigned(~0);
+  return fSourceFilterAddress.s_addr != netAddressBits(~0);
 }
 
 
 void GroupEId::init(struct in_addr const& groupAddr,
 		    struct in_addr const& sourceFilterAddr,
-		    unsigned short portNum,
+		    portNumBits portNum,
 		    Scope const& scope,
 		    unsigned numSuccessiveGroupAddrs) {
   fGroupAddress = groupAddr;

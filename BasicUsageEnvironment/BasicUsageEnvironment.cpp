@@ -263,7 +263,7 @@ void BasicTaskScheduler::SingleStep() {
       }
   }
   
-  // Handle any delayed events that have come due:
+  // Handle any delayed event that may have come due:
   fDelayQueue.handleAlarm();
   
   // Call the handler function for each readable socket:
