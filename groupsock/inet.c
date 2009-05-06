@@ -96,10 +96,18 @@ struct hostent* our_gethostbyname(name)
 #ifdef USE_SYSTEM_RANDOM
 #include <stdlib.h>
 long our_random() {
+#if defined(__WIN32__) || defined(_WIN32)
+  return rand();
+#else
   return random();
+#endif
 }
 void our_srandom(unsigned int x) {
+#if defined(__WIN32__) || defined(_WIN32)
+  return srand(x);
+#else
   return srandom(x);
+#endif
 }
 #else
 /*

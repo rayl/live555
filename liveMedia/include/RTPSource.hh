@@ -139,6 +139,9 @@ public:
 		      unsigned ntpTimestampMSW, unsigned ntpTimestampLSW,
 		      unsigned rtpTimestamp);
 
+  // The following is called when a RTCP BYE packet is received:
+  void removeRecord(unsigned SSRC);
+
 private: // constructor and destructor, called only by RTPSource:
   friend class RTPSource;
   RTPReceptionStatsDB(RTPSource& rtpSource);

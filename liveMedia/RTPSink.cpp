@@ -169,7 +169,7 @@ RTPTransmissionStatsDB::~RTPTransmissionStatsDB() {
 }
 
 void RTPTransmissionStatsDB
-::noteIncomingRR(unsigned SSRC,
+::noteIncomingRR(unsigned SSRC, struct sockaddr_in const& lastFromAddress,
                  unsigned lossStats, unsigned lastPacketNumReceived,
                  unsigned jitter, unsigned lastSRTime, unsigned diffSR_RRTime) {
   RTPTransmissionStats* stats = lookup(SSRC);
@@ -184,8 +184,16 @@ void RTPTransmissionStatsDB
 #endif
   }
 
-  stats->noteIncomingRR(lossStats, lastPacketNumReceived, jitter,
+  stats->noteIncomingRR(lastFromAddress,
+			lossStats, lastPacketNumReceived, jitter,
                         lastSRTime, diffSR_RRTime);
+}
+
+void RTPTransmissionStatsDB::removeRecord(unsigned SSRC) {
+  long SSRC_long = (long)SSRC;
+  if (fTable->Remove((char const*)SSRC_long)) {
+    --fNumReceivers;
+  }
 }
 
 RTPTransmissionStatsDB::Iterator
@@ -221,17 +229,22 @@ void RTPTransmissionStatsDB::add(unsigned SSRC, RTPTransmissionStats* stats) {
 RTPTransmissionStats::RTPTransmissionStats(RTPSink& rtpSink, unsigned SSRC)
   : fOurRTPSink(rtpSink), fSSRC(SSRC), fLastPacketNumReceived(0),
     fPacketLossRatio(0), fTotNumPacketsLost(0), fJitter(0),
-    fLastSRTime(0), fDiffSR_RRTime(0),
-    fFirstPacket(True) {
+    fLastSRTime(0), fDiffSR_RRTime(0), fFirstPacket(True),
+    fTotalOctetCount_hi(0), fTotalOctetCount_lo(0), 
+    fTotalPacketCount_hi(0), fTotalPacketCount_lo(0) {
+  gettimeofday(&fTimeCreated, NULL);
+
+  fLastOctetCount = rtpSink.octetCount();
+  fLastPacketCount = rtpSink.packetCount();
 }
 
 RTPTransmissionStats::~RTPTransmissionStats() {}
 
-void RTPTransmissionStats::noteIncomingRR(unsigned lossStats,
-					  unsigned lastPacketNumReceived,
-					  unsigned jitter,
-					  unsigned lastSRTime,
-					  unsigned diffSR_RRTime) {
+void RTPTransmissionStats
+::noteIncomingRR(struct sockaddr_in const& lastFromAddress,
+		 unsigned lossStats, unsigned lastPacketNumReceived,
+		 unsigned jitter, unsigned lastSRTime,
+		 unsigned diffSR_RRTime) {
   if (fFirstPacket) {
     fFirstPacket = False;
     fFirstPacketNumReported = lastPacketNumReceived;
@@ -242,6 +255,7 @@ void RTPTransmissionStats::noteIncomingRR(unsigned lossStats,
   }
   gettimeofday(&fTimeReceived, NULL);
 
+  fLastFromAddress = lastFromAddress;
   fPacketLossRatio = lossStats>>24;
   fTotNumPacketsLost = lossStats&0xFFFFFF;
   fLastPacketNumReceived = lastPacketNumReceived;
@@ -254,6 +268,26 @@ void RTPTransmissionStats::noteIncomingRR(unsigned lossStats,
   unsigned rtd = roundTripDelay(); 
   fprintf(stderr, "=> round-trip delay: 0x%04x (== %f seconds)\n", rtd, rtd/65536.0);
 #endif
+
+  // Update our counts of the total number of octets and packets sent towards
+  // this receiver:
+  u_int32_t newOctetCount = fOurRTPSink.octetCount();
+  u_int32_t octetCountDiff = newOctetCount - fLastOctetCount;
+  fLastOctetCount = newOctetCount;
+  u_int32_t prevTotalOctetCount_lo = fTotalOctetCount_lo;
+  fTotalOctetCount_lo += octetCountDiff;
+  if (fTotalOctetCount_lo < prevTotalOctetCount_lo) { // wrap around
+    ++fTotalOctetCount_hi;
+  }
+
+  u_int32_t newPacketCount = fOurRTPSink.packetCount();
+  u_int32_t packetCountDiff = newPacketCount - fLastPacketCount;
+  fLastPacketCount = newPacketCount;
+  u_int32_t prevTotalPacketCount_lo = fTotalPacketCount_lo;
+  fTotalPacketCount_lo += packetCountDiff;
+  if (fTotalPacketCount_lo < prevTotalPacketCount_lo) { // wrap around
+    ++fTotalPacketCount_hi;
+  }
 }
 
 unsigned RTPTransmissionStats::roundTripDelay() const {
@@ -281,6 +315,16 @@ unsigned RTPTransmissionStats::roundTripDelay() const {
     rawResult = 0;
   }
   return (unsigned)rawResult;
+}
+
+void RTPTransmissionStats::getTotalOctetCount(u_int32_t& hi, u_int32_t& lo) {
+  hi = fTotalOctetCount_hi;
+  lo = fTotalOctetCount_lo;
+}
+
+void RTPTransmissionStats::getTotalPacketCount(u_int32_t& hi, u_int32_t& lo) {
+  hi = fTotalPacketCount_hi;
+  lo = fTotalPacketCount_lo;
 }
 
 unsigned RTPTransmissionStats::packetsReceivedSinceLastRR() const {

@@ -91,7 +91,7 @@ private:
   void addReport();
     void addSR();
     void addRR();
-      void enqueueCommonReportPrefix(unsigned char packetType, unsigned SSRC,
+      void enqueueCommonReportPrefix(unsigned char packetType, u_int32_t SSRC,
 				     unsigned numExtraWords = 0);
       void enqueueCommonReportSuffix();
         void enqueueReportBlock(RTPReceptionStats* receptionStats);
@@ -105,7 +105,7 @@ private:
 
   static void incomingReportHandler(RTCPInstance* instance, int /*mask*/);
   void incomingReportHandler1();
-  void onReceive(int typeOfPacket, int totPacketSize, unsigned ssrc);
+  void onReceive(int typeOfPacket, int totPacketSize, u_int32_t ssrc);
 
 private:
   unsigned char* fInBuf;
@@ -128,7 +128,7 @@ private:
 
   int fLastSentSize;
   int fLastReceivedSize;
-  int fLastReceivedSSRC;
+  u_int32_t fLastReceivedSSRC;
   int fTypeOfEvent;
   int fTypeOfPacket;
   Boolean fHaveJustSentPacket;
@@ -147,7 +147,8 @@ public: // because this stuff is used by an external "C" function
   int packetType() {return fTypeOfPacket;}
   int receivedPacketSize() {return fLastReceivedSize;}
   int checkNewSSRC();
-  void removeSSRC();
+  void removeLastReceivedSSRC();
+  void removeSSRC(u_int32_t ssrc);
 };
 
 // RTCP packet types:

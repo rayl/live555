@@ -236,7 +236,7 @@ static void createJPEGHeader(unsigned char* buf, unsigned type,
   *ptr++ = 0x03; // number of components
   *ptr++ = 0x01; // id of component
   *ptr++ = type ? 0x22 : 0x21; // sampling ratio (h,v)
-  *ptr++ = numQtables == 1 ? 0x00 : 0x01; // quant table id
+  *ptr++ = 0x00; // quant table id
   *ptr++ = 0x02; // id of component
   *ptr++ = 0x11; // sampling ratio (h,v)
   *ptr++ = numQtables == 1 ? 0x00 : 0x01; // quant table id
@@ -340,7 +340,9 @@ Boolean JPEGVideoRTPSource
   unsigned type = Type & 1;
   unsigned Q = (unsigned)headerStart[5];
   unsigned width = (unsigned)headerStart[6] * 8;
+  if (width == 0) width = 256*8; // special case
   unsigned height = (unsigned)headerStart[7] * 8;
+  if (height == 0) height = 256*8; // special case
 
   if (Type > 63) {
     // Restart Marker header present

@@ -26,8 +26,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class RTCPMemberDatabase {
 public:
-  RTCPMemberDatabase()
-    : fNumMembers(1 /*ourself*/), fTable(HashTable::create(ONE_WORD_HASH_KEYS)) {
+  RTCPMemberDatabase(RTCPInstance& ourRTCPInstance)
+    : fOurRTCPInstance(ourRTCPInstance), fNumMembers(1 /*ourself*/),
+      fTable(HashTable::create(ONE_WORD_HASH_KEYS)) {
   }
 
   virtual ~RTCPMemberDatabase() {
@@ -66,6 +67,7 @@ public:
   void reapOldMembers(unsigned threshold);
 
 private:
+  RTCPInstance& fOurRTCPInstance;
   unsigned fNumMembers;
   HashTable* fTable;
 };
@@ -97,7 +99,7 @@ void RTCPMemberDatabase::reapOldMembers(unsigned threshold) {
 #ifdef DEBUG
         fprintf(stderr, "reap: removing SSRC 0x%x\n", oldSSRC);
 #endif
-      remove(oldSSRC);
+      fOurRTCPInstance.removeSSRC(oldSSRC);
     }
   } while (foundOldMember);
 }
@@ -136,7 +138,7 @@ RTCPInstance::RTCPInstance(UsageEnvironment& env, Groupsock* RTCPgs,
   double timeNow = dTimeNow();
   fPrevReportTime = fNextReportTime = timeNow;
 
-  fKnownMembers = new RTCPMemberDatabase;
+  fKnownMembers = new RTCPMemberDatabase(*this);
   fInBuf = new unsigned char[maxPacketSize];
   if (fKnownMembers == NULL || fInBuf == NULL) return;
 
@@ -369,7 +371,8 @@ void RTCPInstance::incomingReportHandler1() {
                 unsigned jitter = ntohl(*(unsigned*)pkt); ADVANCE(4);
                 unsigned timeLastSR = ntohl(*(unsigned*)pkt); ADVANCE(4);
                 unsigned timeSinceLastSR = ntohl(*(unsigned*)pkt); ADVANCE(4);
-                transmissionStats.noteIncomingRR(reportSenderSSRC, lossStats,
+                transmissionStats.noteIncomingRR(reportSenderSSRC, fromAddress,
+						 lossStats,
 						 highestReceived, jitter,
 						 timeLastSR, timeSinceLastSR);
               } else {
@@ -531,8 +534,16 @@ int RTCPInstance::checkNewSSRC() {
 				       fOutgoingReportCount);
 }
 
-void RTCPInstance::removeSSRC() {
-  fKnownMembers->remove(fLastReceivedSSRC);
+void RTCPInstance::removeLastReceivedSSRC() {
+  removeSSRC(fLastReceivedSSRC);
+}
+
+void RTCPInstance::removeSSRC(u_int32_t ssrc) {
+  fKnownMembers->remove(ssrc);
+
+  // Also, remove records of this SSRC from any reception or transmission stats
+  if (fSource != NULL) fSource->receptionStatsDB().removeRecord(ssrc);
+  if (fSink != NULL) fSink->transmissionStatsDB().removeRecord(ssrc);
 }
 
 void RTCPInstance::onExpire(RTCPInstance* instance) {
@@ -865,7 +876,7 @@ extern "C" void RemoveMember(packet p) {
   RTCPInstance* instance = (RTCPInstance*)p;
   if (instance == NULL) return;
 
-  instance->removeSSRC();
+  instance->removeLastReceivedSSRC();
 }
 
 extern "C" void RemoveSender(packet /*p*/) {

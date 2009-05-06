@@ -29,8 +29,8 @@ class JPEGVideoSource: public FramedSource {
 public:
   virtual u_int8_t type() = 0;
   virtual u_int8_t qFactor() = 0;
-  virtual u_int8_t width() = 0; // # pixels/8
-  virtual u_int8_t height() = 0; // # pixels/8
+  virtual u_int8_t width() = 0; // # pixels/8 (or 0 for 2048 pixels)
+  virtual u_int8_t height() = 0; // # pixels/8 (or 0 for 2048 pixels)
 
   virtual u_int8_t const* quantizationTables(u_int8_t& precision,
 					     u_int16_t& length);

@@ -141,6 +141,11 @@ void RTPReceptionStatsDB
   stats->noteIncomingSR(ntpTimestampMSW, ntpTimestampLSW, rtpTimestamp);
 }
 
+void RTPReceptionStatsDB::removeRecord(unsigned SSRC) {
+  long SSRC_long = (long)SSRC;
+  fTable->Remove((char const*)SSRC_long);
+}
+
 RTPReceptionStatsDB::Iterator
 ::Iterator(RTPReceptionStatsDB& receptionStatsDB)
   : fIter(HashTable::Iterator::create(*(receptionStatsDB.fTable))) {

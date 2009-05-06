@@ -746,9 +746,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     constructSubsessionURL(subsession, prefix, separator, suffix);
     char* transportFmt;
 
-    if (fServerIsKasenna && fKasennaContentType != NULL &&
-	(strncmp(fKasennaContentType, "MPEG-2", 6) == 0 ||
-	 strncmp(fKasennaContentType, "MPEG-1", 6) == 0)) {
+    if (strcmp(subsession.protocolName(), "UDP") == 0) {
       char const* setupFmt = "SETUP %s%s RTSP/1.0\r\n";
       unsigned setupSize = strlen(setupFmt)
         + strlen(prefix) + strlen (separator);

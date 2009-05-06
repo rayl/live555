@@ -33,6 +33,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #define NULL 0
 #endif
 
+#ifdef __BORLANDC__
+#define _setmode setmode
+#define _O_BINARY O_BINARY
+#endif
+
 class TaskScheduler; // forward
 
 // An abstract base class, subclassed for each use of the library

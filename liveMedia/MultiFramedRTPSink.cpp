@@ -24,10 +24,19 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// MultiFramedRTPSink //////////
 
-static unsigned const maxPacketSize = 1448;
+static unsigned _maxPacketSize = 1448;
 	// bytes (1500, minus some allowance for IP, UDP, UMTP headers)
         // (Also, make it a multiple of 4 bytes, just in case that matters.)
-static unsigned const preferredPacketSize = 1000; // bytes
+static unsigned _preferredPacketSize = 1000; // bytes
+
+void MultiFramedRTPSink::setPacketSizes(unsigned preferredPacketSize,
+					unsigned maxPacketSize) {
+  if (preferredPacketSize > maxPacketSize || preferredPacketSize == 0) return;
+      // sanity check
+
+  _preferredPacketSize = preferredPacketSize;
+  _maxPacketSize = maxPacketSize; 
+}
 
 MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,
 				       Groupsock* rtpGS,
@@ -38,7 +47,7 @@ MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,
   : RTPSink(env, rtpGS, rtpPayloadType, rtpTimestampFrequency,
 	    rtpPayloadFormatName, numChannels),
     fCurFragmentationOffset(0), fPreviousFrameEndedFragmentation(False) {
-  fOutBuf = new OutPacketBuffer(preferredPacketSize, maxPacketSize);
+  fOutBuf = new OutPacketBuffer(_preferredPacketSize, _maxPacketSize);
 }
 
 MultiFramedRTPSink::~MultiFramedRTPSink() {

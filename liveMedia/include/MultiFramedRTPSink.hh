@@ -27,6 +27,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 class MultiFramedRTPSink: public RTPSink {
+public:
+  static void setPacketSizes(unsigned preferredPacketSize,
+			     unsigned maxPacketSize);
+
 protected:
   MultiFramedRTPSink(UsageEnvironment& env,
 		     Groupsock* rtpgs, unsigned char rtpPayloadType,

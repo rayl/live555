@@ -41,8 +41,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 // The following makes the Borland compiler happy:
 #ifdef __BORLANDC__
-#define _setmode setmode
-#define _O_BINARY O_BINARY
+#define _strnicmp strnicmp
+#define fabsf(x) fabs(x)
 #endif
 
 #define mediumNameMaxLen 30
