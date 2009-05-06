@@ -103,8 +103,14 @@ NetAddressList::NetAddressList(char const* hostname)
 	return;
       }
     } else { // Try resolving "hostname" as a real host name
+
+#if defined(VXWORKS)
+      char hostentBuf[512];
+      host = (struct hostent*)resolvGetHostByName((char*)hostname,(char*)&hostentBuf,sizeof hostentBuf);
+#else
       host = our_gethostbyname((char*)hostname);
-      
+#endif
+
       if (host == NULL) {
 	// It was a host name, and we couldn't resolve it.  We're SOL.
 	return;

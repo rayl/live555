@@ -171,8 +171,8 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
     // Get the response from the server:
     unsigned const readBufSize = 20000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received DESCRIBE response: " << readBuf << "\n";
     }
@@ -395,8 +395,8 @@ char* RTSPClient::sendOptionsCmd(char const* url) {
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received OPTIONS response: " << readBuf << "\n";
     }
@@ -516,8 +516,8 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received ANNOUNCE response: " << readBuf << "\n";
     }
@@ -712,8 +712,8 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received SETUP response: " << readBuf << "\n";
     }
@@ -834,8 +834,8 @@ Boolean RTSPClient::playMediaSession(MediaSession& session) {
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received PLAY response: " << readBuf << "\n";
     }
@@ -924,8 +924,8 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received PLAY response: " << readBuf << "\n";
     }
@@ -1012,8 +1012,8 @@ Boolean RTSPClient::pauseMediaSession(MediaSession& session) {
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received PAUSE response: " << readBuf << "\n";
     }
@@ -1084,8 +1084,8 @@ Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession) {
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received PAUSE response: " << readBuf << "\n";
     }
@@ -1159,8 +1159,8 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received RECORD response: " << readBuf << "\n";
     }
@@ -1230,8 +1230,8 @@ Boolean RTSPClient::teardownMediaSession(MediaSession& session) {
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received TEARDOWN response: " << readBuf << "\n";
     }
@@ -1307,8 +1307,8 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
-    int bytesRead = getResponse(readBuf, readBufSize);
-    if (bytesRead < 0) break;
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead == 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received TEARDOWN response: " << readBuf << "\n";
     }
@@ -1538,8 +1538,8 @@ Boolean RTSPClient::sendRequest(char const* requestString) {
   return send(fSocketNum, requestString, strlen(requestString), 0) >= 0;
 }
 
-int RTSPClient::getResponse(char*& responseBuffer,
-			    unsigned responseBufferSize) {
+unsigned RTSPClient::getResponse(char*& responseBuffer,
+				 unsigned responseBufferSize) {
   struct sockaddr_in fromAddress;
   
   if (responseBufferSize == 0) return 0; // just in case...
@@ -1565,7 +1565,7 @@ int RTSPClient::getResponse(char*& responseBuffer,
 	  != 1) break;
 
       unsigned short size;
-      if (readSocket(envir(), fSocketNum, (unsigned char*)&size, 2,
+      if (readSocketExact(envir(), fSocketNum, (unsigned char*)&size, 2,
 		     fromAddress) != 2) break;
       size = ntohs(size);
       if (fVerbosityLevel >= 1) {

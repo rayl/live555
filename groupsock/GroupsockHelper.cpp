@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "mTunnel" multicast access service
-// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Helper routines to implement 'group sockets'
 // Implementation
 
@@ -192,6 +192,11 @@ int setupStreamSocket(UsageEnvironment& env,
 #if defined(__WIN32__) || defined(_WIN32) || defined(IMN_PIM)
     unsigned long arg = 1;
     if (ioctlsocket(newSocket, FIONBIO, &arg) != 0) {
+
+#elif defined(VXWORKS)
+    int arg = 1;
+    if (ioctl(newSocket, FIONBIO, (int)&arg) != 0) {
+
 #else
     int curFlags = fcntl(newSocket, F_GETFL, 0);
     if (fcntl(newSocket, F_SETFL, curFlags|O_NONBLOCK) < 0) {
@@ -282,6 +287,29 @@ int readSocket(UsageEnvironment& env,
   } while (0);
   
   return bytesRead;
+}
+
+
+int readSocketExact(UsageEnvironment& env,
+		    int socket, unsigned char* buffer, unsigned bufferSize,
+		    struct sockaddr_in& fromAddress,
+		    struct timeval* timeout) {
+  /* read EXACTLY bufferSize bytes from the socket into the buffer.
+     fromaddress is address of last read.
+     return the number of bytes acually read when an error occurs
+  */
+  int bsize = bufferSize;
+  int bytesRead = 0;
+  int totBytesRead =0;
+  do {
+    bytesRead = readSocket (env, socket, buffer + totBytesRead, bsize,
+                            fromAddress, timeout);
+    if (bytesRead <= 0) break;
+    totBytesRead += bytesRead;
+    bsize -= bytesRead;
+  } while (bsize != 0);
+
+  return totBytesRead;
 }
 
 Boolean writeSocket(UsageEnvironment& env,
@@ -558,16 +586,22 @@ netAddressBits ourSourceAddressForMulticast(UsageEnvironment& env) {
 		  // We couldn't find our address using multicast loopback
 		  // so try instead to look it up directly.
 		  char hostname[100];
+		  hostname[0] = '\0';
 #ifndef CRIS
 		  gethostname(hostname, sizeof hostname);
-#else
-		  // "gethostname()" isn't defined on this platform; give up
-		  hostname[0] = '\0';
 #endif
 		  if (hostname[0] == '\0') {
-			env.setResultErrMsg("initial gethostname() failed");
-			break;
+		    env.setResultErrMsg("initial gethostname() failed");
+		    break;
 		  }
+
+#if defined(VXWORKS)
+#include <hostLib.h>
+		  if (ERROR == (ourAddress = hostGetByName( hostname ))) {
+		    ourAddress = 0;
+		  }
+
+#else
 		  struct hostent* hstent
 		    = (struct hostent*)gethostbyname(hostname);
 		  if (hstent == NULL || hstent->h_length != 4) {
@@ -594,6 +628,7 @@ netAddressBits ourSourceAddressForMulticast(UsageEnvironment& env) {
 			break;
 		  }
 		}
+#endif
 
 		// Make sure we have a good address:
 		netAddressBits from = fromAddr.sin_addr.s_addr;

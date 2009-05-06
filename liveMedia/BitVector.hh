@@ -41,6 +41,7 @@ public:
 
   unsigned curBitIndex() const { return fCurBitIndex; }
   unsigned totNumBits() const { return fTotNumBits; }
+  unsigned numBitsRemaining() const { return fTotNumBits - fCurBitIndex; } 
 
 private:
   unsigned char* fBaseBytePtr;

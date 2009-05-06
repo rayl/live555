@@ -10,6 +10,10 @@
 
 #include <stdio.h>
 
+#ifdef VXWORKS
+#include <inetLib.h>
+#endif
+
 unsigned our_inet_addr(cp)
 	char const* cp;
 {
@@ -20,7 +24,26 @@ char *
 our_inet_ntoa(in)
         struct in_addr in;
 {
+#ifndef VXWORKS
   return inet_ntoa(in);
+#else
+  /* according the man pages of inet_ntoa :
+
+     NOTES
+     The return value from inet_ntoa() points to a  buffer  which
+     is  overwritten on each call.  This buffer is implemented as
+     thread-specific data in multithreaded applications.
+
+     the vxworks version of inet_ntoa allocates a buffer for each
+     ip address string, and does not reuse the same buffer.
+
+     this is merely to simulate the same behaviour (not multithread
+     safe though):
+  */
+  static char result[INET_ADDR_LEN];
+  inet_ntoa_b(in, result);
+  return(result);
+#endif
 }
 
 #if defined(__WIN32__) || defined(_WIN32)
@@ -60,6 +83,7 @@ int initializeWinsockIfNecessary(void) { return 1; }
 #define NULL 0
 #endif
 
+#if !defined(VXWORKS)
 struct hostent* our_gethostbyname(name)
      char* name;
 {
@@ -67,7 +91,7 @@ struct hostent* our_gethostbyname(name)
 
 	return (struct hostent*) gethostbyname(name);
 }
-
+#endif
 
 #ifdef USE_SYSTEM_RANDOM
 #include <stdlib.h>

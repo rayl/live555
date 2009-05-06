@@ -197,16 +197,16 @@ void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
   // RFC 2326, section 10.12:
   do {
     char const dollar = '$';
-    if (send(socketNum, &dollar, 1, 0) < 0) break;
-
-    if (send(socketNum, (char*)&streamChannelId, 1, 0) < 0) break;
+    if (send(socketNum, &dollar, 1, 0) != 1) break;
+    if (send(socketNum, (char*)&streamChannelId, 1, 0) != 1) break;
 
     char netPacketSize[2];
     netPacketSize[0] = (char) ((packetSize&0xFF00)>>8);
     netPacketSize[1] = (char) (packetSize&0xFF);
-    if (send(socketNum, netPacketSize, 2, 0) < 0) break;
+    if (send(socketNum, netPacketSize, 2, 0) != 2) break;
 
-    if (send(socketNum, (char*)packet, packetSize, 0) < 0) break;
+    if (send(socketNum, (char*)packet, packetSize, 0) != (int)packetSize) break;
+
 #ifdef DEBUG
     fprintf(stderr, "sendRTPOverTCP: completed\n"); fflush(stderr);
 #endif
@@ -292,8 +292,8 @@ void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor,
 
     // The next two bytes are the RTP or RTCP packet size (in network order)
     unsigned short size;
-    if (readSocket(env, socketNum, (unsigned char*)&size, 2,
-		   fromAddress) != 2) break;
+    if (readSocketExact(env, socketNum, (unsigned char*)&size, 2,
+			fromAddress) != 2) break;
     rtpInterface->fNextTCPReadSize = ntohs(size);
 #ifdef DEBUG
     fprintf(stderr, "SocketDescriptor::tcpReadHandler() reading %d bytes on channel %d\n", rtpInterface->fNextTCPReadSize, streamChannelId);

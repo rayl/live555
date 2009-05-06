@@ -100,6 +100,7 @@ MPEG4GenericRTPSource
 
 MPEG4GenericRTPSource::~MPEG4GenericRTPSource() {
   delete[] fAUHeaders;
+  delete[] fMode;
   delete[] fMIMEType;
 }
 

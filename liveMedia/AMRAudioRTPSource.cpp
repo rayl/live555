@@ -686,6 +686,13 @@ static unsigned short frameBitsFromFTWideband[16] = {
 
 static void unpackBandwidthEfficientData(BufferedPacket* packet,
 					 Boolean isWideband) {
+#ifdef DEBUG
+  fprintf(stderr, "Unpacking 'bandwidth-efficient' payload (%d bytes):\n", packet->dataSize());
+  for (unsigned i = 0; i < packet->dataSize(); ++i) {
+    fprintf(stderr, "%02x:", (packet->data())[i]);
+  }
+  fprintf(stderr, "\n");
+#endif
   BitVector fromBV(packet->data(), 0, 8*packet->dataSize());
 
   unsigned const toBufferSize = 2*packet->dataSize(); // conservatively large
@@ -717,9 +724,20 @@ static void unpackBandwidthEfficientData(BufferedPacket* packet,
 	      packet->data(), fromBV.curBitIndex(), // from
 	      frameSizeBits // num bits
 	      );
+#ifdef DEBUG
+    if (frameSizeBits > fromBV.numBitsRemaining()) {
+      fprintf(stderr, "\tWarning: Unpacking frame %d of %d: want %d bits, but only %d are available!\n", i, tocSize, frameSizeBits, fromBV.numBitsRemaining());
+    }
+#endif
     fromBV.skipBits(frameSizeBits);
     toCount += frameSizeBytes;
   }  
+
+#ifdef DEBUG
+  if (fromBV.numBitsRemaining() > 7) {
+    fprintf(stderr, "\tWarning: %d bits remain unused!\n", fromBV.numBitsRemaining());
+  }
+#endif
 
   // Finally, replace the current packet data with the unpacked data:
   packet->removePadding(packet->dataSize()); // throws away current packet data

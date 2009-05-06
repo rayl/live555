@@ -120,7 +120,7 @@ Boolean HTTPSink::continuePlaying() {
       // client player tools happy:
       char okResponse[400];
       const char* responseFmt = "HTTP/1.1 200 OK\r\nCache-Control: no-cache\r\nPragma: no-cache\r\nContent-Length: 2147483647\r\nContent-Type: %s\r\n\r\n";
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4) || defined(IMN_PIM) || defined(CRIS)
+#if defined(IRIX) || defined(ALPHA) || defined(_QNX4) || defined(IMN_PIM) || defined(CRIS) || defined (VXWORKS)
       /* snprintf() isn't defined, so just use sprintf() - ugh! */
       sprintf(okResponse, responseFmt, fSource->MIMEtype());
 #else

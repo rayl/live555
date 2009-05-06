@@ -397,7 +397,11 @@ ReorderingPacketBuffer
 }
 
 ReorderingPacketBuffer::~ReorderingPacketBuffer() {
-  delete fHeadPacket;
+  if (fHeadPacket == NULL) {
+    delete fSavedPacket;
+  } else {
+    delete fHeadPacket; // will also delete fSavedPacket, because it's on the list
+  }
   delete fPacketFactory;
 }
 

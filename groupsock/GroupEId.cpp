@@ -24,40 +24,42 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ////////// Scope //////////
 
 void Scope::assign(u_int8_t ttl, const char* publicKey) {
-	fTTL = ttl;
-	fPublicKey = strDup(publicKey == NULL ? "nokey" : publicKey);
+  fTTL = ttl;
+
+  fPublicKey = strDup(publicKey == NULL ? "nokey" : publicKey);
 }
 
 void Scope::clean() {
-	delete[] fPublicKey;
+  delete[] fPublicKey;
+  fPublicKey = NULL;
 }
 
 
 Scope::Scope(u_int8_t ttl, const char* publicKey) {
-	assign(ttl, publicKey);
+  assign(ttl, publicKey);
 }
 
 Scope::Scope(const Scope& orig) {
-	assign(orig.ttl(), orig.publicKey());
+  assign(orig.ttl(), orig.publicKey());
 }
 
 Scope& Scope::operator=(const Scope& rightSide) {
-	if (publicKey() == NULL
-	    || strcmp(publicKey(), rightSide.publicKey()) != 0) {
-		clean();
-		assign(rightSide.ttl(), rightSide.publicKey());
-	} else { // need to assign TTL only
-		fTTL = rightSide.ttl();
-	}
-	return *this;
+  if (publicKey() == NULL
+      || strcmp(publicKey(), rightSide.publicKey()) != 0) {
+    clean();
+    assign(rightSide.ttl(), rightSide.publicKey());
+  } else { // need to assign TTL only
+    fTTL = rightSide.ttl();
+  }
+  return *this;
 }
 
 Scope::~Scope() {
-	clean();
+  clean();
 }
 	
 unsigned Scope::publicKeySize() const {
-	return strlen(fPublicKey);
+  return fPublicKey == NULL ? 0 : strlen(fPublicKey);
 }
 
 ////////// GroupEId //////////

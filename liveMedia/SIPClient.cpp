@@ -459,7 +459,7 @@ unsigned SIPClient::getResponseCode() {
 
     char* firstLine = NULL;
     char* nextLineStart = NULL;
-    int bytesRead = getResponse(readBuf, readBufSize);
+    unsigned bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
       envir() << "Received INVITE response: " << readBuf << "\n";
@@ -944,8 +944,8 @@ Boolean SIPClient::sendRequest(char const* requestString,
 			    requestLength);
 }
 
-int SIPClient::getResponse(char*& responseBuffer,
-			   unsigned responseBufferSize) {
+unsigned SIPClient::getResponse(char*& responseBuffer,
+				unsigned responseBufferSize) {
   if (responseBufferSize == 0) return 0; // just in case...
   responseBuffer[0] = '\0'; // ditto
 
