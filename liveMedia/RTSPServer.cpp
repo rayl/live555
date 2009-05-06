@@ -160,6 +160,12 @@ int RTSPServer::setUpOurSocket(UsageEnvironment& env, Port& ourPort) {
   return -1;
 }
 
+Boolean RTSPServer
+::specialClientAccessCheck(int /*clientSocket*/, char const* /*urlSuffix*/) {
+  // default implementation
+  return True;
+}
+
 RTSPServer::RTSPServer(UsageEnvironment& env,
 		       int ourSocket, Port ourPort,
 		       UserAuthenticationDatabase* authDatabase,
@@ -462,7 +468,8 @@ void RTSPServer::RTSPClientSession
   char* sdpDescription = NULL;
   char* rtspURL = NULL;
   do {
-    if (!authenticationOK("DESCRIBE", cseq, fullRequestStr)) break;
+      if (!authenticationOK("DESCRIBE", cseq, urlSuffix, fullRequestStr))
+          break;
 
     // We should really check that the request contains an "Accept:" #####
     // for "application/sdp", because that's what we're sending back #####
@@ -769,13 +776,11 @@ void RTSPServer::RTSPClientSession
                  "RTSP/1.0 200 OK\r\n"
                  "CSeq: %s\r\n"
                  "%s"
-                 "Transport: %s;multicast;destination=%s;client_port=%d;server_port=%d\r\n"
+                 "Transport: %s;multicast;destination=%s;port=%d;ttl=%d\r\n"
                  "Session: %d\r\n\r\n",
                  cseq,
                  dateHeader(),
-                 streamingModeString,
-                 our_inet_ntoa(destinationAddr),
-                 ntohs(clientRTPPort.num()), ntohs(serverRTPPort.num()),
+                 streamingModeString, our_inet_ntoa(destinationAddr), ntohs(serverRTPPort.num()), destinationTTL,
                  fOurSessionId);
         delete[] streamingModeString;
         break;
@@ -1131,7 +1136,18 @@ static Boolean parseAuthorizationHeader(char const* buf,
 
 Boolean RTSPServer::RTSPClientSession
 ::authenticationOK(char const* cmdName, char const* cseq,
-		   char const* fullRequestStr) {
+		   char const* urlSuffix, char const* fullRequestStr) {
+
+  if (!fOurServer.specialClientAccessCheck(fClientSocket, urlSuffix)) {
+    snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
+             "RTSP/1.0 401 Unauthorized\r\n"
+             "CSeq: %s\r\n"
+             "%s"
+             "\r\n",
+             cseq, dateHeader());
+    return False;
+  }
+
   // If we weren't set up with an authentication database, we're OK:
   if (fOurServer.fAuthDB == NULL) return True;
 

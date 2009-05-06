@@ -19,6 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include <BasicUsageEnvironment.hh>
 #include "DynamicRTSPServer.hh"
+#include "RTSPOverHTTPServer.hh"
 #include "version.hh"
 
 int main(int argc, char** argv) {
@@ -38,8 +39,12 @@ int main(int argc, char** argv) {
   // Create the RTSP server.  Try first with the default port number (554),
   // and then with the alternative port number (8554):
   RTSPServer* rtspServer;
-  rtspServer = DynamicRTSPServer::createNew(*env, 554, authDB);
-  if (rtspServer == NULL) rtspServer = DynamicRTSPServer::createNew(*env, 8554, authDB);
+  portNumBits rtspServerPortNum = 554;
+  rtspServer = DynamicRTSPServer::createNew(*env, rtspServerPortNum, authDB);
+  if (rtspServer == NULL) {
+    rtspServerPortNum = 8554;
+    rtspServer = DynamicRTSPServer::createNew(*env, rtspServerPortNum, authDB);
+  }
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
@@ -63,6 +68,25 @@ int main(int argc, char** argv) {
   *env << "\t\t(a \".tsx\" index file - if present - provides server 'trick play' support)\n";
   *env << "\t\".wav\" => a WAV Audio file\n";
   *env << "See http://www.live555.com/mediaServer/ for additional documentation.\n";
+
+#ifdef undef
+THIS CODE DOESN'T YET WORK.  DON'T TRY TO USE IT!
+  // Also, attempt to create a HTTP server for RTSP-over-HTTP tunneling.
+  // Try first with the default HTTP port (80), and then with the alternative HTTP
+  // port number (8000).
+  RTSPOverHTTPServer* rtspOverHTTPServer;
+  portNumBits httpServerPortNum = 80;
+  rtspOverHTTPServer = RTSPOverHTTPServer::createNew(*env, httpServerPortNum, rtspServerPortNum);
+  if (rtspOverHTTPServer == NULL) {
+    httpServerPortNum = 8000;
+    rtspOverHTTPServer = RTSPOverHTTPServer::createNew(*env, httpServerPortNum, rtspServerPortNum);
+  }
+  if (rtspOverHTTPServer == NULL) {
+    *env << "(No server for RTSP-over-HTTP tunneling was created.)\n";
+  } else {
+    *env << "(We use port " << httpServerPortNum << " for RTSP-over-HTTP tunneling.)\n";
+  }
+#endif
 
   env->taskScheduler().doEventLoop(); // does not return
 

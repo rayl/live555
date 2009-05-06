@@ -140,6 +140,7 @@ static ServerMediaSession* createNewSMS(UsageEnvironment& env,
     sprintf(indexFileName, "%sx", fileName);
     NEW_SMS("MPEG Transport Stream");
     sms->addSubsession(MPEG2TransportFileServerMediaSubsession::createNew(env, fileName, indexFileName, reuseSource));
+    delete[] indexFileName;
   } else if (strcmp(extension, ".wav") == 0) {
     // Assumed to be a WAV Audio file:
     NEW_SMS("WAV Audio Stream");
