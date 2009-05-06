@@ -192,6 +192,7 @@ private:
 
     // The remaining fields are used for hint tracks only:
     unsigned startSampleNumber;
+    unsigned short seqNum;
     unsigned rtpHeader;
     unsigned char numSpecialHeaders; // used when our RTP source is H.263+
     unsigned specialHeaderBytesLength; // ditto
@@ -548,6 +549,7 @@ SubsessionIOState::SubsessionIOState(QuickTimeFileSink& sink,
 
   fPrevFrameState.presentationTime.tv_sec = 0;
   fPrevFrameState.presentationTime.tv_usec = 0;
+  fPrevFrameState.seqNum = 0;
 }
 
 SubsessionIOState::~SubsessionIOState() {
@@ -828,12 +830,9 @@ void SubsessionIOState::useFrame(SubsessionBuffer& buffer) {
 void SubsessionIOState::useFrameForHinting(unsigned frameSize,
 					   struct timeval presentationTime,
 					   unsigned startSampleNumber) {
-  // Normally, assume that each frame has just a single RTP packet.
-  // This simplifies the hinting code, even though it might not be
-  // true in practice.  (Instead of multiple RTP packets, we'll get
-  // a single, large RTP packet that may get fragmented at the IP level.)
-  // However, if the source is H.263+, then we need to break the frame
-  // back into separate RTP packets, because we want to reuse the special
+  // At this point, we have a single, combined frame - not individual packets.
+  // For the hint track, we need to split the frame back up into separate packets.
+  // However, if the source is H.263+, then we also need to reuse the special
   // header bytes that were at the start of each of the RTP packets.
   Boolean hack263 = strcmp(fOurSubsession.codecName(), "H263-1998") == 0;
 
@@ -850,10 +849,13 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
     if (msDuration > fHINF.dmax) fHINF.dmax = msDuration;
     unsigned hintSampleDuration
       = (unsigned)((2*duration*fQTTimeScale+1)/2); // round
+    //  fprintf(stderr, "useFrameForHinting(%d) => hintSampleDuration %d\n", frameSize, hintSampleDuration); //#####@@@@@
 
     unsigned const hintSampleDestFileOffset = ftell(fOurSink.fOutFid);
 
-    unsigned short numPTEntries = 1; // normal case
+    unsigned const maxPacketSize = 1450;
+    unsigned short numPTEntries
+      = (fPrevFrameState.frameSize + (maxPacketSize-1))/maxPacketSize; // normal case
     unsigned char* immediateDataPtr = NULL;
     unsigned immediateDataBytesRemaining = 0;
     if (hack263) { // special case
@@ -870,12 +872,19 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
     for (unsigned i = 0; i < numPTEntries; ++i) {
       // Output a Packet Table entry (representing a single RTP packet):
       unsigned short numDTEntries = 1;
+      unsigned short seqNum = fPrevFrameState.seqNum++;
+          // Note: This assumes that the input stream had no packets lost #####
       unsigned rtpHeader = fPrevFrameState.rtpHeader;
-      unsigned dataFrameSize = fPrevFrameState.frameSize;
+      if (i+1 < numPTEntries) {
+	// This is not the last RTP packet, so clear the marker bit:
+	rtpHeader &=~ (1<<23);
+      }
+      unsigned dataFrameSize = (i+1 < numPTEntries)
+	? maxPacketSize : fPrevFrameState.frameSize - i*maxPacketSize; // normal case
       unsigned sampleNumber = fPrevFrameState.startSampleNumber;
 
       unsigned char immediateDataLen = 0;
-      if (hack263) {
+      if (hack263) { // special case
 	++numDTEntries; // to include a Data Table entry for the special hdr
 	if (immediateDataBytesRemaining > 0) {
 	  immediateDataLen = *immediateDataPtr++;
@@ -885,26 +894,19 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
 	    immediateDataLen = immediateDataBytesRemaining;
 	  }
 	}
-	dataFrameSize
-	  = fPrevFrameState.packetSizes[i] - immediateDataLen;
+	dataFrameSize = fPrevFrameState.packetSizes[i] - immediateDataLen;
 
 	Boolean PbitSet
 	  = immediateDataLen >= 1 && (immediateDataPtr[0]&0x4) != 0;
 	if (PbitSet) {
 	  offsetWithinSample += 2; // to omit the two leading 0 bytes
 	}
-
-	if (i+1 < numPTEntries) {
-	  // This is not the last RTP packet, so clear the marker bit:
-	  rtpHeader &=~ (1<<23);
-	}
       }
 
       // Output the Packet Table:
       hintSampleSize += fOurSink.addWord(0); // Relative transmission time
-      unsigned seqNumBehind = numPTEntries - 1 - i;
-      hintSampleSize += fOurSink.addWord(rtpHeader - seqNumBehind);
-          // RTP header info + RTP sequence number (modified by packet #)
+      hintSampleSize += fOurSink.addWord(rtpHeader|seqNum);
+          // RTP header info + RTP sequence number
       hintSampleSize += fOurSink.addHalfWord(0x0000); // Flags
       hintSampleSize += fOurSink.addHalfWord(numDTEntries); // Entry count
       unsigned totalPacketSize = 0;
@@ -934,6 +936,7 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
       totalPacketSize += dataFrameSize; fHINF.dmed += dataFrameSize;
       hintSampleSize += fOurSink.addWord(sampleNumber); // Sample number
       hintSampleSize += fOurSink.addWord(offsetWithinSample); // Offset
+      //fprintf(stderr, "added hint entry: size %d, sample %d, offset %d\n", dataFrameSize, sampleNumber, offsetWithinSample);//#####@@@@@
       // Get "bytes|samples per compression block" from the hinted track:
       unsigned short const bytesPerCompressionBlock
 	= fTrackHintedByUs->fQTBytesPerFrame;
@@ -963,8 +966,7 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
   fPrevFrameState.startSampleNumber = startSampleNumber;
   fPrevFrameState.rtpHeader
     = rs->curPacketMarkerBit()<<23
-    | (rs->rtpPayloadFormat()&0x7F)<<16
-    | rs->curPacketRTPSeqNum();
+    | (rs->rtpPayloadFormat()&0x7F)<<16;
   if (hack263) {
       H263plusVideoRTPSource* rs_263 = (H263plusVideoRTPSource*)rs;
       fPrevFrameState.numSpecialHeaders = rs_263->fNumSpecialHeaders;
@@ -1597,13 +1599,8 @@ addAtom(wave);
     size += add4ByteString("mp4a"); // ???
     size += addWord(0x00000000); // ???
     size += addAtom_esds(); // ESDescriptor
-    size += addAtom_srcq(); // ??? #####
     size += addWord(0x00000008); // ???
     size += addWord(0x00000000); // ???
-    size += addWord(0x00000000); // ???
-    size += addWord(0x00030014); // ???
-    size += addWord(0x00000000); // ???
-    size += addWord(0x20780015); // ???
   }
 addAtomEnd;
 
@@ -1648,12 +1645,10 @@ addAtom(esds);
     size += addWord(0x22000000); // ???
     size += addWord(0x04808080); // ???
     size += addWord(0x14401500); // ???
-    size += addWord(0x18000001); // ???
-    size += addWord(0xf4000001); // ???
-    size += addWord(0xf4000580); // ???
-    size += addWord(0x80800212); // ???
-    size += addWord(0x10068080); // ???
-    size += addByte(0x80); size += addByte(0x01); size += addByte(0x02); // ???
+    size += addWord(0x06000000); // ???
+    size += addWord(0xbb800000); // ???
+    size += addWord(0xbb800580); // ???
+    size += addByte(0x80); size += addByte(0x80); // ???
   } else if (strcmp(subsession.mediumName(), "video") == 0) {
     // MPEG-4 video
     size += addWord(0x00000000); // ???
@@ -1663,17 +1658,24 @@ addAtom(esds);
     size += addWord(0x000d4e10); // ???
     size += addWord(0x000d4e10); // ???
     size += addByte(0x05); // ???
+  }
 
-    // Add the source's 'config' information (the VOSH header):
-    unsigned configSize;
-    unsigned char* config
-      = parseGeneralConfigStr(subsession.fmtp_config(), configSize);
-    if (configSize > 0) --configSize; // remove trailing '\0';
-    size += addByte(configSize);
-    for (unsigned i = 0; i < configSize; ++i) {
-      size += addByte(config[i]);
-    }
+  // Add the source's 'config' information:
+  unsigned configSize;
+  unsigned char* config
+    = parseGeneralConfigStr(subsession.fmtp_config(), configSize);
+  if (configSize > 0) --configSize; // remove trailing '\0';
+  size += addByte(configSize);
+  for (unsigned i = 0; i < configSize; ++i) {
+    size += addByte(config[i]);
+  }
 
+  if (strcmp(subsession.mediumName(), "audio") == 0) {
+    // MPEG-4 audio
+    size += addWord(0x06808080); // ???
+    size += addHalfWord(0x0102); // ???
+  } else {
+    // MPEG-4 video
     size += addHalfWord(0x0601); // ???
     size += addByte(0x02); // ???
   }

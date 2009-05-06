@@ -396,7 +396,11 @@ void MPEGProgramStreamParser::parsePackHeader() {
     }
 
     setParseState(PARSING_PACK_HEADER); // ensures we progress over bad data
-    skipBytes(1);
+    if (first4Bytes&0xFF > 1) { // a system code definitely doesn't start here
+      skipBytes(4);
+    } else {
+      skipBytes(1);
+    }
   }
   
   // The size of the pack header differs depending on whether it's

@@ -159,7 +159,7 @@ unsigned MPEG1or2AudioStreamParser::parse(unsigned& numTruncatedBytes) {
     saveParserState();
     
     // We expect a MPEG audio header (first 11 bits set to 1) at the start:
-    while ((fCurrentFrame.hdr = test4Bytes())&0xFFE00000 != 0xFFE00000) {
+    while (((fCurrentFrame.hdr = test4Bytes())&0xFFE00000) != 0xFFE00000) {
       skipBytes(1);
       saveParserState();
     }

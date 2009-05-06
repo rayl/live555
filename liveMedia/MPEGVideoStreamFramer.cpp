@@ -142,6 +142,7 @@ void MPEGVideoStreamFramer::continueReadProcessing() {
     // We were able to acquire a frame from the input.
     // It has already been copied to the reader's space.
     fFrameSize = acquiredFrameSize;
+    fNumTruncatedBytes = fParser->numTruncatedBytes();
     
     // "fPresentationTime" should have already been computed.
     // Compute "fDurationInMicroseconds" now:

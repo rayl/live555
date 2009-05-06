@@ -34,10 +34,12 @@ MPEGVideoStreamParser::~MPEGVideoStreamParser() {
 void MPEGVideoStreamParser::restoreSavedParserState() {
   StreamParser::restoreSavedParserState();
   fTo = fSavedTo;
+  fNumTruncatedBytes = fSavedNumTruncatedBytes;
 }
 
 void MPEGVideoStreamParser::setParseState() {
   fSavedTo = fTo;
+  fSavedNumTruncatedBytes = fNumTruncatedBytes;
   saveParserState();
 }
 
@@ -45,4 +47,5 @@ void MPEGVideoStreamParser::registerReadInterest(unsigned char* to,
 						 unsigned maxSize) {
   fStartOfFrame = fTo = fSavedTo = to;
   fLimit = to + maxSize;
+  fNumTruncatedBytes = fSavedNumTruncatedBytes = 0;
 }

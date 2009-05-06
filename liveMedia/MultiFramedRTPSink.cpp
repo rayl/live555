@@ -192,9 +192,10 @@ void MultiFramedRTPSink
     unsigned const bufferSize = fOutBuf->totalBytesAvailable();
     unsigned newNumPacketsLimit
       = (frameSize + numTruncatedBytes + (maxPacketSize-1)) / maxPacketSize;
+    if (newNumPacketsLimit <= OutPacketBuffer::numPacketsLimit) newNumPacketsLimit = OutPacketBuffer::numPacketsLimit + 1;
     envir() << "MultiFramedRTPSink::afterGettingFrame1(): The input frame data was too large for our buffer size ("
 	    << bufferSize << ").  "
-	    << numTruncatedBytes << " of trailing data was dropped!  Correct this by increasing \"OutPacketBuffer::numPacketsLimit\" to at least "
+	    << numTruncatedBytes << " bytes of trailing data was dropped!  Correct this by increasing \"OutPacketBuffer::numPacketsLimit\" to at least "
 	    << newNumPacketsLimit << " (current value: "
 	    << OutPacketBuffer::numPacketsLimit
 	    << ").\n";

@@ -72,7 +72,7 @@ void BasicUDPSink::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedB
   if (numTruncatedBytes > 0) {
     envir() << "BasicUDPSink::afterGettingFrame1(): The input frame data was too large for our spcified maximum payload size ("
 	    << fMaxPayloadSize << ").  "
-	    << numTruncatedBytes << " of trailing data was dropped!\n";
+	    << numTruncatedBytes << " bytes of trailing data was dropped!\n";
   }
 
   // Send the packet:
