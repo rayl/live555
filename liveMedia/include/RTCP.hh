@@ -46,7 +46,7 @@ public:
   static RTCPInstance* createNew(UsageEnvironment& env, Groupsock* RTCPgs,
 				 unsigned totSessionBW, /* in kbps */
 				 unsigned char const* cname,
-				 RTPSink const* sink,
+				 RTPSink* sink,
 				 RTPSource const* source,
 				 Boolean isSSMSource = False);
 
@@ -78,7 +78,7 @@ public:
 protected:
   RTCPInstance(UsageEnvironment& env, Groupsock* RTPgs, unsigned totSessionBW,
 	       unsigned char const* cname,
-	       RTPSink const* sink, RTPSource const* source,
+	       RTPSink* sink, RTPSource const* source,
 	       Boolean isSSMSource);
       // called only by createNew()
   virtual ~RTCPInstance();
@@ -112,7 +112,7 @@ private:
   OutPacketBuffer* fOutBuf;
   RTPInterface fRTCPInterface;
   unsigned fTotSessionBW;
-  RTPSink const* fSink;
+  RTPSink* fSink;
   RTPSource const* fSource;
   Boolean fIsSSMSource;
 

@@ -120,7 +120,7 @@ static unsigned const preferredPacketSize = 1000; // bytes
 RTCPInstance::RTCPInstance(UsageEnvironment& env, Groupsock* RTCPgs,
 			   unsigned totSessionBW,
 			   unsigned char const* cname,
-			   RTPSink const* sink, RTPSource const* source,
+			   RTPSink* sink, RTPSource const* source,
 			   Boolean isSSMSource)
   : Medium(env), fRTCPInterface(this, RTCPgs), fTotSessionBW(totSessionBW),
     fSink(sink), fSource(source), fIsSSMSource(isSSMSource),
@@ -179,8 +179,7 @@ RTCPInstance::~RTCPInstance() {
 RTCPInstance* RTCPInstance::createNew(UsageEnvironment& env, Groupsock* RTCPgs,
 				      unsigned totSessionBW,
 				      unsigned char const* cname,
-				      RTPSink const* sink,
-				      RTPSource const* source,
+				      RTPSink* sink, RTPSource const* source,
 				      Boolean isSSMSource) {
   return new RTCPInstance(env, RTCPgs, totSessionBW, cname, sink, source,
 			  isSSMSource);

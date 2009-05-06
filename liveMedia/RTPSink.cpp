@@ -51,7 +51,7 @@ RTPSink::RTPSink(UsageEnvironment& env,
   : MediaSink(env), fRTPInterface(this, rtpGS),
     fRTPPayloadType(rtpPayloadType),
     fPacketCount(0), fOctetCount(0), fTotalOctetCount(0),
-    fTimestampFrequency(rtpTimestampFrequency),
+    fTimestampFrequency(rtpTimestampFrequency), fHaveComputedFirstTimestamp(False),
     fNumChannels(numChannels) {
   fRTPPayloadFormatName
     = strDup(rtpPayloadFormatName == NULL ? "???" : rtpPayloadFormatName);
@@ -71,20 +71,17 @@ RTPSink::~RTPSink() {
   delete[] (char*)fRTPPayloadFormatName;
 }
 
-u_int32_t RTPSink::convertToRTPTimestamp(struct timeval tv, Boolean isFirstTime) {
-  if (isFirstTime) {
+u_int32_t RTPSink::convertToRTPTimestamp(struct timeval tv) {
+  u_int32_t rtpTimestampIncrement = timevalToTimestamp(tv);
+
+  if (!fHaveComputedFirstTimestamp) {
     // Make the first timestamp the same as the current "fTimestampBase", so that
     // timestamps begin with the value we promised when this "RTPSink" was created:
-    u_int32_t rtpTimestampIncrement = timevalToTimestamp(tv);
     fTimestampBase -= rtpTimestampIncrement;
+    fHaveComputedFirstTimestamp = True;
   }
 
-  return convertToRTPTimestamp(tv);
-}
-
-u_int32_t RTPSink::convertToRTPTimestamp(struct timeval tv) const {
-  u_int32_t const rtpTimestamp = fTimestampBase + timevalToTimestamp(tv);
-
+  u_int32_t const rtpTimestamp = fTimestampBase + rtpTimestampIncrement;
 #ifdef DEBUG_TIMESTAMPS
   fprintf(stderr, "fTimestampBase: 0x%08x, tv: %lu.%06ld\n\t=> RTP timestamp: 0x%08x\n",
 	  fTimestampBase, tv.tv_sec, tv.tv_usec, rtpTimestamp);

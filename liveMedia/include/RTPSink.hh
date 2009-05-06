@@ -38,8 +38,7 @@ public:
   // used by RTCP:
   u_int32_t SSRC() const {return fSSRC;}
      // later need a means of changing the SSRC if there's a collision #####
-  u_int32_t convertToRTPTimestamp(struct timeval tv, Boolean isFirstTime);
-  u_int32_t convertToRTPTimestamp(struct timeval tv) const;
+  u_int32_t convertToRTPTimestamp(struct timeval tv);
   unsigned packetCount() const {return fPacketCount;}
   unsigned octetCount() const {return fOctetCount;}
 
@@ -110,6 +109,7 @@ private:
 private:
   u_int32_t fSSRC, fTimestampBase;
   unsigned fTimestampFrequency;
+  Boolean fHaveComputedFirstTimestamp;
   char const* fRTPPayloadFormatName;
   unsigned fNumChannels;
   struct timeval fCreationTime;
@@ -156,7 +156,7 @@ private:
 private:
   friend class Iterator;
   unsigned fNumReceivers;
-  RTPSink& fOurRTPSink;
+    RTPSink& fOurRTPSink;
   HashTable* fTable;
 };
 
