@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A test program that streams GSM audio via RTP/RTCP
@@ -78,12 +78,12 @@ int main(int argc, char** argv) {
   const unsigned short rtpPortNum = 6666;
   const unsigned short rtcpPortNum = rtpPortNum+1;
   const unsigned char ttl = 1; // low, in case routers don't admin scope
-  
+
   struct in_addr destinationAddress;
   destinationAddress.s_addr = our_inet_addr(destinationAddressStr);
   const Port rtpPort(rtpPortNum);
   const Port rtcpPort(rtcpPortNum);
-  
+
   sessionState.rtpGroupsock
     = new Groupsock(*env, destinationAddress, rtpPort, ttl);
   sessionState.rtcpGroupsock
@@ -92,11 +92,11 @@ int main(int argc, char** argv) {
   sessionState.rtpGroupsock->multicastSendOnly();
   sessionState.rtcpGroupsock->multicastSendOnly();
 #endif
-  
+
   // Create a 'GSM RTP' sink from the RTP 'groupsock':
   sessionState.sink
     = GSMAudioRTPSink::createNew(*env, sessionState.rtpGroupsock);
-  
+
   // Create (and start) a 'RTCP instance' for this RTP sink:
   const unsigned estimatedSessionBandwidth = 160; // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
@@ -141,7 +141,7 @@ void play() {
     *env << "Failed to create GSM source\n";
     exit(1);
   }
-  
+
   // Finally, start the streaming:
   *env << "Beginning streaming...\n";
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);

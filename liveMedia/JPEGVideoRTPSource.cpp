@@ -11,19 +11,12 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
-
 // JPEG Video (RFC 2435) RTP Sources
 // Implementation
-// 09 26 2002 - Initial Implementation : Giom
-// Copyright (c) 1990-2002 Morgan Multimedia  All rights reserved.
-
-// 02/2003: Cleaned up to add the synthesized JPEG header to the start
-// of each incoming frame.
-// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 
 #include "JPEGVideoRTPSource.hh"
 
@@ -190,7 +183,7 @@ static void createJPEGHeader(unsigned char* buf, unsigned type,
 
   // MARKER_SOI:
   *ptr++ = 0xFF; *ptr++ = MARKER_SOI;
-  
+
   // MARKER_APP_FIRST:
   *ptr++ = 0xFF; *ptr++ = MARKER_APP_FIRST;
   *ptr++ = 0x00; *ptr++ = 0x10; // size of chunk
@@ -200,14 +193,14 @@ static void createJPEGHeader(unsigned char* buf, unsigned type,
   *ptr++ = 0x00; *ptr++ = 0x01; // Horizontal pixel aspect ratio
   *ptr++ = 0x00; *ptr++ = 0x01; // Vertical pixel aspect ratio
   *ptr++ = 0x00; *ptr++ = 0x00; // no thumbnail
-  
+
   // MARKER_DRI:
   if (dri > 0) {
     *ptr++ = 0xFF; *ptr++ = MARKER_DRI;
     *ptr++ = 0x00; *ptr++ = 0x04; // size of chunk
     *ptr++ = (BYTE)(dri >> 8); *ptr++ = (BYTE)(dri); // restart interval
   }
-  
+
   // MARKER_DQT (luma):
   unsigned tableSize = numQtables == 1 ? qtlen : qtlen/2;
   *ptr++ = 0xFF; *ptr++ = MARKER_DQT;
@@ -216,7 +209,7 @@ static void createJPEGHeader(unsigned char* buf, unsigned type,
   memcpy(ptr, qtables, tableSize);
   qtables += tableSize;
   ptr += tableSize;
-  
+
   if (numQtables > 1) {
     unsigned tableSize = qtlen - qtlen/2;
     // MARKER_DQT (chroma):
@@ -227,7 +220,7 @@ static void createJPEGHeader(unsigned char* buf, unsigned type,
     qtables += tableSize;
     ptr += tableSize;
   }
-  
+
   // MARKER_SOF0:
   *ptr++ = 0xFF; *ptr++ = MARKER_SOF0;
   *ptr++ = 0x00; *ptr++ = 0x11; // size of chunk
@@ -246,7 +239,7 @@ static void createJPEGHeader(unsigned char* buf, unsigned type,
   *ptr++ = 0x03; // id of component
   *ptr++ = 0x11; // sampling ratio (h,v)
   *ptr++ = 0x01; // quant table id
-  
+
   createHuffmanHeader(ptr, lum_dc_codelens, sizeof lum_dc_codelens,
 		      lum_dc_symbols, sizeof lum_dc_symbols, 0, 0);
   createHuffmanHeader(ptr, lum_ac_codelens, sizeof lum_ac_codelens,
@@ -396,7 +389,7 @@ Boolean JPEGVideoRTPSource
 
 	qtlen = Length;
 	qtables = &headerStart[resultSpecialHeaderSize];
-	
+
 	resultSpecialHeaderSize += Length;
       }
     }
@@ -433,7 +426,7 @@ Boolean JPEGVideoRTPSource
    = fCurrentPacketCompletesFrame = packet->rtpMarkerBit();
 
   return True;
-}    
+}
 
 char const* JPEGVideoRTPSource::MIMEtype() const {
   return "video/JPEG";

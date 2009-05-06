@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A test program that streams a MP3 file via RTP/RTCP
@@ -80,12 +80,12 @@ int main(int argc, char** argv) {
   const unsigned short rtpPortNum = 6666;
   const unsigned short rtcpPortNum = rtpPortNum+1;
   const unsigned char ttl = 1; // low, in case routers don't admin scope
-  
+
   struct in_addr destinationAddress;
   destinationAddress.s_addr = our_inet_addr(destinationAddressStr);
   const Port rtpPort(rtpPortNum);
   const Port rtcpPort(rtcpPortNum);
-  
+
   sessionState.rtpGroupsock
     = new Groupsock(*env, destinationAddress, rtpPort, ttl);
   sessionState.rtcpGroupsock
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
   sessionState.rtpGroupsock->multicastSendOnly();
   sessionState.rtcpGroupsock->multicastSendOnly();
 #endif
-  
+
   // Create a 'MP3 RTP' sink from the RTP 'groupsock':
 #ifdef STREAM_USING_ADUS
   unsigned char rtpPayloadFormat = 96; // A dynamic payload format code
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
   sessionState.sink
     = MPEG1or2AudioRTPSink::createNew(*env, sessionState.rtpGroupsock);
 #endif
-  
+
   // Create (and start) a 'RTCP instance' for this RTP sink:
   const unsigned estimatedSessionBandwidth = 160; // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
@@ -155,7 +155,7 @@ void play() {
 	 << "\" as a MP3 file source\n";
     exit(1);
   }
-  
+
 #ifdef STREAM_USING_ADUS
   // Add a filter that converts the source MP3s to ADUs:
   sessionState.source
@@ -170,7 +170,7 @@ void play() {
   unsigned char interleaveCycle[] = {0,2,1,3}; // or choose your own order...
   unsigned const interleaveCycleSize
     = (sizeof interleaveCycle)/(sizeof (unsigned char));
-  Interleaving interleaving(interleaveCycleSize, interleaveCycle); 
+  Interleaving interleaving(interleaveCycleSize, interleaveCycle);
   sessionState.source
     = MP3ADUinterleaver::createNew(*env, interleaving, sessionState.source);
   if (sessionState.source == NULL) {

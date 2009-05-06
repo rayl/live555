@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -38,7 +38,7 @@ FILE* OpenInputFile(UsageEnvironment& env, char const* fileName) {
 #if defined(__WIN32__) || defined(_WIN32)
     _setmode(_fileno(stdin), _O_BINARY); // convert to binary mode
 #endif
-  } else { 
+  } else {
     fid = fopen(fileName, "rb");
     if (fid == NULL) {
       env.setResultMsg("unable to open file \"",fileName, "\"");

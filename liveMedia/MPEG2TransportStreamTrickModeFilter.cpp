@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -68,7 +68,7 @@ void MPEG2TransportStreamTrickModeFilter::doGetNextFrame() {
     afterGetting(this);
     return;
   }
-  
+
   while (1) {
     // Get the next record from our index file.
     // This tells us the type of frame this data is, which Transport Stream packet
@@ -96,7 +96,7 @@ void MPEG2TransportStreamTrickModeFilter::doGetNextFrame() {
     //    fprintf(stderr, "#####read index record %ld: ts %ld: %c, PCR %f\n", fNextIndexRecordNum, fDesiredTSPacketNum, isIFrameStart(recordType) ? 'I' : isNonIFrameStart(recordType) ? 'j' : 'x', recordPCR);
     fNextIndexRecordNum
       += (fState == DELIVERING_SAVED_FRAME) ? 1 : fDirection;
-    
+
     // Handle this index record, depending on the record type and our current state:
     switch (fState) {
     case SKIPPING_FRAME:
@@ -146,7 +146,7 @@ void MPEG2TransportStreamTrickModeFilter::doGetNextFrame() {
 	  fState = SKIPPING_FRAME;
 	}
       } else {
-	// Not the start of a frame, but deliver it, if it's needed: 
+	// Not the start of a frame, but deliver it, if it's needed:
 	if (fState == SAVING_AND_DELIVERING_FRAME) {
 	  //	  fprintf(stderr, "\tdelivering\n");//#####
 	  fDesiredDataPCR = recordPCR; // use this frame's PCR
@@ -196,7 +196,7 @@ void MPEG2TransportStreamTrickModeFilter::attemptDeliveryToClient() {
     fPresentationTime.tv_usec
       = (unsigned long)((deliveryPCR - fPresentationTime.tv_sec)*1000000.0f);
     //    fprintf(stderr, "#####DGNF9\n");
-    
+
     afterGetting(this);
   } else {
     // Arrange to read the Transport Packet that we want:
@@ -206,11 +206,11 @@ void MPEG2TransportStreamTrickModeFilter::attemptDeliveryToClient() {
 
 void MPEG2TransportStreamTrickModeFilter::seekToTransportPacket(unsigned long tsPacketNum) {
   if (tsPacketNum == fNextTSPacketNum) return; // we're already there
-  
+
   ByteStreamFileSource* tsFile = (ByteStreamFileSource*)fInputSource;
   u_int64_t tsPacketNum64 = (u_int64_t)tsPacketNum;
   tsFile->seekToByteAbsolute(tsPacketNum64*TRANSPORT_PACKET_SIZE);
-  
+
   fNextTSPacketNum = tsPacketNum;
 }
 
@@ -236,10 +236,10 @@ void MPEG2TransportStreamTrickModeFilter::afterGettingFrame1(unsigned frameSize)
     onSourceClosure1();
     return;
   }
-  
+
   fCurrentTSPacketNum = fNextTSPacketNum; // i.e., the one that we just read
-  ++fNextTSPacketNum; 
-  
+  ++fNextTSPacketNum;
+
   // Attempt deliver again:
   attemptDeliveryToClient();
 }

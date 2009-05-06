@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A test program that reads a MPEG-1 or 2 Program Stream file,
@@ -156,7 +156,7 @@ void afterPlaying(void* clientData) {
   // wait until its sink ends playing also:
   if (audioSource->isCurrentlyAwaitingData()
       || videoSource->isCurrentlyAwaitingData()) return;
-  
+
   // Now that both sinks have ended, close both input sources,
   // and start playing again:
   *env << "...done reading from file\n";
@@ -182,7 +182,7 @@ void play() {
 	 << "\" as a byte-stream file source\n";
     exit(1);
   }
-  
+
   // We must demultiplex Audio and Video Elementary Streams
   // from the input source:
   mpegDemux = MPEG1or2Demux::createNew(*env, fileSource);

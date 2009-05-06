@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -76,7 +76,7 @@ OnDemandServerMediaSubsession::sdpLines() {
     // We need to construct a set of SDP lines that describe this
     // subsession (as a unicast stream).  To do so, we first create
     // dummy (unused) source and "RTPSink" objects,
-    // whose parameters we use for the SDP lines: 
+    // whose parameters we use for the SDP lines:
     unsigned estBitrate; // unused
     FramedSource* inputSource = createNewStreamSource(0, estBitrate);
     if (inputSource == NULL) return NULL; // file not found
@@ -217,12 +217,12 @@ void OnDemandServerMediaSubsession
 
 	break; // success
       }
-      
+
       unsigned char rtpPayloadType = 96 + trackNumber()-1; // if dynamic
       rtpSink = createNewRTPSink(rtpGroupsock, rtpPayloadType, mediaSource);
       udpSink = NULL;
     }
-    
+
     // Turn off the destinations for each groupsock.  They'll get set later
     // (unless TCP is used instead):
     if (rtpGroupsock != NULL) rtpGroupsock->removeAllDestinations();
@@ -234,7 +234,7 @@ void OnDemandServerMediaSubsession
 			streamBitrate, mediaSource,
 			rtpGroupsock, rtcpGroupsock);
   }
-  
+
   // Record these destinations as being for this client session id:
   Destinations* destinations;
   if (tcpSocketNum < 0) { // UDP
@@ -251,7 +251,7 @@ void OnDemandServerMediaSubsession::startStream(unsigned clientSessionId,
 						void* rtcpRRHandlerClientData,
 						unsigned short& rtpSeqNum,
 						unsigned& rtpTimestamp) {
-  StreamState* streamState = (StreamState*)streamToken; 
+  StreamState* streamState = (StreamState*)streamToken;
   Destinations* destinations
     = (Destinations*)(fDestinationsHashTable->Lookup((char const*)clientSessionId));
   if (streamState != NULL) {
@@ -270,7 +270,7 @@ void OnDemandServerMediaSubsession::pauseStream(unsigned /*clientSessionId*/,
   // the same source:
   if (fReuseFirstSource) return;
 
-  StreamState* streamState = (StreamState*)streamToken; 
+  StreamState* streamState = (StreamState*)streamToken;
   if (streamState != NULL) streamState->pause();
 }
 
@@ -280,7 +280,7 @@ void OnDemandServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
   // the same source:
   if (fReuseFirstSource) return;
 
-  StreamState* streamState = (StreamState*)streamToken; 
+  StreamState* streamState = (StreamState*)streamToken;
   if (streamState != NULL && streamState->mediaSource() != NULL) {
     seekStreamSource(streamState->mediaSource(), seekNPT);
   }
@@ -292,7 +292,7 @@ void OnDemandServerMediaSubsession::setStreamScale(unsigned /*clientSessionId*/,
   // from the same source:
   if (fReuseFirstSource) return;
 
-  StreamState* streamState = (StreamState*)streamToken; 
+  StreamState* streamState = (StreamState*)streamToken;
   if (streamState != NULL && streamState->mediaSource() != NULL) {
     setStreamSourceScale(streamState->mediaSource(), scale);
   }
@@ -300,7 +300,7 @@ void OnDemandServerMediaSubsession::setStreamScale(unsigned /*clientSessionId*/,
 
 void OnDemandServerMediaSubsession::deleteStream(unsigned clientSessionId,
 						 void*& streamToken) {
-  StreamState* streamState = (StreamState*)streamToken; 
+  StreamState* streamState = (StreamState*)streamToken;
 
   // Look up (and remove) the destinations for this client session:
   Destinations* destinations
@@ -317,7 +317,7 @@ void OnDemandServerMediaSubsession::deleteStream(unsigned clientSessionId,
     if (streamState->referenceCount() > 0) --streamState->referenceCount();
     if (streamState->referenceCount() == 0) {
       delete streamState;
-      if (fLastStreamToken == streamToken) fLastStreamToken = NULL; 
+      if (fLastStreamToken == streamToken) fLastStreamToken = NULL;
       streamToken = NULL;
     }
   }
@@ -358,7 +358,7 @@ void OnDemandServerMediaSubsession
   char const* rangeLine = rangeSDPLine();
   char const* auxSDPLine = getAuxSDPLine(rtpSink, inputSource);
   if (auxSDPLine == NULL) auxSDPLine = "";
-  
+
   char const* const sdpFmt =
     "m=%s %u RTP/AVP %d\r\n"
     "c=IN IP4 %s\r\n"
@@ -384,7 +384,7 @@ void OnDemandServerMediaSubsession
 	  auxSDPLine, // optional extra SDP line
 	  trackId()); // a=control:<track-id>
   delete[] (char*)rangeLine; delete[] rtpmapLine; delete[] ipAddressStr;
-  
+
   fSDPLines = strDup(sdpLines);
   delete[] sdpLines;
 }
@@ -416,7 +416,7 @@ StreamState::StreamState(OnDemandServerMediaSubsession& master,
     fRTPSink(rtpSink), fUDPSink(udpSink), fStreamDuration(master.duration()),
     fTotalBW(totalBW), fRTCPInstance(NULL) /* created later */,
     fMediaSource(mediaSource), fRTPgs(rtpGS), fRTCPgs(rtcpGS) {
-}  
+}
 
 StreamState::~StreamState() {
   reclaim();

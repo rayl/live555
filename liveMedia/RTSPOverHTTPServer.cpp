@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -165,7 +165,7 @@ void RTSPOverHTTPServer::HTTPClientConnection::incomingRequestHandler1() {
   struct sockaddr_in dummy; // 'from' address, meaningless in this case
   Boolean endOfMsg = False;
   unsigned char* ptr = &fRequestBuffer[fRequestBytesAlreadySeen];
-  
+
   int bytesRead = readSocket(envir(), fClientSocket,
                              ptr, fRequestBufferBytesLeft, dummy);
   if (bytesRead <= 0 || (unsigned)bytesRead >= fRequestBufferBytesLeft) {
@@ -197,7 +197,7 @@ void RTSPOverHTTPServer::HTTPClientConnection::incomingRequestHandler1() {
     }
     ++tmpPtr;
   }
-  
+
   fRequestBufferBytesLeft -= bytesRead;
   fRequestBytesAlreadySeen += bytesRead;
 
@@ -240,7 +240,7 @@ void RTSPOverHTTPServer::HTTPClientConnection::incomingRequestHandler1() {
     }
 #endif
   }
-    
+
 #ifdef DEBUG
   fprintf(stderr, "sending response: %s", fResponseBuffer);
 #endif

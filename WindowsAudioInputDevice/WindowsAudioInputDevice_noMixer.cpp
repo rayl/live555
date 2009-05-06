@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 2001-2004 Live Networks, Inc.  All rights reserved.
 // Windows implementation of a generic audio input device
@@ -49,23 +49,23 @@ AudioInputDevice::createNew(UsageEnvironment& env, int inputPortNumber,
 				  samplingFrequency, granularityInMS,
 				  success);
   if (!success) {delete newSource; newSource = NULL;}
-  
+
   return newSource;
 }
 
 AudioPortNames* AudioInputDevice::getPortNames() {
   WindowsAudioInputDevice::initializeIfNecessary();
-  
+
   AudioPortNames* portNames = new AudioPortNames;
   portNames->numPorts = WindowsAudioInputDevice::numAudioInputPorts;
   portNames->portName = new char*[WindowsAudioInputDevice::numAudioInputPorts];
-  
+
   for (unsigned i = 0; i < WindowsAudioInputDevice::numAudioInputPorts; ++i) {
     AudioInputPort& audioInputPort = WindowsAudioInputDevice::ourAudioInputPorts[i];
-    
+
     portNames->portName[i] = strDup(audioInputPort.name);
   }
-  
+
   return portNames;
 }
 
@@ -86,7 +86,7 @@ WindowsAudioInputDevice
 
 WindowsAudioInputDevice::~WindowsAudioInputDevice() {
   if (fCurPortIndex >= 0) ourAudioInputPorts[fCurPortIndex].close();
-  
+
   delete[] ourAudioInputPorts; ourAudioInputPorts = NULL;
   numAudioInputPorts = 0;
 }
@@ -95,7 +95,7 @@ void WindowsAudioInputDevice::initializeIfNecessary() {
   if (ourAudioInputPorts != NULL) return; // we've already been initialized
   numAudioInputPorts = waveInGetNumDevs();
   ourAudioInputPorts = new AudioInputPort[numAudioInputPorts];
-  
+
   // Initialize each audio input port
   for (unsigned i = 0; i < numAudioInputPorts; ++i) {
     AudioInputPort& port = ourAudioInputPorts[i];
@@ -107,7 +107,7 @@ void WindowsAudioInputDevice::initializeIfNecessary() {
 
 Boolean WindowsAudioInputDevice::setInputPort(int portIndex) {
   initializeIfNecessary();
-  
+
   if (portIndex < 0 || portIndex >= (int)numAudioInputPorts) { // bad index
     envir().setResultMsg("Bad input port index\n");
     return False;
@@ -128,8 +128,8 @@ Boolean WindowsAudioInputDevice::setInputPort(int portIndex) {
 		return False;
 	  }
   }
-  
-  if (portIndex != fCurPortIndex) { 
+
+  if (portIndex != fCurPortIndex) {
     // The port has changed, so close the old one and open the new one:
     if (fCurPortIndex >= 0) ourAudioInputPorts[fCurPortIndex].close();;
     fCurPortIndex = portIndex;
@@ -160,10 +160,10 @@ void AudioInputPort::open(unsigned numChannels, unsigned samplingFrequency, unsi
 
     return;
   } while (0);
-  
+
   // An error occurred:
-  close(); 
-}        
+  close();
+}
 
 void AudioInputPort::open() {
   open(1, 8000, 20);

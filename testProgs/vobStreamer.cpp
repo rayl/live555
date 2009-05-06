@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A test program that reads a VOB file
@@ -122,7 +122,7 @@ int main(int argc, char const** argv) {
   if (iFramesOnly && (mediaToStream&VOB_VIDEO) == 0) {
     *env << "Warning: Because we're not streaming video, the -i flag has no effect.\n";
   }
-    
+
   inputFileNames = &argv[1];
   curInputFileName = inputFileNames;
 
@@ -155,7 +155,7 @@ int main(int argc, char const** argv) {
     audioSink
       = AC3AudioRTPSink::createNew(*env, rtpGroupsockAudio, 96, 0);
     // set the RTP timestamp frequency 'for real' later
-    
+
     // Create (and start) a 'RTCP instance' for this RTP sink:
     rtcpGroupsockAudio
       = new Groupsock(*env, destinationAddress, rtcpPortAudio, ttl);
@@ -173,10 +173,10 @@ int main(int argc, char const** argv) {
     rtpGroupsockVideo
       = new Groupsock(*env, destinationAddress, rtpPortVideo, ttl);
     rtpGroupsockVideo->multicastSendOnly(); // because we're a SSM source
-    
+
     // Create a 'MPEG Video RTP' sink from the RTP 'groupsock':
     videoSink = MPEG1or2VideoRTPSink::createNew(*env, rtpGroupsockVideo);
-    
+
     // Create (and start) a 'RTCP instance' for this RTP sink:
     rtcpGroupsockVideo
       = new Groupsock(*env, destinationAddress, rtcpPortVideo, ttl);
@@ -229,7 +229,7 @@ void afterPlaying(void* clientData) {
       || videoSource != NULL && videoSource->isCurrentlyAwaitingData()) {
     return;
   }
-  
+
   // Now that both sinks have ended, close both input sources,
   // and start playing again:
   *env << "...done reading from file\n";
@@ -257,7 +257,7 @@ void play() {
     haveReadOneFile = False;
     curInputFileName = inputFileNames;
   }
-  
+
   // Open the current input file as a 'byte-stream file source':
   ByteStreamFileSource* fileSource
     = ByteStreamFileSource::createNew(*env, *curInputFileName);
@@ -270,7 +270,7 @@ void play() {
     return;
   }
   haveReadOneFile = True;
-  
+
   // We must demultiplex Audio and Video Elementary Streams
   // from the input source:
   mpegDemux = MPEG1or2Demux::createNew(*env, fileSource);

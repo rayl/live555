@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -89,7 +89,7 @@ SIPClient::SIPClient(UsageEnvironment& env,
 	  << env.getResultMsg() << "\n";
     }
   }
-      
+
   // Set various headers to be used in each request:
   char const* formatStr;
   unsigned headerSize;
@@ -202,7 +202,7 @@ char* SIPClient::invite1(Authenticator* authenticator) {
     char* rtpmapLine;
     unsigned rtpmapLineSize;
     if (fMIMESubtypeSize > 0) {
-      char* const rtpmapFmt = 
+      char* const rtpmapFmt =
 	"a=rtpmap:%u %s/8000\r\n";
       unsigned rtpmapFmtSize = strlen(rtpmapFmt)
 	+ 3 /* max char len */ + fMIMESubtypeSize;
@@ -215,7 +215,7 @@ char* SIPClient::invite1(Authenticator* authenticator) {
       rtpmapLine = strDup("");
       rtpmapLineSize = 0;
     }
-    char* const inviteSDPFmt = 
+    char* const inviteSDPFmt =
       "v=0\r\n"
       "o=- %u %u IN IP4 %s\r\n"
       "s=%s session\r\n"
@@ -371,10 +371,10 @@ void SIPClient::doInviteStateMachine(unsigned responseCode) {
 	fInviteClientState = Calling;
 	if (!sendINVITE()) doInviteStateTerminated(0);
       } else {
-	// Turn off timers A & B before moving to a new state: 
+	// Turn off timers A & B before moving to a new state:
 	sched.unscheduleDelayedTask(fTimerA);
 	sched.unscheduleDelayedTask(fTimerB);
-	
+
 	if (responseCode == timerBFires) {
 	  envir().setResultMsg("No response from server");
 	  doInviteStateTerminated(0);
@@ -502,7 +502,7 @@ unsigned SIPClient::getResponseCode() {
           }
           delete[] realm; delete[] nonce;
           if (foundAuthenticateHeader) break;
-	} 
+	}
       }
       envir().setResultMsg("cannot handle INVITE response: ", firstLine);
       break;
@@ -528,7 +528,7 @@ unsigned SIPClient::getResponseCode() {
 	fToTagStrSize = strlen(fToTagStr);
       }
       delete[] toTagStr;
- 
+
       if (sscanf(lineStart, "Content-Length: %d", &contentLength) == 1
           || sscanf(lineStart, "Content-length: %d", &contentLength) == 1) {
         if (contentLength < 0) {
@@ -658,7 +658,7 @@ Boolean SIPClient::sendACK() {
 	    fURL, fToTagStr,
 	    fCallId, fOurAddressStr,
 	    fCSeq /* note: it's the same as before; not incremented */);
-    
+
     if (!sendRequest(cmd, strlen(cmd))) {
       envir().setResultErrMsg("ACK send() failed: ");
       break;
@@ -699,7 +699,7 @@ Boolean SIPClient::sendBYE() {
 	    fURL, fToTagStr,
 	    fCallId, fOurAddressStr,
 	    ++fCSeq);
-    
+
     if (!sendRequest(cmd, strlen(cmd))) {
       envir().setResultErrMsg("BYE send() failed: ");
       break;
@@ -721,14 +721,14 @@ Boolean SIPClient::processURL(char const* url) {
       NetAddress destAddress;
       if (!parseSIPURL(envir(), url, destAddress, fServerPortNum)) break;
       fServerAddress.s_addr = *(unsigned*)(destAddress.data());
-    
+
       if (fOurSocket != NULL) {
 	fOurSocket->changeDestinationParameters(fServerAddress,
 						fServerPortNum, 255);
       }
     }
 
-    return True; 
+    return True;
   } while (0);
 
   fInviteStatusCode = 1;
@@ -908,7 +908,7 @@ unsigned SIPClient::getResponse(char*& responseBuffer,
       break;
     }
     bytesRead += bytesReadNow;
-    
+
     // Check whether we have "\r\n\r\n":
     char* lastToCheck = responseBuffer+bytesRead-4;
     if (lastToCheck < responseBuffer) continue;
@@ -932,11 +932,11 @@ unsigned SIPClient::getResponse(char*& responseBuffer,
       }
     }
   }
-  
+
   return 0;
 }
 
-Boolean SIPClient::parseResponseCode(char const* line, 
+Boolean SIPClient::parseResponseCode(char const* line,
 				      unsigned& responseCode) {
   if (sscanf(line, "%*s%u", &responseCode) != 1) {
     envir().setResultMsg("no response code in line: \"", line, "\"");

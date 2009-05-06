@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -126,7 +126,7 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
     if (!get2Bytes(fid, audioFormat)) break;
 
     fAudioFormat = (unsigned char)audioFormat;
-    if (fAudioFormat != WA_PCM && fAudioFormat != WA_PCMA && fAudioFormat != WA_PCMU) { 
+    if (fAudioFormat != WA_PCM && fAudioFormat != WA_PCMA && fAudioFormat != WA_PCMU) {
       // not PCM/PCMU/PCMA - we can't handle this
       env.setResultMsg("Audio format is not PCM/PCMU/PCMA");
       break;
@@ -173,7 +173,7 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
     fWAVHeaderSize = ftell(fid);
     success = True;
   } while (0);
-  
+
   if (!success) {
     env.setResultMsg("Bad WAV file format");
     // Set "fBitsPerSample" to zero, to indicate failure:
@@ -218,7 +218,7 @@ void WAVAudioFileSource::doGetNextFrame() {
     fFrameSize = fread(fTo, 1, bytesToRead, fFid);
   } else {
     // We read every 'fScaleFactor'th sample:
-    fFrameSize = 0; 
+    fFrameSize = 0;
     while (bytesToRead > 0) {
       size_t bytesRead = fread(fTo, 1, bytesPerSample, fFid);
       if (bytesRead <= 0) break;

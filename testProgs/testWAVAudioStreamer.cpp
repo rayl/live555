@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A test program that streams a WAV audio file via RTP/RTCP
@@ -83,7 +83,7 @@ void play() {
   *env << bitsPerSample << " bits-per-sample, ";
   *env << numChannels << " channels => ";
   *env << bitsPerSecond << " bits-per-second\n";
-  
+
   // Add in any filter necessary to transform the data prior to streaming.
   // (This is where any audio compression would get added.)
   char* mimeType;
@@ -143,24 +143,24 @@ void play() {
   const unsigned short rtpPortNum = 2222;
   const unsigned short rtcpPortNum = rtpPortNum+1;
   const unsigned char ttl = 255;
-  
+
   const Port rtpPort(rtpPortNum);
   const Port rtcpPort(rtcpPortNum);
-  
+
   sessionState.rtpGroupsock
     = new Groupsock(*env, destinationAddress, rtpPort, ttl);
   sessionState.rtpGroupsock->multicastSendOnly(); // we're a SSM source
   sessionState.rtcpGroupsock
     = new Groupsock(*env, destinationAddress, rtcpPort, ttl);
   sessionState.rtcpGroupsock->multicastSendOnly(); // we're a SSM source
-  
+
   // Create an appropriate audio RTP sink (using "SimpleRTPSink")
   // from the RTP 'groupsock':
   sessionState.sink
     = SimpleRTPSink::createNew(*env, sessionState.rtpGroupsock,
 			       payloadFormatCode, samplingFrequency,
 			       "audio", mimeType, numChannels);
-  
+
   // Create (and start) a 'RTCP instance' for this RTP sink:
   const unsigned estimatedSessionBandwidth = bitsPerSecond/1000;
       // in kbps; for RTCP b/w share

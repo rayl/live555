@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A program that receives and prints SDP/SAP announcements
@@ -38,9 +38,9 @@ int main(int argc, char** argv) {
 
   const Port port(9875);
   const unsigned char ttl = 0; // we're only reading from this mcast group
-  
+
   Groupsock inputGroupsock(*env, sessionAddress, port, ttl);
-  
+
   // Start reading and printing incoming packets
   // (Because this is the only thing we do, we can just do this
   // synchronously, in a loop, so we don't need to set up an asynchronous

@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 //	Help by Carlo Bonamico to get working for Windows
@@ -52,7 +52,7 @@ void Timeval::operator-=(const DelayInterval& arg2) {
 DelayInterval operator-(const Timeval& arg1, const Timeval& arg2) {
   time_base_seconds secs = arg1.seconds() - arg2.seconds();
   time_base_seconds usecs = arg1.useconds() - arg2.useconds();
-  
+
   if (usecs < 0) {
     usecs += MILLION;
     --secs;
@@ -69,11 +69,11 @@ DelayInterval operator-(const Timeval& arg1, const Timeval& arg2) {
 DelayInterval operator*(short arg1, const DelayInterval& arg2) {
   time_base_seconds result_seconds = arg1*arg2.seconds();
   time_base_seconds result_useconds = arg1*arg2.useconds();
-  
+
   time_base_seconds carry = result_useconds/MILLION;
   result_useconds -= carry*MILLION;
   result_seconds += carry;
-  
+
   return DelayInterval(result_seconds, result_useconds);
 }
 
@@ -123,9 +123,9 @@ void DelayQueue::addEntry(DelayQueueEntry* newEntry) {
     newEntry->fDeltaTimeRemaining -= cur->fDeltaTimeRemaining;
     cur = cur->fNext;
   }
-  
+
   cur->fDeltaTimeRemaining -= newEntry->fDeltaTimeRemaining;
-  
+
   // Add "newEntry" to the queue, just before "cur":
   newEntry->fNext = cur;
   newEntry->fPrev = cur->fPrev;
@@ -134,7 +134,7 @@ void DelayQueue::addEntry(DelayQueueEntry* newEntry) {
 
 void DelayQueue::updateEntry(DelayQueueEntry* entry, DelayInterval newDelay) {
   if (entry == NULL) return;
-  
+
   removeEntry(entry);
   entry->fDeltaTimeRemaining = newDelay;
   addEntry(entry);
@@ -147,7 +147,7 @@ void DelayQueue::updateEntry(long tokenToFind, DelayInterval newDelay) {
 
 void DelayQueue::removeEntry(DelayQueueEntry* entry) {
   if (entry == NULL || entry->fNext == NULL) return;
-  
+
   entry->fNext->fDeltaTimeRemaining += entry->fDeltaTimeRemaining;
   entry->fPrev->fNext = entry->fNext;
   entry->fNext->fPrev = entry->fPrev;
@@ -175,7 +175,7 @@ void DelayQueue::handleAlarm() {
     // This event is due to be handled:
     DelayQueueEntry* toRemove = head();
     removeEntry(toRemove); // do this first, in case handler accesses queue
-    
+
     toRemove->handleTimeout();
   }
 }
@@ -195,7 +195,7 @@ void DelayQueue::synchronize() {
   EventTime timeNow = TimeNow();
   DelayInterval timeSinceLastSync = timeNow - fLastSyncTime;
   fLastSyncTime = timeNow;
-  
+
   // Then, adjust the delay queue for any entries whose time is up:
   DelayQueueEntry* curEntry = head();
   while (timeSinceLastSync >= curEntry->fDeltaTimeRemaining) {

@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 2001-2004 Live Networks, Inc.  All rights reserved.
 // Windows implementation of a generic audio input device
@@ -79,13 +79,13 @@ double WindowsAudioInputDevice_common::getAverageLevel() const {
       short* samplePtr = (short*)(curHdr->lpData);
       unsigned numSamples = blockSize/2;
       totNumSamples += numSamples;
-      
+
       while (numSamples-- > 0) {
 	short sample = *samplePtr++;
 	if (sample < 0) sample = -sample;
 	levelTotal += (unsigned short)sample;
       }
-      
+
       if (curHdr == readTail) break;
       curHdr = curHdr->lpNext;
     }
@@ -109,7 +109,7 @@ void WindowsAudioInputDevice_common::audioReadyPoller1() {
       handleClosure(this);
       return;
     }
-    
+
     // Try again after a short delay:
     unsigned const uSecondsToDelay = fGranularityInMS*1000;
     fTotalPollingDelay += uSecondsToDelay;
@@ -126,7 +126,7 @@ void WindowsAudioInputDevice_common::onceAudioIsReady() {
     return;
   }
   fDurationInMicroseconds = 1000000/fSamplingFrequency;
-  
+
   // Call our own 'after getting' function.  Because we sometimes get here
   // after returning from a delay, we can call this directly, without risking
   // infinite recursion
@@ -145,7 +145,7 @@ static void CALLBACK waveInCallback(HWAVEIN /*hwi*/, UINT uMsg,
 
 Boolean WindowsAudioInputDevice_common::openWavInPort(int index, unsigned numChannels, unsigned samplingFrequency, unsigned granularityInMS) {
 	uSecsPerByte = (8*1e6)/(_bitsPerSample*numChannels*samplingFrequency);
-    
+
 	// Configure the port, based on the specified parameters:
     WAVEFORMATEX wfx;
     wfx.wFormatTag      = WAVE_FORMAT_PCM;
@@ -155,16 +155,16 @@ Boolean WindowsAudioInputDevice_common::openWavInPort(int index, unsigned numCha
     wfx.nBlockAlign     = (numChannels*_bitsPerSample)/8;
     wfx.nAvgBytesPerSec = samplingFrequency*wfx.nBlockAlign;
     wfx.cbSize          = 0;
-    
+
     blockSize = (wfx.nAvgBytesPerSec*granularityInMS)/1000;
-    
+
     // Use a 10-second input buffer, to allow for CPU competition from video, etc.,
     // and also for some audio cards that buffer as much as 5 seconds of audio.
     unsigned const bufferSeconds = 10;
     numBlocks = (bufferSeconds*1000)/granularityInMS;
-    
+
     if (!waveIn_open(index, wfx)) return False;
-    
+
     // Set this process's priority high. I'm not sure how much this is really needed,
     // but the "rat" code does this:
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
@@ -173,23 +173,23 @@ Boolean WindowsAudioInputDevice_common::openWavInPort(int index, unsigned numCha
 
 Boolean WindowsAudioInputDevice_common::waveIn_open(unsigned uid, WAVEFORMATEX& wfx) {
   if (shWaveIn != NULL) return True; // already open
-  
+
   do {
     waveIn_reset();
     if (waveInOpen(&shWaveIn, uid, &wfx,
 		   (DWORD)waveInCallback, 0, CALLBACK_FUNCTION) != MMSYSERR_NOERROR) break;
-    
+
     // Allocate read buffers, and headers:
     readData = new unsigned char[numBlocks*blockSize];
     if (readData == NULL) break;
-    
+
     readHdrs = new WAVEHDR[numBlocks];
     if (readHdrs == NULL) break;
     readHead = readTail = NULL;
-    
+
     readTimes = new struct timeval[numBlocks];
     if (readTimes == NULL) break;
-    
+
     // Initialize headers:
     for (unsigned i = 0; i < numBlocks; ++i) {
       readHdrs[i].lpData = (char*)&readData[i*blockSize];
@@ -198,44 +198,44 @@ Boolean WindowsAudioInputDevice_common::waveIn_open(unsigned uid, WAVEFORMATEX& 
       if (waveInPrepareHeader(shWaveIn, &readHdrs[i], sizeof (WAVEHDR)) != MMSYSERR_NOERROR) break;
       if (waveInAddBuffer(shWaveIn, &readHdrs[i], sizeof (WAVEHDR)) != MMSYSERR_NOERROR) break;
     }
-    
+
     if (waveInStart(shWaveIn) != MMSYSERR_NOERROR) break;
-    
+
     hAudioReady = CreateEvent(NULL, TRUE, FALSE, "waveIn Audio Ready");
     return True;
   } while (0);
-  
+
   waveIn_reset();
   return False;
 }
 
 void WindowsAudioInputDevice_common::waveIn_close() {
   if (shWaveIn == NULL) return; // already closed
-  
+
   waveInStop(shWaveIn);
   waveInReset(shWaveIn);
-  
+
   for (unsigned i = 0; i < numBlocks; ++i) {
     if (readHdrs[i].dwFlags & WHDR_PREPARED) {
       waveInUnprepareHeader(shWaveIn, &readHdrs[i], sizeof (WAVEHDR));
     }
   }
-  
+
   waveInClose(shWaveIn);
   waveIn_reset();
 }
 
 void WindowsAudioInputDevice_common::waveIn_reset() {
   shWaveIn = NULL;
-  
+
   delete[] readData; readData = NULL;
   bytesUsedAtReadHead = 0;
-  
+
   delete[] readHdrs; readHdrs = NULL;
   readHead = readTail = NULL;
-  
+
   delete[] readTimes; readTimes = NULL;
-  
+
   hAudioReady = NULL;
 }
 
@@ -244,7 +244,7 @@ unsigned WindowsAudioInputDevice_common::readFromBuffers(unsigned char* to, unsi
   if (readHead != NULL) {
     int hdrIndex = readHead - readHdrs;
     creationTime = readTimes[hdrIndex];
-    
+
     // Adjust this time to allow for any data that's already been read from this buffer:
     if (bytesUsedAtReadHead > 0) {
       creationTime.tv_usec += (unsigned)(uSecsPerByte*bytesUsedAtReadHead);
@@ -252,7 +252,7 @@ unsigned WindowsAudioInputDevice_common::readFromBuffers(unsigned char* to, unsi
       creationTime.tv_usec %= 1000000;
     }
   }
-  
+
   // Then, read from each available buffer, until we have the data that we want:
   unsigned numBytesRead = 0;
   while (readHead != NULL && numBytesRead < numBytesWanted) {
@@ -265,31 +265,31 @@ unsigned WindowsAudioInputDevice_common::readFromBuffers(unsigned char* to, unsi
       releaseHeadBuffer();
     }
   }
-  
+
   return numBytesRead;
 }
 
 void WindowsAudioInputDevice_common::releaseHeadBuffer() {
   WAVEHDR* toRelease = readHead;
   if (readHead == NULL) return;
-  
+
   readHead = readHead->lpNext;
   if (readHead == NULL) readTail = NULL;
-  
-  toRelease->lpNext = NULL; 
-  toRelease->dwBytesRecorded = 0; 
+
+  toRelease->lpNext = NULL;
+  toRelease->dwBytesRecorded = 0;
   toRelease->dwFlags &= ~WHDR_DONE;
-  waveInAddBuffer(shWaveIn, toRelease, sizeof (WAVEHDR)); 
+  waveInAddBuffer(shWaveIn, toRelease, sizeof (WAVEHDR));
   bytesUsedAtReadHead = 0;
 }
 
 void WindowsAudioInputDevice_common::waveInProc(WAVEHDR* hdr) {
   unsigned hdrIndex = hdr - readHdrs;
-  
+
   // Record the time that the data arrived:
   int dontCare;
   gettimeofday(&readTimes[hdrIndex], &dontCare);
-  
+
   // Add the block to the tail of the queue:
   hdr->lpNext = NULL;
   if (readTail != NULL) {

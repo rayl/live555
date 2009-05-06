@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -104,10 +104,10 @@ unsigned H263plusVideoStreamParser::parse(u_int64_t & currentDuration)
       // Parse 1 frame
       // For the first time, only the first frame's header is returned.
       // The second time the full first frame is returned
-      frameSize = parseH263Frame(); 
+      frameSize = parseH263Frame();
 
       currentDuration = 0;
-      if ((frameSize > 0)){ 
+      if ((frameSize > 0)){
          // We were able to acquire a frame from the input.
 
          // Parse the returned frame header (if any)
@@ -144,7 +144,7 @@ unsigned H263plusVideoStreamParser::parse(u_int64_t & currentDuration)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// parseH263Frame derived from LoadNextH263Object of MPEG4IP 
+// parseH263Frame derived from LoadNextH263Object of MPEG4IP
 // - service routine that reads a single frame from the input file.
 // It shall fill the input buffer with data up until - and including - the
 // next start code and shall report back both the number of bytes read and a
@@ -169,11 +169,11 @@ int H263plusVideoStreamParser::parseH263Frame( )
    u_int8_t * bufferIndex = fTo;
    // The buffer end which will allow the loop to leave place for
    // the additionalBytesNeeded
-   u_int8_t * bufferEnd = fTo + fMaxSize - ADDITIONAL_BYTES_NEEDED - 1;	
+   u_int8_t * bufferEnd = fTo + fMaxSize - ADDITIONAL_BYTES_NEEDED - 1;
 
    memcpy(fTo, fNextHeader, H263_REQUIRE_HEADER_SIZE_BYTES);
    bufferIndex += H263_REQUIRE_HEADER_SIZE_BYTES;
-   
+
 
    // The state table and the following loop implements a state machine enabling
    // us to read bytes from the file until (and inclusing) the requested

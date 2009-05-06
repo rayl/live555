@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -101,10 +101,10 @@ void MPEG2TransportStreamMultiplexor
     fInputBufferSize = 0; // then, ignore the buffer
   } else {
     fCurrentPID = stream_id;
-    
+
     // Set the stream's type:
     u_int8_t& streamType = fPIDState[fCurrentPID].streamType; // alias
-    
+
     if (streamType == 0) {
       // Instead, set the stream's type to default values, based on whether
       // the stream is audio or video, and whether it's MPEG-1 or MPEG-2:
@@ -113,12 +113,12 @@ void MPEG2TransportStreamMultiplexor
       } else if ((stream_id&0xE0) == 0xC0) { // audio
 	streamType = mpegVersion == 1 ? 3 : mpegVersion == 2 ? 4 : 0xF;
       } else if (stream_id == 0xBD) { // private_stream1 (usually AC-3)
-	streamType = 0x06; // for DVB; for ATSC, use 0x81 
+	streamType = 0x06; // for DVB; for ATSC, use 0x81
       } else { // something else, e.g., AC-3 uses private_stream1 (0xBD)
-	streamType = 0x81; // private 
+	streamType = 0x81; // private
       }
     }
-    
+
     if (fPCR_PID == 0) { // set it to this stream, if it's appropriate:
       if ((!fHaveVideoStreams && (streamType == 3 || streamType == 4 || streamType == 0xF))/* audio stream */ ||
 	  (streamType == 1 || streamType == 2 || streamType == 0x10)/* video stream */) {
@@ -179,7 +179,7 @@ void MPEG2TransportStreamMultiplexor
     }
     // ASSERT: numHeaderBytes+numPCRBytes+numPaddingBytes+numDataBytes
     //         == TRANSPORT_PACKET_SIZE
-    
+
     // Fill in the header of the Transport Stream packet:
     unsigned char* header = fTo;
     *header++ = 0x47; // sync_byte
@@ -217,7 +217,7 @@ void MPEG2TransportStreamMultiplexor
 	}
       }
     }
-    
+
     // Add any padding bytes:
     for (unsigned i = 0; i < numPaddingBytes; ++i) *header++ = 0xFF;
 
@@ -251,18 +251,18 @@ void MPEG2TransportStreamMultiplexor::deliverPATPacket() {
   *pat++ = OUR_PROGRAM_NUMBER>>8; *pat++ = OUR_PROGRAM_NUMBER; // program_number
   *pat++ = 0xE0|(OUR_PROGRAM_MAP_PID>>8); // reserved; program_map_PID (high)
   *pat++ = OUR_PROGRAM_MAP_PID; // program_map_PID (low)
- 
+
   // Compute the CRC from the bytes we currently have (not including "pointer_field"):
   u_int32_t crc = calculateCRC(patBuffer+1, pat - (patBuffer+1));
   *pat++ = crc>>24; *pat++ = crc>>16; *pat++ = crc>>8; *pat++ = crc;
-  
+
   // Fill in the rest of the packet with padding bytes:
   while (pat < &patBuffer[patSize]) *pat++ = 0xFF;
 
   // Deliver the packet:
   unsigned startPosition = 0;
   deliverDataToClient(PAT_PID, patBuffer, patSize, startPosition);
-  
+
   // Finally, remove the new buffer:
   delete[] patBuffer;
 }
@@ -290,7 +290,7 @@ void MPEG2TransportStreamMultiplexor::deliverPMTPacket(Boolean hasChanged) {
   *pmt++ = 0xF0; // reserved; program_info_length (high)
   *pmt++ = 0; // program_info_length (low)
   for (int pid = 0; pid < PID_TABLE_SIZE; ++pid) {
-    if (fPIDState[pid].streamType != 0) { 
+    if (fPIDState[pid].streamType != 0) {
       // This PID gets recorded in the table
       *pmt++ = fPIDState[pid].streamType;
       *pmt++ = 0xE0; // reserved; elementary_pid (high)
@@ -301,18 +301,18 @@ void MPEG2TransportStreamMultiplexor::deliverPMTPacket(Boolean hasChanged) {
   }
   unsigned section_length = pmt - (section_lengthPtr+1) + 4 /*for CRC*/;
   *section_lengthPtr = section_length;
- 
+
   // Compute the CRC from the bytes we currently have (not including "pointer_field"):
   u_int32_t crc = calculateCRC(pmtBuffer+1, pmt - (pmtBuffer+1));
   *pmt++ = crc>>24; *pmt++ = crc>>16; *pmt++ = crc>>8; *pmt++ = crc;
-  
+
   // Fill in the rest of the packet with padding bytes:
   while (pmt < &pmtBuffer[pmtSize]) *pmt++ = 0xFF;
 
   // Deliver the packet:
   unsigned startPosition = 0;
   deliverDataToClient(OUR_PROGRAM_MAP_PID, pmtBuffer, pmtSize, startPosition);
-  
+
   // Finally, remove the new buffer:
   delete[] pmtBuffer;
 }
@@ -325,7 +325,7 @@ void MPEG2TransportStreamMultiplexor::setProgramStreamMap(unsigned frameSize) {
   if ((u_int16_t)frameSize > 6+program_stream_map_length) {
     frameSize = 6+program_stream_map_length;
   }
-  
+
   u_int8_t versionByte = fInputBuffer[6];
   if ((versionByte&0x80) == 0) return; // "current_next_indicator" is not set
   fCurrentInputProgramMapVersion = versionByte&0x1F;
@@ -339,7 +339,7 @@ void MPEG2TransportStreamMultiplexor::setProgramStreamMap(unsigned frameSize) {
   frameSize -= 4; // sizeof CRC_32
   if (frameSize > offset + elementary_stream_map_length) {
     frameSize = offset + elementary_stream_map_length;
-  } 
+  }
 
   while (offset + 4 <= frameSize) {
     u_int8_t stream_type = fInputBuffer[offset];

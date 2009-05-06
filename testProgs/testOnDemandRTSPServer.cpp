@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A test program that demonstrates how to stream - via unicast RTP
@@ -126,13 +126,13 @@ int main(int argc, char** argv) {
 				      descriptionString);
     Boolean useADUs = False;
     Interleaving* interleaving = NULL;
-#ifdef STREAM_USING_ADUS 
+#ifdef STREAM_USING_ADUS
     useADUs = True;
 #ifdef INTERLEAVE_ADUS
     unsigned char interleaveCycle[] = {0,2,1,3}; // or choose your own...
     unsigned const interleaveCycleSize
       = (sizeof interleaveCycle)/(sizeof (unsigned char));
-    interleaving = new Interleaving(interleaveCycleSize, interleaveCycle); 
+    interleaving = new Interleaving(interleaveCycleSize, interleaveCycle);
 #endif
 #endif
     sms->addSubsession(MP3AudioFileServerMediaSubsession
@@ -228,7 +228,7 @@ int main(int argc, char** argv) {
 static void announceStream(RTSPServer* rtspServer, ServerMediaSession* sms,
 			   char const* streamName, char const* inputFileName) {
   char* url = rtspServer->rtspURL(sms);
-  UsageEnvironment& env = rtspServer->envir(); 
+  UsageEnvironment& env = rtspServer->envir();
   env << "\n\"" << streamName << "\" stream, from the file \""
       << inputFileName << "\"\n";
   env << "Play this stream using the URL \"" << url << "\"\n";

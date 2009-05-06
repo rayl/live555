@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 2001-2004 Live Networks, Inc.  All rights reserved.
 // Windows implementation of a generic audio input device
@@ -33,13 +33,13 @@ class Mixer {
 public:
   Mixer();
   virtual ~Mixer();
-  
+
   void open(unsigned numChannels, unsigned samplingFrequency, unsigned granularityInMS);
   void open(); // open with default parameters
   void getPortsInfo();
   Boolean enableInputPort(unsigned portIndex, char const*& errReason, MMRESULT& errCode);
   void close();
-  
+
   unsigned index;
   HMIXER hMixer; // valid when open
   DWORD dwRecLineID; // valid when open
@@ -64,17 +64,17 @@ AudioInputDevice::createNew(UsageEnvironment& env, int inputPortNumber,
 				  samplingFrequency, granularityInMS,
 				  success);
   if (!success) {delete newSource; newSource = NULL;}
-  
+
   return newSource;
 }
 
 AudioPortNames* AudioInputDevice::getPortNames() {
   WindowsAudioInputDevice::initializeIfNecessary();
-  
+
   AudioPortNames* portNames = new AudioPortNames;
   portNames->numPorts = WindowsAudioInputDevice::numInputPortsTotal;
   portNames->portName = new char*[WindowsAudioInputDevice::numInputPortsTotal];
-  
+
   // If there's more than one mixer, print only the port name.
   // If there's two or more mixers, also include the mixer name
   // (to disambiguate port names that may be the same name in different mixers)
@@ -86,11 +86,11 @@ AudioPortNames* AudioInputDevice::getPortNames() {
   } else {
     portNameFmt = "%s (%s)";
   }
-  
+
   unsigned curPortNum = 0;
   for (unsigned i = 0; i < WindowsAudioInputDevice::numMixers; ++i) {
     Mixer& mixer = WindowsAudioInputDevice::ourMixers[i];
-    
+
     if (WindowsAudioInputDevice::numMixers <= 1) {
       mixerNameBuffer[0] = '\0';
     } else {
@@ -105,13 +105,13 @@ AudioPortNames* AudioInputDevice::getPortNames() {
       }
 #endif
     }
-    
+
     for (unsigned j = 0; j < mixer.numPorts; ++j) {
       sprintf(portNameBuffer, portNameFmt, mixer.ports[j].name, mixerNameBuffer);
       portNames->portName[curPortNum++] = strDup(portNameBuffer);
     }
   }
-  
+
   return portNames;
 }
 
@@ -133,7 +133,7 @@ WindowsAudioInputDevice
 
 WindowsAudioInputDevice::~WindowsAudioInputDevice() {
   if (fCurMixerId >= 0) ourMixers[fCurMixerId].close();
-  
+
   delete[] ourMixers; ourMixers = NULL;
   numMixers = numInputPortsTotal = 0;
 }
@@ -142,7 +142,7 @@ void WindowsAudioInputDevice::initializeIfNecessary() {
   if (ourMixers != NULL) return; // we've already been initialized
   numMixers = mixerGetNumDevs();
   ourMixers = new Mixer[numMixers];
-  
+
   // Initialize each mixer:
   numInputPortsTotal = 0;
   for (unsigned i = 0; i < numMixers; ++i) {
@@ -153,9 +153,9 @@ void WindowsAudioInputDevice::initializeIfNecessary() {
       // This device has a valid mixer.  Get information about its ports:
       mixer.getPortsInfo();
       mixer.close();
-      
+
       if (mixer.numPorts == 0) continue;
-      
+
       numInputPortsTotal += mixer.numPorts;
     } else {
       mixer.ports = NULL;
@@ -166,12 +166,12 @@ void WindowsAudioInputDevice::initializeIfNecessary() {
 
 Boolean WindowsAudioInputDevice::setInputPort(int portIndex) {
   initializeIfNecessary();
-  
+
   if (portIndex < 0 || portIndex >= (int)numInputPortsTotal) { // bad index
     envir().setResultMsg("Bad input port index\n");
     return False;
   }
-  
+
   // Find the mixer and port that corresponds to "portIndex":
   int newMixerId, portWithinMixer, portIndexCount = 0;
   for (newMixerId = 0; newMixerId < (int)numMixers; ++newMixerId) {
@@ -182,7 +182,7 @@ Boolean WindowsAudioInputDevice::setInputPort(int portIndex) {
       break;
     }
   }
-  
+
   // Check that this mixer is allowed:
   if (allowedDeviceNames != NULL) {
 	  int i;
@@ -198,8 +198,8 @@ Boolean WindowsAudioInputDevice::setInputPort(int portIndex) {
 		return False;
 	  }
   }
-  
-  if (newMixerId != fCurMixerId) { 
+
+  if (newMixerId != fCurMixerId) {
     // The mixer has changed, so close the old one and open the new one:
     if (fCurMixerId >= 0) ourMixers[fCurMixerId].close();
     fCurMixerId = newMixerId;
@@ -243,17 +243,17 @@ void Mixer::open(unsigned numChannels, unsigned samplingFrequency, unsigned gran
   do {
     MIXERCAPS mc;
     if (mixerGetDevCaps(index, &mc, sizeof mc) != MMSYSERR_NOERROR) break;
-    
+
     // Copy the mixer name:
     strncpy(name, mc.szPname, MAXPNAMELEN);
-    
+
     // Find the correct line for this mixer:
     unsigned i, uWavIn;
     unsigned nWavIn = waveInGetNumDevs();
     for (i = 0; i < nWavIn; ++i) {
       WAVEINCAPS wic;
       if (waveInGetDevCaps(i, &wic, sizeof wic) != MMSYSERR_NOERROR) continue;
-      
+
       MIXERLINE ml;
       ml.cbStruct = sizeof ml;
       ml.Target.dwType  = MIXERLINE_TARGETTYPE_WAVEIN;
@@ -261,7 +261,7 @@ void Mixer::open(unsigned numChannels, unsigned samplingFrequency, unsigned gran
       ml.Target.vDriverVersion = wic.vDriverVersion;
       ml.Target.wMid = wic.wMid;
       ml.Target.wPid = wic.wPid;
-      
+
       if (mixerGetLineInfo((HMIXEROBJ)index, &ml, MIXER_GETLINEINFOF_TARGETTYPE/*|MIXER_OBJECTF_MIXER*/) == MMSYSERR_NOERROR) {
 				// this is the right line
 	uWavIn = i;
@@ -270,23 +270,23 @@ void Mixer::open(unsigned numChannels, unsigned samplingFrequency, unsigned gran
       }
     }
     if (i >= nWavIn) break; // error: we couldn't find the right line
-    
+
     if (mixerOpen(&newHMixer, index, (unsigned long)NULL, (unsigned long)NULL, MIXER_OBJECTF_MIXER) != MMSYSERR_NOERROR) break;
     if (newHMixer == NULL) break;
-    
+
     // Sanity check: re-call "mixerGetDevCaps()" using the mixer device handle:
     if (mixerGetDevCaps((UINT)newHMixer, &mc, sizeof mc) != MMSYSERR_NOERROR) break;
-    if (mc.cDestinations < 1) break; // error: this mixer has no destinations         
-    
+    if (mc.cDestinations < 1) break; // error: this mixer has no destinations
+
 	if (!WindowsAudioInputDevice_common::openWavInPort(uWavIn, numChannels, samplingFrequency, granularityInMS)) break;
 
     hMixer = newHMixer;
     return;
   } while (0);
-  
+
   // An error occurred:
-  close(); 
-}        
+  close();
+}
 
 void Mixer::open() {
   open(1, 8000, 20);
@@ -295,7 +295,7 @@ void Mixer::open() {
 void Mixer::getPortsInfo() {
   MIXERCAPS mc;
   mixerGetDevCaps((UINT)hMixer, &mc, sizeof mc);
-  
+
   MIXERLINE mlt;
   unsigned i;
   for (i = 0; i < mc.cDestinations; ++i) {
@@ -306,7 +306,7 @@ void Mixer::getPortsInfo() {
     if (mlt.dwLineID == dwRecLineID) break; // this is the destination we're interested in
   }
   ports = new AudioInputPort[mlt.cConnections];
-  
+
   numPorts = mlt.cConnections;
   for (i = 0; i < numPorts; ++i) {
     MIXERLINE mlc;
@@ -317,7 +317,7 @@ void Mixer::getPortsInfo() {
 	ports[i].dwComponentType = mlc.dwComponentType;
     strncpy(ports[i].name, mlc.szName, MIXER_LONG_NAME_CHARS);
   }
-  
+
   // Make the microphone the first port in the list:
   for (i = 1; i < numPorts; ++i) {
 #ifdef OLD_MICROPHONE_TESTING_CODE
@@ -336,7 +336,7 @@ void Mixer::getPortsInfo() {
 Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRESULT& errCode) {
   errReason = NULL; // unless there's an error
   AudioInputPort& port = ports[portIndex];
-  
+
   MIXERCONTROL mc;
   mc.cMultipleItems = 1; // in case it doesn't get set below
   MIXERLINECONTROLS mlc;
@@ -351,7 +351,7 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
     return False;
   }
 #endif
-  
+
   MIXERLINE ml;
   memset(&ml, 0, sizeof (MIXERLINE));
   ml.cbStruct = sizeof (MIXERLINE);
@@ -360,10 +360,10 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
     errReason = "mixerGetLineInfo()1";
     return False;
   }
-  
+
   char portname[MIXER_LONG_NAME_CHARS+1];
   strncpy(portname, ml.szName, MIXER_LONG_NAME_CHARS);
-  
+
   memset(&ml, 0, sizeof (MIXERLINE));
   ml.cbStruct = sizeof (MIXERLINE);
   ml.dwLineID = dwRecLineID;
@@ -371,7 +371,7 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
     errReason = "mixerGetLineInfo()2";
     return False;
   }
-  
+
   // Get Mixer/MUX control information (need control id to set and get control details)
   mlc.cbStruct = sizeof mlc;
   mlc.dwLineID = ml.dwLineID;
@@ -385,7 +385,7 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
     mlc.dwControlType = MIXERCONTROL_CONTROLTYPE_MIXER; // Multiple Select
     mixerGetLineControls((HMIXEROBJ)hMixer, &mlc, MIXER_GETLINECONTROLSF_ONEBYTYPE/*|MIXER_OBJECTF_HMIXER*/);
   }
-  
+
   unsigned matchLine = 0;
   if (mc.cMultipleItems > 1) {
     // Before getting control, we need to know which line to grab.
@@ -394,10 +394,10 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
     mcd.cbStruct = sizeof mcd;
     mcd.cChannels = ml.cChannels;
     mcd.cMultipleItems = mc.cMultipleItems;
-    MIXERCONTROLDETAILS_LISTTEXT* mcdlText = new MIXERCONTROLDETAILS_LISTTEXT[mc.cMultipleItems];        
+    MIXERCONTROLDETAILS_LISTTEXT* mcdlText = new MIXERCONTROLDETAILS_LISTTEXT[mc.cMultipleItems];
     mcd.cbDetails = sizeof (MIXERCONTROLDETAILS_LISTTEXT);
     mcd.paDetails = mcdlText;
-    
+
     if (mc.dwControlID != 0xDEADBEEF) { // we know the control id for real
       mcd.dwControlID = mc.dwControlID;
       if ((errCode = mixerGetControlDetails((HMIXEROBJ)hMixer, &mcd, MIXER_GETCONTROLDETAILSF_LISTTEXT/*|MIXER_OBJECTF_HMIXER*/)) != MMSYSERR_NOERROR) {
@@ -417,7 +417,7 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
 	return False;
       }
     }
-    
+
     for (unsigned i = 0; i < mcd.cMultipleItems; ++i) {
       if (strcmp(mcdlText[i].szName, portname) == 0) {
 	matchLine = i;
@@ -426,34 +426,34 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
     }
     delete[] mcdlText;
   }
-  
+
   // Now get control itself:
   MIXERCONTROLDETAILS mcd;
   mcd.cbStruct = sizeof mcd;
   mcd.dwControlID = mc.dwControlID;
   mcd.cChannels = ml.cChannels;
   mcd.cMultipleItems = mc.cMultipleItems;
-  MIXERCONTROLDETAILS_BOOLEAN* mcdbState = new MIXERCONTROLDETAILS_BOOLEAN[mc.cMultipleItems];        
+  MIXERCONTROLDETAILS_BOOLEAN* mcdbState = new MIXERCONTROLDETAILS_BOOLEAN[mc.cMultipleItems];
   mcd.paDetails = mcdbState;
   mcd.cbDetails = sizeof (MIXERCONTROLDETAILS_BOOLEAN);
-  
+
   if ((errCode = mixerGetControlDetails((HMIXEROBJ)hMixer, &mcd, MIXER_GETCONTROLDETAILSF_VALUE/*|MIXER_OBJECTF_HMIXER*/)) != MMSYSERR_NOERROR) {
     delete[] mcdbState;
     errReason = "mixerGetControlDetails()3";
     return False;
   }
-  
+
   for (unsigned j = 0; j < mcd.cMultipleItems; ++j) {
     mcdbState[j].fValue = (j == matchLine);
   }
-  
+
   if ((errCode = mixerSetControlDetails((HMIXEROBJ)hMixer, &mcd, MIXER_OBJECTF_HMIXER)) != MMSYSERR_NOERROR) {
     delete[] mcdbState;
     errReason = "mixerSetControlDetails()";
     return False;
   }
   delete[] mcdbState;
-  
+
   return True;
 }
 

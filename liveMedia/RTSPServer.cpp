@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -160,7 +160,7 @@ int RTSPServer::setUpOurSocket(UsageEnvironment& env, Port& ourPort) {
     }
 
     return ourSocket;
-  } while (0);  
+  } while (0);
 
   if (ourSocket != -1) ::closeSocket(ourSocket);
   return -1;
@@ -179,7 +179,7 @@ RTSPServer::RTSPServer(UsageEnvironment& env,
   : Medium(env),
     fServerSocket(ourSocket), fServerPort(ourPort),
     fAuthDB(authDatabase), fReclamationTestSeconds(reclamationTestSeconds),
-    fServerMediaSessions(HashTable::create(STRING_HASH_KEYS)), 
+    fServerMediaSessions(HashTable::create(STRING_HASH_KEYS)),
     fSessionIdCounter(0) {
 #ifdef USE_SIGNALS
   // Ignore the SIGPIPE signal, so that clients on the same host that are killed
@@ -312,7 +312,7 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
   struct sockaddr_in dummy; // 'from' address, meaningless in this case
   Boolean endOfMsg = False;
   unsigned char* ptr = &fRequestBuffer[fRequestBytesAlreadySeen];
-  
+
   int bytesRead = readSocket(envir(), fClientSocket,
 			     ptr, fRequestBufferBytesLeft, dummy);
   if (bytesRead <= 0 || (unsigned)bytesRead >= fRequestBufferBytesLeft) {
@@ -343,7 +343,7 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
     }
     ++tmpPtr;
   }
-  
+
   fRequestBufferBytesLeft -= bytesRead;
   fRequestBytesAlreadySeen += bytesRead;
 
@@ -385,7 +385,7 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
       handleCmd_notSupported(cseq);
     }
   }
-    
+
 #ifdef DEBUG
   fprintf(stderr, "sending response: %s", fResponseBuffer);
 #endif
@@ -420,7 +420,7 @@ static char const* dateHeader() {
   WCHAR timeFormat[] = L"HH:mm:ss GMT\r\n";
   WCHAR inBuf[200];
   DWORD locale = LOCALE_NEUTRAL;
-  
+
   int ret = GetDateFormat(locale, 0, &SystemTime,
 			  (LPTSTR)dateFormat, (LPTSTR)inBuf, sizeof inBuf);
   inBuf[ret - 1] = ' ';
@@ -548,7 +548,7 @@ static void parseTransportHeader(char const* buf,
   destinationAddressStr = NULL;
   destinationTTL = 255;
   clientRTPPortNum = 0;
-  clientRTCPPortNum = 1; 
+  clientRTCPPortNum = 1;
   rtpChannelId = rtcpChannelId = 0xFF;
 
   portNumBits p1, p2;
@@ -899,7 +899,7 @@ void RTSPServer::RTSPClientSession
   char* rtspURL = fOurServer.rtspURL(fOurServerMediaSession, fClientSocket);
   unsigned rtspURLSize = strlen(rtspURL);
 
-  //// Parse the client's "Scale:" header, if any: 
+  //// Parse the client's "Scale:" header, if any:
   float scale;
   Boolean sawScaleHeader = parseScaleHeader(fullRequestStr, scale);
 
@@ -919,7 +919,7 @@ void RTSPServer::RTSPClientSession
   }
   scaleHeader = strDup(buf);
 
-  //// Parse the client's "Range:" header, if any: 
+  //// Parse the client's "Range:" header, if any:
   float rangeStart = 0.0, rangeEnd = 0.0;
   Boolean sawRangeHeader = parseRangeHeader(fullRequestStr, rangeStart, rangeEnd);
 
@@ -953,7 +953,7 @@ void RTSPServer::RTSPClientSession
   // Create a "RTP-Info:" line.  It will get filled in from each subsession's state:
   char const* rtpInfoFmt =
     "%s" // "RTP-Info:", plus any preceding rtpInfo items
-    "%s" // comma separator, if needed 
+    "%s" // comma separator, if needed
     "url=%s/%s"
     ";seq=%d"
 #ifdef RTPINFO_INCLUDE_RTPTIME
@@ -1003,7 +1003,7 @@ void RTSPServer::RTSPClientSession
 #ifdef RTPINFO_INCLUDE_RTPTIME
 	+ 10 /*max unsigned (32-bit) len*/
 #endif
-	+ 2 /*allows for trailing \r\n at final end of string*/; 
+	+ 2 /*allows for trailing \r\n at final end of string*/;
       rtpInfo = new char[rtpInfoSize];
       sprintf(rtpInfo, rtpInfoFmt,
 	      prevRTPInfo,

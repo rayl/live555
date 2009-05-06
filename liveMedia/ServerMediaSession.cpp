@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -230,7 +230,7 @@ char* ServerMediaSession::generateSDPDescription() {
     } else { // subsessions have differing durations, so "a=range:" lines go there
       rangeLine = strDup("");
     }
-    
+
     char const* const sdpPrefixFmt =
       "v=0\r\n"
       "o=- %ld%06ld %d IN IP4 %s\r\n"
@@ -257,7 +257,7 @@ char* ServerMediaSession::generateSDPDescription() {
       + strlen(fMiscSDPLines);
     sdp = new char[sdpLength];
     if (sdp == NULL) break;
-    
+
     // Generate the SDP prefix (session-level lines):
     sprintf(sdp, sdpPrefixFmt,
 	    fCreationTime.tv_sec, fCreationTime.tv_usec, // o= <session id>
@@ -383,5 +383,5 @@ ServerMediaSubsession::rangeSDPLine() const {
     char buf[100];
     sprintf(buf, "a=range:npt=0-%.3f\r\n", ourDuration);
     return strDup(buf);
-  }  
+  }
 }

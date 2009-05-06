@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -31,7 +31,7 @@ void MultiFramedRTPSink::setPacketSizes(unsigned preferredPacketSize,
 
   delete fOutBuf;
   fOutBuf = new OutPacketBuffer(preferredPacketSize, maxPacketSize);
-  fOurMaxPacketSize = maxPacketSize; // save value, in case subclasses need it 
+  fOurMaxPacketSize = maxPacketSize; // save value, in case subclasses need it
 }
 
 MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,
@@ -322,8 +322,8 @@ void MultiFramedRTPSink
     // (iv) one frame per packet is allowed:
     if (fOutBuf->isPreferredSize()
         || fOutBuf->wouldOverflow(numFrameBytesToUse)
-        || (fPreviousFrameEndedFragmentation && 
-            !allowOtherFramesAfterLastFragment()) 
+        || (fPreviousFrameEndedFragmentation &&
+            !allowOtherFramesAfterLastFragment())
         || !frameCanAppearAfterPacketStart(fOutBuf->curPtr() - frameSize,
 					   frameSize) ) {
       // The packet is ready to be sent now

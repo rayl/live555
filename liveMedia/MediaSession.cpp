@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -108,12 +108,12 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
   char const* nextSDPLine;
   while (1) {
     if (!parseSDPLine(sdpLine, nextSDPLine)) return False;
-    //##### We should really check for: 
+    //##### We should really check for:
     // - "a=control:" attributes (to set the URL for aggregate control)
     // - the correct SDP version (v=0)
     if (sdpLine[0] == 'm') break;
     sdpLine = nextSDPLine;
-    if (sdpLine == NULL) break; // there are no m= lines at all 
+    if (sdpLine == NULL) break; // there are no m= lines at all
 
     // Check for various special SDP lines that we understand:
     if (parseSDPLine_s(sdpLine)) continue;
@@ -127,7 +127,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     if (RealParseSDPAttributes(this, sdpLine)) continue;
 #endif
   }
-    
+
   while (sdpLine != NULL) {
     // We have a "m=" line, representing a new sub-session:
     MediaSubsession* subsession = new MediaSubsession(*this);
@@ -299,7 +299,7 @@ Boolean MediaSession::parseSDPLine_s(char const* sdpLine) {
   // Check for "s=<session name>" line
   char* buffer = strDupSize(sdpLine);
   Boolean parseSuccess = False;
-  
+
   if (sscanf(sdpLine, "s=%[^\r\n]", buffer) == 1) {
     delete[] fSessionName; fSessionName = strDup(buffer);
     parseSuccess = True;
@@ -313,7 +313,7 @@ Boolean MediaSession::parseSDPLine_i(char const* sdpLine) {
   // Check for "i=<session description>" line
   char* buffer = strDupSize(sdpLine);
   Boolean parseSuccess = False;
-  
+
   if (sscanf(sdpLine, "i=%[^\r\n]", buffer) == 1) {
     delete[] fSessionDescription; fSessionDescription = strDup(buffer);
     parseSuccess = True;
@@ -321,7 +321,7 @@ Boolean MediaSession::parseSDPLine_i(char const* sdpLine) {
   delete[] buffer;
 
   return parseSuccess;
-}  
+}
 
 Boolean MediaSession::parseSDPLine_c(char const* sdpLine) {
   // Check for "c=IN IP4 <connection-endpoint>"
@@ -396,7 +396,7 @@ static Boolean parseSourceFilterAttribute(char const* sdpLine,
   // Note: At present, we don't check that <something> really matches
   // one of our multicast addresses.  We also don't support more than
   // one <source> #####
-  Boolean result = False; // until we succeed 
+  Boolean result = False; // until we succeed
   char* sourceName = strDupSize(sdpLine); // ensures we have enough space
   do {
     if (sscanf(sdpLine, "a=source-filter: incl IN IP4 %*s %s",
@@ -585,7 +585,7 @@ float MediaSubsession::playEndTime() const {
 
 Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
   if (fReadSource != NULL) return True; // has already been initiated
-  
+
   do {
     if (fCodecName == NULL) {
       env().setResultMsg("Codec is unspecified");
@@ -699,12 +699,12 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	  = MP3ADURTPSource::createNew(env(), fRTPSocket, fRTPPayloadFormat,
 				       fRTPTimestampFrequency);
 	if (fRTPSource == NULL) break;
-	
+
 	// Add a filter that deinterleaves the ADUs after depacketizing them:
 	MP3ADUdeinterleaver* deinterleaver
 	  = MP3ADUdeinterleaver::createNew(env(), fRTPSource);
 	if (deinterleaver == NULL) break;
-	
+
 	// Add another filter that converts these ADUs to MP3 frames:
 	fReadSource = MP3FromADUSource::createNew(env(), deinterleaver);
       } else if (strcmp(fCodecName, "X-MP3-DRAFT-00") == 0) {
@@ -715,7 +715,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 				       fRTPTimestampFrequency,
 				       "audio/MPA-ROBUST" /*hack*/);
 	if (fRTPSource == NULL) break;
-	
+
 	// Add a filter that converts these ADUs to MP3 frames:
 	fReadSource = MP3FromADUSource::createNew(env(), fRTPSource,
 						  False /*no ADU header*/);
@@ -822,7 +822,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	env().setResultMsg("RTP payload format unknown or not supported");
 	break;
       }
-      
+
       if (createSimpleRTPSource) {
 	char* mimeType
 	  = new char[strlen(mediumName()) + strlen(codecName()) + 2] ;
@@ -840,7 +840,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
       env().setResultMsg("Failed to create read source");
       break;
     }
-    
+
     // Finally, create our RTCP instance. (It starts running automatically)
     if (fRTPSource != NULL) {
       unsigned totSessionBandwidth = 500; // HACK - later get from SDP#####
@@ -1059,7 +1059,7 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
   // Check for a "a=fmtp:" line:
   // TEMP: We check only for a handful of expected parameter names #####
   // Later: (i) check that payload format number matches; #####
-  //        (ii) look for other parameters also (generalize?) #####  
+  //        (ii) look for other parameters also (generalize?) #####
   do {
     if (strncmp(sdpLine, "a=fmtp:", 7) != 0) break; sdpLine += 7;
     while (isdigit(*sdpLine)) ++sdpLine;
@@ -1123,7 +1123,7 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
 	delete[] fMode; fMode = strDup(valueStr);
       } else if (sscanf(sdpLine, " sprop-parameter-sets = %[^; \t\r\n]", valueStr) == 1) {
 	// Note: We used "sdpLine" here, because the value is case-sensitive.
-	delete[] fSpropParameterSets; fSpropParameterSets = strDup(valueStr); 
+	delete[] fSpropParameterSets; fSpropParameterSets = strDup(valueStr);
       } else {
 	// Some of the above parameters are Boolean.  Check whether the parameter
 	// names appear alone, without a "= 1" at the end:

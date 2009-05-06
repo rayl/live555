@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -60,7 +60,7 @@ private:
 
   virtual Boolean processSpecialHeader(BufferedPacket* packet,
                                        unsigned& resultSpecialHeaderSize);
-  virtual char const* MIMEtype() const; 
+  virtual char const* MIMEtype() const;
 
 private:
   Boolean fIsWideband, fIsOctetAligned, fIsInterleaved, fCRCsArePresent;
@@ -82,7 +82,7 @@ private:
   AMRDeinterleaver(UsageEnvironment& env,
 		   Boolean isWideband, unsigned numChannels,
 		   unsigned maxInterleaveGroupSize, RawAMRRTPSource* inputSource);
-      // called only by "createNew()" 
+      // called only by "createNew()"
 
   virtual ~AMRDeinterleaver();
 
@@ -90,7 +90,7 @@ private:
 				unsigned numTruncatedBytes,
                                 struct timeval presentationTime,
 				unsigned durationInMicroseconds);
-  void afterGettingFrame1(unsigned frameSize, struct timeval presentationTime); 
+  void afterGettingFrame1(unsigned frameSize, struct timeval presentationTime);
 
 private:
   // Redefined virtual functions:
@@ -101,7 +101,7 @@ private:
   RawAMRRTPSource* fInputSource;
   class AMRDeinterleavingBuffer* fDeinterleavingBuffer;
   Boolean fNeedAFrame;
-  
+
 };
 
 
@@ -141,7 +141,7 @@ AMRAudioRTPSource::createNew(UsageEnvironment& env,
       env << "AMRAudioRTPSource::createNew(): 'Bandwidth-efficient mode' was specified, along with interleaving, 'robust sorting order', and/or CRCs, so we assume 'octet-aligned mode' instead.\n";
       isOctetAligned = True;
     }
-  } 
+  }
 
   Boolean isInterleaved;
   unsigned maxInterleaveGroupSize; // in frames (not frame-blocks)
@@ -312,7 +312,7 @@ Boolean RawAMRRTPSource
 #endif
 
   return True;
-} 
+}
 
 char const* RawAMRRTPSource::MIMEtype() const {
   return fIsWideband ? "audio/AMR-WB" : "audio/AMR";
@@ -396,7 +396,7 @@ public:
   Boolean retrieveFrame(unsigned char* to, unsigned maxSize,
 			unsigned& resultFrameSize, unsigned& resultNumTruncatedBytes,
 			u_int8_t& resultFrameHeader,
-			struct timeval& resultPresentationTime, 
+			struct timeval& resultPresentationTime,
 			Boolean& resultIsSynchronized);
 
   unsigned char* inputBuffer() { return fInputBuffer; }
@@ -460,7 +460,7 @@ void AMRDeinterleaver::doGetNextFrame() {
   // First, try getting a frame from the deinterleaving buffer:
   if (fDeinterleavingBuffer->retrieveFrame(fTo, fMaxSize,
 					   fFrameSize, fNumTruncatedBytes,
-					   fLastFrameHeader, fPresentationTime, 
+					   fLastFrameHeader, fPresentationTime,
 					   fInputSource->isSynchronized())) {
 
     // Success!
@@ -501,7 +501,7 @@ void AMRDeinterleaver
 void AMRDeinterleaver
 ::afterGettingFrame1(unsigned frameSize, struct timeval presentationTime) {
   RawAMRRTPSource* source = (RawAMRRTPSource*)fInputSource;
-  
+
   // First, put the frame into our deinterleaving buffer:
   fDeinterleavingBuffer->deliverIncomingFrame(frameSize, source, presentationTime);
 
@@ -546,7 +546,7 @@ void AMRDeinterleavingBuffer
     exit(1);
   }
 
-  --frameIndex; // because it was incremented by the source when this frame was read 
+  --frameIndex; // because it was incremented by the source when this frame was read
   u_int8_t frameHeader;
   if (frameIndex >= source->TOCSize()) { // sanity check
     frameHeader = FT_NO_DATA<<3;
@@ -578,7 +578,7 @@ void AMRDeinterleavingBuffer
     fIncomingBankId ^= 1;
     unsigned char tmp = fIncomingBinMax;
     fIncomingBinMax = fOutgoingBinMax;
-    fOutgoingBinMax = tmp; 
+    fOutgoingBinMax = tmp;
     fNextOutgoingBin = 0;
   }
 
@@ -728,7 +728,7 @@ static void unpackBandwidthEfficientData(BufferedPacket* packet,
 #endif
     fromBV.skipBits(frameSizeBits);
     toCount += frameSizeBytes;
-  }  
+  }
 
 #ifdef DEBUG
   if (fromBV.numBitsRemaining() > 7) {

@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -66,7 +66,7 @@ struct timeval MP3StreamState::currentFramePlayTime() const {
 
   // result is numSamples/freq
   unsigned const uSeconds
-    = ((numSamples*2*MILLION)/freq + 1)/2; // rounds to nearest integer 
+    = ((numSamples*2*MILLION)/freq + 1)/2; // rounds to nearest integer
 
   struct timeval result;
   result.tv_sec = uSeconds/MILLION;
@@ -226,7 +226,7 @@ Boolean MP3StreamState::findNextFrame() {
   unsigned char hbuf[8];
   unsigned l; int i;
   int attempt = 0;
-  
+
 #ifdef DEBUGGING_INPUT
   /* use this debugging code to generate a copy of the input stream */
   FILE* fout;
@@ -238,15 +238,15 @@ Boolean MP3StreamState::findNextFrame() {
   fclose(fout);
   exit(0);
 #endif
-  
+
  read_again:
   if (readFromStream(hbuf, 4) != 4) return False;
-  
+
   fr().hdr =  ((unsigned long) hbuf[0] << 24)
             | ((unsigned long) hbuf[1] << 16)
             | ((unsigned long) hbuf[2] << 8)
             | (unsigned long) hbuf[3];
-  
+
 #ifdef DEBUG_PARSE
   fprintf(stderr, "fr().hdr: 0x%08x\n", fr().hdr);
 #endif
@@ -314,7 +314,7 @@ Boolean MP3StreamState::findNextFrame() {
       fprintf(stderr,"Giving up searching valid MPEG header\n");
 #endif
       return False;
-      
+
 #ifdef DEBUG_ERRORS
       fprintf(stderr,"Illegal Audio-MPEG-Header 0x%08lx at offset 0x%lx.\n",
 	      fr().hdr,tell_stream(str)-4);
@@ -330,13 +330,13 @@ Boolean MP3StreamState::findNextFrame() {
 	if (readFromStream(&hbuf[3],1) != 1) {
 	  return False;
 	}
-	
+
 	/* This is faster than combining fr().hdr from scratch */
 	fr().hdr = ((fr().hdr << 8) | hbuf[3]) & 0xffffffff;
-	
+
 	if (!fr().oldHdr)
 	  goto init_resync;       /* "considered harmful", eh? */
-	
+
       } while ((fr().hdr & HDRCMPMASK) != (fr().oldHdr & HDRCMPMASK)
 	       && (fr().hdr & HDRCMPMASK) != (fr().firstHdr & HDRCMPMASK));
 #ifdef DEBUG_ERRORS
@@ -346,19 +346,19 @@ Boolean MP3StreamState::findNextFrame() {
     if (!fr().firstHdr) {
       fr().firstHdr = fr().hdr;
     }
-    
+
     fr().setParamsFromHeader();
     fr().setBytePointer(fr().frameBytes, fr().frameSize);
-    
+
     fr().oldHdr = fr().hdr;
-    
+
     if (fr().isFreeFormat) {
 #ifdef DEBUG_ERRORS
       fprintf(stderr,"Free format not supported.\n");
 #endif
       return False;
     }
-    
+
 #ifdef MP3_ONLY
     if (fr().layer != 3) {
 #ifdef DEBUG_ERRORS
@@ -368,13 +368,13 @@ Boolean MP3StreamState::findNextFrame() {
     }
 #endif
   }
-  
+
   if ((l = readFromStream(fr().frameBytes, fr().frameSize))
       != fr().frameSize) {
     if (l == 0) return False;
     memset(fr().frameBytes+1, 0, fr().frameSize-1);
   }
-  
+
   return True;
 }
 
@@ -467,7 +467,7 @@ void MP3StreamState::checkForXingHeader() {
   }
 
   if (flags&XING_TOC_FLAG) {
-    // Fill in the Xing 'table of contents': 
+    // Fill in the Xing 'table of contents':
     if (bytesAvailable < XING_TOC_LENGTH) return;
     fHasXingTOC = True;
     for (unsigned j = 0; j < XING_TOC_LENGTH; ++j) {

@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -61,7 +61,7 @@ void StreamParser::ensureValidBytes1(unsigned numBytesNeeded) {
     // Swap banks, but save any still-needed bytes from the old bank:
     unsigned numBytesToSave = fTotNumValidBytes - fSavedParserIndex;
     unsigned char const* from = &curBank()[fSavedParserIndex];
-    
+
     fCurBankNum = (fCurBankNum + 1)%2;
     fCurBank = fBank[fCurBankNum];
     memmove(curBank(), from, numBytesToSave);

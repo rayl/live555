@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A test program that splits a MPEG-1 or 2 Program Stream file into
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 	 << "\" as a byte-stream file source\n";
     exit(1);
   }
-  
+
   // Create a MPEG demultiplexor that reads from that source.
   sessionState.baseDemultiplexor = MPEG1or2Demux::createNew(*env, inputSource);
 

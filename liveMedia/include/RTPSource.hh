@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -129,7 +129,7 @@ public:
     HashTable::Iterator* fIter;
   };
 
-  // The following is called whenever a RTP packet is received: 
+  // The following is called whenever a RTP packet is received:
   void noteIncomingPacket(u_int32_t SSRC, u_int16_t seqNum,
 			  u_int32_t rtpTimestamp,
 			  unsigned timestampFrequency,
@@ -138,7 +138,7 @@ public:
 			  Boolean& resultHasBeenSyncedUsingRTCP,
 			  unsigned packetSize /* payload only */);
 
-  // The following is called whenever a RTCP SR packet is received: 
+  // The following is called whenever a RTCP SR packet is received:
   void noteIncomingSR(u_int32_t SSRC,
 		      u_int32_t ntpTimestampMSW, u_int32_t ntpTimestampLSW,
 		      u_int32_t rtpTimestamp);

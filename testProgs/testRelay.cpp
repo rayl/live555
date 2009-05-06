@@ -11,11 +11,11 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A test program that receives a UDP multicast stream
-// and retransmits it to another (multicast or unicast) address & port 
+// and retransmits it to another (multicast or unicast) address & port
 // main program
 
 #include <liveMedia.hh>
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
 
   Port const inputPort(8888);
   unsigned char const inputTTL = 0; // we're only reading from this mcast group
-  
+
 #ifdef USE_SSM
   char* sourceAddressStr = "aaa.bbb.ccc.ddd";
                            // replace this with the real source address
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 #else
   Groupsock inputGroupsock(*env, inputAddress, inputPort, inputTTL);
 #endif
-  
+
   // Then create a liveMedia 'source' object, encapsulating this groupsock:
   FramedSource* source = BasicUDPSource::createNew(*env, &inputGroupsock);
 
@@ -67,10 +67,10 @@ int main(int argc, char** argv) {
     // address as "inputAddressStr".
   struct in_addr outputAddress;
   outputAddress.s_addr = our_inet_addr(outputAddressStr);
-  
+
   Port const outputPort(4444);
   unsigned char const outputTTL = 255;
-  
+
   Groupsock outputGroupsock(*env, outputAddress, outputPort, outputTTL);
 
   // Then create a liveMedia 'sink' object, encapsulating this groupsock:

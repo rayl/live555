@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -120,7 +120,7 @@ Boolean QuickTimeGenericRTPSource
 #endif
     unsigned payloadDescriptionLength = (headerStart[2]<<8)|headerStart[3];
     headerStart += 4;
-    
+
 #ifdef DEBUG
     fprintf(stderr, "\tK: %d, F: %d, A: %d, Z: %d, payloadDescriptionLength: %d\n", K, F, A, Z, payloadDescriptionLength);
 #endif
@@ -131,7 +131,7 @@ Boolean QuickTimeGenericRTPSource
     expectedHeaderSize += 3;
     expectedHeaderSize -= expectedHeaderSize%4; // adds padding
     if (packetSize < expectedHeaderSize) return False;
-    unsigned char padding = expectedHeaderSize - nonPaddedSize; 
+    unsigned char padding = expectedHeaderSize - nonPaddedSize;
 
 #ifdef DEBUG
     unsigned mediaType = (headerStart[0]<<24)|(headerStart[1]<<16)
@@ -193,7 +193,7 @@ Boolean QuickTimeGenericRTPSource
 
     unsigned ssInfoLength = (headerStart[2]<<8)|headerStart[3];
     headerStart += 4;
-    
+
 #ifdef DEBUG
     fprintf(stderr, "\tssInfoLength: %d\n", ssInfoLength);
 #endif
@@ -204,7 +204,7 @@ Boolean QuickTimeGenericRTPSource
     expectedHeaderSize += 3;
     expectedHeaderSize -= expectedHeaderSize%4; // adds padding
     if (packetSize < expectedHeaderSize) return False;
-    unsigned char padding = expectedHeaderSize - nonPaddedSize; 
+    unsigned char padding = expectedHeaderSize - nonPaddedSize;
 
     ssInfoLength -= 4;
     while (ssInfoLength > 3) {
@@ -264,7 +264,7 @@ unsigned QTGenericBufferedPacket::
   // later, extract and use the "timestamp" field #####
   framePtr += 8;
   dataSize -= 8;
-  
+
   return sampleLength < dataSize ? sampleLength : dataSize;
 }
 

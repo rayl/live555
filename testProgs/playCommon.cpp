@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A common framework, used for the "openRTSP" and "playSIP" applications
@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
       break;
     }
 
-    case 'I': { // specify input interface... 
+    case 'I': { // specify input interface...
       NetAddressList addresses(argv[2]);
       if (addresses.numAddresses() == 0) {
 	*env << "Failed to find network address for \"" << argv[2] << "\"";
@@ -579,7 +579,7 @@ int main(int argc, char** argv) {
 		  // Because we're saving the incoming data, rather than playing
 		  // it in real time, allow an especially large time threshold
 		  // (1 second) for reordering misordered incoming packets:
-		  unsigned const thresh = 1000000; // 1 second 
+		  unsigned const thresh = 1000000; // 1 second
 		  subsession->rtpSource()->setPacketReorderingThresholdTime(thresh);
 
 		  if (socketInputBufferSize > 0) {
@@ -605,7 +605,7 @@ int main(int argc, char** argv) {
 	     << subsession->mediumName()
 	     << "/" << subsession->codecName()
 	     << "\" subsession.  (Try adding the \"-p <portNum>\" option.)\n";
-      } else {	
+      } else {
 		madeProgress = True;
       }
     }
@@ -690,7 +690,7 @@ int main(int argc, char** argv) {
       iter.reset();
       while ((subsession = iter.next()) != NULL) {
 	if (subsession->readSource() == NULL) continue; // was not initiated
-	
+
 	// Create an output file for each desired stream:
 	char outFileName[1000];
 	if (singleMedium == NULL) {
@@ -751,7 +751,7 @@ int main(int argc, char** argv) {
 	  subsession->sink->startPlaying(*(subsession->readSource()),
 					 subsessionAfterPlaying,
 					 subsession);
-	  
+
 	  // Also set a handler to be called if a RTCP "BYE" arrives
 	  // for this subsession:
 	  if (subsession->rtcpInstance() != NULL) {
@@ -765,7 +765,7 @@ int main(int argc, char** argv) {
       if (!madeProgress) shutdown();
     }
   }
-    
+
   // Finally, start playing each subsession, to start the data flow:
 
   startPlayingStreams();
@@ -958,7 +958,7 @@ public:
     }
   }
   virtual ~qosMeasurementRecord() { delete fNext; }
-    
+
   void periodicQOSMeasurement(struct timeval const& timeNow);
 
 public:
@@ -1107,16 +1107,16 @@ void printQOSData(int exitCode) {
 
       *env << "subsession\t" << subsession->mediumName()
 	   << "/" << subsession->codecName() << "\n";
-      
+
       unsigned numPacketsReceived = 0, numPacketsExpected = 0;
-      
+
       if (curQOSRecord != NULL) {
 	numPacketsReceived = curQOSRecord->totNumPacketsReceived;
 	numPacketsExpected = curQOSRecord->totNumPacketsExpected;
       }
       *env << "num_packets_received\t" << numPacketsReceived << "\n";
       *env << "num_packets_lost\t" << numPacketsExpected - numPacketsReceived << "\n";
-      
+
       if (curQOSRecord != NULL) {
 	unsigned secsDiff = curQOSRecord->measurementEndTime.tv_sec
 	  - curQOSRecord->measurementStartTime.tv_sec;
@@ -1124,11 +1124,11 @@ void printQOSData(int exitCode) {
 	  - curQOSRecord->measurementStartTime.tv_usec;
 	double measurementTime = secsDiff + usecsDiff/1000000.0;
 	*env << "elapsed_measurement_time\t" << measurementTime << "\n";
-	
+
 	*env << "kBytes_received_total\t" << curQOSRecord->kBytesTotal << "\n";
-	
+
 	*env << "measurement_sampling_interval_ms\t" << qosMeasurementIntervalMS << "\n";
-	
+
 	if (curQOSRecord->kbits_per_second_max == 0) {
 	  // special case: we didn't receive any data:
 	  *env <<
@@ -1141,7 +1141,7 @@ void printQOSData(int exitCode) {
 	       << (measurementTime == 0.0 ? 0.0 : 8*curQOSRecord->kBytesTotal/measurementTime) << "\n";
 	  *env << "kbits_per_second_max\t" << curQOSRecord->kbits_per_second_max << "\n";
 	}
-	
+
 	*env << "packet_loss_percentage_min\t" << 100*curQOSRecord->packet_loss_fraction_min << "\n";
 	double packetLossFraction = numPacketsExpected == 0 ? 1.0
 	  : 1.0 - numPacketsReceived/(double)numPacketsExpected;
@@ -1149,7 +1149,7 @@ void printQOSData(int exitCode) {
 	*env << "packet_loss_percentage_ave\t" << 100*packetLossFraction << "\n";
 	*env << "packet_loss_percentage_max\t"
 	     << (packetLossFraction == 1.0 ? 100.0 : 100*curQOSRecord->packet_loss_fraction_max) << "\n";
-	
+
 #ifdef SUPPORT_REAL_RTSP
 	if (session->isRealNetworksRDT) {
 	  RealRDTSource* rdt = (RealRDTSource*)src;
@@ -1177,11 +1177,11 @@ void printQOSData(int exitCode) {
 #ifdef SUPPORT_REAL_RTSP
 	}
 #endif
-	
+
 	curQOSRecord = curQOSRecord->fNext;
       }
     }
-  }    
+  }
 
   *env << "end_QOS_statistics\n";
   delete qosRecordHead;
@@ -1219,7 +1219,7 @@ void signalHandlerShutdown(int /*sig*/) {
 }
 
 void checkForPacketArrival(void* /*clientData*/) {
-  if (!notifyOnPacketArrival) return; // we're not checking 
+  if (!notifyOnPacketArrival) return; // we're not checking
 
   // Check each subsession, to see whether it has received data packets:
   unsigned numSubsessionsChecked = 0;
@@ -1277,7 +1277,7 @@ void checkForPacketArrival(void* /*clientData*/) {
 }
 
 void checkInterPacketGaps(void* /*clientData*/) {
-  if (interPacketGapMaxTime == 0) return; // we're not checking 
+  if (interPacketGapMaxTime == 0) return; // we're not checking
 
   // Check each subsession, counting up how many packets have been received:
   unsigned newTotNumPacketsReceived = 0;
@@ -1298,7 +1298,7 @@ void checkInterPacketGaps(void* /*clientData*/) {
     sessionAfterPlaying();
   } else {
     totNumPacketsReceived = newTotNumPacketsReceived;
-    // Check again, after the specified delay: 
+    // Check again, after the specified delay:
     interPacketGapCheckTimerTask
       = env->taskScheduler().scheduleDelayedTask(interPacketGapMaxTime*1000000,
 				 (TaskFunc*)checkInterPacketGaps, NULL);

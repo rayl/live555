@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
 // A test program that receives a RTP/RTCP multicast MP3 stream,
@@ -67,12 +67,12 @@ int main(int argc, char** argv) {
 #ifndef USE_SSM
   const unsigned char ttl = 1; // low, in case routers don't admin scope
 #endif
-  
+
   struct in_addr sessionAddress;
   sessionAddress.s_addr = our_inet_addr(sessionAddressStr);
   const Port rtpPort(rtpPortNum);
   const Port rtcpPort(rtcpPortNum);
-  
+
 #ifdef USE_SSM
   char* sourceAddressStr = "aaa.bbb.ccc.ddd";
                            // replace this with the real source address
@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
   Groupsock rtpGroupsock(*env, sessionAddress, rtpPort, ttl);
   Groupsock rtcpGroupsock(*env, sessionAddress, rtcpPort, ttl);
 #endif
-  
+
   RTPSource* rtpSource;
 #ifndef STREAM_USING_ADUS
   // Create the data source: a "MPEG Audio RTP source"

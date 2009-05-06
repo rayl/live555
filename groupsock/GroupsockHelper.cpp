@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "mTunnel" multicast access service
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -60,20 +60,20 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
     socketErr(env, "Failed to initialize 'winsock': ");
     return -1;
   }
-  
+
   int newSocket = socket(AF_INET, SOCK_DGRAM, 0);
   if (newSocket < 0) {
     socketErr(env, "unable to create datagram socket: ");
     return newSocket;
   }
-  
+
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEADDR) error: ");
     closeSocket(newSocket);
     return -1;
   }
-  
+
 #if defined(__WIN32__) || defined(_WIN32)
   // Windoze doesn't properly handle SO_REUSEPORT or IP_MULTICAST_LOOP
 #else
@@ -85,7 +85,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
     return -1;
   }
 #endif
-  
+
 #ifdef IP_MULTICAST_LOOP
   const u_int8_t loop = (u_int8_t)setLoopback;
   if (setsockopt(newSocket, IPPROTO_IP, IP_MULTICAST_LOOP,
@@ -96,7 +96,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
   }
 #endif
 #endif
-  
+
   // Note: Windoze requires binding, even if the port number is 0
   netAddressBits addr = INADDR_ANY;
 #if defined(__WIN32__) || defined(_WIN32)
@@ -117,12 +117,12 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
 #else
   }
 #endif
-  
+
   // Set the sending interface for multicasts, if it's not the default:
   if (SendingInterfaceAddr != INADDR_ANY) {
     struct in_addr addr;
     addr.s_addr = SendingInterfaceAddr;
-    
+
     if (setsockopt(newSocket, IPPROTO_IP, IP_MULTICAST_IF,
 		   (const char*)&addr, sizeof addr) < 0) {
       socketErr(env, "error setting outgoing multicast interface: ");
@@ -130,7 +130,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
       return -1;
     }
   }
-  
+
   return newSocket;
 }
 
@@ -153,20 +153,20 @@ int setupStreamSocket(UsageEnvironment& env,
     socketErr(env, "Failed to initialize 'winsock': ");
     return -1;
   }
-  
+
   int newSocket = socket(AF_INET, SOCK_STREAM, 0);
   if (newSocket < 0) {
     socketErr(env, "unable to create stream socket: ");
     return newSocket;
   }
-  
+
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEADDR) error: ");
     closeSocket(newSocket);
     return -1;
   }
-  
+
   // SO_REUSEPORT doesn't really make sense for TCP sockets, so we
   // normally don't set them.  However, if you really want to do this
   // #define REUSE_FOR_TCP
@@ -225,7 +225,7 @@ static int blockUntilReadable(UsageEnvironment& env,
     if (socket < 0) break;
     FD_SET((unsigned) socket, &rd_set);
     const unsigned numFds = socket+1;
-    
+
     result = select(numFds, &rd_set, NULL, NULL, timeout);
     if (timeout != NULL && result == 0) {
       break; // this is OK - timeout occurred
@@ -237,7 +237,7 @@ static int blockUntilReadable(UsageEnvironment& env,
       socketErr(env, "select() error: ");
       break;
     }
-    
+
     if (!FD_ISSET(socket, &rd_set)) {
       socketErr(env, "select() error - !FD_ISSET");
       break;
@@ -264,7 +264,7 @@ int readSocket(UsageEnvironment& env,
     } else if (result <= 0) {
       break;
     }
-    
+
     SOCKLEN_T addressSize = sizeof fromAddress;
     bytesRead = recvfrom(socket, (char*)buffer, bufferSize, 0,
 			 (struct sockaddr*)&fromAddress,
@@ -294,7 +294,7 @@ int readSocket(UsageEnvironment& env,
       break;
     }
   } while (0);
-  
+
   return bytesRead;
 }
 
@@ -305,7 +305,7 @@ int readSocketExact(UsageEnvironment& env,
 		    struct timeval* timeout) {
   /* read EXACTLY bufferSize bytes from the socket into the buffer.
      fromaddress is address of last read.
-     return the number of bytes acually read when an error occurs
+     return the number of bytes actually read when an error occurs
   */
   int bsize = bufferSize;
   int bytesRead = 0;
@@ -442,7 +442,7 @@ Boolean socketJoinGroup(UsageEnvironment& env, int socket,
     }
 #endif
   }
-  
+
   return True;
 }
 
@@ -507,7 +507,7 @@ Boolean socketJoinGroupSSM(UsageEnvironment& env, int socket,
     socketErr(env, "setsockopt(IP_ADD_SOURCE_MEMBERSHIP) error: ");
     return False;
   }
-  
+
   return True;
 }
 
@@ -524,7 +524,7 @@ Boolean socketLeaveGroupSSM(UsageEnvironment& /*env*/, int socket,
 		 (const char*)&imr, sizeof (struct ip_mreq_source)) < 0) {
     return False;
   }
-  
+
   return True;
 }
 
@@ -532,7 +532,7 @@ static Boolean getSourcePort0(int socket, portNumBits& resultPortNum/*host order
   sockaddr_in test; test.sin_port = 0;
   SOCKLEN_T len = sizeof test;
   if (getsockname(socket, (struct sockaddr*)&test, &len) < 0) return False;
-  
+
   resultPortNum = ntohs(test.sin_port);
   return True;
 }
@@ -549,7 +549,7 @@ Boolean getSourcePort(UsageEnvironment& env, int socket, Port& port) {
       return False;
     }
   }
-  
+
   port = Port(portNum);
   return True;
 }
@@ -568,12 +568,12 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
   static netAddressBits ourAddress = 0;
   int sock = -1;
   struct in_addr testAddr;
-  
+
   if (ourAddress == 0) {
     // We need to find our source address
     struct sockaddr_in fromAddr;
     fromAddr.sin_addr.s_addr = 0;
-    
+
     // Get our address by sending a (0-TTL) multicast packet,
     // receiving it, and looking at the source address used.
     // (This is kinda bogus, but it provides the best guarantee
@@ -583,18 +583,18 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
 
       testAddr.s_addr = our_inet_addr("228.67.43.91"); // arbitrary
       Port testPort(15947); // ditto
-      
+
       sock = setupDatagramSocket(env, testPort);
       if (sock < 0) break;
-      
+
       if (!socketJoinGroup(env, sock, testAddr.s_addr)) break;
-      
+
       unsigned char testString[] = "hostIdTest";
       unsigned testStringLength = sizeof testString;
-      
+
       if (!writeSocket(env, sock, testAddr, testPort, 0,
 		       testString, testStringLength)) break;
-      
+
       unsigned char readBuffer[20];
       struct timeval timeout;
       timeout.tv_sec = 5;
@@ -624,7 +624,7 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
 	env.setResultErrMsg("initial gethostname() failed");
 	break;
       }
-      
+
 #if defined(VXWORKS)
 #include <hostLib.h>
       if (ERROR == (ourAddress = hostGetByName( hostname ))) break;
@@ -641,7 +641,7 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
       for (unsigned i = 0; ; ++i) {
 	char* addrPtr = hstent->h_addr_list[i];
 	if (addrPtr == NULL) break;
-	
+
 	netAddressBits a = *(netAddressBits*)addrPtr;
 	if (!badAddress(a)) {
 	  addr = a;
@@ -655,7 +655,7 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
 	break;
       }
     } while (0);
-    
+
     // Make sure we have a good address:
     netAddressBits from = fromAddr.sin_addr.s_addr;
     if (badAddress(from)) {
@@ -666,15 +666,15 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
       env.setResultMsg(tmp);
       from = 0;
     }
-    
+
     ourAddress = from;
 #endif
-    
+
     if (sock >= 0) {
       socketLeaveGroup(env, sock, testAddr.s_addr);
       closeSocket(sock);
     }
-    
+
     // Use our newly-discovered IP address, and the current time,
     // to initialize the random number generator's seed:
     struct timeval timeNow;
@@ -700,7 +700,7 @@ netAddressBits chooseRandomIPv4SSMAddress(UsageEnvironment& env) {
 char const* timestampString() {
   struct timeval tvNow;
   gettimeofday(&tvNow, NULL);
-  
+
 #if !defined(_WIN32_WCE)
   static char timeString[9]; // holds hh:mm:ss plus trailing '\0'
   char const* ctimeResult = ctime((time_t*)&tvNow.tv_sec);
@@ -717,7 +717,7 @@ char const* timestampString() {
   static char timeString[50];
   sprintf(timeString, "%lu.%06ld", tvNow.tv_sec, tvNow.tv_usec);
 #endif
-  
+
   return (char const*)&timeString;
 }
 

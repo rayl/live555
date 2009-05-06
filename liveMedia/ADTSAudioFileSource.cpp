@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -42,13 +42,13 @@ ADTSAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
     // to get the audio stream's parameters:
     unsigned char fixedHeader[4]; // it's actually 3.5 bytes long
     if (fread(fixedHeader, 1, sizeof fixedHeader, fid) < sizeof fixedHeader) break;
-    
+
     // Check the 'syncword':
     if (!(fixedHeader[0] == 0xFF && (fixedHeader[1]&0xF0) == 0xF0)) {
       env.setResultMsg("Bad 'syncword' at start of ADTS file");
       break;
     }
-    
+
     // Get and check the 'profile':
     u_int8_t profile = (fixedHeader[2]&0xC0)>>6; // 2 bits
     if (profile == 3) {

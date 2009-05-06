@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
@@ -25,7 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "H263plusVideoFileServerMediaSubsession.hh"
 #include "H263plusVideoRTPSink.hh"
 #include "ByteStreamFileSource.hh"
-#include "H263plusVideoStreamFramer.hh" 
+#include "H263plusVideoStreamFramer.hh"
 
 H263plusVideoFileServerMediaSubsession*
 H263plusVideoFileServerMediaSubsession::createNew(UsageEnvironment& env,
@@ -36,7 +36,7 @@ H263plusVideoFileServerMediaSubsession::createNew(UsageEnvironment& env,
 
 H263plusVideoFileServerMediaSubsession
 ::H263plusVideoFileServerMediaSubsession(UsageEnvironment& env,
-					 char const* fileName, 
+					 char const* fileName,
 					 Boolean reuseFirstSource)
   : FileServerMediaSubsession(env, fileName, reuseFirstSource) {
 }

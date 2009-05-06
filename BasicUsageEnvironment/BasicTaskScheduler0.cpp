@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // Basic Usage Environment: for a simple, non-scripted, console application
@@ -28,13 +28,13 @@ public:
   AlarmHandler(TaskFunc* proc, void* clientData, DelayInterval timeToDelay)
     : DelayQueueEntry(timeToDelay), fProc(proc), fClientData(clientData) {
   }
-  
+
 private: // redefined virtual functions
   virtual void handleTimeout() {
     (*fProc)(fClientData);
     DelayQueueEntry::handleTimeout();
   }
-  
+
 private:
   TaskFunc* fProc;
   void* fClientData;
@@ -60,7 +60,7 @@ TaskToken BasicTaskScheduler0::scheduleDelayedTask(int64_t microseconds,
   AlarmHandler* alarmHandler = new AlarmHandler(proc, clientData, timeToDelay);
   fDelayQueue.addEntry(alarmHandler);
 
-  return (void*)(alarmHandler->token()); 
+  return (void*)(alarmHandler->token());
 }
 
 void BasicTaskScheduler0::unscheduleDelayedTask(TaskToken& prevTask) {
@@ -124,7 +124,7 @@ void HandlerSet
     handler = new HandlerDescriptor(fHandlers.fNextHandler);
     handler->socketNum = socketNum;
   }
-  
+
   handler->handlerProc = handlerProc;
   handler->clientData = clientData;
 }

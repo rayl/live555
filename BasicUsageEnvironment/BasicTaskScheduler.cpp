@@ -11,7 +11,7 @@ more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
-59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 // Basic Usage Environment: for a simple, non-scripted, console application
@@ -47,7 +47,7 @@ BasicTaskScheduler::~BasicTaskScheduler() {
 
 void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
   fd_set readSet = fReadSet; // make a copy for this select() call
-  
+
   DelayInterval const& timeToDelay = fDelayQueue.timeToNextAlarm();
   struct timeval tv_timeToDelay;
   tv_timeToDelay.tv_sec = timeToDelay.seconds();
@@ -66,7 +66,7 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
     tv_timeToDelay.tv_sec = maxDelayTime/MILLION;
     tv_timeToDelay.tv_usec = maxDelayTime%MILLION;
   }
-  
+
   int selectResult = select(fMaxNumSockets, &readSet, NULL, NULL,
 			    &tv_timeToDelay);
   if (selectResult < 0) {
@@ -91,10 +91,10 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
 	exit(0);
       }
   }
-  
+
   // Handle any delayed event that may have come due:
   fDelayQueue.handleAlarm();
-  
+
   // Call the handler function for one readable socket:
   HandlerIterator iter(*fReadHandlers);
   HandlerDescriptor* handler;
