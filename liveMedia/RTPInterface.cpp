@@ -268,11 +268,14 @@ void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor,
     // commands from the server.  At present, we can't do anything with
     // these, because we have taken complete control of reading this socket.
     // (Later, fix) #####
-    unsigned char c = '\0';
+    unsigned char c;
     struct sockaddr_in fromAddress;
-    while (readSocket(env, socketNum, &c, 1, fromAddress) != 1
-	   && c != '$') {}
-    if (c != '$') break;
+    do {
+		if (readSocket(env, socketNum, &c, 1, fromAddress) != 1) { // error reading TCP socket
+			env.taskScheduler().turnOffBackgroundReadHandling(socketNum); // stops further calls to us
+			return;
+		}
+	} while (c != '$');
 
     // The next byte is the stream channel id:
     unsigned char streamChannelId;
