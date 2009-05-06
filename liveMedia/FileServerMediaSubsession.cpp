@@ -22,8 +22,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "FileServerMediaSubsession.hh"
 
 FileServerMediaSubsession
-::FileServerMediaSubsession(UsageEnvironment& env, char const* fileName)
-  : OnDemandServerMediaSubsession(env) {
+::FileServerMediaSubsession(UsageEnvironment& env, char const* fileName,
+			    Boolean reuseFirstSource)
+  : OnDemandServerMediaSubsession(env, reuseFirstSource) {
   fFileName = strDup(fileName);
 }
 

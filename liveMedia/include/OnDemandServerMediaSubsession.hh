@@ -31,8 +31,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class OnDemandServerMediaSubsession: public ServerMediaSubsession {
 protected: // we're a virtual base class
-  OnDemandServerMediaSubsession(UsageEnvironment& env,
-				Boolean reuseFirstSource = False);
+  OnDemandServerMediaSubsession(UsageEnvironment& env, Boolean reuseFirstSource);
   virtual ~OnDemandServerMediaSubsession();
 
 private: // redefined virtual functions

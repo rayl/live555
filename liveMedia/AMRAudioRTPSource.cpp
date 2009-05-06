@@ -465,6 +465,7 @@ AMRDeinterleaver::AMRDeinterleaver(UsageEnvironment& env,
 
 AMRDeinterleaver::~AMRDeinterleaver() {
   delete fDeinterleavingBuffer;
+  Medium::close(fInputSource);
 }
 
 static unsigned const uSecsPerFrame = 20000; // 20 ms

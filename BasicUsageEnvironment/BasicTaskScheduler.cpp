@@ -82,7 +82,9 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
 #endif
       {
 	// Unexpected error - treat this as fatal:
+#if !defined(_WIN32_WCE)
 	perror("BasicTaskScheduler::SingleStep(): select() fails");
+#endif
 	exit(0);
       }
   }

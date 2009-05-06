@@ -41,19 +41,24 @@ MPEG1or2FileServerDemux::~MPEG1or2FileServerDemux() {
 
 ServerMediaSubsession*
 MPEG1or2FileServerDemux::newAudioServerMediaSubsession() {
-  return MPEG1or2DemuxedServerMediaSubsession::createNew(*this, 0xC0);
+  return MPEG1or2DemuxedServerMediaSubsession::createNew(*this, 0xC0,
+False /*reuseFirstSource #####*/
+);
 }
 
 ServerMediaSubsession*
 MPEG1or2FileServerDemux::newVideoServerMediaSubsession(Boolean iFramesOnly,
 						       double vshPeriod) {
   return MPEG1or2DemuxedServerMediaSubsession::createNew(*this, 0xE0,
+False, /*reuseFirstSource #####*/
 							 iFramesOnly, vshPeriod);
 }
 
 ServerMediaSubsession*
 MPEG1or2FileServerDemux::newAC3AudioServerMediaSubsession() {
-  return MPEG1or2DemuxedServerMediaSubsession::createNew(*this, 0xBD);
+  return MPEG1or2DemuxedServerMediaSubsession::createNew(*this, 0xBD,
+False /*reuseFirstSource #####*/
+);
   // because, in a VOB file, the AC3 audio has stream id 0xBD
 }
 

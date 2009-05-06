@@ -33,12 +33,13 @@ class MPEG1or2DemuxedServerMediaSubsession: public OnDemandServerMediaSubsession
 public:
   static MPEG1or2DemuxedServerMediaSubsession*
   createNew(MPEG1or2FileServerDemux& demux, u_int8_t streamIdTag,
+	    Boolean reuseFirstSource,
 	    Boolean iFramesOnly = False, double vshPeriod = 5.0);
   // The last two parameters are relevant for video streams only
 
 private:
   MPEG1or2DemuxedServerMediaSubsession(MPEG1or2FileServerDemux& demux,
-				       u_int8_t streamIdTag,
+				       u_int8_t streamIdTag, Boolean reuseFirstSource,
 				       Boolean iFramesOnly, double vshPeriod);
       // called only by createNew();
   virtual ~MPEG1or2DemuxedServerMediaSubsession();

@@ -29,16 +29,17 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 MPEG1or2DemuxedServerMediaSubsession* MPEG1or2DemuxedServerMediaSubsession
 ::createNew(MPEG1or2FileServerDemux& demux, u_int8_t streamIdTag,
-	    Boolean iFramesOnly, double vshPeriod) {
+	    Boolean reuseFirstSource, Boolean iFramesOnly, double vshPeriod) {
   return new MPEG1or2DemuxedServerMediaSubsession(demux, streamIdTag,
+						  reuseFirstSource,
 						  iFramesOnly, vshPeriod);
 }
 
 MPEG1or2DemuxedServerMediaSubsession
 ::MPEG1or2DemuxedServerMediaSubsession(MPEG1or2FileServerDemux& demux,
-				       u_int8_t streamIdTag,
+				       u_int8_t streamIdTag, Boolean reuseFirstSource,
 				       Boolean iFramesOnly, double vshPeriod)
-  : OnDemandServerMediaSubsession(demux.envir()),
+  : OnDemandServerMediaSubsession(demux.envir(), reuseFirstSource),
     fOurDemux(demux), fStreamIdTag(streamIdTag),
     fIFramesOnly(iFramesOnly), fVSHPeriod(vshPeriod) {
 }
