@@ -60,9 +60,6 @@ void MP3HuffmanDecode(MP3SideInfo::gr_info_s_t* gr, int isMPEG2,
 
 extern unsigned char huffdec[]; // huffman table data
 
-unsigned getScaleFactorsLength(MP3SideInfo::gr_info_s_t* gr,
-			       Boolean isMPEG2);
-
 // The following are used if we process Huffman-decoded values
 #ifdef FOUR_BYTE_SAMPLES
 #define BYTES_PER_SAMPLE_VALUE 4

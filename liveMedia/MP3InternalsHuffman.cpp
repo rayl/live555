@@ -553,8 +553,8 @@ static unsigned rsf_get_scale_factors_2(MP3SideInfo::gr_info_s_t *gr_info) {
   return numbits;
 }
 
-unsigned getScaleFactorsLength(MP3SideInfo::gr_info_s_t* gr,
-			       Boolean isMPEG2) {
+static unsigned getScaleFactorsLength(MP3SideInfo::gr_info_s_t* gr,
+				      Boolean isMPEG2) {
   return isMPEG2 ? rsf_get_scale_factors_2(gr)
                  : rsf_get_scale_factors_1(gr);
 }

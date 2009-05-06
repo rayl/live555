@@ -41,19 +41,6 @@ static unsigned live_tabsel[2][3][16] = {
 static long live_freqs[]
 = { 44100, 48000, 32000, 22050, 24000, 16000, 11025, 12000, 8000, 0 };
 
-static double ispow[8207];
-static double aa_ca[8], aa_cs[8];
-static double COS1[12][6];
-static double win[4][36];
-static double win1[4][36];
-static double COS9[9];
-static double COS6_1,COS6_2;
-static double tfcos36[9];
-static double tfcos12[3];
-
-static int longLimit[7][23];
-static int shortLimit[7][14];
-
 struct bandInfoStruct {
   int longIdx[23];
   int longDiff[22];
@@ -101,29 +88,11 @@ static struct bandInfoStruct const bandInfo[7] = {
    {4,4,4,6,6,8,10,14,18,26,32,42,18 } } ,
 };
 
-static int mapbuf0[7][152];
-static int mapbuf1[7][156];
-static int mapbuf2[7][44];
-static int *map[7][3];
-static int *mapend[7][3];
-
 unsigned int n_slen2[512]; /* MPEG 2.0 slen for 'normal' mode */
 unsigned int i_slen2[256]; /* MPEG 2.0 slen for intensity stereo */
 
-static double tan1_1[16],tan2_1[16],tan1_2[16],tan2_2[16];
-static double pow1_1[2][16],pow2_1[2][16],pow1_2[2][16],pow2_2[2][16];
-
-// Init tables for layer-3 
-static double gainpow2[256+118+4];
-
 #define MPG_MD_MONO 3 
 
-#ifndef M_PI
-#define  M_PI            3.14159265358979323846  /* pi */
-#endif
-#ifndef M_SQRT2
-#define  M_SQRT2         1.41421356237309504880  /* sqrt(2) */
-#endif
 
 ////////// MP3FrameParams //////////
 
@@ -136,154 +105,6 @@ MP3FrameParams::MP3FrameParams()
   doneInit = True;
 
   int i,j,k,l;
-
-  for (i=-256;i<118+4;i++) {
-    gainpow2[i+256] = pow((double)2.0,-0.25 * (double) (i+210) );
-  }
-
-  for (i=0;i<8207;i++) {
-    ispow[i] = pow((double)i,(double)4.0/3.0);
-  }
-
-  for (i=0;i<8;i++) {
-    static double const Ci[8]
-      = {-0.6,-0.535,-0.33,-0.185,-0.095,-0.041,-0.0142,-0.0037};
-    double sq = sqrt(1.0+Ci[i]*Ci[i]);
-    aa_cs[i] = 1.0/sq;
-    aa_ca[i] = Ci[i]/sq;
-  }
-
-  for (i=0;i<18;i++) {
-    win[0][i]    = win[1][i]    = 0.5 * sin( M_PI / 72.0 * (double) (2*(i+0) +1) ) / cos ( M_PI * (double) (2*(i+0) +19) / 72.0 );
-    win[0][i+18] = win[3][i+18] = 0.5 * sin( M_PI / 72.0 * (double) (2*(i+18)+1) ) / cos ( M_PI * (double) (2*(i+18)+19) / 72.0 );
-  }
-  for (i=0;i<6;i++) {
-    win[1][i+18] = 0.5 / cos ( M_PI * (double) (2*(i+18)+19) / 72.0 );
-    win[3][i+12] = 0.5 / cos ( M_PI * (double) (2*(i+12)+19) / 72.0 );
-    win[1][i+24] = 0.5 * sin( M_PI / 24.0 * (double) (2*i+13) ) / cos ( M_PI * (double) (2*(i+24)+19) / 72.0 );
-    win[1][i+30] = win[3][i] = 0.0;
-    win[3][i+6 ] = 0.5 * sin( M_PI / 24.0 * (double) (2*i+1) )  / cos ( M_PI * (double) (2*(i+6 )+19) / 72.0 );
-  }
-
-  for (i=0;i<9;i++) {
-    COS9[i] = cos( M_PI / 18.0 * (double) i);
-  }
-
-  for (i=0;i<9;i++) {
-    tfcos36[i] = 0.5 / cos ( M_PI * (double) (i*2+1) / 36.0 );
-  }
-  for(i=0;i<3;i++) {
-    tfcos12[i] = 0.5 / cos ( M_PI * (double) (i*2+1) / 12.0 );
-  }
-
-  COS6_1 = cos( M_PI / 6.0 * (double) 1);
-  COS6_2 = cos( M_PI / 6.0 * (double) 2);
-
-  for (i=0;i<12;i++) {
-    win[2][i]  = 0.5 * sin( M_PI / 24.0 * (double) (2*i+1) ) / cos ( M_PI * (double) (2*i+7) / 24.0 );
-    for (j=0;j<6;j++) {
-      COS1[i][j] = cos( M_PI / 24.0 * (double) ((2*i+7)*(2*j+1)) );
-    }
-  }
-
-  for (j=0;j<4;j++) {
-    static int const len[4] = { 36,36,12,36 };
-    for (i=0;i<len[j];i+=2) {
-      win1[j][i] = + win[j][i];
-    }
-    for (i=1;i<len[j];i+=2) {
-      win1[j][i] = - win[j][i];
-    }
-  }
-
-  for (i=0;i<16;i++) {
-    double t = tan( (double) i * M_PI / 12.0 );
-    tan1_1[i] = t / (1.0+t);
-    tan2_1[i] = 1.0 / (1.0 + t);
-    tan1_2[i] = M_SQRT2 * t / (1.0+t);
-    tan2_2[i] = M_SQRT2 / (1.0 + t);
-
-    for (j=0;j<2;j++) {
-      double base = pow(2.0,-0.25*(j+1.0));
-      double p1=1.0,p2=1.0;
-      if (i > 0) {
-        if (i & 1) {
-          p1 = pow(base,(i+1.0)*0.5);
-	} else {
-          p2 = pow(base,i*0.5);
-	}
-      }
-      pow1_1[j][i] = p1;
-      pow2_1[j][i] = p2;
-      pow1_2[j][i] = M_SQRT2 * p1;
-      pow2_2[j][i] = M_SQRT2 * p2;
-    }
-  }
-
-  for (j=0;j<7;j++) {
-    struct bandInfoStruct const* bi = &bandInfo[j];
-    int *mp;
-    int cb,lwin;
-    int const* bdf;
-    
-    mp = map[j][0] = mapbuf0[j];
-    bdf = bi->longDiff;
-    for (i=0,cb = 0; cb < 8 ; cb++,i+=*bdf++) {
-      *mp++ = (*bdf) >> 1;
-      *mp++ = i;
-      *mp++ = 3;
-      *mp++ = cb;
-    }
-    bdf = bi->shortDiff+3;
-    for (cb=3;cb<13;cb++) {
-      int l = (*bdf++) >> 1;
-      for(lwin=0;lwin<3;lwin++) {
-	*mp++ = l;
-	*mp++ = i + lwin;
-	*mp++ = lwin;
-	*mp++ = cb;
-      }
-      i += 6*l;
-    }
-    mapend[j][0] = mp;
-    
-    mp = map[j][1] = mapbuf1[j];
-    bdf = bi->shortDiff+0;
-    for (i=0,cb=0;cb<13;cb++) {
-      int l = (*bdf++) >> 1;
-      for (lwin=0;lwin<3;lwin++) {
-	*mp++ = l;
-	*mp++ = i + lwin;
-	*mp++ = lwin;
-	*mp++ = cb;
-      }
-      i += 6*l;
-    }
-    mapend[j][1] = mp;
-    
-    mp = map[j][2] = mapbuf2[j];
-    bdf = bi->longDiff;
-    for (cb = 0; cb < 22 ; cb++) {
-      *mp++ = (*bdf++) >> 1;
-      *mp++ = cb;
-    }
-    mapend[j][2] = mp;
-  }
-
-  for (j=0;j<7;j++) {
-    for (i=0;i<23;i++) {
-      longLimit[j][i] = (bandInfo[j].longIdx[i] - 1 + 8) / 18 + 1;
-      if (longLimit[j][i] > SBLIMIT) {
-        longLimit[j][i] = SBLIMIT;
-      }
-    }
-    for (i=0;i<14;i++) {
-      shortLimit[j][i] = (bandInfo[j].shortIdx[i] - 1) / 18 + 1;
-      if (shortLimit[j][i] > SBLIMIT) {
-        shortLimit[j][i] = SBLIMIT;
-      }
-    }
-  }
 
   for (i=0;i<5;i++) {
     for (j=0;j<6;j++) {
@@ -522,9 +343,12 @@ Boolean GetADUInfoFromMP3Frame(unsigned char const* framePtr,
 
 
 static void getSideInfo1(MP3FrameParams& fr, MP3SideInfo& si,
-			 int stereo, int ms_stereo, long sfreq, int single) {
+			 int stereo, int ms_stereo, long sfreq,
+			 int /*single*/) {
    int ch, gr;
+#if 0
    int powdiff = (single == 3) ? 4 : 0;
+#endif
 
    /* initialize all four "part2_3_length" fields to zero: */
    si.ch[0].gr[0].part2_3_length = 0; si.ch[1].gr[0].part2_3_length = 0;
@@ -548,8 +372,10 @@ static void getSideInfo1(MP3FrameParams& fr, MP3SideInfo& si,
        gr_info.part2_3_length = fr.getBits(12);
        gr_info.big_values = fr.getBits(9);
        gr_info.global_gain = fr.getBits(8);
+#if 0
        gr_info.pow2gain = gainpow2+256 - gr_info.global_gain + powdiff;
        if (ms_stereo) gr_info.pow2gain += 2;
+#endif
        gr_info.scalefac_compress = fr.getBits(4);
 /* window-switching flag == 1 for block_Type != 0 .. and block-type == 0 -> win-sw-flag = 0 */
        gr_info.window_switching_flag = fr.get1Bit();
@@ -600,9 +426,12 @@ static void getSideInfo1(MP3FrameParams& fr, MP3SideInfo& si,
 }
 
 static void getSideInfo2(MP3FrameParams& fr, MP3SideInfo& si,
-			 int stereo, int ms_stereo, long sfreq, int single) {
+			 int stereo, int ms_stereo, long sfreq,
+			 int /*single*/) {
    int ch;
+#if 0
    int powdiff = (single == 3) ? 4 : 0;
+#endif
 
    /* initialize all four "part2_3_length" fields to zero: */
    si.ch[0].gr[0].part2_3_length = 0; si.ch[1].gr[0].part2_3_length = 0;
@@ -622,8 +451,10 @@ static void getSideInfo2(MP3FrameParams& fr, MP3SideInfo& si,
 
        gr_info.big_values = fr.getBits(9);
        gr_info.global_gain = fr.getBits(8);
+#if 0
        gr_info.pow2gain = gainpow2+256 - gr_info.global_gain + powdiff;
        if (ms_stereo) gr_info.pow2gain += 2;
+#endif
        gr_info.scalefac_compress = fr.getBits(9);
 /* window-switching flag == 1 for block_Type != 0 .. and block-type == 0 -> win-sw-flag = 0 */
        gr_info.window_switching_flag = fr.get1Bit();
