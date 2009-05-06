@@ -397,7 +397,7 @@ void MPEGProgramStreamParser::parsePackHeader() {
     }
 
     setParseState(PARSING_PACK_HEADER); // ensures we progress over bad data
-    if (first4Bytes&0xFF > 1) { // a system code definitely doesn't start here
+    if ((first4Bytes&0xFF) > 1) { // a system code definitely doesn't start here
       skipBytes(4);
     } else {
       skipBytes(1);

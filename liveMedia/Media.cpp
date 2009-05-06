@@ -164,8 +164,6 @@ void MediaLookupTable::remove(char const* name) {
   Medium* medium = lookup(name);
   if (medium != NULL) {
     fTable->Remove(name);
-    delete medium;
-
     if (fTable->IsEmpty()) {
       // We can also delete ourselves (to reclaim space):
       _Tables* ourTables = _Tables::getOurTables(fEnv);
@@ -173,6 +171,8 @@ void MediaLookupTable::remove(char const* name) {
       ourTables->mediaTable = NULL;
       ourTables->reclaimIfPossible();
     }
+
+    delete medium;
   }
 }
 
