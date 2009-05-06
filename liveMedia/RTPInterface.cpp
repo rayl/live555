@@ -197,7 +197,7 @@ Boolean RTPInterface::handleRead(unsigned char* buffer,
     unsigned totBytesToRead = fNextTCPReadSize;
     if (totBytesToRead > bufferMaxSize) totBytesToRead = bufferMaxSize; 
     unsigned curBytesToRead = totBytesToRead;
-    unsigned curBytesRead;
+    int curBytesRead;
     while ((curBytesRead = readSocket(envir(), fNextTCPReadStreamSocketNum,
 				      &buffer[bytesRead], curBytesToRead,
 				      fromAddress)) > 0) {

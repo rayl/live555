@@ -980,7 +980,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       // Normal case.
       // Set the RTP and RTCP sockets' destination address and port
       // from the information in the SETUP response: 
-      subsession.setDestinations(fServerAddress);
+      subsession.setDestinations(subsession.connectionEndpointAddress());
     }
 
     delete[] cmd;
