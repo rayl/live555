@@ -51,6 +51,10 @@ protected:
   Boolean fCurrentPacketBeginsFrame;
   Boolean fCurrentPacketCompletesFrame;
 
+protected:
+  // redefined virtual functions:
+  virtual void doStopGettingFrames();
+
 private:
   // redefined virtual functions:
   virtual void doGetNextFrame();

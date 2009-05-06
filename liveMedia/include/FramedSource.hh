@@ -44,7 +44,6 @@ public:
 		    onCloseFunc* onCloseFunc,
 		    void* onCloseClientData);
   // ##### The following is for backwards-compatibility; remove it eventually:
-#define BACKWARDS_COMPATIBLE_WITH_OLD_AFTER_GETTING_FUNC
 #ifdef BACKWARDS_COMPATIBLE_WITH_OLD_AFTER_GETTING_FUNC
   typedef void (bwCompatAfterGettingFunc)(void* clientData, unsigned frameSize,
 					  struct timeval presentationTime);

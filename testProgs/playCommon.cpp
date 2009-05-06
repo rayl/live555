@@ -494,10 +494,10 @@ int main(int argc, char** argv) {
       } else {
 	*env << clientProtocolName << " \"OPTIONS\" request returned: "
 	     << optionsResponse << "\n";
-	delete[] optionsResponse;
       }
       shutdown();
     }
+    delete[] optionsResponse;
   }
 
   // Open the URL, to get a SDP description:

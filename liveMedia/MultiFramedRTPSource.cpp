@@ -89,6 +89,10 @@ Boolean MultiFramedRTPSource
   return True;
 }
 
+void MultiFramedRTPSource::doStopGettingFrames() {
+  fRTPInterface.stopNetworkReading();
+}
+
 void MultiFramedRTPSource::doGetNextFrame() {
   if (!fAreDoingNetworkReads) {
     // Turn on background read handling of incoming packets:
