@@ -34,7 +34,8 @@ StreamParser::StreamParser(FramedSource* inputSource,
     fOnInputCloseClientData(onInputCloseClientData),
     fClientContinueFunc(clientContinueFunc),
     fClientContinueClientData(clientContinueClientData),
-    fSavedParserIndex(0), fCurParserIndex(0), fRemainingUnparsedBits(0),
+    fSavedParserIndex(0), fSavedRemainingUnparsedBits(0),
+    fCurParserIndex(0), fRemainingUnparsedBits(0),
     fTotNumValidBytes(0) {
   fBank[0] = new unsigned char[BANK_SIZE];
   fBank[1] = new unsigned char[BANK_SIZE];
@@ -172,4 +173,10 @@ unsigned StreamParser::getBits(unsigned numBits) {
 
     return result;
   }
+}
+
+void StreamParser::flushInput() {
+  fCurParserIndex = fSavedParserIndex = 0;
+  fSavedRemainingUnparsedBits = fRemainingUnparsedBits = 0;
+  fTotNumValidBytes = 0;
 }

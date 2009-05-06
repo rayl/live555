@@ -34,6 +34,8 @@ public:
   // will be reset to that of the input source, whenever new data
   // is read from it.
 
+  void flushInput(); // called if there is a discontinuity (seeking) in the input
+
 private:
   MPEG1or2AudioStreamFramer(UsageEnvironment& env, FramedSource* inputSource,
 			    Boolean syncWithInputSource);
@@ -53,6 +55,7 @@ private:
   virtual void doGetNextFrame();
 
 private:
+  void reset();
   struct timeval currentFramePlayTime() const;
 
 private:

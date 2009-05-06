@@ -55,10 +55,7 @@ MPEG1or2AudioStreamFramer
 			    Boolean syncWithInputSource)
   : FramedFilter(env, inputSource),
     fSyncWithInputSource(syncWithInputSource) {
-  // Use the current wallclock time as the initial 'presentation time':
-  struct timeval timeNow;
-  gettimeofday(&timeNow, NULL);
-  resetPresentationTime(timeNow);
+  reset();
 
   fParser = new MPEG1or2AudioStreamParser(this, inputSource);
 }
@@ -73,6 +70,18 @@ MPEG1or2AudioStreamFramer::createNew(UsageEnvironment& env,
 				     Boolean syncWithInputSource) {
   // Need to add source type checking here???  #####
   return new MPEG1or2AudioStreamFramer(env, inputSource, syncWithInputSource);
+}
+
+void MPEG1or2AudioStreamFramer::flushInput() {
+  reset();
+  fParser->flushInput();
+}
+
+void MPEG1or2AudioStreamFramer::reset() {
+  // Use the current wallclock time as the initial 'presentation time':
+  struct timeval timeNow;
+  gettimeofday(&timeNow, NULL);
+  resetPresentationTime(timeNow);
 }
 
 void MPEG1or2AudioStreamFramer

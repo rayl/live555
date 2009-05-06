@@ -26,6 +26,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEG1or2VideoRTPSink.hh"
 #include "AC3AudioStreamFramer.hh"
 #include "AC3AudioRTPSink.hh"
+#include "ByteStreamFileSource.hh"
 
 MPEG1or2DemuxedServerMediaSubsession* MPEG1or2DemuxedServerMediaSubsession
 ::createNew(MPEG1or2FileServerDemux& demux, u_int8_t streamIdTag,
@@ -94,10 +95,38 @@ RTPSink* MPEG1or2DemuxedServerMediaSubsession
 
 void MPEG1or2DemuxedServerMediaSubsession
 ::seekStreamSource(FramedSource* inputSource, float seekNPT) {
+  float const dur = duration();
+  unsigned const size = fOurDemux.fileSize();
+  unsigned absBytePosition = dur == 0.0 ? 0 : (unsigned)((seekNPT/dur)*size);
+
+  // "inputSource" is a 'framer'
+  // Flush its data, to account for the seek that we're about to do:
+  if ((fStreamIdTag&0xF0) == 0xC0 /*MPEG audio*/) {
+    MPEG1or2AudioStreamFramer* framer = (MPEG1or2AudioStreamFramer*)inputSource;
+    framer->flushInput();
+  } else if ((fStreamIdTag&0xF0) == 0xE0 /*video*/) {
+    MPEG1or2VideoStreamFramer* framer = (MPEG1or2VideoStreamFramer*)inputSource;
+    framer->flushInput();
+  }
+
   // "inputSource" is a filter; its input source is the original elem stream source:
   MPEG1or2DemuxedElementaryStream* elemStreamSource
     = (MPEG1or2DemuxedElementaryStream*)(((FramedFilter*)inputSource)->inputSource());
-  elemStreamSource->sourceDemux().seekWithinSource(seekNPT);
+
+  // Next, get the original source demux:
+  MPEG1or2Demux& sourceDemux = elemStreamSource->sourceDemux();
+
+  // and flush its input buffers:
+  sourceDemux.flushInput();
+
+  // Then, get the original input file stream from the source demux:
+  ByteStreamFileSource* inputFileSource
+    = (ByteStreamFileSource*)(sourceDemux.inputSource());
+  // Note: We can make that cast, because we know that the demux was originally
+  // created from a "ByteStreamFileSource".
+
+  // Do the appropriate seek within the input file stream:
+  inputFileSource->seekToByteAbsolute(absBytePosition);
 }
 
 float MPEG1or2DemuxedServerMediaSubsession::duration() const {

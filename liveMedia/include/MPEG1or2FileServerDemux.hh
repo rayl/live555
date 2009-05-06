@@ -40,6 +40,7 @@ public:
 			  if one doesn't already appear in the stream */);
   ServerMediaSubsession* newAC3AudioServerMediaSubsession(); // AC-3 audio (from VOB)
 
+  unsigned fileSize() const { return fFileSize; }
   float fileDuration() const { return fFileDuration; }
 
 private:
@@ -55,16 +56,12 @@ private:
 
 private:
   char const* fFileName;
+  unsigned fFileSize;
   float fFileDuration;
   Boolean fReuseFirstSource;
   MPEG1or2Demux* fSession0Demux;
   MPEG1or2Demux* fLastCreatedDemux;
   u_int8_t fLastClientSessionId;
 };
-
-
-// Returns the playing time (i.e., duration), in seconds, of the named
-// MPEG-1 or 2 Program Stream file, or 0.0 if unknown:
-float MPEG1or2ProgramStreamFileDuration(UsageEnvironment& env, char const* fileName);
 
 #endif

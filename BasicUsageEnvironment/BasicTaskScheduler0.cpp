@@ -43,7 +43,8 @@ private:
 
 ////////// BasicTaskScheduler0 //////////
 
-BasicTaskScheduler0::BasicTaskScheduler0() {
+BasicTaskScheduler0::BasicTaskScheduler0()
+  : fLastHandledSocketNum(-1) {
   fReadHandlers = new HandlerSet;
 }
 

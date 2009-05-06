@@ -110,7 +110,7 @@ MPEG1or2Demux* MPEG1or2Demux
 }
 
 MPEG1or2Demux::SCR::SCR()
-  : highBit(0), remainingBits(0), extension(0) {
+  : highBit(0), remainingBits(0), extension(0), isValid(False) {
 }
 
 void MPEG1or2Demux
@@ -118,6 +118,10 @@ void MPEG1or2Demux
   if (--fNumOutstandingESs == 0 && fReclaimWhenLastESDies) {
     delete this;
   }
+}
+
+void MPEG1or2Demux::flushInput() {
+  fParser->flushInput();
 }
 
 MPEG1or2DemuxedElementaryStream*
@@ -312,9 +316,6 @@ void MPEG1or2Demux::handleClosure(void* clientData) {
   }
 }
 
-void MPEG1or2Demux::seekWithinSource(float /*seekNPT*/) {
-  // TO COMPLETE //#####@@@@@
-}
 
 ////////// MPEGProgramStreamParser implementation //////////
 
@@ -422,6 +423,7 @@ void MPEGProgramStreamParser::parsePackHeader() {
     scr.remainingBits |= (next4Bytes&0xFFFE0000)>>2;
     scr.remainingBits |= (next4Bytes&0x0000FFFE)>>1;
     scr.extension = 0;
+    scr.isValid = True;
     skipBits(24);
 
 #if defined(DEBUG_TIMESTAMPS) || defined(DEBUG_SCR_TIMESTAMPS)
@@ -440,6 +442,7 @@ void MPEGProgramStreamParser::parsePackHeader() {
     scr.extension = (next4Bytes&0x00000003)<<7;
     next4Bytes = get4Bytes();
     scr.extension |= (next4Bytes&0xFE000000)>>25;
+    scr.isValid = True;
     skipBits(5);
 
 #if defined(DEBUG_TIMESTAMPS) || defined(DEBUG_SCR_TIMESTAMPS)

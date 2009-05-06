@@ -26,6 +26,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 class StreamParser {
+public:
+  virtual void flushInput();
+
 protected: // we're a virtual base class
   typedef void (clientContinueFunc)(void* clientData,
 				    unsigned char* ptr, unsigned size,

@@ -40,6 +40,8 @@ public:
   Boolean& pictureEndMarker() { return fPictureEndMarker; }
       // a hack for implementing the RTP 'M' bit
 
+  void flushInput(); // called if there is a discontinuity (seeking) in the input
+
 protected:
   MPEGVideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource);
       // we're an abstract base class
@@ -54,6 +56,8 @@ private: // redefined virtual functions
   virtual void doGetNextFrame();
 
 private:
+  void reset();
+
   static void continueReadProcessing(void* clientData,
 				     unsigned char* ptr, unsigned size,
 				     struct timeval presentationTime);

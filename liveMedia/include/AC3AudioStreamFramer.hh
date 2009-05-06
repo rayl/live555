@@ -33,6 +33,8 @@ public:
 
   unsigned samplingRate();
 
+  void flushInput(); // called if there is a discontinuity (seeking) in the input
+
 private:
   AC3AudioStreamFramer(UsageEnvironment& env, FramedSource* inputSource,
 		       unsigned char streamCode);

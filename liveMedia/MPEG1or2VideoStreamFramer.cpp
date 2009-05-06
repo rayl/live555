@@ -30,6 +30,7 @@ enum MPEGParseState {
   PARSING_VIDEO_SEQUENCE_HEADER,
   PARSING_VIDEO_SEQUENCE_HEADER_SEEN_CODE,
   PARSING_GOP_HEADER,
+  PARSING_GOP_HEADER_SEEN_CODE,
   PARSING_PICTURE_HEADER,
   PARSING_SLICE
 }; 
@@ -44,16 +45,19 @@ public:
   virtual ~MPEG1or2VideoStreamParser();
 
 private: // redefined virtual functions:
+  virtual void flushInput();
   virtual unsigned parse();
 
 private:
+  void reset();
+
   MPEG1or2VideoStreamFramer* usingSource() {
     return (MPEG1or2VideoStreamFramer*)fUsingSource;
   }
   void setParseState(MPEGParseState parseState);
 
-  unsigned parseVideoSequenceHeader(Boolean haveSeenStartCode = False);
-  unsigned parseGOPHeader();
+  unsigned parseVideoSequenceHeader(Boolean haveSeenStartCode);
+  unsigned parseGOPHeader(Boolean haveSeenStartCode);
   unsigned parsePictureHeader();
   unsigned parseSlice();
 
@@ -120,10 +124,9 @@ MPEG1or2VideoStreamParser
 			FramedSource* inputSource,
 			Boolean iFramesOnly, double vshPeriod)
   : MPEGVideoStreamParser(usingSource, inputSource),
-  fCurrentParseState(PARSING_VIDEO_SEQUENCE_HEADER),
-  fPicturesSinceLastGOP(0), fCurPicTemporalReference(0),
-  fCurrentSliceNumber(0), fSavedVSHSize(0), fVSHPeriod(vshPeriod),
-  fIFramesOnly(iFramesOnly), fSkippingCurrentPicture(False) {
+    fCurrentParseState(PARSING_VIDEO_SEQUENCE_HEADER),
+    fVSHPeriod(vshPeriod), fIFramesOnly(iFramesOnly) {
+  reset();
 }
 
 MPEG1or2VideoStreamParser::~MPEG1or2VideoStreamParser() {
@@ -134,17 +137,36 @@ void MPEG1or2VideoStreamParser::setParseState(MPEGParseState parseState) {
   MPEGVideoStreamParser::setParseState();
 }
 
+void MPEG1or2VideoStreamParser::reset() {
+  fPicturesSinceLastGOP = 0;
+  fCurPicTemporalReference = 0;
+  fCurrentSliceNumber = 0;
+  fSavedVSHSize = 0;
+  fSkippingCurrentPicture = False;
+}
+
+void MPEG1or2VideoStreamParser::flushInput() {
+  reset();
+  StreamParser::flushInput();
+  if (fCurrentParseState != PARSING_VIDEO_SEQUENCE_HEADER) {
+    setParseState(PARSING_GOP_HEADER); // start from the next GOP
+  }
+}
+
 unsigned MPEG1or2VideoStreamParser::parse() {
   try {
     switch (fCurrentParseState) {
     case PARSING_VIDEO_SEQUENCE_HEADER: {
-      return parseVideoSequenceHeader();
+      return parseVideoSequenceHeader(False);
     }
     case PARSING_VIDEO_SEQUENCE_HEADER_SEEN_CODE: {
       return parseVideoSequenceHeader(True);
     }
     case PARSING_GOP_HEADER: {
-      return parseGOPHeader();
+      return parseGOPHeader(False);
+    }
+    case PARSING_GOP_HEADER_SEEN_CODE: {
+      return parseGOPHeader(True);
     }
     case PARSING_PICTURE_HEADER: {
       return parsePictureHeader();
@@ -263,7 +285,7 @@ unsigned MPEG1or2VideoStreamParser
   } while (next4Bytes != GROUP_START_CODE && next4Bytes != PICTURE_START_CODE);
   
   setParseState((next4Bytes == GROUP_START_CODE)
-		? PARSING_GOP_HEADER : PARSING_PICTURE_HEADER);
+		? PARSING_GOP_HEADER_SEEN_CODE : PARSING_PICTURE_HEADER);
 
   // Compute this frame's timestamp by noting how many pictures we've seen
   // since the last GOP header:
@@ -276,7 +298,7 @@ unsigned MPEG1or2VideoStreamParser
   return curFrameSize();
 }
 
-unsigned MPEG1or2VideoStreamParser::parseGOPHeader() {
+unsigned MPEG1or2VideoStreamParser::parseGOPHeader(Boolean haveSeenStartCode) {
   // First check whether we should insert a previously-saved
   // 'video_sequence_header' here:
   if (needToUseSavedVSH()) return useSavedVSH();
@@ -284,8 +306,21 @@ unsigned MPEG1or2VideoStreamParser::parseGOPHeader() {
 #ifdef DEBUG
   fprintf(stderr, "parsing GOP header\n");
 #endif
-  // Note that we've already read the GROUP_START_CODE
-  save4Bytes(GROUP_START_CODE);
+  unsigned first4Bytes;
+  if (!haveSeenStartCode) {
+    while ((first4Bytes = test4Bytes()) != GROUP_START_CODE) {
+#ifdef DEBUG
+      fprintf(stderr, "ignoring non GOP start code: 0x%08x\n", first4Bytes);
+#endif
+      get1Byte(); setParseState(PARSING_GOP_HEADER);
+          // ensures we progress over bad data
+    }
+    first4Bytes = get4Bytes();
+  } else {
+    // We've already seen the GROUP_START_CODE
+    first4Bytes = GROUP_START_CODE;
+  }
+  save4Bytes(first4Bytes);
 
   // Next, extract the (25-bit) time code from the next 4 bytes:
   unsigned next4Bytes = get4Bytes();
@@ -416,7 +451,7 @@ unsigned MPEG1or2VideoStreamParser::parseSlice() {
       break;
     }
     case GROUP_START_CODE: {
-      setParseState(PARSING_GOP_HEADER);
+      setParseState(PARSING_GOP_HEADER_SEEN_CODE);
       break;
     }
     case PICTURE_START_CODE: {

@@ -57,14 +57,20 @@ unsigned GetFileSize(char const* fileName, FILE* fid) {
   unsigned fileSize = 0; // by default
 
   if (fid != stdin) {
-#if defined(_WIN32_WCE)
-    fseek(fid, 0, SEEK_END);
-    fileSize = ftell(fid);
-    fseek(fid, 0, SEEK_SET);
-#else
-    struct stat sb;
-    if (stat(fileName, &sb) == 0) {
-      fileSize = sb.st_size;
+#if !defined(_WIN32_WCE)
+    if (fileName == NULL) {
+#endif
+      if (fseek(fid, 0, SEEK_END) >= 0) {
+	fileSize = ftell(fid);
+	if (fileSize == (unsigned)-1) fileSize = 0; // ftell() failed
+	fseek(fid, 0, SEEK_SET);
+      }
+#if !defined(_WIN32_WCE)
+    } else {
+      struct stat sb;
+      if (stat(fileName, &sb) == 0) {
+	fileSize = sb.st_size;
+      }
     }
 #endif
   }

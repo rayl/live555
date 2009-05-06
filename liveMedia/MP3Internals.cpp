@@ -38,8 +38,8 @@ static unsigned live_tabsel[2][3][16] = {
 };
 /* Note: live_tabsel[*][*][0 or 15] shouldn't occur; use dummy values there */
 
-static long live_freqs[7]
-= { 44100, 48000, 32000, 22050, 24000, 16000 , 11025 };
+static long live_freqs[]
+= { 44100, 48000, 32000, 22050, 24000, 16000, 11025, 12000, 8000, 0 };
 
 static double ispow[8207];
 static double aa_ca[8], aa_cs[8];
@@ -347,7 +347,7 @@ void MP3FrameParams::setParamsFromHeader() {
   bitrateIndex = ((hdr>>12)&0xf);
   
   if (isMPEG2_5) {
-    samplingFreqIndex = 6;
+    samplingFreqIndex = ((hdr>>10)&0x3) + 6;
   } else {
     samplingFreqIndex = ((hdr>>10)&0x3) + (isMPEG2*3);
   }

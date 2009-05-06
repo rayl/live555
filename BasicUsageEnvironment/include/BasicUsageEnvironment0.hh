@@ -97,6 +97,7 @@ protected:
 
   // To implement background reads:
   HandlerSet* fReadHandlers;
+  int fLastHandledSocketNum;
 };
 
 #endif

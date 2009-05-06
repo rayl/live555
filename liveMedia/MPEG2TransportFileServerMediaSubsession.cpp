@@ -57,7 +57,7 @@ FramedSource* MPEG2TransportFileServerMediaSubsession
   if (fileSource == NULL) return NULL;
   fFileSize = fileSource->fileSize();
 
-  // Create a framer for the Video Elementary Stream:
+  // Create a framer for the Transport Stream:
   return MPEG2TransportStreamFramer::createNew(envir(), fileSource);
 }
 

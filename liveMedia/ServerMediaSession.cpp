@@ -111,7 +111,7 @@ void ServerMediaSession::testScaleFactor(float& scale) {
     subsession->testScaleFactor(ssscale);
     if (subsession == fSubsessionsHead) { // this is the first subsession
       minSSScale = maxSSScale = bestSSScale = ssscale;
-      bestDistanceTo1 = fabsf(ssscale - 1.0f);
+      bestDistanceTo1 = (float)fabs(ssscale - 1.0f);
     } else {
       if (ssscale < minSSScale) {
 	minSSScale = ssscale;
@@ -119,7 +119,7 @@ void ServerMediaSession::testScaleFactor(float& scale) {
 	maxSSScale = ssscale;
       }
 
-      float distanceTo1 = fabsf(ssscale - 1.0f);
+      float distanceTo1 = (float)fabs(ssscale - 1.0f);
       if (distanceTo1 < bestDistanceTo1) {
 	bestSSScale = ssscale;
 	bestDistanceTo1 = distanceTo1;

@@ -34,6 +34,14 @@ public:
   // "preferredFrameSize" == 0 means 'no preference'
   // "playTimePerFrame" is in microseconds
 
+  static ByteStreamFileSource* createNew(UsageEnvironment& env,
+					 FILE* fid,
+					 Boolean deleteFidOnClose = False,
+					 unsigned preferredFrameSize = 0,
+					 unsigned playTimePerFrame = 0);
+      // an alternative version of "createNew()" that's used if you already have
+      // an open file.
+
   unsigned fileSize() const { return fFileSize; }
       // 0 means zero-length, unbounded, or unknown
 
@@ -42,7 +50,8 @@ public:
 
 protected:
   ByteStreamFileSource(UsageEnvironment& env,
-		       FILE* fid, unsigned preferredFrameSize,
+		       FILE* fid, Boolean deleteFidOnClose,
+		       unsigned preferredFrameSize,
 		       unsigned playTimePerFrame);
 	// called only by createNew()
 
@@ -57,6 +66,7 @@ private:
   unsigned fPlayTimePerFrame;
   unsigned fLastPlayTime;
   unsigned fFileSize;
+  Boolean fDeleteFidOnClose;
 };
 
 #endif

@@ -48,9 +48,11 @@ Boolean BasicUDPSink::continuePlaying() {
 }
 
 void BasicUDPSink::continuePlaying1() {
-  fSource->getNextFrame(fOutputBuffer, fMaxPayloadSize,
-                        afterGettingFrame, this,
-                        onSourceClosure, this);
+  if (fSource != NULL) {
+    fSource->getNextFrame(fOutputBuffer, fMaxPayloadSize,
+			  afterGettingFrame, this,
+			  onSourceClosure, this);
+  }
 }
 
 void BasicUDPSink::afterGettingFrame(void* clientData, unsigned frameSize,

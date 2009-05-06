@@ -31,7 +31,7 @@ public:
   static MPEG2TransportFileServerMediaSubsession*
   createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource);
 
-private:
+protected:
   MPEG2TransportFileServerMediaSubsession(UsageEnvironment& env,
 					  char const* fileName,
 					  Boolean reuseFirstSource);

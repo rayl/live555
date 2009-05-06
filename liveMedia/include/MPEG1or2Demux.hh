@@ -63,8 +63,6 @@ public:
 
   FramedSource* inputSource() const { return fInputSource; }
 
-  void seekWithinSource(float seekNPT);
-
   class SCR {
   public:
     SCR();
@@ -72,10 +70,14 @@ public:
     u_int8_t highBit;
     u_int32_t remainingBits;
     u_int16_t extension;
+
+    Boolean isValid;
   };
-  SCR lastSeenSCR() const { return fLastSeenSCR; }
+  SCR& lastSeenSCR() { return fLastSeenSCR; }
 
   unsigned char mpegVersion() const { return fMPEGversion; }
+
+  void flushInput(); // should be called before any 'seek' on the underlying source
 
 private:
   MPEG1or2Demux(UsageEnvironment& env,

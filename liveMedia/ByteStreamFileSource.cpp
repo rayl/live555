@@ -36,9 +36,26 @@ ByteStreamFileSource::createNew(UsageEnvironment& env, char const* fileName,
   FILE* fid = OpenInputFile(env, fileName);
   if (fid == NULL) return NULL;
 
+  Boolean deleteFidOnClose = fid == stdin ? False : True;
   ByteStreamFileSource* newSource
-    = new ByteStreamFileSource(env, fid, preferredFrameSize, playTimePerFrame);
+    = new ByteStreamFileSource(env, fid, deleteFidOnClose,
+			       preferredFrameSize, playTimePerFrame);
   newSource->fFileSize = GetFileSize(fileName, fid);
+
+  return newSource;
+}
+
+ByteStreamFileSource*
+ByteStreamFileSource::createNew(UsageEnvironment& env, FILE* fid,
+				Boolean deleteFidOnClose,
+				unsigned preferredFrameSize,
+				unsigned playTimePerFrame) {
+  if (fid == NULL) return NULL;
+
+  ByteStreamFileSource* newSource
+    = new ByteStreamFileSource(env, fid, deleteFidOnClose,
+			       preferredFrameSize, playTimePerFrame);
+  newSource->fFileSize = GetFileSize(NULL, fid);
 
   return newSource;
 }
@@ -52,14 +69,16 @@ void ByteStreamFileSource::seekToByteRelative(int offset) {
 }
 
 ByteStreamFileSource::ByteStreamFileSource(UsageEnvironment& env, FILE* fid,
+					   Boolean deleteFidOnClose,
 					   unsigned preferredFrameSize,
 					   unsigned playTimePerFrame)
   : FramedFileSource(env, fid), fPreferredFrameSize(preferredFrameSize),
-    fPlayTimePerFrame(playTimePerFrame), fLastPlayTime(0), fFileSize(0) {
+    fPlayTimePerFrame(playTimePerFrame), fLastPlayTime(0), fFileSize(0),
+    fDeleteFidOnClose(deleteFidOnClose) {
 }
 
 ByteStreamFileSource::~ByteStreamFileSource() {
-  CloseInputFile(fFid);
+  if (fDeleteFidOnClose && fFid != NULL) fclose(fFid);
 }
 
 void ByteStreamFileSource::doGetNextFrame() {

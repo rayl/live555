@@ -47,6 +47,7 @@ public:
   virtual ~MPEG4VideoStreamParser();
 
 private: // redefined virtual functions:
+  virtual void flushInput();
   virtual unsigned parse();
 
 private:
@@ -163,6 +164,19 @@ void MPEG4VideoStreamParser::setParseState(MPEGParseState parseState) {
   fCurrentParseState = parseState;
   MPEGVideoStreamParser::setParseState();
 }
+
+void MPEG4VideoStreamParser::flushInput() {
+  fSecondsSinceLastTimeCode = 0;
+  fTotalTicksSinceLastTimeCode = 0;
+  fPrevNewTotalTicks = 0;
+  fPrevPictureCountDelta = 1;
+
+  StreamParser::flushInput();
+  if (fCurrentParseState != PARSING_VISUAL_OBJECT_SEQUENCE) {
+    setParseState(PARSING_VISUAL_OBJECT_SEQUENCE); // later, change to GOV or VOP? #####
+  }
+}
+
 
 unsigned MPEG4VideoStreamParser::parse() {
   try {

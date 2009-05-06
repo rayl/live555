@@ -116,6 +116,10 @@ unsigned AC3AudioStreamFramer::samplingRate() {
   return fParser->currentFrame().samplingFreq;
 }
 
+void AC3AudioStreamFramer::flushInput() {
+  fParser->flushInput();
+}
+
 void AC3AudioStreamFramer::doGetNextFrame() {
   fParser->registerReadInterest(fTo, fMaxSize);
   parseNextFrame();

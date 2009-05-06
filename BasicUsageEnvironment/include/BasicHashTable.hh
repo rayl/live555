@@ -38,6 +38,7 @@ public:
   virtual ~BasicHashTable();
   
   // Used to iterate through the members of the table:
+  class Iterator; friend class Iterator; // to make Sun's C++ compiler happy
   class Iterator: public HashTable::Iterator {
   public:
     Iterator(BasicHashTable& table);
@@ -91,7 +92,6 @@ private:
   }
 
 private:
-  friend class Iterator;
   TableEntry** fBuckets; // pointer to bucket array
   TableEntry* fStaticBuckets[SMALL_HASH_TABLE_SIZE];// used for small tables
   unsigned fNumBuckets, fNumEntries, fRebuildSize, fDownShift, fMask;

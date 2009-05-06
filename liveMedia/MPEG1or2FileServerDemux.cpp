@@ -28,6 +28,9 @@ MPEG1or2FileServerDemux::createNew(UsageEnvironment& env, char const* fileName,
   return new MPEG1or2FileServerDemux(env, fileName, reuseFirstSource);
 }
 
+static float MPEG1or2ProgramStreamFileDuration(UsageEnvironment& env,
+					       char const* fileName,
+					       unsigned& fileSize); // forward
 MPEG1or2FileServerDemux
 ::MPEG1or2FileServerDemux(UsageEnvironment& env, char const* fileName,
 			  Boolean reuseFirstSource)
@@ -35,7 +38,7 @@ MPEG1or2FileServerDemux
     fReuseFirstSource(reuseFirstSource),
     fSession0Demux(NULL), fLastCreatedDemux(NULL), fLastClientSessionId(~0) {
   fFileName = strDup(fileName);
-  fFileDuration = MPEG1or2ProgramStreamFileDuration(env, fileName);
+  fFileDuration = MPEG1or2ProgramStreamFileDuration(env, fileName, fFileSize);
 }
 
 MPEG1or2FileServerDemux::~MPEG1or2FileServerDemux() {
@@ -107,13 +110,16 @@ MPEG1or2FileServerDemux::newElementaryStream(unsigned clientSessionId,
 
 
 static Boolean getMPEG1or2TimeCode(FramedSource* dataSource,
+				   MPEG1or2Demux& parentDemux,
 				   Boolean returnFirstSeenCode,
 				   float& timeCode); // forward
 
-float MPEG1or2ProgramStreamFileDuration(UsageEnvironment& env, char const* fileName) {
-  //  fprintf(stderr, "#####@@@@@MPEG1or2ProgramStreamFileDuration(%s)\n", fileName);
+static float MPEG1or2ProgramStreamFileDuration(UsageEnvironment& env,
+					       char const* fileName,
+					       unsigned& fileSize) {
   FramedSource* dataSource = NULL;
   float duration = 0.0; // until we learn otherwise
+  fileSize = 0; // ditto
 
   do {
     // Open the input file as a 'byte-stream file source':
@@ -121,11 +127,11 @@ float MPEG1or2ProgramStreamFileDuration(UsageEnvironment& env, char const* fileN
     if (fileSource == NULL) break;
     dataSource = fileSource;
 
-    unsigned fileSize = fileSource->fileSize();
+    fileSize = fileSource->fileSize();
     if (fileSize == 0) break;
 
     // Create a MPEG demultiplexor that reads from that source.
-    MPEG1or2Demux* baseDemux = MPEG1or2Demux::createNew(env, dataSource);
+    MPEG1or2Demux* baseDemux = MPEG1or2Demux::createNew(env, dataSource, True);
     if (baseDemux == NULL) break;
 
     // Create, from this, a source that returns raw PES packets:
@@ -133,18 +139,19 @@ float MPEG1or2ProgramStreamFileDuration(UsageEnvironment& env, char const* fileN
 
     // Read the first time code from the file:
     float firstTimeCode;
-    if (!getMPEG1or2TimeCode(dataSource, True, firstTimeCode)) break;
+    if (!getMPEG1or2TimeCode(dataSource, *baseDemux, True, firstTimeCode)) break;
 
-    
     // Then, read the last time code from the file.
-    // (Before doing this, seek towards the end of the file, for efficiency.)
+    // (Before doing this, flush the demux's input buffers, 
+    //  and seek towards the end of the file, for efficiency.)
+    baseDemux->flushInput();
     unsigned const startByteFromEnd = 100000;
     unsigned newFilePosition
       = fileSize < startByteFromEnd ? 0 : fileSize - startByteFromEnd;
     if (newFilePosition > 0) fileSource->seekToByteAbsolute(newFilePosition);
 
     float lastTimeCode;
-    if (!getMPEG1or2TimeCode(dataSource, False, lastTimeCode)) break;
+    if (!getMPEG1or2TimeCode(dataSource, *baseDemux, False, lastTimeCode)) break;
 
     // Take the difference between these time codes as being the file duration:
     float timeCodeDiff = lastTimeCode - firstTimeCode;
@@ -156,9 +163,98 @@ float MPEG1or2ProgramStreamFileDuration(UsageEnvironment& env, char const* fileN
   return duration;
 }
 
-static Boolean getMPEG1or2TimeCode(FramedSource* /*dataSource*/,
-				   Boolean /*returnFirstSeenCode*/,
+class DummySink: public MediaSink {
+public:
+  DummySink(MPEG1or2Demux& demux, Boolean returnFirstSeenCode);
+  virtual ~DummySink();
+
+  char watchVariable;
+
+private:
+  // redefined virtual function:
+  virtual Boolean continuePlaying();
+
+private:
+  static void afterGettingFrame(void* clientData, unsigned frameSize,
+                                unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+                                unsigned durationInMicroseconds);
+  void afterGettingFrame1();
+
+private:
+  MPEG1or2Demux& fOurDemux;
+  Boolean fReturnFirstSeenCode;
+  unsigned char fBuf[10000];
+};
+
+static void afterPlayingDummySink(DummySink* sink); // forward
+static float computeSCRTimeCode(MPEG1or2Demux::SCR const& scr); // forward
+
+static Boolean getMPEG1or2TimeCode(FramedSource* dataSource,
+				   MPEG1or2Demux& parentDemux,
+				   Boolean returnFirstSeenCode,
 				   float& timeCode) {
-  timeCode = 0.0; return True;//#####@@@@@
+  // Start reading through "dataSource", until we see a SCR time code:
+  parentDemux.lastSeenSCR().isValid = False;
+  UsageEnvironment& env = dataSource->envir(); // alias
+  DummySink sink(parentDemux, returnFirstSeenCode);
+  sink.startPlaying(*dataSource,
+		    (MediaSink::afterPlayingFunc*)afterPlayingDummySink, &sink);
+  env.taskScheduler().doEventLoop(&sink.watchVariable);
+  
+  timeCode = computeSCRTimeCode(parentDemux.lastSeenSCR());
+  return parentDemux.lastSeenSCR().isValid;
 }
 
+
+////////// DummySink implementation //////////
+
+DummySink::DummySink(MPEG1or2Demux& demux, Boolean returnFirstSeenCode)
+  : MediaSink(demux.envir()),
+    watchVariable(0), fOurDemux(demux), fReturnFirstSeenCode(returnFirstSeenCode) {
+}
+
+DummySink::~DummySink() {
+}
+
+Boolean DummySink::continuePlaying() {
+  fSource->getNextFrame(fBuf, sizeof fBuf,
+			afterGettingFrame, this,
+			onSourceClosure, this);
+  return True;
+}
+
+void DummySink::afterGettingFrame(void* clientData, unsigned /*frameSize*/,
+				  unsigned /*numTruncatedBytes*/,
+				  struct timeval /*presentationTime*/,
+				  unsigned /*durationInMicroseconds*/) {
+  DummySink* sink = (DummySink*)clientData;
+  sink->afterGettingFrame1();
+}
+
+void DummySink::afterGettingFrame1() {
+  if (fReturnFirstSeenCode && fOurDemux.lastSeenSCR().isValid) {
+    // We were asked to return the first SCR that we saw, and we've seen one,
+    // so we're done.  (Handle this as if the input source had closed.)
+    onSourceClosure(this);
+    return;
+  }
+
+  continuePlaying();
+}
+
+static void afterPlayingDummySink(DummySink* sink) {
+  // Return from the "doEventLoop()" call: 
+  sink->watchVariable = ~0;
+}
+
+static float computeSCRTimeCode(MPEG1or2Demux::SCR const& scr) {
+  float result = (float)(scr.remainingBits/90000.0 + scr.extension/300.0);
+  if (scr.highBit) {
+    // Add (2^32)/90000 == (2^28)/5625
+    float const highBitValue = (float)((256*1024*1024)/5625.0);
+    result += highBitValue;
+  }
+
+  return result;
+}

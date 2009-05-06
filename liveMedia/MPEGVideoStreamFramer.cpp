@@ -42,15 +42,29 @@ MPEGVideoStreamFramer::MPEGVideoStreamFramer(UsageEnvironment& env,
 					     FramedSource* inputSource)
   : FramedFilter(env, inputSource),
     fFrameRate(0.0) /* until we learn otherwise */,
-    fPictureCount(0), fPictureEndMarker(False),
-    fPicturesAdjustment(0), fPictureTimeBase(0.0), fTcSecsBase(0),
-    fHaveSeenFirstTimeCode(False) {
-  // Use the current wallclock time as the base 'presentation time':
-  gettimeofday(&fPresentationTimeBase, NULL);
+    fParser(NULL) {
+  reset();
 }
 
 MPEGVideoStreamFramer::~MPEGVideoStreamFramer() {
   delete fParser;
+}
+
+void MPEGVideoStreamFramer::flushInput() {
+  reset();
+  if (fParser != NULL) fParser->flushInput();
+}
+
+void MPEGVideoStreamFramer::reset() {
+  fPictureCount = 0;
+  fPictureEndMarker = False;
+  fPicturesAdjustment = 0;
+  fPictureTimeBase = 0.0;
+  fTcSecsBase = 0;
+  fHaveSeenFirstTimeCode = False;
+
+  // Use the current wallclock time as the base 'presentation time':
+  gettimeofday(&fPresentationTimeBase, NULL);
 }
 
 #ifdef DEBUG
@@ -65,6 +79,7 @@ void MPEGVideoStreamFramer
   double pictureTime = fFrameRate == 0.0 ? 0.0
     : (tc.pictures + fPicturesAdjustment + numAdditionalPictures)/fFrameRate
     - fPictureTimeBase;
+  if (pictureTime < 0.0) pictureTime = 0.0; // sanity check
   unsigned pictureSeconds = (unsigned)pictureTime;
   double pictureFractionOfSecond = pictureTime - (double)pictureSeconds;
 

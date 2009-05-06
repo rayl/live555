@@ -94,15 +94,47 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
   // Handle any delayed event that may have come due:
   fDelayQueue.handleAlarm();
   
-  // Call the handler function for each readable socket:
+  // Call the handler function for one readable socket:
   HandlerIterator iter(*fReadHandlers);
   HandlerDescriptor* handler;
+  // To ensure forward progress through the handlers, begin past the last
+  // socket number that we handled:
+  if (fLastHandledSocketNum >= 0) {
+    while ((handler = iter.next()) != NULL) {
+      if (handler->socketNum == fLastHandledSocketNum) break;
+    }
+    if (handler == NULL) {
+      fLastHandledSocketNum = -1;
+      iter.reset(); // start from the beginning instead
+    }
+  }
   while ((handler = iter.next()) != NULL) {
     if (FD_ISSET(handler->socketNum, &readSet) &&
 	FD_ISSET(handler->socketNum, &fReadSet) /* sanity check */ &&
 	handler->handlerProc != NULL) {
+      fLastHandledSocketNum = handler->socketNum;
+          // Note: we set "fLastHandledSocketNum" before calling the handler,
+          // in case the handler calls "doEventLoop()" reentrantly.
       (*handler->handlerProc)(handler->clientData, SOCKET_READABLE);
+      break;
     }
+  }
+  if (handler == NULL && fLastHandledSocketNum >= 0) {
+    // We didn't call a handler, but we didn't get to check all of them,
+    // so try again from the beginning:
+    iter.reset();
+    while ((handler = iter.next()) != NULL) {
+      if (FD_ISSET(handler->socketNum, &readSet) &&
+	  FD_ISSET(handler->socketNum, &fReadSet) /* sanity check */ &&
+	  handler->handlerProc != NULL) {
+	fLastHandledSocketNum = handler->socketNum;
+	    // Note: we set "fLastHandledSocketNum" before calling the handler,
+            // in case the handler calls "doEventLoop()" reentrantly.
+	(*handler->handlerProc)(handler->clientData, SOCKET_READABLE);
+	break;
+      }
+    }
+    if (handler == NULL) fLastHandledSocketNum = -1;//because we didn't call a handler
   }
 }
 

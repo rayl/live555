@@ -123,6 +123,8 @@ private:
 			char const* cseq, char const* fullRequestStr);
     void handleCmd_PAUSE(ServerMediaSubsession* subsession,
 			 char const* cseq);
+    void handleCmd_GET_PARAMETER(ServerMediaSubsession* subsession,
+				 char const* cseq, char const* fullRequestStr);
     Boolean authenticationOK(char const* cmdName, char const* cseq,
 			     char const* fullRequestStr);
     Boolean parseRequestString(char const *reqStr, unsigned reqStrSize,
@@ -142,7 +144,7 @@ private:
     int fClientSocket;
     struct sockaddr_in fClientAddr;
     unsigned char fBuffer[10000];
-    Boolean fSessionIsActive;
+    Boolean fSessionIsActive, fStreamAfterSETUP;
     Authenticator fCurrentAuthenticator; // used if access control is needed
     unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
     unsigned fNumStreamStates; 
