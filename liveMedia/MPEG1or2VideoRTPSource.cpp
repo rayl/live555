@@ -40,13 +40,12 @@ MPEG1or2VideoRTPSource::~MPEG1or2VideoRTPSource() {
 }
 
 Boolean MPEG1or2VideoRTPSource
-::processSpecialHeader(unsigned char* headerStart, unsigned packetSize,
-		       Boolean /*rtpMarkerBit*/,
+::processSpecialHeader(BufferedPacket* packet,
 		       unsigned& resultSpecialHeaderSize) {
   // There's a 4-byte video-specific header
-  if (packetSize < 4) return False;
+  if (packet->dataSize() < 4) return False;
 
-  u_int32_t header = ntohl(*(unsigned*)headerStart);
+  u_int32_t header = ntohl(*(unsigned*)(packet->data()));
 
   u_int32_t sBit = header&0x00002000; // sequence-header-present
   u_int32_t bBit = header&0x00001000; // beginning-of-slice

@@ -104,15 +104,16 @@ MPEG4GenericRTPSource::~MPEG4GenericRTPSource() {
 }
 
 Boolean MPEG4GenericRTPSource
-::processSpecialHeader(unsigned char* headerStart,
-		       unsigned packetSize,
-		       Boolean rtpMarkerBit,
+::processSpecialHeader(BufferedPacket* packet,
 		       unsigned& resultSpecialHeaderSize) {
+  unsigned char* headerStart = packet->data();
+  unsigned packetSize = packet->dataSize();
+
   fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame;
           // whether the *previous* packet ended a frame
 
   // The RTP "M" (marker) bit indicates the last fragment of a frame:
-  fCurrentPacketCompletesFrame = rtpMarkerBit;
+  fCurrentPacketCompletesFrame = packet->rtpMarkerBit();
 
   // default values:
   resultSpecialHeaderSize = 0;

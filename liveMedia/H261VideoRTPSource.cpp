@@ -40,17 +40,16 @@ H261VideoRTPSource::~H261VideoRTPSource() {
 }
 
 Boolean H261VideoRTPSource
-::processSpecialHeader(unsigned char* headerStart, unsigned packetSize,
-		       Boolean rtpMarkerBit,
+::processSpecialHeader(BufferedPacket* packet,
                        unsigned& resultSpecialHeaderSize) {
   // There's a 4-byte video-specific header
-  if (packetSize < 4) return False;
+  if (packet->dataSize() < 4) return False;
 
   fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame;
   // whether the *previous* packet ended a frame
 
   // The RTP "M" (marker) bit indicates the last fragment of a frame:
-  fCurrentPacketCompletesFrame = rtpMarkerBit;
+  fCurrentPacketCompletesFrame = packet->rtpMarkerBit();
 
   resultSpecialHeaderSize = 4;
   return True;

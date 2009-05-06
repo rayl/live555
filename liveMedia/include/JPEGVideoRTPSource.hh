@@ -25,19 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MultiFramedRTPSource.hh"
 #endif
 
-enum {
-	MARKER_SOF0	= 0xc0,		// start-of-frame, baseline scan
-	MARKER_SOI	= 0xd8,		// start of image
-	MARKER_EOI	= 0xd9,		// end of image
-	MARKER_SOS	= 0xda,		// start of scan
-	MARKER_DRI	= 0xdd,		// restart interval
-	MARKER_DQT	= 0xdb,		// define quantization tables
-	MARKER_DHT  = 0xc4,		// huffman tables
-	MARKER_APP_FIRST	= 0xe0,
-	MARKER_APP_LAST		= 0xef,
-	MARKER_COMMENT		= 0xfe,
-};
-
 #define MAX_JPEG_HEADER_SIZE 1024
 
 class JPEGVideoRTPSource: public MultiFramedRTPSource {
@@ -46,19 +33,6 @@ public:
   createNew(UsageEnvironment& env, Groupsock* RTPgs,
 	    unsigned char rtpPayloadFormat = 26,
 	    unsigned rtpPayloadFrequency = 90000);
-
-  Boolean detected;
-  unsigned type;
-  unsigned width;
-  unsigned height;
-  unsigned quality;
-  unsigned dri;
-  unsigned char* qtables;
-  unsigned qtlen;
-  unsigned char header[MAX_JPEG_HEADER_SIZE];
-  unsigned hdrlen;
-  unsigned framesize;
-
 
 protected:
   virtual ~JPEGVideoRTPSource();
@@ -71,12 +45,10 @@ private:
 
 private:
   // redefined virtual functions:
-  virtual Boolean processSpecialHeader(unsigned char* headerStart,
-                                       unsigned packetSize,
-									   Boolean rtpMarkerBit,
+  virtual Boolean processSpecialHeader(BufferedPacket* packet,
                                        unsigned& resultSpecialHeaderSize);
-
-					virtual char const* MIMEtype() const; 
+  
+  virtual char const* MIMEtype() const; 
 };
 
 #endif

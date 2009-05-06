@@ -41,9 +41,11 @@ AC3AudioRTPSource::~AC3AudioRTPSource() {
 }
 
 Boolean AC3AudioRTPSource
-::processSpecialHeader(unsigned char* headerStart, unsigned packetSize,
-		       Boolean rtpMarkerBit,
-                       unsigned& resultSpecialHeaderSize) {
+::processSpecialHeader(BufferedPacket* packet,
+		       unsigned& resultSpecialHeaderSize) {
+  unsigned char* headerStart = packet->data();
+  unsigned packetSize = packet->dataSize();
+
   // There's a 1-byte "NDU" header, containing the number of frames
   // present in this RTP packet.
   if (packetSize < 2) return False;
@@ -65,7 +67,7 @@ Boolean AC3AudioRTPSource
   // whether the *previous* packet ended a frame
 
   // The RTP "M" (marker) bit indicates the last fragment of a frame:
-  fCurrentPacketCompletesFrame = rtpMarkerBit;
+  fCurrentPacketCompletesFrame = packet->rtpMarkerBit();
 
   resultSpecialHeaderSize = 2;
   return True;

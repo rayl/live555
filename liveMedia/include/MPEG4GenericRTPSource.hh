@@ -55,9 +55,7 @@ private:
 
 private:
   // redefined virtual functions:
-  virtual Boolean processSpecialHeader(unsigned char* headerStart,
-                                       unsigned packetSize,
-                                       Boolean rtpMarkerBit,
+  virtual Boolean processSpecialHeader(BufferedPacket* packet,
                                        unsigned& resultSpecialHeaderSize);
   virtual char const* MIMEtype() const; 
 

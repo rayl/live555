@@ -53,11 +53,10 @@ SimpleRTPSource::~SimpleRTPSource() {
 }
 
 Boolean SimpleRTPSource
-::processSpecialHeader(unsigned char* /*headerStart*/,
-		       unsigned /*packetSize*/,
-		       Boolean rtpMarkerBit,
+::processSpecialHeader(BufferedPacket* packet,
 		       unsigned& resultSpecialHeaderSize) {
-  fCurrentPacketCompletesFrame = !fUseMBitForFrameEnd || rtpMarkerBit;
+  fCurrentPacketCompletesFrame
+    = !fUseMBitForFrameEnd || packet->rtpMarkerBit();
 
   resultSpecialHeaderSize = fOffset;
   return True;

@@ -84,9 +84,11 @@ QuickTimeGenericRTPSource::~QuickTimeGenericRTPSource() {
 }
 
 Boolean QuickTimeGenericRTPSource
-::processSpecialHeader(unsigned char* headerStart, unsigned packetSize,
-		       Boolean rtpMarkerBit,
+::processSpecialHeader(BufferedPacket* packet,
                        unsigned& resultSpecialHeaderSize) {
+  unsigned char* headerStart = packet->data();
+  unsigned packetSize = packet->dataSize();
+
   // The "QuickTime Header" must be at least 4 bytes in size:
   // Extract the known fields from the first 4 bytes:
   unsigned expectedHeaderSize = 4;
@@ -231,7 +233,7 @@ Boolean QuickTimeGenericRTPSource
 
   fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame;
           // whether the *previous* packet ended a frame
-  fCurrentPacketCompletesFrame = rtpMarkerBit;
+  fCurrentPacketCompletesFrame = packet->rtpMarkerBit();
 
   resultSpecialHeaderSize = expectedHeaderSize;
 #ifdef DEBUG

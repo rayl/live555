@@ -43,9 +43,7 @@ private:
 
 private:
   // redefined virtual functions:
-  virtual Boolean processSpecialHeader(unsigned char* headerStart,
-                                       unsigned packetSize,
-				       Boolean rtpMarkerBit,
+  virtual Boolean processSpecialHeader(BufferedPacket* packet,
                                        unsigned& resultSpecialHeaderSize);
   virtual Boolean packetIsUsableInJitterCalculation(unsigned char* packet,
 						    unsigned packetSize);

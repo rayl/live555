@@ -75,9 +75,7 @@ MultiFramedRTPSource::~MultiFramedRTPSource() {
 }
 
 Boolean MultiFramedRTPSource
-::processSpecialHeader(unsigned char* /*headerStart*/,
-		       unsigned /*packetSize*/,
-		       Boolean /*rtpMarkerBit*/,
+::processSpecialHeader(BufferedPacket* /*packet*/,
 		       unsigned& resultSpecialHeaderSize) {
   // Default implementation: Assume no special header:
   resultSpecialHeaderSize = 0;
@@ -120,10 +118,7 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 	// Before using the packet, check whether it has a special header
 	// that needs to be processed:
 	unsigned specialHeaderSize;
-	if (!processSpecialHeader(nextPacket->data(),
-				  nextPacket->dataSize(),
-				  nextPacket->rtpMarkerBit(),
-				  specialHeaderSize)) {
+	if (!processSpecialHeader(nextPacket, specialHeaderSize)) {
 	  // Something's wrong with the header; reject the packet:
 	  fReorderingBuffer->releaseUsedPacket(nextPacket);
 	  fNeedDelivery = True;

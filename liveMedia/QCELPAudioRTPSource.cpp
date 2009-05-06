@@ -50,9 +50,7 @@ private:
 
 private:
   // redefined virtual functions:
-  virtual Boolean processSpecialHeader(unsigned char* headerStart,
-                                       unsigned packetSize,
-				       Boolean rtpMarkerBit,
+  virtual Boolean processSpecialHeader(BufferedPacket* packet,
                                        unsigned& resultSpecialHeaderSize);
   virtual char const* MIMEtype() const; 
 
@@ -168,9 +166,11 @@ RawQCELPRTPSource::~RawQCELPRTPSource() {
 }
 
 Boolean RawQCELPRTPSource
-::processSpecialHeader(unsigned char* headerStart, unsigned packetSize,
-		       Boolean /*rtpMarkerBit*/,
+::processSpecialHeader(BufferedPacket* packet,
 		       unsigned& resultSpecialHeaderSize) {
+  unsigned char* headerStart = packet->data();
+  unsigned packetSize = packet->dataSize();
+
   // First, check whether this packet's RTP timestamp is synchronized:
   if (RTPSource::hasBeenSynchronizedUsingRTCP()) {
     ++fNumSuccessiveSyncedPackets;

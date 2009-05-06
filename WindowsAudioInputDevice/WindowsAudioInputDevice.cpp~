@@ -94,7 +94,6 @@ AudioPortNames* AudioInputDevice::getPortNames() {
 			mixerNameBuffer[0] = '\0';
 		} else {
 			strncpy(mixerNameBuffer, mixer.name, sizeof mixerNameBuffer);
-#if 0
 			// Hack: Simplify the mixer name, by truncating after the first space character:
 			for (int k = 0; k < sizeof mixerNameBuffer && mixerNameBuffer[k] != '\0'; ++k) {
 				if (mixerNameBuffer[k] == ' ') {
@@ -102,7 +101,6 @@ AudioPortNames* AudioInputDevice::getPortNames() {
 					break;
 				}
 			}
-#endif
 		}
 
 		for (unsigned j = 0; j < mixer.numPorts; ++j) {

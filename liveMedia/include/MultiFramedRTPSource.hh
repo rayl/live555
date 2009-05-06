@@ -26,6 +26,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTPSource.hh"
 #endif
 
+class BufferedPacket; // forward
 class BufferedPacketFactory; // forward
 
 class MultiFramedRTPSource: public RTPSource {
@@ -37,9 +38,7 @@ protected:
       // virtual base class
   virtual ~MultiFramedRTPSource();
 
-  virtual Boolean processSpecialHeader(unsigned char* headerStart,
-				       unsigned packetSize,
-				       Boolean rtpMarkerBit,
+  virtual Boolean processSpecialHeader(BufferedPacket* packet,
 				       unsigned& resultSpecialHeaderSize);
       // Subclasses redefine this to handle any special, payload format
       // specific header that follows the RTP header.

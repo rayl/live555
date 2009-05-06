@@ -41,13 +41,10 @@ MPEG1or2AudioRTPSource::~MPEG1or2AudioRTPSource() {
 }
 
 Boolean MPEG1or2AudioRTPSource
-::processSpecialHeader(unsigned char* headerStart, unsigned packetSize,
-		       Boolean /*rtpMarkerBit*/,
+::processSpecialHeader(BufferedPacket* packet,
                        unsigned& resultSpecialHeaderSize) {
   // There's a 4-byte header indicating fragmentation.
-  if (packetSize < 4) return False;
-
-  //unsigned header = ntohl(*(unsigned*)headerStart);
+  if (packet->dataSize() < 4) return False;
 
   // Note: This fragmentation header is actually useless to us, because
   // it doesn't tell us whether or not this RTP packet *ends* a

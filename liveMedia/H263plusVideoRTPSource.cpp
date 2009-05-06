@@ -40,9 +40,11 @@ H263plusVideoRTPSource::~H263plusVideoRTPSource() {
 }
 
 Boolean H263plusVideoRTPSource
-::processSpecialHeader(unsigned char* headerStart, unsigned packetSize,
-		       Boolean rtpMarkerBit,
+::processSpecialHeader(BufferedPacket* packet,
                        unsigned& resultSpecialHeaderSize) {
+  unsigned char* headerStart = packet->data();
+  unsigned packetSize = packet->dataSize();
+
   // The H.263+ payload header is at least 2 bytes in size.
   // Extract the known fields from the first 2 bytes:
   unsigned expectedHeaderSize = 2;
@@ -93,7 +95,7 @@ Boolean H263plusVideoRTPSource
   }
 
   // The RTP "M" (marker) bit indicates the last fragment of a frame:
-  fCurrentPacketCompletesFrame = rtpMarkerBit;
+  fCurrentPacketCompletesFrame = packet->rtpMarkerBit();
 
   resultSpecialHeaderSize = expectedHeaderSize;
   return True;
