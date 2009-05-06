@@ -1521,6 +1521,9 @@ Boolean RTSPClient::parseRTSPURL(UsageEnvironment& env, char const* url,
     char const* from = &url[prefixLength];
 
     // Skip over any "<username>[:<password>]@"
+    // (Note that this code fails if <password> contains '@' or '/', but
+    // given that these characters can also appear in <etc>, there seems to
+    // be no way of unambiguously parsing that situation.)
     char const* from1 = from;
     while (*from1 != '\0' && *from1 != '/') {
       if (*from1 == '@') {
