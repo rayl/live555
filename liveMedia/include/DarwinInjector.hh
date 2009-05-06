@@ -31,12 +31,26 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <RTCP.hh>
 #endif
 
-// To use a "DarwinInjector":
-//   1/ Create RTP sinks and RTCP instances for each audio or video subsession.
-//      (Note: These can use 0.0.0.0 for the address of each 'groupsock')
-//   2/ Call "addStream()" for each.
-//   3/ Call "setDestination()" to specify the remote Darwin Streaming Server.
-//   4/ Call "startPlaying" on each RTP sink (from the corresponding data source). 
+/*
+To use a "DarwinInjector":
+  1/ Create RTP sinks and RTCP instances for each audio or video subsession.
+       Note: These can use 0.0.0.0 for the address, and 0 for the port number,
+       of each 'groupsock')
+  2/ Call "addStream()" for each.
+  3/ Call "setDestination()" to specify the remote Darwin Streaming Server.
+     Note: You must have 'write' permission on the Darwin Streaming Server.
+       This can be set up using a "qtaccess" file in the server's 'movies'
+       directory.  For example, the following "qtaccess" file allows anyone to
+       play streams from the server, but allows only valid users to
+       inject streams *into* the server:
+           <Limit WRITE>
+           require valid-user
+           </Limit>
+           require any-user
+     Use the "remoteUserName" and "remotePassword" parameters to
+     "setDestination()", as appropriate. 
+  4/ Call "startPlaying" on each RTP sink (from the corresponding 'source'). 
+*/
 
 class SubstreamDescriptor; // forward
 

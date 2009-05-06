@@ -100,6 +100,7 @@ void afterPlaying(void* /*clientData*/) {
   Medium::close(videoSource);
   // Note that this also closes the input file that this source read from.
 
+  // Start playing once again:
   play();
 }
 

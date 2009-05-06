@@ -1,6 +1,6 @@
 ##### End of variables to change
 
-ALL = testMP3Streamer$(EXE) testMP3Receiver$(EXE) testRelay$(EXE) testMPEG1or2Splitter$(EXE) testMPEG1or2VideoStreamer$(EXE) testMPEG1or2VideoReceiver$(EXE) testMPEG1or2AudioVideoStreamer$(EXE) testMPEG4VideoStreamer$(EXE) testWAVAudioStreamer$(EXE) testAMRAudioStreamer$(EXE) testOnDemandRTSPServer$(EXE) vobStreamer$(EXE) openRTSP$(EXE) playSIP$(EXE) sapWatch$(EXE) testMPEG1or2AudioVideoToDarwin$(EXE)
+ALL = testMP3Streamer$(EXE) testMP3Receiver$(EXE) testRelay$(EXE) testMPEG1or2Splitter$(EXE) testMPEG1or2VideoStreamer$(EXE) testMPEG1or2VideoReceiver$(EXE) testMPEG1or2AudioVideoStreamer$(EXE) testMPEG4VideoStreamer$(EXE) testWAVAudioStreamer$(EXE) testAMRAudioStreamer$(EXE) testOnDemandRTSPServer$(EXE) vobStreamer$(EXE) openRTSP$(EXE) playSIP$(EXE) sapWatch$(EXE) testMPEG1or2AudioVideoToDarwin$(EXE) testMPEG4VideoToDarwin$(EXE)
 all:	$(ALL)
 
 misc:	testGSMStreamer$(EXE)
@@ -27,6 +27,7 @@ OPEN_RTSP_OBJS    = openRTSP.$(OBJ) playCommon.$(OBJ)
 PLAY_SIP_OBJS     = playSIP.$(OBJ) playCommon.$(OBJ)
 SAP_WATCH_OBJS = sapWatch.$(OBJ)
 MPEG_1OR2_AUDIO_VIDEO_TO_DARWIN_OBJS = testMPEG1or2AudioVideoToDarwin.$(OBJ)
+MPEG_4_VIDEO_TO_DARWIN_OBJS = testMPEG4VideoToDarwin.$(OBJ)
 
 GSM_STREAMER_OBJS = testGSMStreamer.$(OBJ) testGSMEncoder.$(OBJ)
 
@@ -78,6 +79,8 @@ sapWatch$(EXE):	$(SAP_WATCH_OBJS) $(LOCAL_LIBS)
 	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(SAP_WATCH_OBJS) $(LIBS)
 testMPEG1or2AudioVideoToDarwin$(EXE):	$(MPEG_1OR2_AUDIO_VIDEO_TO_DARWIN_OBJS) $(LOCAL_LIBS)
 	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(MPEG_1OR2_AUDIO_VIDEO_TO_DARWIN_OBJS) $(LIBS)
+testMPEG4VideoToDarwin$(EXE):	$(MPEG_4_VIDEO_TO_DARWIN_OBJS) $(LOCAL_LIBS)
+	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(MPEG_4_VIDEO_TO_DARWIN_OBJS) $(LIBS)
 
 testGSMStreamer$(EXE):	$(GSM_STREAMER_OBJS) $(LOCAL_LIBS)
 	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(GSM_STREAMER_OBJS) $(LIBS)
