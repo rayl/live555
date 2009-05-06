@@ -61,8 +61,12 @@ private:
     unsigned days, hours, minutes, seconds, pictures;
   } TimeCode_t;
   TimeCode_t fCurGOPTimeCode;
+  double fPictureTimeBase;
+  unsigned fTcSecsBase;
+  Boolean fHaveSeenFirstTimeCode;
 
   void computeTimestamp(unsigned numAdditionalPictures); // sets fTimestamp
+  void setTimeCodeBaseParams();
   double getCurrentTimestamp() const;
 
 private: // parsing state

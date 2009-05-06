@@ -46,6 +46,9 @@ public:
   }
   unsigned char rtpPayloadType() const { return fRTPPayloadType; }
   unsigned rtpTimestampFrequency() const { return fTimestampFrequency; }
+  void setRTPTimestampFrequency(unsigned freq) {
+    fTimestampFrequency = freq;
+  }
   char const* rtpPayloadFormatName() const {return fRTPPayloadFormatName;}
 
   virtual char const* sdpMediaType() const; // for use in SDP m= lines

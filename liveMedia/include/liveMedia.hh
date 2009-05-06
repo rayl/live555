@@ -52,6 +52,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEGDemuxedElementaryStream.hh"
 #include "MPEGAudioStreamFramer.hh"
 #include "AC3AudioStreamFramer.hh"
+#include "AC3AudioRTPSource.hh"
+#include "AC3AudioRTPSink.hh"
 #include "MPEGVideoStreamFramer.hh"
 #include "DeviceSource.hh"
 #include "PrioritizedRTPStreamSelector.hh"

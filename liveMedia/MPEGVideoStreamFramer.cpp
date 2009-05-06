@@ -151,7 +151,8 @@ MPEGVideoStreamFramer::MPEGVideoStreamFramer(UsageEnvironment& env,
 					     double vshPeriod)
   : FramedFilter(env, inputSource),
     fPictureEndMarker(False), fPictureCount(0),
-    fFrameRate(0.0) /* until we learn otherwise (from a video seq hdr) */ {
+    fFrameRate(0.0) /* until we learn otherwise (from a video seq hdr) */,
+    fPictureTimeBase(0.0), fTcSecsBase(0), fHaveSeenFirstTimeCode(False) {
   // Use the current wallclock time as the base 'presentation time':
   gettimeofday(&fPresentationTimeBase, &Idunno);
 
@@ -221,12 +222,14 @@ void MPEGVideoStreamFramer
   // time_code, along with the "numAdditionalPictures" parameter:
   struct TimeCode& tc = fCurGOPTimeCode;
 
-  double pictureTime = (tc.pictures+numAdditionalPictures)/fFrameRate;
+  double pictureTime
+    = (tc.pictures+numAdditionalPictures)/fFrameRate - fPictureTimeBase;
   unsigned pictureSeconds = (unsigned)pictureTime;
   double pictureFractionOfSecond = pictureTime - (float)pictureSeconds;
 
+  unsigned tcSecs
+    = (((tc.days*24)+tc.hours)*60+tc.minutes)*60+tc.seconds - fTcSecsBase;
   fPresentationTime = fPresentationTimeBase;
-  unsigned tcSecs = (((tc.days*24)+tc.hours)*60+tc.minutes)*60+tc.seconds;
   fPresentationTime.tv_sec += tcSecs + pictureSeconds;
   fPresentationTime.tv_usec += (long)(pictureFractionOfSecond*1000000.0);
   if (fPresentationTime.tv_usec >= 1000000) {
@@ -236,6 +239,13 @@ void MPEGVideoStreamFramer
 #ifdef DEBUG_COMPUTE_TIMESTAMP
   fprintf(stderr, "MPEGVideoStreamFramer::computeTimestamp(%d) -> %d.%06d\n", numAdditionalPictures, fPresentationTime.tv_sec, fPresentationTime.tv_usec);
 #endif
+}
+
+void MPEGVideoStreamFramer::setTimeCodeBaseParams() {
+  struct TimeCode& tc = fCurGOPTimeCode;
+  fPictureTimeBase = tc.pictures/fFrameRate;
+  fTcSecsBase = (((tc.days*24)+tc.hours)*60+tc.minutes)*60+tc.seconds;
+  fHaveSeenFirstTimeCode = True;
 }
 
 double MPEGVideoStreamFramer::getCurrentTimestamp() const {
@@ -467,6 +477,9 @@ unsigned MPEGVideoStreamParser::parseGOPHeader() {
   tc.minutes = time_code_minutes;
   tc.seconds = time_code_seconds;
   tc.pictures = time_code_pictures;
+  if (!fUsingSource->fHaveSeenFirstTimeCode) {
+    fUsingSource->setTimeCodeBaseParams();
+  }
 
   fPicturesSinceLastGOP = 0;
 

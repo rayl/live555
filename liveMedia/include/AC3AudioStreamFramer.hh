@@ -31,6 +31,8 @@ public:
   createNew(UsageEnvironment& env, FramedSource* inputSource,
 	    unsigned char streamCode = 0x80);
 
+  unsigned samplingRate();
+
 private:
   AC3AudioStreamFramer(UsageEnvironment& env, FramedSource* inputSource,
 		       unsigned char streamCode);
