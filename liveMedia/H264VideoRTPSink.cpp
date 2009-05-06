@@ -50,7 +50,7 @@ H264VideoRTPSink
 
 H264VideoRTPSink::~H264VideoRTPSink() {
   delete[] fFmtpSDPLine;
-  delete fOurFragmenter;
+  Medium::close(fOurFragmenter);
   fSource = NULL;
 }
 
@@ -88,6 +88,7 @@ void H264VideoRTPSink::stopPlaying() {
 
   // Then, close our 'fragmenter' object:
   Medium::close(fOurFragmenter); fOurFragmenter = NULL;
+  fSource = NULL;
 }
 
 void H264VideoRTPSink::doSpecialFrameHandling(unsigned /*fragmentationOffset*/,
