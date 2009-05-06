@@ -112,6 +112,11 @@ protected:
   virtual void reset();
   virtual unsigned nextEnclosedFrameSize(unsigned char*& framePtr,
 					 unsigned dataSize);
+      // The above function has been deprecated.  Instead, new subclasses should use:
+  virtual void getNextEnclosedFrameParameters(unsigned char*& framePtr,
+					      unsigned dataSize,
+					      unsigned& frameSize,
+					      unsigned& frameDurationInMicroseconds);
 
   unsigned fPacketSize;
   unsigned char* fBuf;

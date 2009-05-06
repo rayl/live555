@@ -57,6 +57,9 @@ protected:
       // whether this frame can appear in position >1 in a pkt (default: True)
   virtual unsigned specialHeaderSize() const;
       // returns the size of any special header used (following the RTP header)
+  virtual unsigned frameSpecificHeaderSize() const;
+      // returns the size of any frame-specific header used (before each frame
+      // within the packet)
 
   // Functions that might be called by doSpecialFrameHandling():
   Boolean isFirstPacket() const { return fIsFirstPacket; }
@@ -68,6 +71,10 @@ protected:
 			    unsigned wordPosition = 0);
   void setSpecialHeaderBytes(unsigned char const* bytes, unsigned numBytes,
 			     unsigned bytePosition = 0);
+  void setFrameSpecificHeaderWord(unsigned word, /* 32 bits, in host order */
+				  unsigned wordPosition = 0);
+  void setFrameSpecificHeaderBytes(unsigned char const* bytes, unsigned numBytes,
+				   unsigned bytePosition = 0);
   unsigned numFramesUsedSoFar() const { return fNumFramesUsedSoFar; }
 
 private: // redefined virtual functions:
@@ -105,6 +112,9 @@ private:
   unsigned fTimestampPosition;
   unsigned fSpecialHeaderPosition;
   unsigned fSpecialHeaderSize; // size in bytes of any special header used
+  unsigned fCurFrameSpecificHeaderPosition;
+  unsigned fCurFrameSpecificHeaderSize; // size in bytes of cur frame-specific header
+  unsigned fTotalFrameSpecificHeaderSizes; // size of all frame-specific hdrs in pkt
 };
 
 #endif
