@@ -222,13 +222,14 @@ unsigned MPEG1or2VideoStreamParser
 #endif
   unsigned first4Bytes;
   if (!haveSeenStartCode) {
-    while ((first4Bytes = get4Bytes()) != VIDEO_SEQUENCE_HEADER_START_CODE) {
+    while ((first4Bytes = test4Bytes()) != VIDEO_SEQUENCE_HEADER_START_CODE) {
 #ifdef DEBUG
       fprintf(stderr, "ignoring non video sequence header: 0x%08x\n", first4Bytes);
 #endif
-      setParseState(PARSING_VIDEO_SEQUENCE_HEADER);
+      get1Byte(); setParseState(PARSING_VIDEO_SEQUENCE_HEADER);
           // ensures we progress over bad data
     }
+    first4Bytes = get4Bytes();
   } else {
     // We've already seen the start code
     first4Bytes = VIDEO_SEQUENCE_HEADER_START_CODE;
@@ -377,11 +378,11 @@ unsigned MPEG1or2VideoStreamParser::parsePictureHeader() {
 }
 
 unsigned MPEG1or2VideoStreamParser::parseSlice() {
-#ifdef DEBUG_SLICE
-  fprintf(stderr, "parsing slice\n");
-#endif
   // Note that we've already read the slice_start_code:
   unsigned next4Bytes = PICTURE_START_CODE|fCurrentSliceNumber;
+#ifdef DEBUG_SLICE
+  fprintf(stderr, "parsing slice: 0x%08x\n", next4Bytes);
+#endif
 
   if (fSkippingCurrentPicture) {
     // Skip all bytes that we see, up until we reach a code of some sort:

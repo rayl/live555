@@ -650,12 +650,6 @@ void RTSPServer::RTSPClientSession
 
 void RTSPServer::RTSPClientSession
   ::handleCmd_TEARDOWN(ServerMediaSubsession* subsession, char const* cseq) {
-  for (unsigned i = 0; i < fNumStreamStates; ++i) {
-    if (subsession == NULL /* means: aggregated operation */
-	|| subsession == fStreamStates[i].subsession) {
-      fStreamStates[i].subsession->endStream(fStreamStates[i].streamToken);
-    }
-  }
   sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\n\r\n", cseq);
   fSessionIsActive = False; // triggers deletion of ourself after responding
 }

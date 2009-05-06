@@ -31,7 +31,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class OnDemandServerMediaSubsession: public ServerMediaSubsession {
 protected: // we're a virtual base class
-  OnDemandServerMediaSubsession(UsageEnvironment& env);
+  OnDemandServerMediaSubsession(UsageEnvironment& env,
+				Boolean reuseFirstSource = False);
   virtual ~OnDemandServerMediaSubsession();
 
 private: // redefined virtual functions
@@ -51,8 +52,7 @@ private: // redefined virtual functions
                                    void*& streamToken);
   virtual void startStream(void* streamToken);
   virtual void pauseStream(void* streamToken);
-  virtual void endStream(void* streamToken);
-  virtual void deleteStream(void* streamToken);
+  virtual void deleteStream(void*& streamToken);
 
 protected: // new virtual functions
   virtual char const* getAuxSDPLine(RTPSink* rtpSink,
@@ -71,6 +71,8 @@ private:
       // used to implement "sdpLines()"
 
 protected:
+  Boolean fReuseFirstSource;
+  void* fLastStreamToken;
   char* fSDPLines;
   char fCNAME[100]; // for RTCP
 };

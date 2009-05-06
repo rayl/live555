@@ -121,7 +121,7 @@ Boolean MPEG4GenericRTPSource
   resultSpecialHeaderSize = 0;
   fNumAUHeaders = 0;
   fNextAUHeader = 0;
-  fAUHeaders = NULL;
+  delete[] fAUHeaders; fAUHeaders = NULL;
 
   if (fSizeLength > 0) {
     // The packet begins with a "AU Header Section".  Parse it, to
@@ -141,7 +141,7 @@ Boolean MPEG4GenericRTPSource
       fNumAUHeaders = 1 + bitsAvail/(fSizeLength + fIndexDeltaLength);
     }
     if (fNumAUHeaders > 0) {
-      delete[] fAUHeaders; fAUHeaders = new AUHeader[fNumAUHeaders];
+      fAUHeaders = new AUHeader[fNumAUHeaders];
       // Fill in each header:
       BitVector bv(&headerStart[2], 0, AU_headers_length);
       fAUHeaders[0].size = bv.getBits(fSizeLength);

@@ -238,9 +238,6 @@ void ServerMediaSubsession::startStream(void* /*streamToken*/) {
 void ServerMediaSubsession::pauseStream(void* /*streamToken*/) {
   // default implementation: do nothing
 }
-void ServerMediaSubsession::endStream(void* /*streamToken*/) {
-  // default implementation: do nothing
-}
-void ServerMediaSubsession::deleteStream(void* /*streamToken*/) {
+void ServerMediaSubsession::deleteStream(void*& /*streamToken*/) {
   // default implementation: do nothing
 }
