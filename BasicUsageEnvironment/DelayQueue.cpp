@@ -58,7 +58,7 @@ DelayInterval operator-(const Timeval& arg1, const Timeval& arg2) {
     --secs;
   }
   if (secs < 0)
-    return ZERO;
+    return DELAY_ZERO;
   else
     return DelayInterval(secs, usecs);
 }
@@ -80,8 +80,8 @@ DelayInterval operator*(short arg1, const DelayInterval& arg2) {
 #ifndef INT_MAX
 #define INT_MAX	0x7FFFFFFF
 #endif
-const DelayInterval ZERO(0, 0);
-const DelayInterval SECOND(1, 0);
+const DelayInterval DELAY_ZERO(0, 0);
+const DelayInterval DELAY_SECOND(1, 0);
 const DelayInterval ETERNITY(INT_MAX, MILLION-1);
 // used internally to make the implementation work
 
@@ -162,16 +162,16 @@ DelayQueueEntry* DelayQueue::removeEntry(long tokenToFind) {
 }
 
 DelayInterval const& DelayQueue::timeToNextAlarm() {
-  if (head()->fDeltaTimeRemaining == ZERO) return ZERO; // a common case
+  if (head()->fDeltaTimeRemaining == DELAY_ZERO) return DELAY_ZERO; // a common case
 
   synchronize();
   return head()->fDeltaTimeRemaining;
 }
 
 void DelayQueue::handleAlarm() {
-  if (head()->fDeltaTimeRemaining != ZERO) synchronize();
+  if (head()->fDeltaTimeRemaining != DELAY_ZERO) synchronize();
 
-  if (head()->fDeltaTimeRemaining == ZERO) {
+  if (head()->fDeltaTimeRemaining == DELAY_ZERO) {
     // This event is due to be handled:
     DelayQueueEntry* toRemove = head();
     removeEntry(toRemove); // do this first, in case handler accesses queue
@@ -200,7 +200,7 @@ void DelayQueue::synchronize() {
   DelayQueueEntry* curEntry = head();
   while (timeSinceLastSync >= curEntry->fDeltaTimeRemaining) {
     timeSinceLastSync -= curEntry->fDeltaTimeRemaining;
-    curEntry->fDeltaTimeRemaining = ZERO;
+    curEntry->fDeltaTimeRemaining = DELAY_ZERO;
     curEntry = curEntry->fNext;
   }
   curEntry->fDeltaTimeRemaining -= timeSinceLastSync;

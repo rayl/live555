@@ -23,9 +23,16 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ////////// LATMBufferedPacket and LATMBufferedPacketFactory //////////
 
 class LATMBufferedPacket: public BufferedPacket {
+public:
+  LATMBufferedPacket(Boolean includeLATMDataLengthField);
+  virtual ~LATMBufferedPacket();
+
 private: // redefined virtual functions
   virtual unsigned nextEnclosedFrameSize(unsigned char*& framePtr,
                                  unsigned dataSize);
+
+private:
+  Boolean fIncludeLATMDataLengthField;
 };
 
 class LATMBufferedPacketFactory: public BufferedPacketFactory {
@@ -49,10 +56,15 @@ MPEG4LATMAudioRTPSource
 			  unsigned rtpTimestampFrequency)
   : MultiFramedRTPSource(env, RTPgs,
 			 rtpPayloadFormat, rtpTimestampFrequency,
-			 new LATMBufferedPacketFactory) {
+			 new LATMBufferedPacketFactory),
+    fIncludeLATMDataLengthField(True) {
 }
 
 MPEG4LATMAudioRTPSource::~MPEG4LATMAudioRTPSource() {
+}
+
+void MPEG4LATMAudioRTPSource::omitLATMDataLengthField() {
+  fIncludeLATMDataLengthField = False;
 }
 
 Boolean MPEG4LATMAudioRTPSource
@@ -76,6 +88,13 @@ char const* MPEG4LATMAudioRTPSource::MIMEtype() const {
 
 ////////// LATMBufferedPacket and LATMBufferedPacketFactory implementation
 
+LATMBufferedPacket::LATMBufferedPacket(Boolean includeLATMDataLengthField)
+  : fIncludeLATMDataLengthField(includeLATMDataLengthField) {
+}
+
+LATMBufferedPacket::~LATMBufferedPacket() {
+}
+
 unsigned LATMBufferedPacket
 ::nextEnclosedFrameSize(unsigned char*& framePtr, unsigned dataSize) {
   // Look at the LATM data length byte(s), to determine the size
@@ -87,19 +106,20 @@ unsigned LATMBufferedPacket
     if (framePtr[i] != 0xFF) break;
   }
   ++i;
-#ifdef OMIT_DATA_LENGTH_FIELD
-  framePtr += i;
-  dataSize -= i;
-#else
-  resultFrameSize += i;
-#endif
+  if (fIncludeLATMDataLengthField) {
+    resultFrameSize += i;
+  } else {
+    framePtr += i;
+    dataSize -= i;
+  }
 
   return (resultFrameSize <= dataSize) ? resultFrameSize : dataSize;
 }
 
 BufferedPacket* LATMBufferedPacketFactory
-::createNewPacket(MultiFramedRTPSource* /*ourSource*/) {
-  return new LATMBufferedPacket;
+::createNewPacket(MultiFramedRTPSource* ourSource) {
+  MPEG4LATMAudioRTPSource* source = (MPEG4LATMAudioRTPSource*)ourSource;
+  return new LATMBufferedPacket(source->returnedFrameIncludesLATMDataLengthField());
 }
 
 

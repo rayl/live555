@@ -109,11 +109,11 @@ public:
 
 DelayInterval operator*(short arg1, DelayInterval const& arg2);
 
-extern DelayInterval const ZERO;
-extern DelayInterval const SECOND;
-DelayInterval const MINUTE = 60*SECOND;
-DelayInterval const HOUR = 60*MINUTE;
-DelayInterval const DAY = 24*HOUR;
+extern DelayInterval const DELAY_ZERO;
+extern DelayInterval const DELAY_SECOND;
+DelayInterval const DELAY_MINUTE = 60*DELAY_SECOND;
+DelayInterval const DELAY_HOUR = 60*DELAY_MINUTE;
+DelayInterval const DELAY_DAY = 24*DELAY_HOUR;
 
 ///// EventTime /////
 
@@ -128,7 +128,7 @@ public:
 EventTime TimeNow();
 
 DelayInterval TimeRemainingUntil(EventTime const& futureEvent);
-// Returns ZERO if "futureEvent" has already occurred.
+// Returns DELAY_ZERO if "futureEvent" has already occurred.
 
 extern EventTime const THE_END_OF_TIME;
 

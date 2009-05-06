@@ -32,6 +32,12 @@ public:
 	    unsigned char rtpPayloadFormat,
 	    unsigned rtpTimestampFrequency);
 
+  // By default, the LATM data length field is included at the beginning of each
+  // returned frame.  To omit this field, call the following:
+  void omitLATMDataLengthField();
+
+  Boolean returnedFrameIncludesLATMDataLengthField() const { return fIncludeLATMDataLengthField; }
+
 protected:
   virtual ~MPEG4LATMAudioRTPSource();
 
@@ -46,6 +52,9 @@ private:
   virtual Boolean processSpecialHeader(BufferedPacket* packet,
                                        unsigned& resultSpecialHeaderSize);
   virtual char const* MIMEtype() const; 
+
+private:
+  Boolean fIncludeLATMDataLengthField;
 };
 
 
