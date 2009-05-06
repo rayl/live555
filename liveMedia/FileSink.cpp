@@ -24,6 +24,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 #include "FileSink.hh"
 #include "GroupsockHelper.hh"
+#include "OutputFile.hh"
 
 ////////// FileSink //////////
 
@@ -60,7 +61,7 @@ FileSink* FileSink::createNew(UsageEnvironment& env, char const* fileName,
       perFrameFileNamePrefix = fileName;
     } else {
       // Normal case: create the fid once
-      fid = openFileByName(env, fileName);
+      fid = OpenOutputFile(env, fileName);
       if (fid == NULL) break;
       perFrameFileNamePrefix = NULL;
     }
@@ -73,32 +74,6 @@ FileSink* FileSink::createNew(UsageEnvironment& env, char const* fileName,
 
   delete newSink;
   return NULL;
-}
-
-FILE* FileSink::openFileByName(UsageEnvironment& env,
-			       char const* fileName) {
-  FILE* fid;
-    
-  // Check for special case 'file names': "stdout" and "stderr"
-  if (strcmp(fileName, "stdout") == 0) {
-    fid = stdout;
-#if defined(__WIN32__) || defined(_WIN32)
-    _setmode(_fileno(stdout), _O_BINARY);	// convert to binary mode
-#endif
-  } else if (strcmp(fileName, "stderr") == 0) {
-    fid = stderr;
-#if defined(__WIN32__) || defined(_WIN32)
-    _setmode(_fileno(stderr), _O_BINARY);	// convert to binary mode
-#endif
-  } else {
-    fid = fopen(fileName, "wb");
-  }
-
-  if (fid == NULL) {
-    env.setResultMsg("unable to open file \"", fileName, "\"");
-  }
-
-  return fid;
 }
 
 Boolean FileSink::continuePlaying() {
@@ -125,7 +100,7 @@ void FileSink::addData(unsigned char* data, unsigned dataSize,
     // Special case: Open a new file on-the-fly for this frame
     sprintf(fPerFrameFileNameBuffer, "%s-%lu.%06lu", fPerFrameFileNamePrefix,
 	    presentationTime.tv_sec, presentationTime.tv_usec);
-    fOutFid = openFileByName(envir(), fPerFrameFileNameBuffer);
+    fOutFid = OpenOutputFile(envir(), fPerFrameFileNameBuffer);
   }
 
   // Write to our file:

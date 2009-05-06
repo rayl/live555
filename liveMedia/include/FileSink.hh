@@ -47,8 +47,6 @@ protected:
       // called only by createNew()
   virtual ~FileSink();
 
-  static FILE* openFileByName(UsageEnvironment& env, char const* fileName);
-
 protected:
   static void afterGettingFrame(void* clientData, unsigned frameSize,
 				unsigned numTruncatedBytes,

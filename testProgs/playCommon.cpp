@@ -59,6 +59,8 @@ Boolean createReceivers = True;
 Boolean outputQuickTimeFile = False;
 Boolean generateMP4Format = False;
 QuickTimeFileSink* qtOut = NULL;
+Boolean outputAVIFile = False;
+AVIFileSink* aviOut = NULL;
 Boolean audioOnly = False;
 Boolean videoOnly = False;
 char const* singleMedium = NULL;
@@ -103,7 +105,7 @@ struct timeval startTime;
 
 void usage() {
   *env << "Usage: " << progName
-       << " [-p <startPortNum>] [-r|-q|-4] [-a|-v] [-V] [-e <endTime>] [-E <max-inter-packet-gap-time> [-c] [-s <offset>] [-n] [-O]"
+       << " [-p <startPortNum>] [-r|-q|-4|-i] [-a|-v] [-V] [-e <endTime>] [-E <max-inter-packet-gap-time> [-c] [-s <offset>] [-n] [-O]"
 	   << (controlConnectionUsesTCP ? " [-t|-T <http-port>]" : "")
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
@@ -164,6 +166,11 @@ int main(int argc, char** argv) {
     case '4': { // output a 'mp4'-format file (to stdout)
       outputQuickTimeFile = True;
       generateMP4Format = True;
+      break;
+    }
+
+    case 'i': { // output an AVI file (to stdout)
+      outputAVIFile = True;
       break;
     }
 
@@ -404,12 +411,12 @@ int main(int argc, char** argv) {
     ++argv; --argc;
   }
   if (argc != 2) usage();
-  if (!createReceivers && outputQuickTimeFile) {
-    *env << "The -r and -q (or -4) flags cannot both be used!\n";
+  if (!createReceivers && (outputQuickTimeFile || outputAVIFile)) {
+    *env << "The -r and -q (or -4 or -i) flags cannot both be used!\n";
     usage();
   }
-  if (destRTSPURL != NULL && (!createReceivers || outputQuickTimeFile)) {
-    *env << "The -R flag cannot be used with -r or -q!\n";
+  if (destRTSPURL != NULL && (!createReceivers || outputQuickTimeFile || outputAVIFile)) {
+    *env << "The -R flag cannot be used with -r, -q, or -i!\n";
     usage();
   }
   if (audioOnly && videoOnly) {
@@ -580,11 +587,24 @@ int main(int argc, char** argv) {
 					   generateHintTracks,
 					   generateMP4Format);
       if (qtOut == NULL) {
-		*env << "Failed to create QuickTime file sink for stdout: " << env->getResultMsg();
-		shutdown();
+	*env << "Failed to create QuickTime file sink for stdout: " << env->getResultMsg();
+	shutdown();
       }
 
       qtOut->startPlaying(sessionAfterPlaying, NULL);
+    } else if (outputAVIFile) {
+      // Create an "AVIFileSink", to write to 'stdout':
+      aviOut = AVIFileSink::createNew(*env, *session, "stdout",
+				      fileSinkBufferSize,
+				      movieWidth, movieHeight,
+				      movieFPS,
+				      packetLossCompensate);
+      if (aviOut == NULL) {
+	*env << "Failed to create AVI file sink for stdout: " << env->getResultMsg();
+	shutdown();
+      }
+
+      aviOut->startPlaying(sessionAfterPlaying, NULL);
 #ifdef SUPPORT_REAL_RTSP
     } else if (session->isRealNetworksRDT) {
       // For RealNetworks' sessions, we create a single output file,
@@ -812,6 +832,7 @@ void tearDownStreams() {
 
 void closeMediaSinks() {
   Medium::close(qtOut);
+  Medium::close(aviOut);
 
   if (session == NULL) return;
   MediaSubsessionIterator iter(*session);
@@ -1055,8 +1076,7 @@ void printQOSData(int exitCode) {
 	numPacketsExpected = curQOSRecord->totNumPacketsExpected;
       }
       *env << "num_packets_received\t" << numPacketsReceived << "\n";
-      *env << "num_packets_lost\t"
-	   << (int)(numPacketsExpected - numPacketsReceived) << "\n";
+      *env << "num_packets_lost\t" << numPacketsExpected - numPacketsReceived << "\n";
       
       if (curQOSRecord != NULL) {
 	unsigned secsDiff = curQOSRecord->measurementEndTime.tv_sec
@@ -1184,10 +1204,12 @@ void checkForPacketArrival(void* /*clientData*/) {
   }
 
   unsigned numSubsessionsToCheck = numSubsessionsChecked;
+  // Special case for "QuickTimeFileSink"s and "AVIFileSink"s:
+  // They might not use all of the input sources:
   if (qtOut != NULL) {
-    // Special case for "QuickTimeFileSink"s: They might not use all of the
-    // input sources:
     numSubsessionsToCheck = qtOut->numActiveSubsessions();
+  } else if (aviOut != NULL) {
+    numSubsessionsToCheck = aviOut->numActiveSubsessions();
   }
 
   Boolean notifyTheUser;

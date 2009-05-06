@@ -176,7 +176,6 @@ private:
   unsigned fMDATposition;
   unsigned fMVHD_durationPosn;
   unsigned fMaxTrackDurationM; // in movie time units
-  MediaSubsession* fCurrentSubsession;
   class SubsessionIOState* fCurrentIOState;
 };
 

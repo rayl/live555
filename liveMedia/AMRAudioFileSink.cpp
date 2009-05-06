@@ -20,6 +20,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "AMRAudioFileSink.hh"
 #include "AMRAudioSource.hh"
+#include "OutputFile.hh"
 
 ////////// AMRAudioFileSink //////////
 
@@ -47,7 +48,7 @@ AMRAudioFileSink::createNew(UsageEnvironment& env, char const* fileName,
       perFrameFileNamePrefix = fileName;
     } else {
       // Normal case: create the fid once
-      fid = openFileByName(env, fileName);
+      fid = OpenOutputFile(env, fileName);
       if (fid == NULL) break;
       perFrameFileNamePrefix = NULL;
     }
