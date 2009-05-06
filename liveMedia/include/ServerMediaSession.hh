@@ -114,7 +114,7 @@ public:
 
   unsigned trackNumber() const { return fTrackNumber; }
   char const* trackId();
-  virtual char const* sdpLines(ServerMediaSession& parentSession) = 0;
+  virtual char const* sdpLines() = 0;
   virtual void getStreamParameters(unsigned clientSessionId, // in
 				   netAddressBits clientAddress, // in
 				   Port const& clientRTPPort, // in
@@ -150,9 +150,10 @@ public:
 protected: // we're a virtual base class
   ServerMediaSubsession(UsageEnvironment& env);
 
-  char const* rangeSDPLine(ServerMediaSession& parentSession) const;
+  char const* rangeSDPLine() const;
       // returns a string to be delete[]d
 
+  ServerMediaSession* fParentSession;
   netAddressBits fServerAddressForSDP;
   portNumBits fPortNumForSDP;
 

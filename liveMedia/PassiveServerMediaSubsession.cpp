@@ -37,7 +37,7 @@ PassiveServerMediaSubsession
 }
 
 char const*
-PassiveServerMediaSubsession::sdpLines(ServerMediaSession& parentSession) {
+PassiveServerMediaSubsession::sdpLines() {
   if (fSDPLines == NULL ) {
     // Construct a set of SDP lines that describe this subsession:
     // Use the components from "rtpSink":
@@ -48,7 +48,7 @@ PassiveServerMediaSubsession::sdpLines(ServerMediaSession& parentSession) {
     unsigned char rtpPayloadType = fRTPSink.rtpPayloadType();
     char const* mediaType = fRTPSink.sdpMediaType();
     char* rtpmapLine = fRTPSink.rtpmapLine();
-    char const* rangeLine = rangeSDPLine(parentSession);
+    char const* rangeLine = rangeSDPLine();
     char const* auxSDPLine = fRTPSink.auxSDPLine();
     if (auxSDPLine == NULL) auxSDPLine = "";
     

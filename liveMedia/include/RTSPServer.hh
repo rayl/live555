@@ -68,6 +68,7 @@ public:
 			      RTSPServer*& resultServer);
 
   void addServerMediaSession(ServerMediaSession* serverMediaSession);
+  ServerMediaSession* lookupServerMediaSession(char const* streamName);
   void removeServerMediaSession(ServerMediaSession* serverMediaSession);
   void removeServerMediaSession(char const* streamName);
 

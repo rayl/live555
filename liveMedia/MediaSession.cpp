@@ -528,7 +528,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fObjecttype(0), fOctetalign(0), fProfile_level_id(0), fRobustsorting(0),
     fSizelength(0), fStreamstateindication(0), fStreamtype(0),
     fCpresent(False), fRandomaccessindication(False),
-    fConfig(NULL), fMode(NULL),
+    fConfig(NULL), fMode(NULL), fSpropParameterSets(NULL),
     fPlayEndTime(0.0),
     fMCT_SLAP_SessionId(0), fMCT_SLAP_Stagger(0),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f),
@@ -544,7 +544,7 @@ MediaSubsession::~MediaSubsession() {
 
   delete[] fConnectionEndpointName; delete[] fSavedSDPLines;
   delete[] fMediumName; delete[] fCodecName; delete[] fProtocolName;
-  delete[] fControlPath; delete[] fConfig; delete[] fMode;
+  delete[] fControlPath; delete[] fConfig; delete[] fMode; delete[] fSpropParameterSets;
 
   delete fNext;
 #ifdef SUPPORT_REAL_RTSP
@@ -739,6 +739,11 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	  = H263plusVideoRTPSource::createNew(env(), fRTPSocket,
 					      fRTPPayloadFormat,
 					      fRTPTimestampFrequency);
+      } else if (strcmp(fCodecName, "H264") == 0) {
+	fReadSource = fRTPSource
+	  = H264VideoRTPSource::createNew(env(), fRTPSocket,
+					  fRTPPayloadFormat,
+					  fRTPTimestampFrequency);
       } else if (strcmp(fCodecName, "JPEG") == 0) { // motion JPEG
 	fReadSource = fRTPSource
 	  = JPEGVideoRTPSource::createNew(env(), fRTPSocket,
@@ -1042,6 +1047,9 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
 	delete[] fConfig; fConfig = strDup(valueStr);
       } else if (sscanf(line, " mode = %[^; \t\r\n]", valueStr) == 1) {
 	delete[] fMode; fMode = strDup(valueStr);
+      } else if (sscanf(sdpLine, " sprop-parameter-sets = %[^; \t\r\n]", valueStr) == 1) {
+	// Note: We used "sdpLine" here, because the value is case-sensitive.
+	delete[] fSpropParameterSets; fSpropParameterSets = strDup(valueStr); 
       } else {
 	// Some of the above parameters are Boolean.  Check whether the parameter
 	// names appear alone, without a "= 1" at the end:
@@ -1065,6 +1073,11 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
       while (*line != '\0' && *line != '\r' && *line != '\n'
 	     && *line != ';') ++line;
       while (*line == ';') ++line;
+
+      // Do the same with sdpLine; needed for finding case sensitive values:
+      while (*sdpLine != '\0' && *sdpLine != '\r' && *sdpLine != '\n'
+	     && *sdpLine != ';') ++sdpLine;
+      while (*sdpLine == ';') ++sdpLine;
     }
     delete[] lineCopy;
     return True;

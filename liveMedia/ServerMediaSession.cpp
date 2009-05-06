@@ -82,7 +82,7 @@ ServerMediaSession::~ServerMediaSession() {
 
 Boolean
 ServerMediaSession::addSubsession(ServerMediaSubsession* subsession) {
-  if (subsession->fTrackNumber != 0) return False; // it's already used
+  if (subsession->fParentSession != NULL) return False; // it's already used
 
   if (fSubsessionsTail == NULL) {
     fSubsessionsHead = subsession;
@@ -91,6 +91,7 @@ ServerMediaSession::addSubsession(ServerMediaSubsession* subsession) {
   }
   fSubsessionsTail = subsession;
 
+  subsession->fParentSession = this;
   subsession->fTrackNumber = ++fSubsessionCounter;
   return True;
 }
@@ -215,7 +216,7 @@ char* ServerMediaSession::generateSDPDescription() {
     ServerMediaSubsession* subsession;
     for (subsession = fSubsessionsHead; subsession != NULL;
 	 subsession = subsession->fNext) {
-      char const* sdpLines = subsession->sdpLines(*this);
+      char const* sdpLines = subsession->sdpLines();
       if (sdpLines == NULL) break; // the media's not available
       sdpLength += strlen(sdpLines);
     }
@@ -279,7 +280,7 @@ char* ServerMediaSession::generateSDPDescription() {
     for (subsession = fSubsessionsHead; subsession != NULL;
 	 subsession = subsession->fNext) {
       mediaSDP += strlen(mediaSDP);
-      sprintf(mediaSDP, "%s", subsession->sdpLines(*this));
+      sprintf(mediaSDP, "%s", subsession->sdpLines());
     }
   } while (0);
 
@@ -316,7 +317,7 @@ void ServerMediaSubsessionIterator::reset() {
 
 ServerMediaSubsession::ServerMediaSubsession(UsageEnvironment& env)
   : Medium(env),
-    fServerAddressForSDP(0), fPortNumForSDP(0),
+    fParentSession(NULL), fServerAddressForSDP(0), fPortNumForSDP(0),
     fNext(NULL), fTrackNumber(0), fTrackId(NULL) {
 }
 
@@ -370,10 +371,12 @@ void ServerMediaSubsession::setServerAddressAndPortForSDP(netAddressBits address
 }
 
 char const*
-ServerMediaSubsession::rangeSDPLine(ServerMediaSession& parentSession) const {
+ServerMediaSubsession::rangeSDPLine() const {
+  if (fParentSession == NULL) return NULL;
+
   // If all of our parent's subsessions have the same duration
-  // (as indicated by "parentSession.duration() < 0"), there's no "a=range:" line:
-  if (parentSession.duration() >= 0.0) return strDup("");
+  // (as indicated by "fParentSession->duration() < 0"), there's no "a=range:" line:
+  if (fParentSession->duration() >= 0.0) return strDup("");
 
   // Use our own duration for a "a=range:" line:
   float ourDuration = duration();

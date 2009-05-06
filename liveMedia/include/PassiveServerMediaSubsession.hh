@@ -44,7 +44,7 @@ private:
   virtual ~PassiveServerMediaSubsession();
 
 private: // redefined virtual functions
-  virtual char const* sdpLines(ServerMediaSession& parentSession);
+  virtual char const* sdpLines();
   virtual void getStreamParameters(unsigned clientSessionId,
 				   netAddressBits clientAddress,
                                    Port const& clientRTPPort,

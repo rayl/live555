@@ -85,6 +85,10 @@ void RTSPServer::addServerMediaSession(ServerMediaSession* serverMediaSession) {
   removeServerMediaSession(existingSession); // if any
 }
 
+ServerMediaSession* RTSPServer::lookupServerMediaSession(char const* streamName) {
+  return (ServerMediaSession*)(fServerMediaSessions->Lookup(streamName));
+}
+
 void RTSPServer::removeServerMediaSession(ServerMediaSession* serverMediaSession) {
   if (serverMediaSession == NULL) return;
 
@@ -97,7 +101,7 @@ void RTSPServer::removeServerMediaSession(ServerMediaSession* serverMediaSession
 }
 
 void RTSPServer::removeServerMediaSession(char const* streamName) {
-  removeServerMediaSession((ServerMediaSession*)(fServerMediaSessions->Lookup(streamName)));
+  removeServerMediaSession(lookupServerMediaSession(streamName));
 }
 
 char* RTSPServer
@@ -438,8 +442,7 @@ void RTSPServer::RTSPClientSession
 
     // Begin by looking up the "ServerMediaSession" object for the
     // specified "urlSuffix":
-    ServerMediaSession* session
-      = (ServerMediaSession*)(fOurServer.fServerMediaSessions->Lookup(urlSuffix));
+    ServerMediaSession* session = fOurServer.lookupServerMediaSession(urlSuffix);
     if (session == NULL) {
       handleCmd_notFound(cseq);
       break;
@@ -599,13 +602,12 @@ void RTSPServer::RTSPClientSession
 
     // Look up the "ServerMediaSession" object for the specified stream:
     if (streamName[0] != '\0' ||
-	fOurServer.fServerMediaSessions->Lookup("") != NULL) { // normal case
+	fOurServer.lookupServerMediaSession("") != NULL) { // normal case
     } else { // weird case: there was no track id in the URL
       streamName = urlSuffix;
       trackId = NULL;
     }
-    fOurServerMediaSession = (ServerMediaSession*)
-      (fOurServer.fServerMediaSessions->Lookup(streamName));
+    fOurServerMediaSession = fOurServer.lookupServerMediaSession(streamName);
     if (fOurServerMediaSession == NULL) {
       handleCmd_notFound(cseq);
       return;

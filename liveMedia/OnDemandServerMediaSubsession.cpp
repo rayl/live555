@@ -70,7 +70,7 @@ OnDemandServerMediaSubsession::~OnDemandServerMediaSubsession() {
 }
 
 char const*
-OnDemandServerMediaSubsession::sdpLines(ServerMediaSession& parentSession) {
+OnDemandServerMediaSubsession::sdpLines() {
   if (fSDPLines == NULL) {
     // We need to construct a set of SDP lines that describe this
     // subsession (as a unicast stream).  To do so, we first create
@@ -87,7 +87,7 @@ OnDemandServerMediaSubsession::sdpLines(ServerMediaSession& parentSession) {
     RTPSink* dummyRTPSink
       = createNewRTPSink(&dummyGroupsock, rtpPayloadType, inputSource);
 
-    setSDPLinesFromRTPSink(dummyRTPSink, inputSource, parentSession);
+    setSDPLinesFromRTPSink(dummyRTPSink, inputSource);
     Medium::close(dummyRTPSink);
     Medium::close(inputSource);
   }
@@ -323,8 +323,7 @@ void OnDemandServerMediaSubsession
 }
 
 void OnDemandServerMediaSubsession
-::setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource,
-			 ServerMediaSession& parentSession) {
+::setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource) {
   if (rtpSink == NULL) return;
 
   char const* mediaType = rtpSink->sdpMediaType();
@@ -332,7 +331,7 @@ void OnDemandServerMediaSubsession
   struct in_addr serverAddrForSDP; serverAddrForSDP.s_addr = fServerAddressForSDP;
   char* const ipAddressStr = strDup(our_inet_ntoa(serverAddrForSDP));
   char* rtpmapLine = rtpSink->rtpmapLine();
-  char const* rangeLine = rangeSDPLine(parentSession);
+  char const* rangeLine = rangeSDPLine();
   char const* auxSDPLine = getAuxSDPLine(rtpSink, inputSource);
   if (auxSDPLine == NULL) auxSDPLine = "";
   

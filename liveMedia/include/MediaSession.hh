@@ -187,6 +187,7 @@ public:
   Boolean fmtp_randomaccessindication() const { return fRandomaccessindication; }
   char const* fmtp_config() const { return fConfig; }
   char const* fmtp_mode() const { return fMode; }
+  char const* fmtp_spropparametersets() const { return fSpropParameterSets; }
 
   unsigned connectionEndpointAddress() const;
       // Converts "fConnectionEndpointName" to an address (or 0 if unknown)
@@ -265,7 +266,7 @@ private:
   unsigned fOctetalign, fProfile_level_id, fRobustsorting;
   unsigned fSizelength, fStreamstateindication, fStreamtype;
   Boolean fCpresent, fRandomaccessindication;
-  char *fConfig, *fMode;
+  char *fConfig, *fMode, *fSpropParameterSets;
 
   float fPlayEndTime;
   int fMCT_SLAP_SessionId; // 0 if not part of a MCT SLAP session
