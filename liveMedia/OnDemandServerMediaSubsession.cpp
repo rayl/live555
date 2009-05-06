@@ -299,16 +299,17 @@ void OnDemandServerMediaSubsession::setStreamScale(unsigned /*clientSessionId*/,
 
 void OnDemandServerMediaSubsession::deleteStream(unsigned clientSessionId,
 						 void*& streamToken) {
+  StreamState* streamState = (StreamState*)streamToken; 
+
   // Look up (and remove) the destinations for this client session:
   Destinations* destinations
     = (Destinations*)(fDestinationsHashTable->Lookup((char const*)clientSessionId));
   if (destinations != NULL) {
     fDestinationsHashTable->Remove((char const*)clientSessionId);
-  }
 
-  // Stop streaming to these destinations:
-  StreamState* streamState = (StreamState*)streamToken; 
-  if (streamState != NULL) streamState->endPlaying(destinations);
+    // Stop streaming to these destinations:
+    if (streamState != NULL) streamState->endPlaying(destinations);
+  }
 
   // Delete the "StreamState" structure if it's no longer being used:
   if (streamState != NULL && streamState->referenceCount() >= 0) {

@@ -856,19 +856,19 @@ void closeMediaSinks() {
 }
 
 void subsessionAfterPlaying(void* clientData) {
-  // Begin by closing this media subsession:
+  // Begin by closing this media subsession's stream:
   MediaSubsession* subsession = (MediaSubsession*)clientData;
   Medium::close(subsession->sink);
   subsession->sink = NULL;
 
-  // Next, check whether *all* subsessions have now been closed:
+  // Next, check whether *all* subsessions' streams have now been closed:
   MediaSession& session = subsession->parentSession();
   MediaSubsessionIterator iter(session);
   while ((subsession = iter.next()) != NULL) {
     if (subsession->sink != NULL) return; // this subsession is still active
   }
 
-  // All subsessions have now been closed
+  // All subsessions' streams have now been closed
   sessionAfterPlaying();
 }
 

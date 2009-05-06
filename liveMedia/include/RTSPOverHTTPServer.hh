@@ -16,7 +16,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // "liveMedia"
 // Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
 // A simple HTTP server that acts solely to implement RTSP-over-HTTP tunneling
-// (to a separate RTSP server).
+// (to a separate RTSP server), as described in
+// http://developer.apple.com/documentation/QuickTime/QTSS/Concepts/chapter_2_section_14.html
 // C++ header
 
 #ifndef _RTSP_OVER_HTTP_SERVER_HH
@@ -54,11 +55,8 @@ private:
     static void incomingRequestHandler(void*, int /*mask*/);
     void incomingRequestHandler1();
     UsageEnvironment& envir() { return fOurServer.envir(); }
-#if 0 //#####@@@@@
-    void reclaimStreamStates();
-#endif
     void resetRequestBuffer();
-    Boolean parseRTSPRequestString(char* resultCmdName,
+    Boolean parseHTTPRequestString(char* resultCmdName,
 				   unsigned resultCmdNameMaxSize, 
 				   char* sessionCookie,
 				   unsigned sessionCookieMaxSize,
@@ -66,7 +64,7 @@ private:
 				   unsigned acceptStrMaxSize,
 				   char* contentTypeStr,
 				   unsigned contentTypeStrMaxSize);
-    void handleCmd_bad(char const* cseq);
+    void handleCmd_bad();
 #if 0 //#####@@@@@
     void handleCmd_notSupported(char const* cseq);
     void handleCmd_notFound(char const* cseq);
@@ -111,8 +109,8 @@ private:
     unsigned fRequestBytesAlreadySeen, fRequestBufferBytesLeft;
     unsigned char* fLastCRLF;
     unsigned char fResponseBuffer[HTTP_BUFFER_SIZE];
+    Boolean fSessionIsActive;
 #if 0 //#####@@@@@
-    Boolean fIsMulticast, fSessionIsActive, fStreamAfterSETUP;
     Authenticator fCurrentAuthenticator; // used if access control is needed
     unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
     unsigned fNumStreamStates; 

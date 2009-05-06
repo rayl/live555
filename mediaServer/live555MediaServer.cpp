@@ -69,8 +69,7 @@ int main(int argc, char** argv) {
   *env << "\t\".wav\" => a WAV Audio file\n";
   *env << "See http://www.live555.com/mediaServer/ for additional documentation.\n";
 
-#ifdef undef
-THIS CODE DOESN'T YET WORK.  DON'T TRY TO USE IT!
+#if 0 // RTSP-over-HTTP tunneling is not yet working
   // Also, attempt to create a HTTP server for RTSP-over-HTTP tunneling.
   // Try first with the default HTTP port (80), and then with the alternative HTTP
   // port number (8000).

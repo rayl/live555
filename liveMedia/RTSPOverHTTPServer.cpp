@@ -16,11 +16,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // "liveMedia"
 // Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
 // A simple HTTP server that acts solely to implement RTSP-over-HTTP tunneling
-// (to a separate RTSP server).
+// (to a separate RTSP server), as described in
+// http://developer.apple.com/documentation/QuickTime/QTSS/Concepts/chapter_2_section_14.html
 // Implementation
 
-#ifdef undef
-THIS CODE DOESN'T YET WORK.  DON'T TRY TO USE IT!!
 #include "RTSPOverHTTPServer.hh"
 #include <GroupsockHelper.hh>
 
@@ -33,6 +32,8 @@ THIS CODE DOESN'T YET WORK.  DON'T TRY TO USE IT!!
 
 #define DEBUG 1 //#####@@@@@
 ///////// RTSPOverHTTPServer implementation //////////
+
+#define HTTP_PARAM_STRING_MAX 100
 
 RTSPOverHTTPServer*
 RTSPOverHTTPServer::createNew(UsageEnvironment& env, Port ourHTTPPort,
@@ -135,7 +136,7 @@ void RTSPOverHTTPServer::incomingConnectionHandler1() {
 
 RTSPOverHTTPServer::HTTPClientConnection
 ::HTTPClientConnection(RTSPOverHTTPServer& ourServer, int clientSocket)
-  : fOurServer(ourServer), fClientSocket(clientSocket) {
+  : fOurServer(ourServer), fClientSocket(clientSocket), fSessionIsActive(True) {
   // Arrange to handle incoming requests:
   resetRequestBuffer();
   envir().taskScheduler().turnOnBackgroundReadHandling(fClientSocket,
@@ -148,12 +149,6 @@ RTSPOverHTTPServer::HTTPClientConnection
   envir().taskScheduler().turnOffBackgroundReadHandling(fClientSocket);
 
   ::closeSocket(fClientSocket);
-}
-
-void RTSPOverHTTPServer::HTTPClientConnection::resetRequestBuffer() {
-  fRequestBytesAlreadySeen = 0;
-  fRequestBufferBytesLeft = sizeof fRequestBuffer;
-  fLastCRLF = &fRequestBuffer[-3]; // hack
 }
 
 void RTSPOverHTTPServer::HTTPClientConnection
@@ -211,18 +206,19 @@ void RTSPOverHTTPServer::HTTPClientConnection::incomingRequestHandler1() {
   char sessionCookie[HTTP_PARAM_STRING_MAX];
   char acceptStr[HTTP_PARAM_STRING_MAX];
   char contentTypeStr[HTTP_PARAM_STRING_MAX];
-  if (!parseRequestString(cmdName, sizeof cmdName,
+  if (!parseHTTPRequestString(cmdName, sizeof cmdName,
 			  sessionCookie, sizeof sessionCookie,
 			  acceptStr, sizeof acceptStr,
-			  contentTypeStr, sizeof contentTypeStr) {
+			  contentTypeStr, sizeof contentTypeStr)) {
 #ifdef DEBUG
-    fprintf(stderr, "parseRTSPRequestString() failed!\n");
+    fprintf(stderr, "parseHTTPRTSPRequestString() failed!\n");
 #endif
-    handleCmd_bad(cseq);
+    handleCmd_bad();
   } else {
 #ifdef DEBUG
-    fprintf(stderr, "parseRTSPRequestString() returned cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\"\n", cmdName, urlPreSuffix, urlSuffix);
+    fprintf(stderr, "parseHTTPRTSPRequestString() returned cmdName \"%s\", sessionCookie \"%s\", acceptStr \"%s\", contentTypeStr \"%s\"\n", cmdName, acceptStr, contentTypeStr);
 #endif
+#if 0
     if (strcmp(cmdName, "OPTIONS") == 0) {
       handleCmd_OPTIONS(cseq);
     } else if (strcmp(cmdName, "DESCRIBE") == 0) {
@@ -238,6 +234,7 @@ void RTSPOverHTTPServer::HTTPClientConnection::incomingRequestHandler1() {
     } else {
       handleCmd_notSupported(cseq);
     }
+#endif
   }
     
 #ifdef DEBUG
@@ -245,14 +242,133 @@ void RTSPOverHTTPServer::HTTPClientConnection::incomingRequestHandler1() {
 #endif
   send(fClientSocket, (char const*)fResponseBuffer, strlen((char*)fResponseBuffer), 0);
 
-  if (strcmp(cmdName, "SETUP") == 0 && fStreamAfterSETUP) {
-    // The client has asked for streaming to commence now, rather than after a
-    // subsequent "PLAY" command.  So, simulate the effect of a "PLAY" command:
-    handleCmd_withinSession("PLAY", urlPreSuffix, urlSuffix, cseq,
-                            (char const*)fRequestBuffer);
-  }
-
   resetRequestBuffer(); // to prepare for any subsequent request
   if (!fSessionIsActive) delete this;
 }
+
+void RTSPOverHTTPServer::HTTPClientConnection::resetRequestBuffer() {
+  fRequestBytesAlreadySeen = 0;
+  fRequestBufferBytesLeft = sizeof fRequestBuffer;
+  fLastCRLF = &fRequestBuffer[-3]; // hack
+}
+
+Boolean RTSPOverHTTPServer::HTTPClientConnection::
+parseHTTPRequestString(char* resultCmdName,
+		   unsigned resultCmdNameMaxSize,
+		   char* sessionCookie,
+		   unsigned sessionCookieMaxSize,
+		   char* acceptStr,
+		   unsigned acceptStrMaxSize,
+		   char* contentTypeStr,
+		   unsigned contentTypeStrMaxSize) {
+  return False; //#####@@@@@
+#if 0
+  // This parser is currently rather dumb; it should be made smarter #####
+
+  // Read everything up to the first space as the command name:
+  Boolean parseSucceeded = False;
+  unsigned i;
+  for (i = 0; i < resultCmdNameMaxSize-1 && i < reqStrSize; ++i) {
+    char c = reqStr[i];
+    if (c == ' ' || c == '\t') {
+      parseSucceeded = True;
+      break;
+    }
+
+    resultCmdName[i] = c;
+  }
+  resultCmdName[i] = '\0';
+  if (!parseSucceeded) return False;
+
+  // Skip over the prefix of any "rtsp://" or "rtsp:/" URL that follows:
+  unsigned j = i+1;
+  while (j < reqStrSize && (reqStr[j] == ' ' || reqStr[j] == '\t')) ++j; // skip over any additional white space
+   for (j = i+1; j < reqStrSize-8; ++j) {
+     if ((reqStr[j] == 'r' || reqStr[j] == 'R')
+	 && (reqStr[j+1] == 't' || reqStr[j+1] == 'T')
+	 && (reqStr[j+2] == 's' || reqStr[j+2] == 'S')
+	 && (reqStr[j+3] == 'p' || reqStr[j+3] == 'P')
+	 && reqStr[j+4] == ':' && reqStr[j+5] == '/') {
+       j += 6;
+       if (reqStr[j] == '/') {
+	 // This is a "rtsp://" URL; skip over the host:port part that follows:
+	 ++j;
+	 while (j < reqStrSize && reqStr[j] != '/' && reqStr[j] != ' ') ++j;
+       } else {
+	 // This is a "rtsp:/" URL; back up to the "/":
+	 --j;
+       }
+       i = j;
+       break;
+     }
+   }
+
+ // Look for the URL suffix (before the following "RTSP/"):
+ parseSucceeded = False;
+ for (unsigned k = i+1; k < reqStrSize-5; ++k) {
+   if (reqStr[k] == 'R' && reqStr[k+1] == 'T' &&
+       reqStr[k+2] == 'S' && reqStr[k+3] == 'P' && reqStr[k+4] == '/') {
+     while (--k >= i && reqStr[k] == ' ') {} // go back over all spaces before "RTSP/"
+      unsigned k1 = k;
+      while (k1 > i && reqStr[k1] != '/' && reqStr[k1] != ' ') --k1;
+      // the URL suffix comes from [k1+1,k]
+
+      // Copy "resultURLSuffix":
+      if (k - k1 + 1 > resultURLSuffixMaxSize) return False; // there's no room
+      unsigned n = 0, k2 = k1+1;
+      while (k2 <= k) resultURLSuffix[n++] = reqStr[k2++];
+      resultURLSuffix[n] = '\0';
+
+      // Also look for the URL 'pre-suffix' before this:
+      unsigned k3 = --k1;
+      while (k3 > i && reqStr[k3] != '/' && reqStr[k3] != ' ') --k3;
+      // the URL pre-suffix comes from [k3+1,k1]
+
+      // Copy "resultURLPreSuffix":
+      if (k1 - k3 + 1 > resultURLPreSuffixMaxSize) return False; // there's no room
+      n = 0; k2 = k3+1;
+      while (k2 <= k1) resultURLPreSuffix[n++] = reqStr[k2++];
+      resultURLPreSuffix[n] = '\0';
+
+      i = k + 7; // to go past " RTSP/"
+      parseSucceeded = True;
+      break;
+    }
+  }
+  if (!parseSucceeded) return False;
+
+  // Look for "CSeq:", skip whitespace,
+  // then read everything up to the next \r or \n as 'CSeq':
+  parseSucceeded = False;
+  for (j = i; j < reqStrSize-5; ++j) {
+    if (reqStr[j] == 'C' && reqStr[j+1] == 'S' && reqStr[j+2] == 'e' &&
+        reqStr[j+3] == 'q' && reqStr[j+4] == ':') {
+      j += 5;
+      unsigned n;
+      while (j < reqStrSize && (reqStr[j] ==  ' ' || reqStr[j] == '\t')) ++j;
+      for (n = 0; n < resultCSeqMaxSize-1 && j < reqStrSize; ++n,++j) {
+        char c = reqStr[j];
+        if (c == '\r' || c == '\n') {
+          parseSucceeded = True;
+          break;
+        }
+
+        resultCSeq[n] = c;
+      }
+      resultCSeq[n] = '\0';
+      break;
+    }
+  }
+  if (!parseSucceeded) return False;
+
+  return True;
 #endif
+}
+
+static char const* allowedCommandNames = "GET, PUT";
+
+void RTSPOverHTTPServer::HTTPClientConnection::handleCmd_bad() {
+  snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
+           "HTTP/1.1 400 Bad Request\r\nAllow: %s\r\n\r\n",
+           allowedCommandNames);
+}

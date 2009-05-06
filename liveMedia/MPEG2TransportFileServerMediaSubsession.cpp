@@ -255,7 +255,7 @@ ClientTrickPlayState::ClientTrickPlayState(MPEG2TransportStreamIndexFile* indexF
     fOriginalTransportStreamSource(NULL),
     fTrickModeFilter(NULL), fTrickPlaySource(NULL),
     fFramer(NULL),
-    fScale(2.0f), fNextScale(1.0f), fNPT(0.0f),
+    fScale(1.0f), fNextScale(1.0f), fNPT(0.0f),
     fTSRecordNum(0), fIxRecordNum(0) {
 }
 

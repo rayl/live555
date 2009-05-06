@@ -240,7 +240,6 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
     // that we recognize.
     // (We should also check for "Content-type: application/sdp",
     // "Content-location", "CSeq", etc.) #####
-    char* contentBase = new char[fResponseBufferSize]; // ensures enough space
     char* serverType = new char[fResponseBufferSize]; // ensures enough space
     int contentLength = -1;
     char* lineStart;
@@ -258,9 +257,12 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
 			       lineStart, "\"");
 	  break;
 	}
-      } else if (sscanf(lineStart, "Content-Base: %s", contentBase) == 1) {
-	if (contentBase[0] != '\0'/*sanity check*/) {
-	  delete[] fBaseURL; fBaseURL = strDup(contentBase);
+      } else if (strncmp(lineStart, "Content-Base:", 13) == 0) {
+	int cbIndex = 13;
+
+	while (lineStart[cbIndex] == ' ' || lineStart[cbIndex] == '\t') ++cbIndex; 
+	if (lineStart[cbIndex] != '\0'/*sanity check*/) {
+	  delete[] fBaseURL; fBaseURL = strDup(&lineStart[cbIndex]);
 	}
       } else if (sscanf(lineStart, "Server: %s", serverType) == 1) {
 	if (strncmp(serverType, "Kasenna", 7) == 0) fServerIsKasenna = True;
@@ -284,7 +286,6 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
       }
     } 
     delete[] serverType;
-    delete[] contentBase;
 
     // We're now at the end of the response header lines
     if (wantRedirection) {
@@ -2290,6 +2291,8 @@ Boolean RTSPClient::parseGetParameterHeader(char const* line,
 
 Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix,
 				       Authenticator* authenticator) {
+  // Set up RTSP-over-HTTP tunneling, as described in
+  //     http://developer.apple.com/documentation/QuickTime/QTSS/Concepts/chapter_2_section_14.html
   if (fVerbosityLevel >= 1) {
     envir() << "Requesting RTSP-over-HTTP tunneling (on port "
 	    << fTunnelOverHTTPPortNum << ")\n\n";
