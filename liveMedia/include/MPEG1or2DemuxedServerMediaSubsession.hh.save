@@ -45,13 +45,11 @@ private:
   virtual ~MPEG1or2DemuxedServerMediaSubsession();
 
 private: // redefined virtual functions
-  virtual void seekStreamSource(FramedSource* inputSource, float seekNPT);
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
 					      unsigned& estBitrate);
   virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
                                     unsigned char rtpPayloadTypeIfDynamic,
 				    FramedSource* inputSource);
-  virtual float duration() const;
 
 private:
   MPEG1or2FileServerDemux& fOurDemux;

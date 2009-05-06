@@ -52,6 +52,19 @@ private:
                           unsigned numTruncatedBytes,
                           struct timeval presentationTime,
                           unsigned durationInMicroseconds);
+
+  Boolean getNextFrameBit(u_int8_t& result);
+  Boolean getNextFrameBits(unsigned numBits, u_int32_t& result);
+    // Which are used by:
+  void analyzeVOLHeader();
+
+private:
+  unsigned fNumBitsSeenSoFar; // used by the getNextFrameBit*() routines
+  u_int32_t vop_time_increment_resolution;
+  unsigned fNumVTIRBits;
+  // # of bits needed to count to "vop_time_increment_resolution"
+  struct timeval fLastNonBFramePresentationTime;
+  unsigned fLastNonBFrameVop_time_increment;
 };
 
 #endif

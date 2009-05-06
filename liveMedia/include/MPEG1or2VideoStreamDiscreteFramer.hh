@@ -55,6 +55,10 @@ private:
                           unsigned numTruncatedBytes,
                           struct timeval presentationTime,
                           unsigned durationInMicroseconds);
+
+private:
+  struct timeval fLastNonBFramePresentationTime;
+  unsigned fLastNonBFrameTemporal_reference;
 };
 
 #endif

@@ -65,7 +65,7 @@ OnDemandServerMediaSubsession::~OnDemandServerMediaSubsession() {
     if (destinations == NULL) break;
     delete destinations;
   }
-  delete[] fDestinationsHashTable;
+  delete fDestinationsHashTable;
 }
 
 char const*

@@ -38,7 +38,10 @@ MPEG1or2VideoStreamDiscreteFramer
                                     FramedSource* inputSource,
                                     Boolean iFramesOnly, double vshPeriod)
   : MPEG1or2VideoStreamFramer(env, inputSource, iFramesOnly, vshPeriod,
-                              False/*don't create a parser*/) {
+                              False/*don't create a parser*/),
+    fLastNonBFrameTemporal_reference(0) {
+  fLastNonBFramePresentationTime.tv_sec = 0;
+  fLastNonBFramePresentationTime.tv_usec = 0;
 }
                                                                                 
 MPEG1or2VideoStreamDiscreteFramer::~MPEG1or2VideoStreamDiscreteFramer() {
@@ -63,12 +66,94 @@ void MPEG1or2VideoStreamDiscreteFramer
   source->afterGettingFrame1(frameSize, numTruncatedBytes,
                              presentationTime, durationInMicroseconds);
 }
-                                                                                
+
+static double const frameRateFromCode[] = {
+  0.0,          // forbidden
+  24000/1001.0, // approx 23.976
+  24.0,
+  25.0,
+  30000/1001.0, // approx 29.97
+  30.0,
+  50.0,
+  60000/1001.0, // approx 59.94
+  60.0,
+  0.0,          // reserved
+  0.0,          // reserved
+  0.0,          // reserved
+  0.0,          // reserved
+  0.0,          // reserved
+  0.0,          // reserved
+  0.0           // reserved
+};
+
 void MPEG1or2VideoStreamDiscreteFramer
 ::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
                      struct timeval presentationTime,
                      unsigned durationInMicroseconds) {
-  fPictureEndMarker = True; // Assume that we have a complete 'picture' here
+  // Check that the first 4 bytes are a system code:
+  if (frameSize >= 4 && fTo[0] == 0 && fTo[1] == 0 && fTo[2] == 1) {
+    fPictureEndMarker = True; // Assume that we have a complete 'picture' here
+
+    u_int8_t nextCode = fTo[3];
+    if (nextCode == 0xB3) { // VIDEO_SEQUENCE_HEADER_START_CODE
+      // Note the following 'frame rate' code:
+      if (frameSize >= 8) {
+	u_int8_t frame_rate_code = fTo[7]&0x0F;
+	fFrameRate = frameRateFromCode[frame_rate_code];
+      }
+    }
+
+    unsigned i = 3;
+    if (nextCode == 0xB3 /*VIDEO_SEQUENCE_HEADER_START_CODE*/ ||
+	nextCode == 0xB8 /*GROUP_START_CODE*/) {
+      // Skip to the following PICTURE_START_CODE (if any):
+      for (i += 4; i < frameSize; ++i) {
+	if (fTo[i] == 0x00 /*PICTURE_START_CODE*/
+	    && fTo[i-1] == 1 && fTo[i-2] == 0 && fTo[i-3] == 0) {
+	  nextCode = fTo[i];
+	  break;
+	}
+      }
+    }
+
+    if (nextCode == 0x00 /*PICTURE_START_CODE*/ && i+2 < frameSize) { 
+      // Get the 'temporal_reference' and 'picture_coding_type' from the
+      // following 2 bytes:
+      ++i;
+      unsigned short temporal_reference = (fTo[i]<<2)|(fTo[i+1]>>6);
+      unsigned char picture_coding_type = (fTo[i+1]&0x38)>>3;
+
+      // If this is a "B" frame, then we have to tweak "presentationTime":
+      if (picture_coding_type == 3/*B*/
+	  && (fLastNonBFramePresentationTime.tv_usec > 0 ||
+	      fLastNonBFramePresentationTime.tv_sec > 0)) {
+	int trIncrement
+            = fLastNonBFrameTemporal_reference - temporal_reference;
+	if (trIncrement < 0) trIncrement += 1024; // field is 10 bits in size
+	unsigned const MILLION = 1000000;
+	unsigned usIncrement = fFrameRate == 0.0 ? 0
+	  : (unsigned)((trIncrement*MILLION)/fFrameRate);
+	unsigned secondsToSubtract = usIncrement/MILLION;
+	unsigned uSecondsToSubtract = usIncrement%MILLION;
+
+	presentationTime = fLastNonBFramePresentationTime;
+	if ((unsigned)presentationTime.tv_usec < uSecondsToSubtract) {
+	  presentationTime.tv_usec += MILLION;
+	  if (presentationTime.tv_sec > 0) --presentationTime.tv_sec;
+	}
+	presentationTime.tv_usec -= uSecondsToSubtract;
+	if ((unsigned)presentationTime.tv_sec > secondsToSubtract) {
+	  presentationTime.tv_sec -= secondsToSubtract;
+	} else {
+	  presentationTime.tv_sec = presentationTime.tv_usec = 0;
+	}
+      } else {
+	fLastNonBFramePresentationTime = presentationTime;
+	fLastNonBFrameTemporal_reference = temporal_reference;
+      }
+    }
+  }
+
   // ##### Later:
   // - do "iFramesOnly" if requested
   // - handle "vshPeriod"
@@ -76,7 +161,7 @@ void MPEG1or2VideoStreamDiscreteFramer
   // Complete delivery to the client:
   fFrameSize = frameSize;
   fNumTruncatedBytes = numTruncatedBytes;
-  fPresentationTime = presentationTime; // change for B-frames??? #####
+  fPresentationTime = presentationTime;
   fDurationInMicroseconds = durationInMicroseconds;
   afterGetting(this);
 }
