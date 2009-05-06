@@ -34,7 +34,7 @@ SESSION_OBJS = MediaSession.$(OBJ) ServerMediaSession.$(OBJ) PassiveServerMediaS
 
 QUICKTIME_OBJS = QuickTimeFileSink.$(OBJ) QuickTimeGenericRTPSource.$(OBJ)
 
-MISC_OBJS = BitVector.$(OBJ) StreamParser.$(OBJ) our_md5.$(OBJ) our_md5hl.$(OBJ)
+MISC_OBJS = DarwinInjector.$(OBJ) BitVector.$(OBJ) StreamParser.$(OBJ) our_md5.$(OBJ) our_md5hl.$(OBJ)
 
 LIVEMEDIA_LIB_OBJS = Media.$(OBJ) $(MISC_SOURCE_OBJS) $(MISC_SINK_OBJS) $(MISC_FILTER_OBJS) $(RTP_OBJS) $(RTCP_OBJS) $(RTSP_OBJS) $(SIP_OBJS) $(SESSION_OBJS) $(QUICKTIME_OBJS) $(MISC_OBJS)
 
@@ -227,6 +227,8 @@ QuickTimeFileSink.$(CPP):	include/QuickTimeFileSink.hh include/H263plusVideoRTPS
 include/QuickTimeFileSink.hh:	include/ServerMediaSession.hh
 QuickTimeGenericRTPSource.$(CPP):	include/QuickTimeGenericRTPSource.hh
 include/QuickTimeGenericRTPSource.hh:	include/MultiFramedRTPSource.hh
+DarwinInjector.$(CPP):	include/DarwinInjector.hh
+include/DarwinInjector.hh:	include/RTSPClient.hh include/RTCP.hh
 BitVector.$(CPP):	BitVector.hh
 StreamParser.$(CPP):	StreamParser.hh
 our_md5.$(C):		our_md5.h

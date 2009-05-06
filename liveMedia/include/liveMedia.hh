@@ -83,5 +83,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MP3AudioFileServerMediaSubsession.hh"
 #include "MPEG1or2VideoFileServerMediaSubsession.hh"
 #include "MPEG1or2FileServerDemux.hh"
+#include "DarwinInjector.hh"
 
 #endif
