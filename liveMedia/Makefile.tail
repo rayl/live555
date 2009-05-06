@@ -203,7 +203,7 @@ rtcp_from_spec.$(C):	rtcp_from_spec.h
 RTSPServer.$(CPP):	include/RTSPServer.hh
 include/RTSPServer.hh:		include/ServerMediaSession.hh include/DigestAuthentication.hh
 include/ServerMediaSession.hh:	include/Media.hh
-RTSPClient.$(CPP):	include/RTSPClient.hh
+RTSPClient.$(CPP):	include/RTSPClient.hh  our_md5.h
 include/RTSPClient.hh:		include/MediaSession.hh include/DigestAuthentication.hh
 SIPClient.$(CPP):	include/SIPClient.hh
 include/SIPClient.hh:		include/MediaSession.hh include/DigestAuthentication.hh

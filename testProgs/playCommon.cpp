@@ -74,6 +74,7 @@ Boolean sendOptionsRequestOnly = False;
 Boolean oneFilePerFrame = False;
 Boolean notifyOnPacketArrival = False;
 Boolean streamUsingTCP = False;
+portNumBits tunnelOverHTTPPortNum = 0;
 char* username = NULL;
 char* password = NULL;
 char* proxyServerName = NULL;
@@ -106,7 +107,7 @@ struct timeval startTime;
 void usage() {
   *env << "Usage: " << progName
        << " [-p <startPortNum>] [-r|-q|-4] [-a|-v] [-V] [-e <endTime>] [-E <max-inter-packet-gap-time> [-c] [-s <offset>] [-n] [-O]"
-	   << (controlConnectionUsesTCP ? " [-t]" : "")
+	   << (controlConnectionUsesTCP ? " [-t|-T <http-port>]" : "")
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "")
@@ -258,6 +259,24 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 'T': {
+      // stream RTP and RTCP over a HTTP connection
+      if (controlConnectionUsesTCP) {
+	if (argc > 3 && argv[2][0] != '-') {
+	  // The next argument is the HTTP server port number:
+	  if (sscanf(argv[2], "%hu", &tunnelOverHTTPPortNum) == 1
+	      && tunnelOverHTTPPortNum > 0) {
+	    ++argv; --argc;
+	    break;
+	  }
+	}
+      }
+
+      // If we get here, the option was specified incorrectly:
+      usage();
+      break;
+    }
+
     case 'u': { // specify a username and password
       username = argv[2];
       password = argv[3];
@@ -403,6 +422,14 @@ int main(int argc, char** argv) {
   if (sendOptionsRequestOnly && !sendOptionsRequest) {
     *env << "The -o and -O flags cannot both be used!\n";
     usage();
+  }
+  if (tunnelOverHTTPPortNum > 0) {
+    if (streamUsingTCP) {
+      *env << "The -t and -T flags cannot both be used!\n";
+      usage();
+    } else {
+      streamUsingTCP = True;
+    }
   }
   if (!createReceivers && notifyOnPacketArrival) {
     *env << "Warning: Because we're not receiving stream data, the -n flag has no effect\n";

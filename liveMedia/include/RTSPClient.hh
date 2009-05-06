@@ -35,9 +35,13 @@ class RTSPClient: public Medium {
 public:
   static RTSPClient* createNew(UsageEnvironment& env,
 			       int verbosityLevel = 0,
-			       char const* applicationName = NULL);
+			       char const* applicationName = NULL,
+			       portNumBits tunnelOverHTTPPortNum = 0);
+  // If "tunnelOverHTTPPortNum" is non-zero, we tunnel RTSP (and RTP)
+  // over a HTTP connection with the given port number, using the technique
+  // described in Apple's document <http://developer.apple.com/documentation/QuickTime/QTSS/Concepts/chapter_2_section_14.html>
 
-  int socketNum() const { return fSocketNum; }
+  int socketNum() const { return fInputSocketNum; }
 
   static Boolean lookupByName(UsageEnvironment& env,
 			      char const* sourceName,
@@ -112,7 +116,8 @@ public:
       // Returns True iff this command succeeds
 
   static Boolean parseRTSPURL(UsageEnvironment& env, char const* url,
-			      NetAddress& address, portNumBits& portNum);
+			      NetAddress& address, portNumBits& portNum,
+			      char const** urlSuffix = NULL);
       // (ignores any "<username>[:<password>]@" in "url")
   static Boolean parseRTSPURLUsernamePassword(char const* url,
 					      char*& username,
@@ -132,10 +137,11 @@ private: // redefined virtual functions
 
 private:
   RTSPClient(UsageEnvironment& env, int verbosityLevel,
-	     char const* applicationName);
+	     char const* applicationName, portNumBits tunnelOverHTTPPortNum);
       // called only by createNew();
 
   void reset();
+  void resetTCPSockets();
 
   Boolean openConnectionFromURL(char const* url);
   char* createAuthenticatorString(Authenticator const* authenticator,
@@ -143,8 +149,13 @@ private:
   static void checkForAuthenticationFailure(unsigned responseCode,
 					    char*& nextLineStart,
 					    Authenticator* authenticator);
-  Boolean sendRequest(char const* requestString);
-  unsigned getResponse(char*& responseBuffer, unsigned responseBufferSize);
+  Boolean sendRequest(char const* requestString, char const* tag,
+		      Boolean base64EncodeIfOverHTTP = True);
+  Boolean getResponse(char const* tag,
+		      unsigned& bytesRead, unsigned& responseCode,
+		      char*& firstLine, char*& nextLineStart,
+		      Boolean checkFor200Response = True);
+  unsigned getResponse1(char*& responseBuffer, unsigned responseBufferSize);
   Boolean parseResponseCode(char const* line, unsigned& responseCode);
   Boolean parseTransportResponse(char const* line,
 				 char*& serverAddressStr,
@@ -157,12 +168,14 @@ private:
 			      char const*& prefix,
 			      char const*& separator,
 			      char const*& suffix);
+  Boolean setupHTTPTunneling(char const* urlSuffix);
 
 private:
   int fVerbosityLevel;
+  portNumBits fTunnelOverHTTPPortNum;
   char* fUserAgentHeaderStr;
       unsigned fUserAgentHeaderStrSize;
-  int fSocketNum;
+  int fInputSocketNum, fOutputSocketNum;
   unsigned fServerAddress;
   static unsigned fCSeq; // sequence number, used in consecutive requests
       // Note: it's static, to ensure that it differs if more than one
@@ -178,6 +191,8 @@ private:
 #endif
   unsigned fDescribeStatusCode;
   // 0: OK; 1: connection failed; 2: stream unavailable
+  char* fResponseBuffer;
+  unsigned fResponseBufferSize;
 };
 
 #endif
