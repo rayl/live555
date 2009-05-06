@@ -91,6 +91,7 @@ Boolean MultiFramedRTPSource
 
 void MultiFramedRTPSource::doStopGettingFrames() {
   fRTPInterface.stopNetworkReading();
+  fAreDoingNetworkReads = False;
 }
 
 void MultiFramedRTPSource::doGetNextFrame() {

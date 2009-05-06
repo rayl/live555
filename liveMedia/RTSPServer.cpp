@@ -1302,7 +1302,7 @@ void RTSPServer::RTSPClientSession
 UserAuthenticationDatabase::UserAuthenticationDatabase(char const* realm,
 						       Boolean passwordsAreMD5)
   : fTable(HashTable::create(STRING_HASH_KEYS)),
-    fRealm(strDup(realm == NULL ? "LIVE.COM Streaming Media" : realm)),
+    fRealm(strDup(realm == NULL ? "LIVE555 Streaming Media" : realm)),
     fPasswordsAreMD5(passwordsAreMD5) {
 }
 

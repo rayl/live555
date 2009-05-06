@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
   // To also reorder ADUs before streaming, uncomment the following:
 //#define INTERLEAVE_ADUS 1
   // (For more information about ADUs and interleaving,
-  //  see <http://www.live.com/rtp-mp3/>)
+  //  see <http://www.live555.com/rtp-mp3/>)
   {
     char const* streamName = "mp3AudioTest";
     char const* inputFileName = "test.mp3";

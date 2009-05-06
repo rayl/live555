@@ -93,6 +93,7 @@ private:
 private:
   // Redefined virtual functions:
   void doGetNextFrame();
+  virtual void doStopGettingFrames();
 
 private:
   FramedSource* fInputSource;
@@ -484,6 +485,10 @@ void AMRDeinterleaver::doGetNextFrame() {
 			       afterGettingFrame, this,
 			       FramedSource::handleClosure, this);
   }
+}
+
+void AMRDeinterleaver::doStopGettingFrames() {
+  fInputSource->stopGettingFrames();
 }
 
 void AMRDeinterleaver

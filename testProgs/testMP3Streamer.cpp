@@ -27,7 +27,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // To also reorder ADUs before streaming, uncomment the following:
 //#define INTERLEAVE_ADUS 1
 // (For more information about ADUs and interleaving,
-//  see <http://www.live.com/rtp-mp3/>)
+//  see <http://www.live555.com/rtp-mp3/>)
 
 // To stream using "source-specific multicast" (SSM), uncomment the following:
 //#define USE_SSM 1

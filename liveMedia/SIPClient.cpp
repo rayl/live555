@@ -95,7 +95,7 @@ SIPClient::SIPClient(UsageEnvironment& env,
   unsigned headerSize;
 
   // Set the "User-Agent:" header:
-  char const* const libName = "LIVE.COM Streaming Media v";
+  char const* const libName = "LIVE555 Streaming Media v";
   char const* const libVersionStr = LIVEMEDIA_LIBRARY_VERSION_STRING;
   char const* libPrefix; char const* libSuffix;
   if (applicationName == NULL || applicationName[0] == '\0') {

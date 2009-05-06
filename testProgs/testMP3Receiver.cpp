@@ -26,7 +26,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // To receive a stream of 'ADUs' rather than raw MP3 frames, uncomment this:
 //#define STREAM_USING_ADUS 1
 // (For more information about ADUs and interleaving,
-//  see <http://www.live.com/rtp-mp3/>)
+//  see <http://www.live555.com/rtp-mp3/>)
 
 // To receive a "source-specific multicast" (SSM) stream, uncomment this:
 //#define USE_SSM 1

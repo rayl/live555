@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
 
   // Next, specify the destination Darwin Streaming Server:
   if (!injector->setDestination(dssNameOrAddress, remoteStreamName,
-				programName, "LIVE.COM Streaming Media")) {
+				programName, "LIVE555 Streaming Media")) {
     *env << "injector->setDestination() failed: "
 	 << env->getResultMsg() << "\n";
     exit(1);
