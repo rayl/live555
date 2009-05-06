@@ -48,7 +48,7 @@ MP3AudioFileServerMediaSubsession
 }
 
 FramedSource* MP3AudioFileServerMediaSubsession
-::createNewStreamSource(unsigned& estBitrate) {
+::createNewStreamSource(unsigned /*clientSessionId*/, unsigned& estBitrate) {
   estBitrate = 128; // kbps, estimate
 
   FramedSource* streamSource;

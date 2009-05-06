@@ -24,6 +24,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _SERVER_MEDIA_SESSION_HH
 #include "ServerMediaSession.hh"
 #endif
+#ifndef _MPEG_1OR2_DEMUXED_ELEMENTARY_STREAM_HH
+#include "MPEG1or2DemuxedElementaryStream.hh"
+#endif
 
 class MPEG1or2FileServerDemux: public Medium {
 public:
@@ -31,12 +34,26 @@ public:
   createNew(UsageEnvironment& env, char const* fileName);
 
   ServerMediaSubsession* newAudioServerMediaSubsession();
-  ServerMediaSubsession* newVideoServerMediaSubsession();
+  ServerMediaSubsession* newVideoServerMediaSubsession(Boolean iFramesOnly = False,
+						       double vshPeriod = 5.0
+		       /* how often (in seconds) to inject a Video_Sequence_Header,
+			  if one doesn't already appear in the stream */);
 
 private:
   MPEG1or2FileServerDemux(UsageEnvironment& env, char const* fileName);
       // called only by createNew();
   virtual ~MPEG1or2FileServerDemux();
+
+private:
+  friend class MPEG1or2DemuxedServerMediaSubsession;
+  MPEG1or2DemuxedElementaryStream* newElementaryStream(unsigned clientSessionId,
+						       u_int8_t streamIdTag);
+
+private:
+  char const* fFileName;
+  MPEG1or2Demux* fSession0Demux;
+  MPEG1or2Demux* fLastCreatedDemux;
+  u_int8_t fLastClientSessionId;
 };
 
 #endif

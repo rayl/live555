@@ -28,7 +28,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class MPEG1or2DemuxedElementaryStream: public FramedSource {
 private: // We are created only by a MPEG1or2Demux (a friend)
   MPEG1or2DemuxedElementaryStream(UsageEnvironment& env,
-			      unsigned char streamIdTag,
+			      u_int8_t streamIdTag,
 			      MPEG1or2Demux& sourceDemux);
   virtual ~MPEG1or2DemuxedElementaryStream();
 
@@ -46,7 +46,7 @@ private:
 				unsigned durationInMicroseconds);
 
 private:
-  unsigned char fOurStreamIdTag;
+  u_int8_t fOurStreamIdTag;
   MPEG1or2Demux& fOurSourceDemux;
   char const* fMIMEtype;
 

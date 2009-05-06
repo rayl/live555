@@ -61,10 +61,12 @@ private:
 
 ////////// MPEG1or2Demux implementation //////////
 
-MPEG1or2Demux::MPEG1or2Demux(UsageEnvironment& env,
-		     FramedSource* inputSource)
+MPEG1or2Demux
+::MPEG1or2Demux(UsageEnvironment& env,
+		FramedSource* inputSource, Boolean reclaimWhenLastESDies)
   : Medium(env), fInputSource(inputSource),
     fNextAudioStreamNumber(0), fNextVideoStreamNumber(0),
+    fReclaimWhenLastESDies(reclaimWhenLastESDies), fNumOutstandingESs(0),
     fNumPendingReads(0), fHaveUndeliveredData(False) {
   fParser = new MPEGProgramStreamParser(this, inputSource);
   for (unsigned i = 0; i < 256; ++i) {
@@ -78,15 +80,24 @@ MPEG1or2Demux::~MPEG1or2Demux() {
   Medium::close(fInputSource);
 }
 
-MPEG1or2Demux* MPEG1or2Demux::createNew(UsageEnvironment& env,
-				FramedSource* inputSource) {
+MPEG1or2Demux* MPEG1or2Demux
+::createNew(UsageEnvironment& env,
+	    FramedSource* inputSource, Boolean reclaimWhenLastESDies) {
   // Need to add source type checking here???  #####
 
-  return new MPEG1or2Demux(env, inputSource);
+  return new MPEG1or2Demux(env, inputSource, reclaimWhenLastESDies);
+}
+
+void MPEG1or2Demux
+::noteElementaryStreamDeletion(MPEG1or2DemuxedElementaryStream* /*es*/) {
+  if (--fNumOutstandingESs == 0 && fReclaimWhenLastESDies) {
+    delete this;
+  }
 }
 
 MPEG1or2DemuxedElementaryStream*
-MPEG1or2Demux::newElementaryStream(unsigned char streamIdTag) {
+MPEG1or2Demux::newElementaryStream(u_int8_t streamIdTag) {
+  ++fNumOutstandingESs;
   return new MPEG1or2DemuxedElementaryStream(envir(), streamIdTag, *this);
 }
 
@@ -102,7 +113,7 @@ MPEG1or2DemuxedElementaryStream* MPEG1or2Demux::newVideoStream() {
   return newElementaryStream(newVideoStreamTag);
 }
 
-void MPEG1or2Demux::registerReadInterest(unsigned char streamIdTag,
+void MPEG1or2Demux::registerReadInterest(u_int8_t streamIdTag,
 				     unsigned char* to, unsigned maxSize,
 				     FramedSource::afterGettingFunc* afterGettingFunc,
 				     void* afterGettingClientData,
@@ -168,7 +179,7 @@ void MPEG1or2Demux::continueReadProcessing() {
   }
 }
 
-void MPEG1or2Demux::getNextFrame(unsigned char streamIdTag,
+void MPEG1or2Demux::getNextFrame(u_int8_t streamIdTag,
 			     unsigned char* to, unsigned maxSize,
 			     FramedSource::afterGettingFunc* afterGettingFunc,
 			     void* afterGettingClientData,
@@ -186,7 +197,7 @@ void MPEG1or2Demux::getNextFrame(unsigned char streamIdTag,
   } // otherwise the continued read processing has already been taken care of
 }
 
-void MPEG1or2Demux::stopGettingFrames(unsigned char streamIdTag) {
+void MPEG1or2Demux::stopGettingFrames(u_int8_t streamIdTag) {
     struct OutputDescriptor& out = fOutput[streamIdTag];
     out.isCurrentlyActive = out.isCurrentlyAwaitingData = False;
 }

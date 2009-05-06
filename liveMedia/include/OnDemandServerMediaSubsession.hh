@@ -15,29 +15,24 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
-// A 'ServerMediaSubsession' object that represents an existing
-// 'RTPSink', rather than one that creates new 'RTPSink's on demand.
+// A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
+// on demand.
 // C++ header
 
-#ifndef _PASSIVE_SERVER_MEDIA_SUBSESSION_HH
-#define _PASSIVE_SERVER_MEDIA_SUBSESSION_HH
+#ifndef _ON_DEMAND_SERVER_MEDIA_SUBSESSION_HH
+#define _ON_DEMAND_SERVER_MEDIA_SUBSESSION_HH
 
 #ifndef _SERVER_MEDIA_SESSION_HH
 #include "ServerMediaSession.hh"
 #endif
-
 #ifndef _RTP_SINK_HH
 #include "RTPSink.hh"
 #endif
 
-class PassiveServerMediaSubsession: public ServerMediaSubsession {
-public:
-  static PassiveServerMediaSubsession* createNew(RTPSink& rtpSink);
-
-private:
-  PassiveServerMediaSubsession(RTPSink& rtpSink);
-      // called only by createNew();
-  virtual ~PassiveServerMediaSubsession();
+class OnDemandServerMediaSubsession: public ServerMediaSubsession {
+protected: // we're a virtual base class
+  OnDemandServerMediaSubsession(UsageEnvironment& env);
+  virtual ~OnDemandServerMediaSubsession();
 
 private: // redefined virtual functions
   virtual char const* sdpLines();
@@ -51,10 +46,30 @@ private: // redefined virtual functions
                                    Port& serverRTPPort,
                                    Port& serverRTCPPort,
                                    void*& streamToken);
+  virtual void startStream(void* streamToken);
+  virtual void pauseStream(void* streamToken);
+  virtual void endStream(void* streamToken);
+  virtual void deleteStream(void* streamToken);
+
+protected: // new virtual functions
+  virtual char const* getAuxSDPLine(RTPSink* rtpSink,
+				    FramedSource* inputSource);
+
+protected: // new virtual functions, defined by subclasses
+  virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
+					      unsigned& estBitrate) = 0;
+      // "estBitrate" is the stream's estimated bitrate, in kbps
+  virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
+				    unsigned char rtpPayloadTypeIfDynamic,
+				    FramedSource* inputSource) = 0;
 
 private:
-  RTPSink& fRTPSink;
+  void setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource);
+      // used to implement "sdpLines()"
+
+protected:
   char* fSDPLines;
+  char fCNAME[100]; // for RTCP
 };
 
 #endif

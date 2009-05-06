@@ -44,7 +44,8 @@ private:
   virtual ~MPEG1or2VideoFileServerMediaSubsession();
 
 private: // redefined virtual functions
-  virtual FramedSource* createNewStreamSource(unsigned& estBitrate);
+  virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
+					      unsigned& estBitrate);
   virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
                                     unsigned char rtpPayloadTypeIfDynamic,
 				    FramedSource* inputSource);

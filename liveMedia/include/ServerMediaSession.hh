@@ -101,13 +101,14 @@ public:
   unsigned trackNumber() const { return fTrackNumber; }
   char const* trackId();
   virtual char const* sdpLines() = 0;
-  virtual void getStreamParameters(netAddressBits clientAddress, // in
+  virtual void getStreamParameters(unsigned clientSessionId, // in
+				   netAddressBits clientAddress, // in
 				   Port const& clientRTPPort, // in
 				   Port const& clientRTCPPort, // in
 				   Boolean& isMulticast, // out
-				   netAddressBits destinationAddress,
-				   u_int8_t destinationTTL,
-				       // out; used only for multicast
+				   netAddressBits& destinationAddress, // in out
+				   u_int8_t& destinationTTL,
+				       // in out; used only for multicast
 				   Port& serverRTPPort, // out
 				   Port& serverRTCPPort, // out; used only for unicast
 				   void*& streamToken // out

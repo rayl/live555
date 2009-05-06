@@ -30,15 +30,18 @@ class MPEG1or2DemuxedElementaryStream; // forward
 class MPEG1or2Demux: public Medium {
 public:
   static MPEG1or2Demux* createNew(UsageEnvironment& env,
-			      FramedSource* inputSource);
+				  FramedSource* inputSource,
+				  Boolean reclaimWhenLastESDies = False);
+  // If "reclaimWhenLastESDies" is True, the the demux is deleted when
+  // all "MPEG1or2DemuxedElementaryStream"s that we created get deleted.
 
-  MPEG1or2DemuxedElementaryStream* newElementaryStream(unsigned char streamIdTag);
+  MPEG1or2DemuxedElementaryStream* newElementaryStream(u_int8_t streamIdTag);
 
   // Specialized versions of the above for audio and video:
   MPEG1or2DemuxedElementaryStream* newAudioStream();
   MPEG1or2DemuxedElementaryStream* newVideoStream();
 
-  void getNextFrame(unsigned char streamIdTag,
+  void getNextFrame(u_int8_t streamIdTag,
 		    unsigned char* to, unsigned maxSize,
 		    FramedSource::afterGettingFunc* afterGettingFunc,
 		    void* afterGettingClientData,
@@ -47,7 +50,7 @@ public:
       // similar to FramedSource::getNextFrame(), except that it also
       // takes a stream id tag as parameter.
 
-  void stopGettingFrames(unsigned char streamIdTag);
+  void stopGettingFrames(u_int8_t streamIdTag);
       // similar to FramedSource::stopGettingFrames(), except that it also
       // takes a stream id tag as parameter.
 
@@ -59,11 +62,11 @@ public:
 
 private:
   MPEG1or2Demux(UsageEnvironment& env,
-	    FramedSource* inputSource);
+		FramedSource* inputSource, Boolean reclaimWhenLastESDies);
       // called only by createNew()
   virtual ~MPEG1or2Demux();
 
-  void registerReadInterest(unsigned char streamIdTag,
+  void registerReadInterest(u_int8_t streamIdTag,
 			    unsigned char* to, unsigned maxSize,
 			    FramedSource::afterGettingFunc* afterGettingFunc,
 			    void* afterGettingClientData,
@@ -75,10 +78,16 @@ private:
   void continueReadProcessing();
 
 private:
+  friend class MPEG1or2DemuxedElementaryStream;
+  void noteElementaryStreamDeletion(MPEG1or2DemuxedElementaryStream* es);
+
+private:
   FramedSource* fInputSource;
 
   unsigned char fNextAudioStreamNumber;
   unsigned char fNextVideoStreamNumber;
+  Boolean fReclaimWhenLastESDies;
+  unsigned fNumOutstandingESs;
 
   // A descriptor for each possible stream id tag:
   typedef struct OutputDescriptor {

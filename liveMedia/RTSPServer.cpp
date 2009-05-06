@@ -177,6 +177,9 @@ void RTSPServer::incomingConnectionHandler1() {
     }
     return;
   }
+#if defined(DEBUG) || defined(DEBUG_CONNECTIONS)
+  fprintf(stderr, "accept()ed connection from %s\n", our_inet_ntoa(clientAddr.sin_addr));
+#endif
 
   // Create a new object for this RTSP session:
   // (Later, we need to do some garbage collection on sessions that #####
@@ -449,13 +452,13 @@ void RTSPServer::RTSPClientSession
   u_int8_t destinationTTL = 255;
   Port serverRTPPort(0);
   Port serverRTCPPort(0);
-  subsession->getStreamParameters(fClientAddr.sin_addr.s_addr,
+  subsession->getStreamParameters(fOurSessionId, fClientAddr.sin_addr.s_addr,
 				  clientRTPPort, clientRTCPPort,
 				  isMulticast, destinationAddress, destinationTTL,
 				  serverRTPPort, serverRTCPPort,
 				  fStreamStates[streamNum].streamToken);
+  struct in_addr destinationAddr; destinationAddr.s_addr = destinationAddress;
   if (isMulticast) {
-    struct in_addr destinationAddr; destinationAddr.s_addr = destinationAddress;
     sprintf((char*)fBuffer,
 	    "RTSP/1.0 200 OK\r\n"
 	    "CSeq: %s\r\n"
@@ -468,10 +471,10 @@ void RTSPServer::RTSPClientSession
     sprintf((char*)fBuffer,
 	    "RTSP/1.0 200 OK\r\n"
 	    "CSeq: %s\r\n"
-	    "Transport: RTP/AVP;unicast;client_port=%d-%d;server_port=%d-%d\r\n"
+	    "Transport: RTP/AVP;unicast;destination=%s;client_port=%d-%d;server_port=%d-%d\r\n"
 	    "Session: %d\r\n\r\n",
 	    cseq,
-	    ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
+	    our_inet_ntoa(destinationAddr), ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
 	    fOurSessionId);
   }
 }

@@ -23,6 +23,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 UsageEnvironment* env;
 
+// To stream *only* MPEG-1 or 2 video "I" frames
+// (e.g., to reduce network bandwidth),
+// change the following "False" to "True":
+Boolean iFramesOnly = False;
+
 int main(int argc, char** argv) {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
@@ -60,16 +65,39 @@ int main(int argc, char** argv) {
     delete[] url;
   }
 
+  // A MPEG-1 or 2 audio+video program stream:
+  {
+    char const* streamName = "mpeg1or2AudioVideoTest";
+    char const* inputFileName = "test.mpg";
+    // NOTE: This *must* be a Program Stream; not an Elementary Stream
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, streamName, streamName,
+				      descriptionString);
+    MPEG1or2FileServerDemux* demux
+      = MPEG1or2FileServerDemux::createNew(*env, inputFileName);
+    // Note (hack): Create the video stream subsession first, to ensure that any
+    // video sequence header at the start of the file gets read.
+    sms->addSubsession(demux->newVideoServerMediaSubsession(iFramesOnly));
+    sms->addSubsession(demux->newAudioServerMediaSubsession());
+    rtspServer->addServerMediaSession(sms);
+
+    char* url = rtspServer->rtspURL(sms);
+    *env << "\n\"" << streamName << "\" stream, from the file \""
+	 << inputFileName << "\"\n";
+    *env << "Play this stream using the URL \"" << url << "\"\n";
+    delete[] url;
+  }
+
   // A MPEG-1 or 2 video elementary stream:
   {
     char const* streamName = "mpeg1or2ESVideoTest";
-    char const* inputFileName = "test.mpg";
+    char const* inputFileName = "testv.mpg";
     // NOTE: This *must* be a Video Elementary Stream; not a Program Stream
     ServerMediaSession* sms
       = ServerMediaSession::createNew(*env, streamName, streamName,
 				      descriptionString);
     sms->addSubsession(MPEG1or2VideoFileServerMediaSubsession
-		       ::createNew(*env, inputFileName));
+		       ::createNew(*env, inputFileName, iFramesOnly));
     rtspServer->addServerMediaSession(sms);
 
     char* url = rtspServer->rtspURL(sms);

@@ -87,7 +87,7 @@ char const* MPEG4VideoFileServerMediaSubsession
 }
 
 FramedSource* MPEG4VideoFileServerMediaSubsession
-::createNewStreamSource(unsigned& estBitrate) {
+::createNewStreamSource(unsigned /*clientSessionId*/, unsigned& estBitrate) {
   estBitrate = 500; // kbps, estimate
 
   // Create the video source:

@@ -23,7 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ////////// MPEG1or2DemuxedElementaryStream //////////
 
 MPEG1or2DemuxedElementaryStream::
-MPEG1or2DemuxedElementaryStream(UsageEnvironment& env, unsigned char streamIdTag,
+MPEG1or2DemuxedElementaryStream(UsageEnvironment& env, u_int8_t streamIdTag,
 			    MPEG1or2Demux& sourceDemux)
   : FramedSource(env),
     fOurStreamIdTag(streamIdTag), fOurSourceDemux(sourceDemux) {
@@ -38,6 +38,7 @@ MPEG1or2DemuxedElementaryStream(UsageEnvironment& env, unsigned char streamIdTag
 }
 
 MPEG1or2DemuxedElementaryStream::~MPEG1or2DemuxedElementaryStream() {
+  fOurSourceDemux.noteElementaryStreamDeletion(this);
 }
 
 void MPEG1or2DemuxedElementaryStream::doGetNextFrame() {

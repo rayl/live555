@@ -147,6 +147,10 @@ int setupStreamSocket(UsageEnvironment& env,
     return -1;
   }
   
+  // SO_REUSEPORT doesn't really make sense for TCP sockets, so we
+  // normally don't set them.  However, if you really want to do this
+  // #define REUSE_FOR_TCP
+#ifdef REUSE_FOR_TCP
 #if defined(__WIN32__) || defined(_WIN32)
     // Windoze doesn't handle SO_REUSEPORT
 #else
@@ -157,6 +161,7 @@ int setupStreamSocket(UsageEnvironment& env,
     _close(newSocket);
     return -1;
   }
+#endif
 #endif
 #endif
 

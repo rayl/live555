@@ -410,7 +410,7 @@ void PacketWarehouse::addNewFrame(unsigned priority,
   if (desc.buffer == NULL) {
 #ifdef DEBUG
     fprintf(stderr, "PacketWarehouse::addNewFrame failed to allocate %d-byte buffer!\n", frameSize);
-#endif DEBUG
+#endif
     exit(1);
   }
   memmove(desc.buffer, buffer, frameSize);

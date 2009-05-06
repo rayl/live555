@@ -16,33 +16,34 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // "liveMedia"
 // Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
-// on demand, from a MPEG-4 video file.
+// on demand, from a MPEG-1 or 2 demuxer.
 // C++ header
 
-#ifndef _MPEG4_VIDEO_FILE_SERVER_MEDIA_SUBSESSION_HH
-#define _MPEG4_VIDEO_FILE_SERVER_MEDIA_SUBSESSION_HH
+#ifndef _MPEG_1OR2_DEMUXED_SERVER_MEDIA_SUBSESSION_HH
+#define _MPEG_1OR2_DEMUXED_SERVER_MEDIA_SUBSESSION_HH
 
-#ifndef _FILE_SERVER_MEDIA_SUBSESSION_HH
-#include "FileServerMediaSubsession.hh"
+#ifndef _ON_DEMAND_SERVER_MEDIA_SUBSESSION_HH
+#include "OnDemandServerMediaSubsession.hh"
+#endif
+#ifndef _MPEG_1OR2_FILE_SERVER_DEMUX_HH
+#include "MPEG1or2FileServerDemux.hh"
 #endif
 
-class MPEG4VideoFileServerMediaSubsession: public FileServerMediaSubsession{
+class MPEG1or2DemuxedServerMediaSubsession: public OnDemandServerMediaSubsession{
 public:
-  static MPEG4VideoFileServerMediaSubsession*
-  createNew(UsageEnvironment& env, char const* fileName);
-
-  void setDoneFlag() { fDoneFlag = ~0; }
-  void checkForAuxSDPLine1();
+  static MPEG1or2DemuxedServerMediaSubsession*
+  createNew(MPEG1or2FileServerDemux& demux, u_int8_t streamIdTag,
+	    Boolean iFramesOnly = False, double vshPeriod = 5.0);
+  // The last two parameters are relevant for video streams only
 
 private:
-  MPEG4VideoFileServerMediaSubsession(UsageEnvironment& env,
-				      char const* fileName);
+  MPEG1or2DemuxedServerMediaSubsession(MPEG1or2FileServerDemux& demux,
+				       u_int8_t streamIdTag,
+				       Boolean iFramesOnly, double vshPeriod);
       // called only by createNew();
-  virtual ~MPEG4VideoFileServerMediaSubsession();
+  virtual ~MPEG1or2DemuxedServerMediaSubsession();
 
 private: // redefined virtual functions
-  virtual char const* getAuxSDPLine(RTPSink* rtpSink,
-				    FramedSource* inputSource);
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
 					      unsigned& estBitrate);
   virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
@@ -50,8 +51,10 @@ private: // redefined virtual functions
 				    FramedSource* inputSource);
 
 private:
-  char fDoneFlag; // used when setting up "fSDPLines"
-  RTPSink* fDummyRTPSink; // ditto
+  MPEG1or2FileServerDemux& fOurDemux;
+  u_int8_t fStreamIdTag;
+  Boolean fIFramesOnly; // for video streams
+  double fVSHPeriod; // for video streams
 };
 
 #endif

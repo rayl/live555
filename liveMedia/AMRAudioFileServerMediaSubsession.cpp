@@ -40,7 +40,7 @@ AMRAudioFileServerMediaSubsession
 }
 
 FramedSource* AMRAudioFileServerMediaSubsession
-::createNewStreamSource(unsigned& estBitrate) {
+::createNewStreamSource(unsigned /*clientSessionId*/, unsigned& estBitrate) {
   estBitrate = 10; // kbps, estimate
 
   return AMRAudioFileSource::createNew(envir(), fFileName);

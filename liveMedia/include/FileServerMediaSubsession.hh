@@ -22,53 +22,17 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _FILE_SERVER_MEDIA_SUBSESSION_HH
 #define _FILE_SERVER_MEDIA_SUBSESSION_HH
 
-#ifndef _SERVER_MEDIA_SESSION_HH
-#include "ServerMediaSession.hh"
-#endif
-#ifndef _RTP_SINK_HH
-#include "RTPSink.hh"
+#ifndef _ON_DEMAND_SERVER_MEDIA_SUBSESSION_HH
+#include "OnDemandServerMediaSubsession.hh"
 #endif
 
-class FileServerMediaSubsession: public ServerMediaSubsession {
+class FileServerMediaSubsession: public OnDemandServerMediaSubsession {
 protected: // we're a virtual base class
   FileServerMediaSubsession(UsageEnvironment& env, char const* fileName);
   virtual ~FileServerMediaSubsession();
 
-private: // redefined virtual functions
-  virtual char const* sdpLines();
-  virtual void getStreamParameters(netAddressBits clientAddress,
-                                   Port const& clientRTPPort,
-                                   Port const& clientRTCPPort,
-                                   Boolean& isMulticast,
-                                   netAddressBits destinationAddress,
-				   u_int8_t destinationTTL,
-                                   Port& serverRTPPort,
-                                   Port& serverRTCPPort,
-                                   void*& streamToken);
-  virtual void startStream(void* streamToken);
-  virtual void pauseStream(void* streamToken);
-  virtual void endStream(void* streamToken);
-  virtual void deleteStream(void* streamToken);
-
-protected: // new virtual functions
-  virtual char const* getAuxSDPLine(RTPSink* rtpSink,
-				    FramedSource* inputSource);
-
-protected: // new virtual functions, defined by subclasses
-  virtual FramedSource* createNewStreamSource(unsigned& estBitrate) = 0;
-      // "estBitrate" is the stream's estimated bitrate, in kbps
-  virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
-				    unsigned char rtpPayloadTypeIfDynamic,
-				    FramedSource* inputSource) = 0;
-
-private:
-  void setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource);
-      // used to implement "sdpLines()"
-
 protected:
   char const* fFileName;
-  char* fSDPLines;
-  char fCNAME[100]; // for RTCP
 };
 
 #endif
