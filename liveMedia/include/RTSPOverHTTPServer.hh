@@ -23,7 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #define _RTSP_OVER_HTTP_SERVER_HH
 
 #include "Media.hh"
-#include <NetInterface.hh>
+#include "NetInterface.hh"
 
 #define HTTP_BUFFER_SIZE 10000 // for incoming requests, and outgoing responses
 

@@ -195,7 +195,7 @@ int main(int argc, char** argv) {
   {
     char const* streamName = "mpeg2TransportStreamTest";
     char const* inputFileName = "test.ts";
-    char const* indexFileName = "test.ts";
+    char const* indexFileName = "test.tsx";
     ServerMediaSession* sms
       = ServerMediaSession::createNew(*env, streamName, streamName,
 				      descriptionString);

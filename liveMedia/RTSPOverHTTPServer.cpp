@@ -221,8 +221,7 @@ void RTSPOverHTTPServer::HTTPClientConnection::incomingRequestHandler1() {
     handleCmd_bad(cseq);
   } else {
 #ifdef DEBUG
-    fprintf(stderr, "parseRTSPRequestString() returned cmdName \"%s\", urlPreSuffix \"%s
-\", urlSuffix \"%s\"\n", cmdName, urlPreSuffix, urlSuffix);
+    fprintf(stderr, "parseRTSPRequestString() returned cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\"\n", cmdName, urlPreSuffix, urlSuffix);
 #endif
     if (strcmp(cmdName, "OPTIONS") == 0) {
       handleCmd_OPTIONS(cseq);

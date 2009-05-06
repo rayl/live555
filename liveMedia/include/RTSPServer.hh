@@ -98,7 +98,8 @@ protected:
   virtual ~RTSPServer();
 
   static int setUpOurSocket(UsageEnvironment& env, Port& ourPort);
-  virtual Boolean specialClientAccessCheck(int clientSocket, char const* urlSuffix);
+  virtual Boolean specialClientAccessCheck(int clientSocket, struct sockaddr_in& clientAddr,
+					   char const* urlSuffix);
       // a hook that allows subclassed servers to do server-specific access checking
       // on each client (e.g., based on client IP address), without using
       // digest authentication.

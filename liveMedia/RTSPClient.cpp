@@ -21,47 +21,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPClient.hh"
 #include "RTSPCommon.hh"
 #include "Base64.hh"
+#include "Locale.hh"
 #include <GroupsockHelper.hh>
 #include "our_md5.h"
 #ifdef SUPPORT_REAL_RTSP
 #include "../RealRTSP/include/RealRTSP.hh"
 #endif
-
-// Experimental support for temporarily setting the locale (e.g., to POSIX,
-// for parsing or printing floating-point numbers in protocol headers).
-#ifdef USE_LOCALE
-#include <locale.h>
-#else
-#ifndef LC_NUMERIC
-#define LC_NUMERIC 0
-#endif
-#endif
-
-class Locale {
-public:
-  Locale(char const* newLocale, int category = LC_NUMERIC)
-    : fCategory(category) {
-#ifdef USE_LOCALE
-    fPrevLocale = strDup(setlocale(category, NULL));
-    setlocale(category, newLocale);
-#endif
-  }
-
-  virtual ~Locale() {
-#ifdef USE_LOCALE
-    if (fPrevLocale != NULL) {
-      setlocale(fCategory, fPrevLocale);
-      delete[] fPrevLocale;
-    }
-#endif
-  }
-
-private:
-  int fCategory;
-  char* fPrevLocale;
-};
-
-
 
 ////////// RTSPClient //////////
 
@@ -1024,7 +989,7 @@ static char* createScaleString(float scale, float currentScale) {
     // This is the default value; we don't need a "Scale:" header:
     buf[0] = '\0';
   } else {
-    Locale("POSIX");
+    Locale("POSIX", LC_NUMERIC);
     sprintf(buf, "Scale: %f\r\n", scale);
   }
 
@@ -1038,11 +1003,11 @@ static char* createRangeString(float start, float end) {
     buf[0] = '\0';
   } else if (end < 0) {
     // There's no end time:
-    Locale("POSIX");
+    Locale("POSIX", LC_NUMERIC);
     sprintf(buf, "Range: npt=%.3f-\r\n", start);
   } else {
     // There's both a start and an end time; include them both in the "Range:" hdr
-    Locale("POSIX");
+    Locale("POSIX", LC_NUMERIC);
     sprintf(buf, "Range: npt=%.3f-%.3f\r\n", start, end);
   }
 
@@ -2281,7 +2246,7 @@ Boolean RTSPClient::parseScaleHeader(char const* line, float& scale) {
   if (_strncasecmp(line, "Scale: ", 7) != 0) return False;
   line += 7;
 
-  Locale("POSIX");
+  Locale("POSIX", LC_NUMERIC);
   return sscanf(line, "%f", &scale) == 1;
 }
 

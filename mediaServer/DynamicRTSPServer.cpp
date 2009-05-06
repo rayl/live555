@@ -87,7 +87,7 @@ sms = ServerMediaSession::createNew(env, fileName, fileName, descStr);\
 static ServerMediaSession* createNewSMS(UsageEnvironment& env,
 					char const* fileName, FILE* /*fid*/) {
   // Use the file name extension to determine the type of "ServerMediaSession":
-  char* extension = strrchr(fileName, '.');
+  char const* extension = strrchr(fileName, '.');
   if (extension == NULL) return NULL;
 
   ServerMediaSession* sms = NULL;
