@@ -20,48 +20,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "H264VideoRTPSink.hh"
 #include "H264VideoStreamFramer.hh"
-#include "FramedFilter.hh"
-
-////////// H264FUAFragmenter definition //////////
-
-// Because of the ideosyncracies of the H.264 RTP payload format, we implement
-// "H264VideoRTPSink" using a separate "H264FUAFragmenter" class that delivers,
-// to the "H264VideoRTPSink", only fragments that will fit within an outgoing
-// RTP packet.  I.e., we implement fragmentation in this separate "H264FUAFragmenter"
-// class, rather than in "H264VideoRTPSink".
-
-class H264FUAFragmenter: public FramedFilter {
-public:
-  H264FUAFragmenter(UsageEnvironment& env, FramedSource* inputSource,
-		    unsigned inputBufferMax, unsigned maxOutputPacketSize);
-
-  virtual ~H264FUAFragmenter();
-
-  Boolean lastFragmentCompletedNALUnit() const { return fLastFragmentCompletedNALUnit; }
-
-private: // redefined virtual functions:
-  virtual void doGetNextFrame();
-
-private:
-  static void afterGettingFrame(void* clientData, unsigned frameSize,
-				unsigned numTruncatedBytes,
-                                struct timeval presentationTime,
-                                unsigned durationInMicroseconds);
-  void afterGettingFrame1(unsigned frameSize,
-                          unsigned numTruncatedBytes,
-                          struct timeval presentationTime,
-                          unsigned durationInMicroseconds);
-
-private:
-  unsigned fInputBufferSize;
-  unsigned fMaxOutputPacketSize;
-  unsigned char* fInputBuffer;
-  unsigned fNumValidDataBytes;
-  unsigned fCurDataOffset;
-  unsigned fSaveNumTruncatedBytes;
-  Boolean fLastFragmentCompletedNALUnit;
-};
-
 
 ////////// H264VideoRTPSink implementation //////////
 

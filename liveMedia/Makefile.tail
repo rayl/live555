@@ -203,8 +203,8 @@ MPEG4ESVideoRTPSink.$(CPP):	include/MPEG4ESVideoRTPSink.hh include/MPEG4VideoStr
 include/MPEG4ESVideoRTPSink.hh: include/VideoRTPSink.hh
 H263plusVideoRTPSink.$(CPP):	include/H263plusVideoRTPSink.hh
 include/H263plusVideoRTPSink.hh:	include/VideoRTPSink.hh
-H264VideoRTPSink.$(CPP):	include/H264VideoRTPSink.hh include/H264VideoStreamFramer.hh include/FramedFilter.hh
-include/H264VideoRTPSink.hh:	include/VideoRTPSink.hh
+H264VideoRTPSink.$(CPP):	include/H264VideoRTPSink.hh include/H264VideoStreamFramer.hh
+include/H264VideoRTPSink.hh:	include/VideoRTPSink.hh include/FramedFilter.hh
 AC3AudioRTPSink.$(CPP):	include/AC3AudioRTPSink.hh
 include/AC3AudioRTPSink.hh:	include/AudioRTPSink.hh
 GSMAudioRTPSink.$(CPP):		include/GSMAudioRTPSink.hh
