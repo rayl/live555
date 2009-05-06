@@ -25,7 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "NetAddress.hh"
 #endif
 
-typedef unsigned short Cookie;
+typedef u_int16_t Cookie;
 
 class TunnelEncapsulationTrailer {
 	// The trailer is layed out as follows:
@@ -45,17 +45,17 @@ class TunnelEncapsulationTrailer {
 		{ return *(Cookie*)byteOffset(0); } 
 	Cookie& dstCookie()
 		{ return *(Cookie*)byteOffset(2); } 
-	unsigned& address()
-		{ return *(unsigned*)byteOffset(4); }
+	u_int32_t& address()
+		{ return *(u_int32_t*)byteOffset(4); }
 	Port& port()
 		{ return *(Port*)byteOffset(8); }
-	unsigned char& ttl()
-		{ return *(unsigned char*)byteOffset(10); }
-	unsigned char& command()
-		{ return *(unsigned char*)byteOffset(11); }
+	u_int8_t& ttl()
+		{ return *(u_int8_t*)byteOffset(10); }
+	u_int8_t& command()
+		{ return *(u_int8_t*)byteOffset(11); }
 
-        unsigned& auxAddress()
-                { return *(unsigned*)byteOffset(-4); }
+        u_int32_t& auxAddress()
+                { return *(u_int32_t*)byteOffset(-4); }
 
     private:
 	inline char* byteOffset(int charIndex)
@@ -69,32 +69,32 @@ const unsigned TunnelEncapsulationTrailerMaxSize
 
 // Command codes:
 // 0: unused
-const unsigned char TunnelDataCmd = 1;
-const unsigned char TunnelJoinGroupCmd = 2;
-const unsigned char TunnelLeaveGroupCmd = 3;
-const unsigned char TunnelTearDownCmd = 4;
-const unsigned char TunnelProbeCmd = 5;
-const unsigned char TunnelProbeAckCmd = 6;
-const unsigned char TunnelProbeNackCmd = 7;
-const unsigned char TunnelJoinRTPGroupCmd = 8;
-const unsigned char TunnelLeaveRTPGroupCmd = 9;
+const u_int8_t TunnelDataCmd = 1;
+const u_int8_t TunnelJoinGroupCmd = 2;
+const u_int8_t TunnelLeaveGroupCmd = 3;
+const u_int8_t TunnelTearDownCmd = 4;
+const u_int8_t TunnelProbeCmd = 5;
+const u_int8_t TunnelProbeAckCmd = 6;
+const u_int8_t TunnelProbeNackCmd = 7;
+const u_int8_t TunnelJoinRTPGroupCmd = 8;
+const u_int8_t TunnelLeaveRTPGroupCmd = 9;
 // 0x0A through 0x10: currently unused.
-const unsigned char TunnelExtensionFlag = 0x80; // a flag, not a cmd code
-const unsigned char TunnelDataAuxCmd
+const u_int8_t TunnelExtensionFlag = 0x80; // a flag, not a cmd code
+const u_int8_t TunnelDataAuxCmd
     = (TunnelExtensionFlag|TunnelDataCmd);
-const unsigned char TunnelJoinGroupAuxCmd
+const u_int8_t TunnelJoinGroupAuxCmd
     = (TunnelExtensionFlag|TunnelJoinGroupCmd);
-const unsigned char TunnelLeaveGroupAuxCmd
+const u_int8_t TunnelLeaveGroupAuxCmd
     = (TunnelExtensionFlag|TunnelLeaveGroupCmd);
 // Note: the TearDown, Probe, ProbeAck, ProbeNack cmds have no Aux version
 // 0x84 through 0x87: currently unused.
-const unsigned char TunnelJoinRTPGroupAuxCmd
+const u_int8_t TunnelJoinRTPGroupAuxCmd
     = (TunnelExtensionFlag|TunnelJoinRTPGroupCmd);
-const unsigned char TunnelLeaveRTPGroupAuxCmd
+const u_int8_t TunnelLeaveRTPGroupAuxCmd
     = (TunnelExtensionFlag|TunnelLeaveRTPGroupCmd);
 // 0x8A through 0xFF: currently unused
 
-inline Boolean TunnelIsAuxCmd(unsigned char cmd) {
+inline Boolean TunnelIsAuxCmd(u_int8_t cmd) {
   return (cmd&TunnelExtensionFlag) != 0;
 }
 

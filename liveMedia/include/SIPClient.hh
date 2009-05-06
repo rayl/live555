@@ -61,6 +61,10 @@ public:
 
   static Boolean parseSIPURL(UsageEnvironment& env, char const* url,
 			     NetAddress& address, portNumBits& portNum);
+      // (ignores any "<username>[:<password>]@" in "url")
+  static Boolean parseSIPURLUsernamePassword(char const* url,
+					     char*& username,
+					     char*& password);
 
 protected:
   virtual ~SIPClient();

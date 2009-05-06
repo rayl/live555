@@ -53,8 +53,7 @@ int main(int argc, char** argv) {
 #else
     = "239.255.42.42";
   // Note: If the session is unicast rather than multicast,
-  // then replace this string with the (unicast) address of the *source*.
-  // (This will cause RTCP Reception Reports to be sent back to the source)
+  // then replace this string with "0.0.0.0"
 #endif
   const unsigned short rtpPortNum = 8888;
   const unsigned short rtcpPortNum = rtpPortNum+1;

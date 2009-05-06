@@ -58,7 +58,7 @@ public:
   static Boolean lookupByName(UsageEnvironment& env,
 			      char const* mediumName,
 			      Medium*& resultMedium);
-  static void close(char const* mediumName);
+  static void close(UsageEnvironment& env, char const* mediumName);
   static void close(Medium* medium); // alternative close() method using ptrs
       // (has no effect if medium == NULL)
 

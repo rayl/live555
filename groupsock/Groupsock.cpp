@@ -45,7 +45,7 @@ OutputSocket::OutputSocket(UsageEnvironment& env, Port port)
 OutputSocket::~OutputSocket() {
 }
 
-Boolean OutputSocket::write(unsigned address, Port port, unsigned char ttl,
+Boolean OutputSocket::write(netAddressBits address, Port port, u_int8_t ttl,
 			    unsigned char* buffer, unsigned bufferSize) {
   if (ttl == fLastSentTTL) {
     // Optimization: So we don't do a 'set TTL' system call again
@@ -90,7 +90,7 @@ NetInterfaceTrafficStats Groupsock::statsRelayedOutgoing;
 
 // Constructor for a source-independent multicast group
 Groupsock::Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
-		     Port port, unsigned char ttl)
+		     Port port, u_int8_t ttl)
   : OutputSocket(env, port),
     deleteIfNoMembers(False), isSlave(False),
     fIncomingGroupEId(groupAddr, port.num(), ttl),
@@ -165,19 +165,19 @@ Groupsock::changeDestinationParameters(struct in_addr const& newDestAddr,
     socketJoinGroup(env(), socketNum(), destAddr.s_addr);
   }
 
-  unsigned short destPortNum = fOutgoingGroupEId.portNum();
+  portNumBits destPortNum = fOutgoingGroupEId.portNum();
   if (newDestPort.num() != 0) {
     destPortNum = newDestPort.num();
     fDestPort = newDestPort;
   }
 
-  unsigned char destTTL = ttl();
-  if (newDestTTL != ~0) destTTL = (unsigned char)newDestTTL;
+  u_int8_t destTTL = ttl();
+  if (newDestTTL != ~0) destTTL = (u_int8_t)newDestTTL;
 
   fOutgoingGroupEId = GroupEId(destAddr, destPortNum, destTTL);
 }
 
-Boolean Groupsock::output(UsageEnvironment& env, unsigned char ttlToSend,
+Boolean Groupsock::output(UsageEnvironment& env, u_int8_t ttlToSend,
 			  unsigned char* buffer, unsigned bufferSize,
 			  DirectedNetInterface* interfaceNotToFwdBackTo) {
   do {
@@ -291,9 +291,9 @@ Boolean Groupsock::wasLoopedBackFromUs(UsageEnvironment& env,
 }
 
 int Groupsock::outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
-					unsigned char ttlToFwd,
+					u_int8_t ttlToFwd,
 					unsigned char* data, unsigned size,
-					unsigned sourceAddr) {
+					netAddressBits sourceAddr) {
   // Don't forward TTL-0 packets
   if (ttlToFwd == 0) return 0;
   
@@ -328,7 +328,7 @@ int Groupsock::outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
       
       Boolean misaligned = ((unsigned long)trailerInPacket & 3) != 0;
       unsigned trailerOffset;
-      unsigned char tunnelCmd;
+      u_int8_t tunnelCmd;
       if (isSSM()) {
 	// add an 'auxilliary address' before the trailer
 	trailerOffset = TunnelEncapsulationTrailerAuxSize;
@@ -469,8 +469,9 @@ static Groupsock* getGroupsockBySocket(int sock) {
 ////////// GroupsockLookupTable //////////
 
 Groupsock*
-GroupsockLookupTable::Fetch(UsageEnvironment& env, unsigned groupAddress,
-			    Port port, unsigned char ttl,
+GroupsockLookupTable::Fetch(UsageEnvironment& env,
+			    netAddressBits groupAddress,
+			    Port port, u_int8_t ttl,
 			    Boolean& isNew) {
   isNew = False;
   Groupsock* groupsock;
@@ -487,8 +488,9 @@ GroupsockLookupTable::Fetch(UsageEnvironment& env, unsigned groupAddress,
 }
 
 Groupsock*
-GroupsockLookupTable::Fetch(UsageEnvironment& env, unsigned groupAddress,
-			    unsigned sourceFilterAddr, Port port,
+GroupsockLookupTable::Fetch(UsageEnvironment& env,
+			    netAddressBits groupAddress,
+			    netAddressBits sourceFilterAddr, Port port,
 			    Boolean& isNew) {
   isNew = False;
   Groupsock* groupsock;
@@ -505,12 +507,14 @@ GroupsockLookupTable::Fetch(UsageEnvironment& env, unsigned groupAddress,
   return groupsock;
 }
 
-Groupsock* GroupsockLookupTable::Lookup(unsigned groupAddress, Port port) {
+Groupsock*
+GroupsockLookupTable::Lookup(netAddressBits groupAddress, Port port) {
   return (Groupsock*) fTable.Lookup(groupAddress, (~0), port);
 }
 
-Groupsock* GroupsockLookupTable::Lookup(unsigned groupAddress,
-					unsigned sourceFilterAddr, Port port) {
+Groupsock*
+GroupsockLookupTable::Lookup(netAddressBits groupAddress,
+			     netAddressBits sourceFilterAddr, Port port) {
   return (Groupsock*) fTable.Lookup(groupAddress, sourceFilterAddr, port);
 }
 
@@ -526,13 +530,13 @@ Boolean GroupsockLookupTable::Remove(Groupsock const* groupsock) {
 }
 
 Groupsock* GroupsockLookupTable::AddNew(UsageEnvironment& env,
-					unsigned groupAddress,
-					unsigned sourceFilterAddress,
-					Port port, unsigned char ttl) {
+					netAddressBits groupAddress,
+					netAddressBits sourceFilterAddress,
+					Port port, u_int8_t ttl) {
   Groupsock* groupsock;
   do {
     struct in_addr groupAddr; groupAddr.s_addr = groupAddress;
-    if (sourceFilterAddress == unsigned(~0)) {
+    if (sourceFilterAddress == netAddressBits(~0)) {
       // regular, ISM groupsock
       groupsock = new Groupsock(env, groupAddr, port, ttl);
     } else {

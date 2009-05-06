@@ -40,17 +40,24 @@ private:
   unsigned fNameGenerator;
 };
 
-MediaLookupTable OurMedia;
+static MediaLookupTable* ourMedia(UsageEnvironment& env) {
+  if (env.priv == NULL) {
+    // Create a new table to record the media that are to be created in
+    // this environment:
+    env.priv = new MediaLookupTable;
+  }
+  return (MediaLookupTable*)(env.priv);
+}
 
 ////////// Medium //////////
 
 Medium::Medium(UsageEnvironment& env)
 	: fEnviron(env), fNextTask(NULL) {
   // First generate a name for the new medium:
-  OurMedia.generateNewName(fMediumName, mediumNameMaxLen);
+  ourMedia(env)->generateNewName(fMediumName, mediumNameMaxLen);
   env.setResultMsg(fMediumName);
 
-  OurMedia.addNew(this, fMediumName);
+  ourMedia(env)->addNew(this, fMediumName);
 }
 
 Medium::~Medium() {
@@ -60,7 +67,7 @@ Medium::~Medium() {
 
 Boolean Medium::lookupByName(UsageEnvironment& env, char const* mediumName,
 				  Medium*& resultMedium) {
-  resultMedium = OurMedia.lookup(mediumName);
+  resultMedium = ourMedia(env)->lookup(mediumName);
   if (resultMedium == NULL) {
     env.setResultMsg("Medium ", mediumName, " does not exist");
     return False;
@@ -69,15 +76,15 @@ Boolean Medium::lookupByName(UsageEnvironment& env, char const* mediumName,
   return True;
 }
 
-void Medium::close(char const* name) {
-  Medium* toDelete = OurMedia.remove(name);
+void Medium::close(UsageEnvironment& env, char const* name) {
+  Medium* toDelete = ourMedia(env)->remove(name);
   delete toDelete;
 }
 
 void Medium::close(Medium* medium) {
   if (medium == NULL) return;
 
-  Medium* toDelete = OurMedia.remove(medium->name());
+  Medium* toDelete = ourMedia(medium->envir())->remove(medium->name());
   if (toDelete != medium) return; // shouldn't happen
 
   delete toDelete;

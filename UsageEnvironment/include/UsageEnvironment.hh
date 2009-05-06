@@ -60,6 +60,9 @@ public:
 	// used to report a (previously set) error message within
 	// a background event
 
+  void* priv;
+      // a pointer to additional, optional, client-specific state
+
 protected:
   UsageEnvironment(TaskScheduler& scheduler); // abstract base class
 

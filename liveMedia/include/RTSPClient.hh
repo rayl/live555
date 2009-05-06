@@ -94,6 +94,10 @@ public:
 
   static Boolean parseRTSPURL(UsageEnvironment& env, char const* url,
 			      NetAddress& address, portNumBits& portNum);
+      // (ignores any "<username>[:<password>]@" in "url")
+  static Boolean parseRTSPURLUsernamePassword(char const* url,
+					      char*& username,
+					      char*& password);
 
 protected:
   virtual ~RTSPClient();

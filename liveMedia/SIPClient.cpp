@@ -171,6 +171,15 @@ static char* getLine(char* startOfLine) {
 }
 
 char* SIPClient::invite(char const* url, AuthRecord* authenticator) {
+  // First, check whether "url" contains a username:password to be used:
+  char* username; char* password;
+  if (authenticator == NULL
+      && parseSIPURLUsernamePassword(url, username, password)) {
+    char* result = inviteWithPassword(url, username, password);
+    delete[] username; delete[] password; // they were dynamically allocated
+    return result;
+  }
+
   if (!processURL(url)) return NULL;
 
   delete[] (char*)fURL; fURL = strDup(url);
@@ -768,6 +777,7 @@ Boolean SIPClient::parseSIPURL(UsageEnvironment& env, char const* url,
   do {
     // Parse the URL as "sip:<username>@<address>:<port>/<etc>"
     // (with ":<port>" and "/<etc>" optional)
+    // Also, skip over any "<username>[:<password>]@" preceding <address>
     char const* prefix = "sip:";
     unsigned const prefixLength = 4;
     if (_strncasecmp(url, prefix, prefixLength) != 0) {
@@ -781,6 +791,17 @@ Boolean SIPClient::parseSIPURL(UsageEnvironment& env, char const* url,
     while (url[addressStartIndex] != '\0'
 	   && url[addressStartIndex++] != '@') {}
     char const* from = &url[addressStartIndex];
+
+    // Skip over any "<username>[:<password>]@"
+    char const* from1 = from;
+    while (*from1 != '\0' && *from1 != '/') {
+      if (*from1 == '@') {
+	from = ++from1;
+	break;
+      }
+      ++from1;
+    }
+
     char* to = &parseBuffer[0];
     unsigned i;
     for (i = 0; i < parseBufferSize; ++i) {
@@ -818,6 +839,46 @@ Boolean SIPClient::parseSIPURL(UsageEnvironment& env, char const* url,
       }
       portNum = (portNumBits)portNumInt;
     }
+
+    return True;
+  } while (0);
+
+  return False;
+}
+
+Boolean SIPClient::parseSIPURLUsernamePassword(char const* url,
+					       char*& username,
+					       char*& password) {
+  username = password = NULL; // by default
+  do {
+    // Parse the URL as "sip:<username>[:<password>]@<whatever>"
+    char const* prefix = "sip:";
+    unsigned const prefixLength = 4;
+    if (_strncasecmp(url, prefix, prefixLength) != 0) break;
+
+    // Look for the ':' and '@':
+    unsigned usernameIndex = prefixLength;
+    unsigned colonIndex = 0, atIndex = 0;
+    for (unsigned i = usernameIndex; url[i] != '\0' && url[i] != '/'; ++i) {
+      if (url[i] == ':' && colonIndex == 0) {
+	colonIndex = i;
+      } else if (url[i] == '@') {
+        atIndex = i;
+        break; // we're done
+      }
+    }
+    if (atIndex == 0) break; // no '@' found
+
+    char* urlCopy = strDup(url);
+    urlCopy[atIndex] = '\0';
+    if (colonIndex > 0) {
+      urlCopy[colonIndex] = '\0';
+      password = strDup(&urlCopy[colonIndex+1]);
+    } else {
+      password = strDup("");
+    }
+    username = strDup(&urlCopy[usernameIndex]);
+    delete[] urlCopy;
 
     return True;
   } while (0);

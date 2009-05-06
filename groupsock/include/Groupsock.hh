@@ -45,13 +45,13 @@ public:
   OutputSocket(UsageEnvironment& env);
   virtual ~OutputSocket();
   
-  Boolean write(unsigned address, Port port, unsigned char ttl,
+  Boolean write(netAddressBits address, Port port, u_int8_t ttl,
 		unsigned char* buffer, unsigned bufferSize);
 
 protected:
   OutputSocket(UsageEnvironment& env, Port port);
 
-  unsigned short sourcePortNum() const {return fSourcePort.num();}
+  portNumBits sourcePortNum() const {return fSourcePort.num();}
 
 private: // redefined virtual function
   virtual Boolean handleRead(unsigned char* buffer, unsigned bufferMaxSize,
@@ -60,7 +60,7 @@ private: // redefined virtual function
 
 private:
   Port fSourcePort;
-  unsigned char fLastSentTTL;
+  u_int8_t fLastSentTTL;
 };
 
 // A "Groupsock" is used to both send and receive packets.
@@ -70,7 +70,7 @@ private:
 class Groupsock: public OutputSocket {
 public:
   Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
-	    Port port, unsigned char ttl);
+	    Port port, u_int8_t ttl);
       // used for a 'source-independent multicast' group
   Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
 	    struct in_addr const& sourceFilterAddr,
@@ -104,11 +104,11 @@ public:
     return fIncomingGroupEId.isSSM();
   }
   
-  unsigned char ttl() const {
+  u_int8_t ttl() const {
     return fOutgoingGroupEId.scope().ttl();
   }
   
-  Boolean output(UsageEnvironment& env, unsigned char ttl,
+  Boolean output(UsageEnvironment& env, u_int8_t ttl,
 		 unsigned char* buffer, unsigned bufferSize,
 		 DirectedNetInterface* interfaceNotToFwdBackTo = NULL);
   
@@ -138,9 +138,9 @@ public: // redefined virtual functions
   
 private:
   int outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
-			       unsigned char ttlToFwd,
+			       u_int8_t ttlToFwd,
 			       unsigned char* data, unsigned size,
-			       unsigned sourceAddr);
+			       netAddressBits sourceAddr);
   
 private:
   GroupEId fIncomingGroupEId, fOutgoingGroupEId;
@@ -155,15 +155,17 @@ ostream& operator<<(ostream& s, const Groupsock& g);
 // by (multicast address, port), or by socket number
 class GroupsockLookupTable {
 public:
-  Groupsock* Fetch(UsageEnvironment& env, unsigned groupAddress,
-		   Port port, unsigned char ttl, Boolean& isNew);
+  Groupsock* Fetch(UsageEnvironment& env, netAddressBits groupAddress,
+		   Port port, u_int8_t ttl, Boolean& isNew);
       // Creates a new Groupsock if none already exists
-  Groupsock* Fetch(UsageEnvironment& env, unsigned groupAddress,
-		   unsigned sourceFilterAddr, Port port, Boolean& isNew);
+  Groupsock* Fetch(UsageEnvironment& env, netAddressBits groupAddress,
+		   netAddressBits sourceFilterAddr,
+		   Port port, Boolean& isNew);
       // Creates a new Groupsock if none already exists
-  Groupsock* Lookup(unsigned groupAddress, Port port);
+  Groupsock* Lookup(netAddressBits groupAddress, Port port);
       // Returns NULL if none already exists
-  Groupsock* Lookup(unsigned groupAddress, unsigned sourceFilterAddr,
+  Groupsock* Lookup(netAddressBits groupAddress,
+		    netAddressBits sourceFilterAddr,
 		    Port port);
       // Returns NULL if none already exists
   Groupsock* Lookup(int sock);
@@ -183,8 +185,9 @@ public:
   
 private:
   Groupsock* AddNew(UsageEnvironment& env,
-		    unsigned groupAddress, unsigned sourceFilterAddress,
-		    Port port, unsigned char ttl);
+		    netAddressBits groupAddress,
+		    netAddressBits sourceFilterAddress,
+		    Port port, u_int8_t ttl);
   
 private:
   friend class Iterator;
