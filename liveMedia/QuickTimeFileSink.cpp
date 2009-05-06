@@ -790,7 +790,7 @@ void SubsessionIOState::useFrame(SubsessionBuffer& buffer) {
   }
 
   // Write the data into the file:
-  fwrite(frameSource, frameSize, 1, fOurSink.fOutFid);
+  fwrite(frameSource, 1, frameSize, fOurSink.fOutFid);
 
   // If we have a hint track, then write to it also:
   if (hasHintTrack()) {

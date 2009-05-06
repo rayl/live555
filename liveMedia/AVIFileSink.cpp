@@ -21,20 +21,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "AVIFileSink.hh"
 #include "OutputFile.hh"
 #include "GroupsockHelper.hh"
-#if 0
-#include "QuickTimeGenericRTPSource.hh"
-#include "H263plusVideoRTPSource.hh" // for the special header
-#include "MPEG4GenericRTPSource.hh" //for "samplingFrequencyFromAudioSpecificConfig()"
-#include "MPEG4LATMAudioRTPSource.hh" // for "parseGeneralConfigStr()"
 
-#include <ctype.h>
+#define fourChar(x,y,z,w) ( ((w)<<24)|((z)<<16)|((y)<<8)|(x) )/*little-endian*/
 
-#define fourChar(x,y,z,w) ( ((x)<<24)|((y)<<16)|((z)<<8)|(w) )
-#endif
-
-////////// AVISubsessionIOState, ChunkDescriptor ///////////
+////////// AVISubsessionIOState ///////////
 // A structure used to represent the I/O state of each input 'subsession':
 
+#if 0
 class ChunkDescriptor {
 public:
   ChunkDescriptor(unsigned offsetInFile, unsigned size,
@@ -55,6 +48,7 @@ public:
   unsigned fFrameDuration;
   struct timeval fPresentationTime; // of the start of the data
 };
+#endif
 
 class SubsessionBuffer {
 public:
@@ -83,115 +77,44 @@ private:
   unsigned char* fData;
   unsigned fBytesInUse;
 };
-#if 0
-
-// A 64-bit counter, used below:
-
-class Count64 {
-public:
-  Count64() { hi = lo = 0; }
-
-  void operator+=(unsigned arg);
-
-  unsigned hi, lo; // each 32 bits
-};
-#endif
 
 class AVISubsessionIOState {
 public:
   AVISubsessionIOState(AVIFileSink& sink, MediaSubsession& subsession);
   virtual ~AVISubsessionIOState();
 
-  Boolean setAVIstate();
+  void setAVIstate(unsigned subsessionIndex);
   void setFinalAVIstate();
 
   void afterGettingFrame(unsigned packetDataSize,
 			 struct timeval presentationTime);
   void onSourceClosure();
 
-#if 0
-  Boolean syncOK(struct timeval presentationTime);
-      // returns true iff data is usable despite a sync check
-
-  static void setHintTrack(AVISubsessionIOState* hintedTrack,
-			   AVISubsessionIOState* hintTrack);
-  Boolean isHintTrack() const { return fTrackHintedByUs != NULL; }
-  Boolean hasHintTrack() const { return fHintTrackForUs != NULL; }
-#endif
-
   UsageEnvironment& envir() const { return fOurSink.envir(); }
 
 public:
-  static unsigned fCurrentTrackNumber;
-  unsigned fTrackID;
-#if 0
-  AVISubsessionIOState* fHintTrackForUs; AVISubsessionIOState* fTrackHintedByUs;
-#endif
-
   SubsessionBuffer *fBuffer, *fPrevBuffer;
   AVIFileSink& fOurSink;
   MediaSubsession& fOurSubsession;
 
   unsigned short fLastPacketRTPSeqNum;
   Boolean fOurSourceIsActive;
+  Boolean fIsVideo, fIsAudio;
+  unsigned fAVISubsessionTag;
+  unsigned fAVICodecHandlerType;
+  unsigned fAVIScale;
+  unsigned fAVIRate;
+  unsigned fAVISize;
+  unsigned fNumFrames;
+  unsigned fSTRHFrameCountPosition;
 
-  Boolean fHaveBeenSynced; // used in synchronizing with other streams
-  struct timeval fSyncTime;
-
-  Boolean fAVIEnableTrack;
-  unsigned fAVIcomponentSubtype;
-  char const* fAVIcomponentName;
-  typedef unsigned (AVIFileSink::*atomCreationFunc)();
-  atomCreationFunc fAVIMediaInformationAtomCreator;
-  atomCreationFunc fAVIMediaDataAtomCreator;
-  char const* fAVIAudioDataType;
-  unsigned short fAVISoundSampleVersion;
-  unsigned fAVITimeScale;
-  unsigned fAVITimeUnitsPerSample;
-  unsigned fAVIBytesPerFrame;
-  unsigned fAVISamplesPerFrame;
-  // These next fields are derived from the ones above,
-  // plus the information from each chunk:
-  unsigned fAVITotNumSamples;
-  unsigned fAVIDurationM; // in media time units
-  unsigned fAVIDurationT; // in track time units
-  unsigned fTKHD_durationPosn;
-      // position of the duration in the output 'tkhd' atom
-  unsigned fAVIInitialOffsetDuration;
-      // if there's a pause at the beginning
-
+#if 0
   ChunkDescriptor *fHeadChunk, *fTailChunk;
   unsigned fNumChunks;
 
-#if 0
-  // Counters to be used in the hint track's 'udta'/'hinf' atom;
-  struct hinf {
-    Count64 trpy;
-    Count64 nump;
-    Count64 tpyl;
-    // Is 'maxr' needed? Computing this would be a PITA. #####
-    Count64 dmed;
-    Count64 dimm;
-    // 'drep' is always 0
-    // 'tmin' and 'tmax' are always 0
-    unsigned pmax;
-    unsigned dmax;
-  } fHINF;
 #endif
-
 private:
   void useFrame(SubsessionBuffer& buffer);
-#if 0
-  void useFrameForHinting(unsigned frameSize,
-			  struct timeval presentationTime,
-			  unsigned startSampleNumber);
-#endif
-
-  // used by the above:
-  unsigned useFrame1(unsigned sourceDataSize,
-		     struct timeval presentationTime,
-		     unsigned frameDuration, unsigned destFileOffset);
-      // returns the number of samples in this data
 
 private:
   // A structure used for temporarily storing frame state:
@@ -199,16 +122,6 @@ private:
     unsigned frameSize;
     struct timeval presentationTime;
     unsigned destFileOffset;
-
-#if 0
-    // The remaining fields are used for hint tracks only:
-    unsigned startSampleNumber;
-    unsigned short seqNum;
-    unsigned rtpHeader;
-    unsigned char numSpecialHeaders; // used when our RTP source has special headers
-    unsigned specialHeaderBytesLength; // ditto
-    unsigned char specialHeaderBytes[SPECIAL_HEADER_BUFFER_SIZE]; // ditto
-#endif
     unsigned packetSizes[256];
   } fPrevFrameState;
 };
@@ -230,29 +143,9 @@ AVIFileSink::AVIFileSink(UsageEnvironment& env,
 			 unsigned movieFPS, Boolean packetLossCompensate)
   : Medium(env), fInputSession(inputSession), fOutFid(outFid),
     fBufferSize(bufferSize), fPacketLossCompensate(packetLossCompensate),
-#if 0
-    fSyncStreams(syncStreams), fGenerateMP4Format(generateMP4Format),
-#endif
-    fAreCurrentlyBeingPlayed(False),
-#if 0
-    fLargestRTPtimestampFrequency(0),
-#endif
-    fNumSubsessions(0),
-#if 0
-    fNumSyncedSubsessions(0),
-#endif
+    fAreCurrentlyBeingPlayed(False), fNumSubsessions(0), fNumBytesWritten(0),
     fHaveCompletedOutputFile(False),
-    fMovieWidth(movieWidth), fMovieHeight(movieHeight),
-    fMovieFPS(movieFPS)
-#if 0
-, fMaxTrackDurationM(0)
-#endif
-{
-#if 0
-  fNewestSyncTime.tv_sec = fNewestSyncTime.tv_usec = 0;
-  fFirstDataTime.tv_sec = fFirstDataTime.tv_usec = (unsigned)(~0);
-#endif
-
+    fMovieWidth(movieWidth), fMovieHeight(movieHeight), fMovieFPS(movieFPS) {
   // Set up I/O state for each input subsession:
   MediaSubsessionIterator iter(fInputSession);
   MediaSubsession* subsession;
@@ -261,10 +154,8 @@ AVIFileSink::AVIFileSink(UsageEnvironment& env,
     FramedSource* subsessionSource = subsession->readSource();
     if (subsessionSource == NULL) continue;
 
-#if 0
     // If "subsession's" SDP description specified screen dimension
-    // or frame rate parameters, then use these.  (Note that this must
-    // be done before the call to "setAVIState()" below.)
+    // or frame rate parameters, then use these.
     if (subsession->videoWidth() != 0) {
       fMovieWidth = subsession->videoWidth();
     }
@@ -274,61 +165,21 @@ AVIFileSink::AVIFileSink(UsageEnvironment& env,
     if (subsession->videoFPS() != 0) {
       fMovieFPS = subsession->videoFPS();
     }
-#endif
 
     AVISubsessionIOState* ioState
       = new AVISubsessionIOState(*this, *subsession);
-    if (ioState == NULL || !ioState->setAVIstate()) {
-      // We're not able to output data for this subsession
-      delete ioState; ioState = NULL;
-      continue;
-    }
     subsession->miscPtr = (void*)ioState;
-
-#if 0
-    if (generateHintTracks) {
-      // Also create a hint track for this track:
-      AVISubsessionIOState* hintTrack
-	= new AVISubsessionIOState(*this, *subsession);
-      AVISubsessionIOState::setHintTrack(ioState, hintTrack);
-      if (!hintTrack->setAVIstate()) {
-	delete hintTrack;
-	AVISubsessionIOState::setHintTrack(ioState, NULL);
-      }
-    }
-#endif
 
     // Also set a 'BYE' handler for this subsession's RTCP instance:
     if (subsession->rtcpInstance() != NULL) {
       subsession->rtcpInstance()->setByeHandler(onRTCPBye, ioState);
     }
 
-#if 0
-    unsigned rtpTimestampFrequency = subsession->rtpTimestampFrequency();
-    if (rtpTimestampFrequency > fLargestRTPtimestampFrequency) {
-      fLargestRTPtimestampFrequency = rtpTimestampFrequency;
-    }
-#endif
-
     ++fNumSubsessions;
   }
 
-#if 0
-  // Use the current time as the file's creation and modification
-  // time.  Use Apple's time format: seconds since January 1, 1904
-
-  gettimeofday(&fStartTime, &Idunno);
-  fAppleCreationTime = fStartTime.tv_sec - 0x83dac000;
-
-  // Begin by writing a "mdat" atom at the start of the file.
-  // (Later, when we've finished copying data to the file, we'll come
-  // back and fill in its size.)
-  fMDATposition = ftell(fOutFid);
-  addAtomHeader("mdat");
-#else
   // Begin by writing an AVI header:
   addFileHeader_AVI();
-#endif
 }
 
 AVIFileSink::~AVIFileSink() {
@@ -342,9 +193,6 @@ AVIFileSink::~AVIFileSink() {
       = (AVISubsessionIOState*)(subsession->miscPtr); 
     if (ioState == NULL) continue;
 
-#if 0
-    delete ioState->fHintTrackForUs; // if any
-#endif
     delete ioState;
   }
 }
@@ -422,13 +270,6 @@ void AVIFileSink
 		    struct timeval presentationTime,
 		    unsigned /*durationInMicroseconds*/) {
   AVISubsessionIOState* ioState = (AVISubsessionIOState*)clientData;
-#if 0
-  if (!ioState->syncOK(presentationTime)) {
-    // Ignore this data:
-    ioState->fOurSink.continuePlaying();
-    return;
-  }
-#endif
   ioState->afterGettingFrame(packetDataSize, presentationTime);
 }
 
@@ -477,25 +318,15 @@ void AVIFileSink::onRTCPBye(void* clientData) {
   ioState->onSourceClosure();
 }
 
-#if 0
-static Boolean timevalGE(struct timeval const& tv1,
-			 struct timeval const& tv2) {
-  return (unsigned)tv1.tv_sec > (unsigned)tv2.tv_sec
-    || (tv1.tv_sec == tv2.tv_sec
-	&& (unsigned)tv1.tv_usec >= (unsigned)tv2.tv_usec);
-}
-#endif
-
 void AVIFileSink::completeOutputFile() {
   if (fHaveCompletedOutputFile || fOutFid == NULL) return;
 
-#if 0
-  // Begin by filling in the initial "mdat" atom with the current
-  // file size:
-  unsigned curFileSize = ftell(fOutFid);
-  setWord(fMDATposition, curFileSize);
+  // Update various AVI 'size' fields to take account of the codec data that
+  // we've now written to the file:
+  unsigned numVideoFrames = 0;
+  unsigned numAudioFrames = 0;
 
-  // Then, note the time of the first received data:
+  //// Subsession-specific fields:
   MediaSubsessionIterator iter(fInputSession);
   MediaSubsession* subsession;
   while ((subsession = iter.next()) != NULL) {
@@ -503,56 +334,36 @@ void AVIFileSink::completeOutputFile() {
       = (AVISubsessionIOState*)(subsession->miscPtr); 
     if (ioState == NULL) continue;
 
-    ChunkDescriptor* const headChunk = ioState->fHeadChunk;
-    if (headChunk != NULL
-	&& timevalGE(fFirstDataTime, headChunk->fPresentationTime)) {
-      fFirstDataTime = headChunk->fPresentationTime;
-    }
+    setWord(ioState->fSTRHFrameCountPosition, ioState->fNumFrames);
+    if (ioState->fIsVideo) numVideoFrames = ioState->fNumFrames;
+    else if (ioState->fIsAudio) numAudioFrames = ioState->fNumFrames;
   }
 
-  // Then, update the QuickTime-specific state for each active track:
-  iter.reset();
-  while ((subsession = iter.next()) != NULL) {
-    AVISubsessionIOState* ioState
-      = (AVISubsessionIOState*)(subsession->miscPtr); 
-    if (ioState == NULL) continue;
+  //// Global fields:
+  fRIFFSizeValue += fNumBytesWritten;
+  setWord(fRIFFSizePosition, fRIFFSizeValue);
 
-    ioState->setFinalAVIstate();
-    // Do the same for a hint track (if any):
-    if (ioState->hasHintTrack()) {
-      ioState->fHintTrackForUs->setFinalAVIstate();
-    }
-  }
+  setWord(fAVIHFrameCountPosition,
+	  numVideoFrames > 0 ? numVideoFrames : numAudioFrames);
 
-  if (fGenerateMP4Format) {
-    // Begin with a "ftyp" atom:
-    addAtom_ftyp();
-  }
-
-  // Then, add a "moov" atom for the file metadata:
-  addAtom_moov();
-#endif
+  fMoviSizeValue += fNumBytesWritten;
+  setWord(fMoviSizePosition, fMoviSizeValue);
 
   // We're done:
   fHaveCompletedOutputFile = True;
 }
 
 
-////////// AVISubsessionIOState, ChunkDescriptor implementation ///////////
-
-unsigned AVISubsessionIOState::fCurrentTrackNumber = 0;
+////////// AVISubsessionIOState implementation ///////////
 
 AVISubsessionIOState::AVISubsessionIOState(AVIFileSink& sink,
 				     MediaSubsession& subsession)
-  :
+  : fOurSink(sink), fOurSubsession(subsession),
+    fNumFrames(0)
 #if 0
-fHintTrackForUs(NULL), fTrackHintedByUs(NULL),
+    , fHeadChunk(NULL), fTailChunk(NULL), fNumChunks(0)
 #endif
-    fOurSink(sink), fOurSubsession(subsession),
-    fLastPacketRTPSeqNum(0), fHaveBeenSynced(False), fAVITotNumSamples(0),
-    fHeadChunk(NULL), fTailChunk(NULL), fNumChunks(0) {
-  fTrackID = ++fCurrentTrackNumber;
-
+{
   fBuffer = new SubsessionBuffer(fOurSink.fBufferSize);
   fPrevBuffer = sink.fPacketLossCompensate
     ? new SubsessionBuffer(fOurSink.fBufferSize) : NULL;
@@ -562,155 +373,58 @@ fHintTrackForUs(NULL), fTrackHintedByUs(NULL),
 
   fPrevFrameState.presentationTime.tv_sec = 0;
   fPrevFrameState.presentationTime.tv_usec = 0;
-#if 0
-  fPrevFrameState.seqNum = 0;
-#endif
 }
 
 AVISubsessionIOState::~AVISubsessionIOState() {
   delete fBuffer; delete fPrevBuffer;
+#if 0
   delete fHeadChunk;
+#endif
 }
 
-Boolean AVISubsessionIOState::setAVIstate() {
-#if 0
-  char const* noCodecWarning1 = "Warning: We don't implement a QuickTime ";
-  char const* noCodecWarning2 = " Media Data Type for the \"";
-  char const* noCodecWarning3 = "\" track, so we'll insert a dummy \"????\" Media Data Atom instead.  A separate, codec-specific editing pass will be needed before this track can be played.\n";
-  Boolean supportPartiallyOnly = False;
-#endif
+void AVISubsessionIOState::setAVIstate(unsigned subsessionIndex) {
+  fIsVideo = strcmp(fOurSubsession.mediumName(), "video") == 0;
+  fIsAudio = strcmp(fOurSubsession.mediumName(), "audio") == 0;
 
-  do {
-#if 0
-    fAVIEnableTrack = True; // enable this track in the movie by default
-    fAVITimeScale = fOurSubsession.rtpTimestampFrequency(); // by default
-    fAVITimeUnitsPerSample = 1; // by default
-    fAVIBytesPerFrame = 0;
-        // by default - indicates that the whole packet data is a frame
-    fAVISamplesPerFrame = 1; // by default
-
-    // Make sure our subsession's medium is one that we know how to
-    // represent in a QuickTime file:
-    if (isHintTrack()) {
-      // Hint tracks are treated specially
-      fAVIEnableTrack = False; // hint tracks are marked as inactive
-      fAVIcomponentSubtype = fourChar('h','i','n','t');
-      fAVIcomponentName = "hint media handler";
-      fAVIMediaInformationAtomCreator = &AVIFileSink::addAtom_gmhd;
-      fAVIMediaDataAtomCreator = &AVIFileSink::addAtom_rtp;
-    } else if (strcmp(fOurSubsession.mediumName(), "audio") == 0) {
-      fAVIcomponentSubtype = fourChar('s','o','u','n');
-      fAVIcomponentName = "Apple Sound Media Handler";
-      fAVIMediaInformationAtomCreator = &AVIFileSink::addAtom_smhd;
-      fAVIMediaDataAtomCreator
-	= &AVIFileSink::addAtom_soundMediaGeneral; // by default
-      fAVISoundSampleVersion = 0; // by default
-
-      // Make sure that our subsession's codec is one that we can handle:
-      if (strcmp(fOurSubsession.codecName(), "X-AVI") == 0 ||
-	  strcmp(fOurSubsession.codecName(), "X-QUICKTIME") == 0) {
-	fAVIMediaDataAtomCreator = &AVIFileSink::addAtom_genericMedia;
-      } else if (strcmp(fOurSubsession.codecName(), "PCMU") == 0) {
-	fAVIAudioDataType = "ulaw";
-	fAVIBytesPerFrame = 1;
-      } else if (strcmp(fOurSubsession.codecName(), "GSM") == 0) {
-	fAVIAudioDataType = "agsm";
-	fAVIBytesPerFrame = 33;
-	fAVISamplesPerFrame = 160;
-      } else if (strcmp(fOurSubsession.codecName(), "PCMA") == 0) {
-	fAVIAudioDataType = "alaw";
-	fAVIBytesPerFrame = 1;
-      } else if (strcmp(fOurSubsession.codecName(), "QCELP") == 0) {
-	fAVIMediaDataAtomCreator = &AVIFileSink::addAtom_Qclp;
-	fAVISamplesPerFrame = 160;
-      } else if (strcmp(fOurSubsession.codecName(), "MPEG4-GENERIC") == 0 ||
-		 strcmp(fOurSubsession.codecName(), "MP4A-LATM") == 0) {
-	fAVIMediaDataAtomCreator = &AVIFileSink::addAtom_mp4a;
-	fAVITimeUnitsPerSample = 1024; // AVI considers each frame to be a 'sample'
-	// The time scale (frequency) comes from the 'config' information.
-	// It might be different from the RTP timestamp frequency (e.g., aacPlus).
-	unsigned frequencyFromConfig
-	  = samplingFrequencyFromAudioSpecificConfig(fOurSubsession.fmtp_config());
-	if (frequencyFromConfig != 0) fAVITimeScale = frequencyFromConfig;
-      } else {
-	envir() << noCodecWarning1 << "Audio" << noCodecWarning2
-		<< fOurSubsession.codecName() << noCodecWarning3;
-	fAVIMediaDataAtomCreator = &AVIFileSink::addAtom_dummy;
-	fAVIEnableTrack = False; // disable this track in the movie
-      }
-    } else if (strcmp(fOurSubsession.mediumName(), "video") == 0) {
-      fAVIcomponentSubtype = fourChar('v','i','d','e');
-      fAVIcomponentName = "Apple Video Media Handler";
-      fAVIMediaInformationAtomCreator = &AVIFileSink::addAtom_vmhd;
-
-      // Make sure that our subsession's codec is one that we can handle:
-      if (strcmp(fOurSubsession.codecName(), "X-AVI") == 0 ||
-	  strcmp(fOurSubsession.codecName(), "X-QUICKTIME") == 0) {
-	fAVIMediaDataAtomCreator = &AVIFileSink::addAtom_genericMedia;
-      } else if (strcmp(fOurSubsession.codecName(), "H263-1998") == 0 ||
-		 strcmp(fOurSubsession.codecName(), "H263-2000") == 0) {
-	fAVIMediaDataAtomCreator = &AVIFileSink::addAtom_h263;
-	fAVITimeScale = 600;
-	fAVITimeUnitsPerSample = fAVITimeScale/fOurSink.fMovieFPS;
-      } else if (strcmp(fOurSubsession.codecName(), "MP4V-ES") == 0) {
-	fAVIMediaDataAtomCreator = &AVIFileSink::addAtom_mp4v;
-	fAVITimeScale = 600;
-	fAVITimeUnitsPerSample = fAVITimeScale/fOurSink.fMovieFPS;
-      } else {
-	envir() << noCodecWarning1 << "Video" << noCodecWarning2
-		<< fOurSubsession.codecName() << noCodecWarning3;
-	fAVIMediaDataAtomCreator = &AVIFileSink::addAtom_dummy;
-	fAVIEnableTrack = False; // disable this track in the movie
-      }
+  if (fIsVideo) {
+    fAVISubsessionTag
+      = fourChar('0'+subsessionIndex/10,'0'+subsessionIndex%10,'d','c');
+    if (strcmp(fOurSubsession.codecName(), "JPEG") == 0) {
+      fAVICodecHandlerType = fourChar('m','j','p','g');
+    } else if (strcmp(fOurSubsession.codecName(), "MP4V-ES") == 0) {
+      fAVICodecHandlerType = fourChar('D','I','V','X');
     } else {
-      envir() << "Warning: We don't implement a QuickTime Media Handler for media type \""
-	      << fOurSubsession.mediumName() << "\"";
-      break;
+      fAVICodecHandlerType = fourChar('?','?','?','?');
     }
-
-    if (supportPartiallyOnly) {
-      envir() << "Warning: We don't have sufficient codec-specific information (e.g., sample sizes) to fully generate the \""
-	      << fOurSubsession.mediumName() << "/"
-	      << fOurSubsession.codecName()
-	      << "\" track, so we'll disable this track in the movie.  A separate, codec-specific editing pass will be needed before this track can be played\n";
-      fAVIEnableTrack = False; // disable this track in the movie
+    fAVIScale = 1; // ??? #####
+    fAVIRate = fOurSink.fMovieFPS; // ??? #####
+    fAVISize = fOurSink.fMovieWidth*fOurSink.fMovieHeight*3; // ??? #####
+  } else if (fIsAudio) {
+    fAVISubsessionTag
+      = fourChar('0'+subsessionIndex/10,'0'+subsessionIndex%10,'w','b');
+    fAVICodecHandlerType = 1; // ??? ####
+    unsigned numChannels = fOurSubsession.numChannels();
+    unsigned rtpTimestampFrequency = fOurSubsession.rtpTimestampFrequency();
+    if (strcmp(fOurSubsession.codecName(), "L16") == 0) {
+      fAVIScale = fAVISize = 2*numChannels; // 2 bytes per sample
+      fAVIRate = fAVISize*rtpTimestampFrequency;
+    } else if (strcmp(fOurSubsession.codecName(), "L8") == 0 ||
+	       strcmp(fOurSubsession.codecName(), "PCMA") == 0 ||
+	       strcmp(fOurSubsession.codecName(), "PCMU") == 0) {
+      fAVIScale = fAVISize = numChannels; // 1 byte per sample
+      fAVIRate = fAVISize*rtpTimestampFrequency;
+    } else {
+      fAVIScale = fAVISize = 1;
+      fAVIRate = 0; // ??? ####
     }
-#endif
-
-    return True;
-  } while (0);
-
-#if 0
-  envir() << ", so a track for the \"" << fOurSubsession.mediumName()
-	  << "/" << fOurSubsession.codecName()
-	  << "\" subsession will not be included in the output QuickTime file\n";
-#endif
-  return False; 
-}
-
-#if 0
-void AVISubsessionIOState::setFinalAVIstate() {
-  // Compute derived parameters, by running through the list of chunks:
-  fAVIDurationT = 0;
-
-  ChunkDescriptor* chunk = fHeadChunk;
-  while (chunk != NULL) {
-    unsigned const numFrames = chunk->fNumFrames;
-    unsigned const dur = numFrames*chunk->fFrameDuration;
-    fAVIDurationT += dur;
-
-    chunk = chunk->fNextChunk;
-  }
-
-  // Convert this duration from track to movie time scale:
-  double scaleFactor = fOurSink.movieTimeScale()/(double)fAVITimeScale;
-  fAVIDurationM = (unsigned)(fAVIDurationT*scaleFactor);
-
-  if (fAVIDurationM > fOurSink.fMaxTrackDurationM) {
-    fOurSink.fMaxTrackDurationM = fAVIDurationM;
+  } else { // unknown medium
+    fAVISubsessionTag
+      = fourChar('0'+subsessionIndex/10,'0'+subsessionIndex%10,'?','?');
+    fAVICodecHandlerType = 0;
+    fAVIScale = fAVISize = 1;
+    fAVIRate = 0; // ??? ####
   }
 }
-#endif
 
 void AVISubsessionIOState::afterGettingFrame(unsigned packetDataSize,
 					  struct timeval presentationTime) {
@@ -733,57 +447,6 @@ void AVISubsessionIOState::afterGettingFrame(unsigned packetDataSize,
   }
   fBuffer->addBytes(packetDataSize);
 
-#if 0
-  // If our RTP source is a "QuickTimeGenericRTPSource", then
-  // use its 'qtState' to set some parameters that we need:
-  if (fAVIMediaDataAtomCreator == &AVIFileSink::addAtom_genericMedia){
-    QuickTimeGenericRTPSource* rtpSource
-      = (QuickTimeGenericRTPSource*)fOurSubsession.rtpSource();
-    QuickTimeGenericRTPSource::AVIState& qtState = rtpSource->qtState;
-    fAVITimeScale = qtState.timescale;
-    if (qtState.width != 0) {
-      fOurSink.fMovieWidth = qtState.width;
-    }
-    if (qtState.height != 0) {
-      fOurSink.fMovieHeight = qtState.height;
-    }
-
-    // Also, if the media type in the "sdAtom" is one that we recognize
-    // to have a special parameters, then fix this here:
-    if (qtState.sdAtomSize >= 8) {
-      char const* atom = qtState.sdAtom;
-      unsigned mediaType = fourChar(atom[4],atom[5],atom[6],atom[7]);
-      switch (mediaType) {
-      case fourChar('a','g','s','m'): {
-	fAVIBytesPerFrame = 33;
-	fAVISamplesPerFrame = 160;
-	break;
-      }
-      case fourChar('Q','c','l','p'): {
-	fAVIBytesPerFrame = 35;
-	fAVISamplesPerFrame = 160;
-	break;
-      }
-      case fourChar('H','c','l','p'): {
-	fAVIBytesPerFrame = 17;
-	fAVISamplesPerFrame = 160;
-	break;
-      }
-      case fourChar('h','2','6','3'): {
-	fAVITimeUnitsPerSample = fAVITimeScale/fOurSink.fMovieFPS;
-	break;
-      }
-      }
-    }
-  } else if (fAVIMediaDataAtomCreator == &AVIFileSink::addAtom_Qclp) {
-    // For QCELP data, make a note of the frame size (even though it's the
-    // same as the packet data size), because it varies depending on the
-    // 'rate' of the stream, and this size gets used later when setting up
-    // the 'Qclp' QuickTime atom:
-    fAVIBytesPerFrame = packetDataSize;
-  }
-#endif
-
   useFrame(*fBuffer);
   if (fOurSink.fPacketLossCompensate) {
     // Save this frame, in case we need it for recovery:
@@ -797,391 +460,30 @@ void AVISubsessionIOState::afterGettingFrame(unsigned packetDataSize,
   fOurSink.continuePlaying();
 }
 
+struct timeval lastPresentationTime; //#####@@@@@
 void AVISubsessionIOState::useFrame(SubsessionBuffer& buffer) {
   unsigned char* const frameSource = buffer.dataStart();
   unsigned const frameSize = buffer.bytesInUse();
+#if 0
+  static unsigned maxBytesPerSecond = 0;//#####@@@@@
   struct timeval const& presentationTime = buffer.presentationTime();
-  unsigned const destFileOffset = ftell(fOurSink.fOutFid);
-#if 0
-  unsigned sampleNumberOfFrameStart = fAVITotNumSamples + 1;
-
-  // If we're not syncing streams, or this subsession is not video, then
-  // just give this frame a fixed duration:
-  if (!fOurSink.fSyncStreams
-      || fAVIcomponentSubtype != fourChar('v','i','d','e')) {
-#endif
-    unsigned const frameDuration = fAVITimeUnitsPerSample*fAVISamplesPerFrame;
-
-    fAVITotNumSamples += useFrame1(frameSize, presentationTime,
-				  frameDuration, destFileOffset);
-#if 0
-  } else {
-    // For synced video streams, we use the difference between successive
-    // frames' presentation times as the 'frame duration'.  So, record
-    // information about the *previous* frame:
-    struct timeval const& ppt = fPrevFrameState.presentationTime; //abbrev
-    if (ppt.tv_sec != 0 || ppt.tv_usec != 0) {
-      // There has been a previous frame.
-      double duration = (presentationTime.tv_sec - ppt.tv_sec)
-	+ (presentationTime.tv_usec - ppt.tv_usec)/1000000.0;
-      if (duration < 0.0) duration = 0.0;
-      unsigned frameDuration
-	= (unsigned)((2*duration*fAVITimeScale+1)/2); // round
-
-      unsigned numSamples
-	= useFrame1(fPrevFrameState.frameSize, ppt,
-		    frameDuration, fPrevFrameState.destFileOffset);
-      fAVITotNumSamples += numSamples;
-      sampleNumberOfFrameStart = fAVITotNumSamples + 1;
-    }
-
-    // Remember the current frame for next time:
-    fPrevFrameState.frameSize = frameSize;
-    fPrevFrameState.presentationTime = presentationTime;
-    fPrevFrameState.destFileOffset = destFileOffset;
-  }
 #endif
 
   // Write the data into the file:
-  fwrite(frameSource, frameSize, 1, fOurSink.fOutFid);
+  fOurSink.fNumBytesWritten += fOurSink.addWord(fAVISubsessionTag); 
+  fOurSink.fNumBytesWritten += fOurSink.addWord(frameSize);
+  fwrite(frameSource, 1, frameSize, fOurSink.fOutFid);
+  fOurSink.fNumBytesWritten += frameSize;
+  // Pad to an even length:
+  if (frameSize%2 != 0) fOurSink.fNumBytesWritten += fOurSink.addByte(0);
 
-#if 0
-  // If we have a hint track, then write to it also:
-  if (hasHintTrack()) {
-    // Because presentation times are used for RTP packet timestamps,
-    // we don't starting writing to the hint track until we've been synced:
-    if (!fHaveBeenSynced) {
-      fHaveBeenSynced
-	= fOurSubsession.rtpSource()->hasBeenSynchronizedUsingRTCP();
-    }
-    if (fHaveBeenSynced) {
-      fHintTrackForUs->useFrameForHinting(frameSize, presentationTime,
-					  sampleNumberOfFrameStart);
-    }
-  }
-#endif
+  ++fNumFrames;
 }
 
-#if 0
-void AVISubsessionIOState::useFrameForHinting(unsigned frameSize,
-					   struct timeval presentationTime,
-					   unsigned startSampleNumber) {
-  // At this point, we have a single, combined frame - not individual packets.
-  // For the hint track, we need to split the frame back up into separate packets.
-  // However, for some RTP sources, then we also need to reuse the special
-  // header bytes that were at the start of each of the RTP packets.
-  Boolean hack263 = strcmp(fOurSubsession.codecName(), "H263-1998") == 0;
-  Boolean hackm4a_generic = strcmp(fOurSubsession.mediumName(), "audio") == 0
-    && strcmp(fOurSubsession.codecName(), "MPEG4-GENERIC") == 0;
-  Boolean hackm4a_latm = strcmp(fOurSubsession.mediumName(), "audio") == 0
-    && strcmp(fOurSubsession.codecName(), "MP4A-LATM") == 0;
-  Boolean hackm4a = hackm4a_generic || hackm4a_latm;
-  Boolean haveSpecialHeaders = (hack263 || hackm4a_generic);
-
-  // If there has been a previous frame, then output a 'hint sample' for it.
-  // (We use the current frame's presentation time to compute the previous
-  // hint sample's duration.)
-  RTPSource* const rs = fOurSubsession.rtpSource(); // abbrev 
-  struct timeval const& ppt = fPrevFrameState.presentationTime; //abbrev
-  if (ppt.tv_sec != 0 || ppt.tv_usec != 0) {
-    double duration = (presentationTime.tv_sec - ppt.tv_sec)
-      + (presentationTime.tv_usec - ppt.tv_usec)/1000000.0;
-    if (duration < 0.0) duration = 0.0;
-    unsigned msDuration = (unsigned)(duration*1000); // milliseconds
-    if (msDuration > fHINF.dmax) fHINF.dmax = msDuration;
-    unsigned hintSampleDuration
-      = (unsigned)((2*duration*fAVITimeScale+1)/2); // round
-    if (hackm4a) {
-      // Because multiple AAC frames can appear in a RTP packet, the presentation
-      // times of the second and subsequent frames will not be accurate.
-      // So, use the known "hintSampleDuration" instead:
-      hintSampleDuration = fTrackHintedByUs->fAVITimeUnitsPerSample;
-
-      // Also, if the 'time scale' was different from the RTP timestamp frequency,
-      // (as can happen with aacPlus), then we need to scale "hintSampleDuration"
-      // accordingly:
-      if (fTrackHintedByUs->fAVITimeScale != fOurSubsession.rtpTimestampFrequency()) {
-	unsigned const scalingFactor
-	  = fOurSubsession.rtpTimestampFrequency()/fTrackHintedByUs->fAVITimeScale ;
-	hintSampleDuration *= scalingFactor;
-      }
-    }
-
-    unsigned const hintSampleDestFileOffset = ftell(fOurSink.fOutFid);
-
-    unsigned const maxPacketSize = 1450;
-    unsigned short numPTEntries
-      = (fPrevFrameState.frameSize + (maxPacketSize-1))/maxPacketSize; // normal case
-    unsigned char* immediateDataPtr = NULL;
-    unsigned immediateDataBytesRemaining = 0;
-    if (haveSpecialHeaders) { // special case
-      numPTEntries = fPrevFrameState.numSpecialHeaders;
-      immediateDataPtr = fPrevFrameState.specialHeaderBytes;
-      immediateDataBytesRemaining
-	= fPrevFrameState.specialHeaderBytesLength;
-    }
-    unsigned hintSampleSize
-      = fOurSink.addHalfWord(numPTEntries);// Entry count
-    hintSampleSize += fOurSink.addHalfWord(0x0000); // Reserved
-
-    unsigned offsetWithinSample = 0;
-    for (unsigned i = 0; i < numPTEntries; ++i) {
-      // Output a Packet Table entry (representing a single RTP packet):
-      unsigned short numDTEntries = 1;
-      unsigned short seqNum = fPrevFrameState.seqNum++;
-          // Note: This assumes that the input stream had no packets lost #####
-      unsigned rtpHeader = fPrevFrameState.rtpHeader;
-      if (i+1 < numPTEntries) {
-	// This is not the last RTP packet, so clear the marker bit:
-	rtpHeader &=~ (1<<23);
-      }
-      unsigned dataFrameSize = (i+1 < numPTEntries)
-	? maxPacketSize : fPrevFrameState.frameSize - i*maxPacketSize; // normal case
-      unsigned sampleNumber = fPrevFrameState.startSampleNumber;
-
-      unsigned char immediateDataLen = 0;
-      if (haveSpecialHeaders) { // special case
-	++numDTEntries; // to include a Data Table entry for the special hdr
-	if (immediateDataBytesRemaining > 0) {
-	  if (hack263) {
-	    immediateDataLen = *immediateDataPtr++;
-	    --immediateDataBytesRemaining;
-	    if (immediateDataLen > immediateDataBytesRemaining) {
-	      // shouldn't happen (length byte was bad)
-	      immediateDataLen = immediateDataBytesRemaining;
-	    }
-	  } else {
-	    immediateDataLen = fPrevFrameState.specialHeaderBytesLength;
-	  }
-	}
-	dataFrameSize = fPrevFrameState.packetSizes[i] - immediateDataLen;
-
-	if (hack263) {
-	  Boolean PbitSet
-	    = immediateDataLen >= 1 && (immediateDataPtr[0]&0x4) != 0;
-	  if (PbitSet) {
-	    offsetWithinSample += 2; // to omit the two leading 0 bytes
-	  }
-	}
-      }
-
-      // Output the Packet Table:
-      hintSampleSize += fOurSink.addWord(0); // Relative transmission time
-      hintSampleSize += fOurSink.addWord(rtpHeader|seqNum);
-          // RTP header info + RTP sequence number
-      hintSampleSize += fOurSink.addHalfWord(0x0000); // Flags
-      hintSampleSize += fOurSink.addHalfWord(numDTEntries); // Entry count
-      unsigned totalPacketSize = 0;
-
-      // Output the Data Table:
-      if (haveSpecialHeaders) {
-	//   use the "Immediate Data" format (1):
-	hintSampleSize += fOurSink.addByte(1); // Source
-	unsigned char len = immediateDataLen > 14 ? 14 : immediateDataLen;
-	hintSampleSize += fOurSink.addByte(len); // Length
-	totalPacketSize += len; fHINF.dimm += len;
-	unsigned char j;
-	for (j = 0; j < len; ++j) {
-	  hintSampleSize += fOurSink.addByte(immediateDataPtr[j]); // Data
-	}
-	for (j = len; j < 14; ++j) {
-	  hintSampleSize += fOurSink.addByte(0); // Data (padding)
-	}
-
-	immediateDataPtr += immediateDataLen;
-	immediateDataBytesRemaining -= immediateDataLen;
-      }
-      //   use the "Sample Data" format (2):
-      hintSampleSize += fOurSink.addByte(2); // Source
-      hintSampleSize += fOurSink.addByte(0); // Track ref index
-      hintSampleSize += fOurSink.addHalfWord(dataFrameSize); // Length
-      totalPacketSize += dataFrameSize; fHINF.dmed += dataFrameSize;
-      hintSampleSize += fOurSink.addWord(sampleNumber); // Sample number
-      hintSampleSize += fOurSink.addWord(offsetWithinSample); // Offset
-      // Get "bytes|samples per compression block" from the hinted track:
-      unsigned short const bytesPerCompressionBlock
-	= fTrackHintedByUs->fAVIBytesPerFrame;
-      unsigned short const samplesPerCompressionBlock
-	= fTrackHintedByUs->fAVISamplesPerFrame;
-      hintSampleSize += fOurSink.addHalfWord(bytesPerCompressionBlock);
-      hintSampleSize += fOurSink.addHalfWord(samplesPerCompressionBlock);
-
-      offsetWithinSample += dataFrameSize;// for the next iteration (if any)
-
-      // Tally statistics for this packet:
-      fHINF.nump += 1;
-      fHINF.tpyl += totalPacketSize;
-      totalPacketSize += 12; // add in the size of the RTP header
-      fHINF.trpy += totalPacketSize;
-      if (totalPacketSize > fHINF.pmax) fHINF.pmax = totalPacketSize;
-    }
-
-    // Make note of this completed hint sample frame:
-    fAVITotNumSamples += useFrame1(hintSampleSize, ppt, hintSampleDuration,
-				  hintSampleDestFileOffset);
-  }
-  
-  // Remember this frame for next time:
-  fPrevFrameState.frameSize = frameSize;
-  fPrevFrameState.presentationTime = presentationTime;
-  fPrevFrameState.startSampleNumber = startSampleNumber;
-  fPrevFrameState.rtpHeader
-    = rs->curPacketMarkerBit()<<23
-    | (rs->rtpPayloadFormat()&0x7F)<<16;
-  if (hack263) {
-    H263plusVideoRTPSource* rs_263 = (H263plusVideoRTPSource*)rs;
-    fPrevFrameState.numSpecialHeaders = rs_263->fNumSpecialHeaders;
-    fPrevFrameState.specialHeaderBytesLength = rs_263->fSpecialHeaderBytesLength;
-    unsigned i;
-    for (i = 0; i < rs_263->fSpecialHeaderBytesLength; ++i) {
-      fPrevFrameState.specialHeaderBytes[i] = rs_263->fSpecialHeaderBytes[i];
-    }
-    for (i = 0; i < rs_263->fNumSpecialHeaders; ++i) {
-      fPrevFrameState.packetSizes[i] = rs_263->fPacketSizes[i];
-    }
-  } else if (hackm4a_generic) {
-    // Synthesize a special header, so that this frame can be in its own RTP packet.
-    unsigned const sizeLength = fOurSubsession.fmtp_sizelength();
-    unsigned const indexLength = fOurSubsession.fmtp_indexlength();
-    if (sizeLength + indexLength != 16) {
-      envir() << "Warning: unexpected 'sizeLength' " << sizeLength
-	      << " and 'indexLength' " << indexLength
-	      << "seen when creating hint track\n";
-    }
-    fPrevFrameState.numSpecialHeaders = 1;
-    fPrevFrameState.specialHeaderBytesLength = 4;
-    fPrevFrameState.specialHeaderBytes[0] = 0; // AU_headers_length (high byte)
-    fPrevFrameState.specialHeaderBytes[1] = 16; // AU_headers_length (low byte)
-    fPrevFrameState.specialHeaderBytes[2] = ((frameSize<<indexLength)&0xFF00)>>8;
-    fPrevFrameState.specialHeaderBytes[3] = (frameSize<<indexLength);
-    fPrevFrameState.packetSizes[0]
-      = fPrevFrameState.specialHeaderBytesLength + frameSize;
-  }
-}
-#endif
-
-unsigned AVISubsessionIOState::useFrame1(unsigned sourceDataSize,
-					 struct timeval presentationTime,
-					 unsigned frameDuration,
-					 unsigned destFileOffset) {
-  // Figure out the actual frame size for this data:
-  unsigned frameSize = fAVIBytesPerFrame;
-  if (frameSize == 0) {
-    // The entire packet data is assumed to be a frame:
-    frameSize = sourceDataSize;
-  }
-  unsigned const numFrames = sourceDataSize/frameSize;
-  unsigned const numSamples = numFrames*fAVISamplesPerFrame;
-
-  // Record the information about which 'chunk' this data belongs to:
-  ChunkDescriptor* newTailChunk;
-  if (fTailChunk == NULL) {
-    newTailChunk = fHeadChunk
-      = new ChunkDescriptor(destFileOffset, sourceDataSize,
-			    frameSize, frameDuration, presentationTime);
-  } else {
-    newTailChunk = fTailChunk->extendChunk(destFileOffset, sourceDataSize,
-					   frameSize, frameDuration,
-					   presentationTime);
-  }
-  if (newTailChunk != fTailChunk) {
-   // This data created a new chunk, rather than extending the old one
-    ++fNumChunks;
-    fTailChunk = newTailChunk;
-  }
-
-  return numSamples;
-}
-  
 void AVISubsessionIOState::onSourceClosure() {
   fOurSourceIsActive = False;
   fOurSink.onSourceClosure1();
 }
-
-#if 0
-Boolean AVISubsessionIOState::syncOK(struct timeval presentationTime) {
-  AVIFileSink& s = fOurSink; // abbreviation
-  if (!s.fSyncStreams) return True; // we don't care
-
-  if (s.fNumSyncedSubsessions < s.fNumSubsessions) {
-    // Not all subsessions have yet been synced.  Check whether ours was
-    // one of the unsynced ones, and, if so, whether it is now synced:
-    if (!fHaveBeenSynced) {
-      // We weren't synchronized before
-      if (fOurSubsession.rtpSource()->hasBeenSynchronizedUsingRTCP()) {
-	// But now we are
-	fHaveBeenSynced = True;
-	fSyncTime = presentationTime;
-	++s.fNumSyncedSubsessions;
-
-	if (timevalGE(fSyncTime, s.fNewestSyncTime)) {
-	  s.fNewestSyncTime = fSyncTime;
-	}
-      }
-    }
-  }
-    
-  // Check again whether all subsessions have been synced:
-  if (s.fNumSyncedSubsessions < s.fNumSubsessions) return False;
-
-  // Allow this data if it is more recent than the newest sync time:
-  return timevalGE(presentationTime, s.fNewestSyncTime);
-}
-
-void AVISubsessionIOState::setHintTrack(AVISubsessionIOState* hintedTrack,
-				     AVISubsessionIOState* hintTrack) {
-  if (hintedTrack != NULL) hintedTrack->fHintTrackForUs = hintTrack;
-  if (hintTrack != NULL) hintTrack->fTrackHintedByUs = hintedTrack;
-}
-
-void Count64::operator+=(unsigned arg) {
-  unsigned newLo = lo + arg;
-  if (newLo < lo) { // lo has overflowed
-    ++hi;
-  }
-  lo = newLo;
-}
-
-ChunkDescriptor
-::ChunkDescriptor(unsigned offsetInFile, unsigned size,
-		  unsigned frameSize, unsigned frameDuration,
-		  struct timeval presentationTime)
-  : fNextChunk(NULL), fOffsetInFile(offsetInFile),
-    fNumFrames(size/frameSize),
-    fFrameSize(frameSize), fFrameDuration(frameDuration),
-    fPresentationTime(presentationTime) {
-}
-
-ChunkDescriptor::~ChunkDescriptor() {
-  delete fNextChunk;
-}
-
-ChunkDescriptor* ChunkDescriptor
-::extendChunk(unsigned newOffsetInFile, unsigned newSize,
-	      unsigned newFrameSize, unsigned newFrameDuration,
-	      struct timeval newPresentationTime) {
-  // First, check whether the new space is just at the end of this
-  // existing chunk:
-  if (newOffsetInFile == fOffsetInFile + fNumFrames*fFrameSize) {
-    // We can extend this existing chunk, provided that the frame size
-    // and frame duration have not changed:
-    if (newFrameSize == fFrameSize && newFrameDuration == fFrameDuration) {
-      fNumFrames += newSize/fFrameSize;
-      return this;
-    }
-  }
-
-  // We'll allocate a new ChunkDescriptor, and link it to the end of us:
-  ChunkDescriptor* newDescriptor
-    = new ChunkDescriptor(newOffsetInFile, newSize,
-			  newFrameSize, newFrameDuration,
-			  newPresentationTime);
-
-  fNextChunk = newDescriptor;
-
-  return newDescriptor;
-}
-#endif
 
 
 ////////// AVI-specific implementation //////////
@@ -1194,13 +496,12 @@ unsigned AVIFileSink::addWord(unsigned word) {
   return 4;
 }
 
-#if 0
 unsigned AVIFileSink::addHalfWord(unsigned short halfWord) {
-  addByte((unsigned char)(halfWord>>8)); addByte((unsigned char)halfWord);
+  // Add "halfWord" to the file in little-endian order:
+  addByte((unsigned char)halfWord); addByte((unsigned char)(halfWord>>8));
 
   return 2;
 }
-#endif
 
 unsigned AVIFileSink::addZeroWords(unsigned numWords) {
   for (unsigned i = 0; i < numWords; ++i) {
@@ -1216,39 +517,6 @@ unsigned AVIFileSink::add4ByteString(char const* str) {
 
   return 4;
 }
-
-#if 0
-unsigned AVIFileSink::addArbitraryString(char const* str,
-					       Boolean oneByteLength) {
-  unsigned size = 0;
-  if (oneByteLength) {
-    // Begin with a byte containing the string length:
-    unsigned strLength = strlen(str);
-    if (strLength >= 256) {
-      envir() << "AVIFileSink::addArbitraryString(\""
-	      << str << "\") saw string longer than we know how to handle ("
-	      << strLength << "\n";
-    }
-    size += addByte((unsigned char)strLength);
-  }
-
-  while (*str != '\0') {
-    size += addByte(*str++);
-  }
-
-  return size;
-}
-
-unsigned AVIFileSink::addAtomHeader(char const* atomName) {
-  // Output a placeholder for the 4-byte size:
-  addWord(0);
-
-  // Output the 4-byte atom name:
-  add4ByteString(atomName);
-
-  return 8;
-}
-#endif
 
 void AVIFileSink::setWord(unsigned filePosn, unsigned size) {
   do {
@@ -1271,947 +539,153 @@ void AVIFileSink::setWord(unsigned filePosn, unsigned size) {
         add4ByteString("" #tag ""); \
         unsigned headerSizePosn = ftell(fOutFid); addWord(0); \
         add4ByteString("" #name ""); \
-        unsigned size = 4 /*include size of name, but not tag or size fields*/
+        unsigned ignoredSize = 8;/*don't include size of tag or size fields*/ \
+        unsigned size = 12
 
 #define addFileHeader1(name) \
     unsigned AVIFileSink::addFileHeader_##name() { \
         add4ByteString("" #name ""); \
         unsigned headerSizePosn = ftell(fOutFid); addWord(0); \
-        unsigned size = 0 /*don't include the size of the name or size fields*/
+        unsigned ignoredSize = 8;/*don't include size of name or size fields*/ \
+        unsigned size = 8
 
 #define addFileHeaderEnd \
-  setWord(headerSizePosn, size); \
+  setWord(headerSizePosn, size-ignoredSize); \
   return size; \
 }
 
 addFileHeader(RIFF,AVI);
     size += addFileHeader_hdrl();
+    size += addFileHeader_movi(); 
+    fRIFFSizePosition = headerSizePosn;
+    fRIFFSizeValue = size-ignoredSize;
 addFileHeaderEnd;
 
 addFileHeader(LIST,hdrl);
     size += addFileHeader_avih();
 
     // Then, add a "strl" header for each subsession (stream):
+    // (Make the video subsession (if any) come before the audio subsession.)
+    unsigned subsessionCount = 0;
     MediaSubsessionIterator iter(fInputSession);
     MediaSubsession* subsession;
     while ((subsession = iter.next()) != NULL) {
       fCurrentIOState = (AVISubsessionIOState*)(subsession->miscPtr);
       if (fCurrentIOState == NULL) continue;
+      if (strcmp(subsession->mediumName(), "video") != 0) continue;
 
+      fCurrentIOState->setAVIstate(subsessionCount++);
       size += addFileHeader_strl();
     }
+    iter.reset();
+    while ((subsession = iter.next()) != NULL) {
+      fCurrentIOState = (AVISubsessionIOState*)(subsession->miscPtr);
+      if (fCurrentIOState == NULL) continue;
+      if (strcmp(subsession->mediumName(), "video") == 0) continue;
+
+      fCurrentIOState->setAVIstate(subsessionCount++);
+      size += addFileHeader_strl();
+    }
+
+    // Then add another JUNK entry
+    ++fJunkNumber;
+    size += addFileHeader_JUNK(); 
+addFileHeaderEnd;
+
+#define AVIF_HASINDEX           0x00000010 // Index at end of file?
+#define AVIF_MUSTUSEINDEX       0x00000020
+#define AVIF_ISINTERLEAVED      0x00000100
+#define AVIF_TRUSTCKTYPE        0x00000800 // Use CKType to find key frames?
+#define AVIF_WASCAPTUREFILE     0x00010000
+#define AVIF_COPYRIGHTED        0x00020000
+
+addFileHeader1(avih);
+    unsigned usecPerFrame = fMovieFPS == 0 ? 0 : 1000000/fMovieFPS;
+    size += addWord(usecPerFrame); // dwMicroSecPerFrame
+    size += addWord(fMovieFPS*10000); // dwMaxBytesPerSec (estimate!) #####
+    size += addWord(0); // dwPaddingGranularity
+    size += addWord(AVIF_TRUSTCKTYPE|AVIF_HASINDEX|AVIF_ISINTERLEAVED); // dwFlags
+    fAVIHFrameCountPosition = ftell(fOutFid);
+    size += addWord(0); // dwTotalFrames (fill in later)
+    size += addWord(0); // dwInitialFrame
+    size += addWord(fNumSubsessions); // dwStreams
+    size += addWord(fBufferSize); // dwSuggestedBufferSize
+    size += addWord(fMovieWidth); // dwWidth
+    size += addWord(fMovieHeight); // dwHeight
+    size += addZeroWords(4); // dwReserved
 addFileHeaderEnd;
 
 addFileHeader(LIST,strl);
-//%%%%%
+    size += addFileHeader_strh(); 
+    size += addFileHeader_strf(); 
+    fJunkNumber = 0;
+    size += addFileHeader_JUNK(); 
 addFileHeaderEnd;
 
-addFileHeader1(avih);
-   unsigned usecPerFrame = fMovieFPS == 0 ? 0 : 1000000/fMovieFPS;
-   size += addWord(usecPerFrame); // dwMicroSecPerFrame
-   size += addWord(fMovieFPS*10000); // dwMaxBytesPerSec (estimate!) #####
-   size += addWord(0); // dwPaddingGranularity
-   size += addWord(0); // dwFlags #####?????
-   size += addWord(0); // dwTotalFrames ##### fill in later
-   size += addWord(0); // dwInitialFrame
-   size += addWord(fNumSubsessions); // dwStreams
-   size += addWord(fBufferSize); // dwSuggestedBufferSize
-   size += addWord(fMovieWidth); // dwWidth
-   size += addWord(fMovieHeight); // dwHeight
-   size += addZeroWords(4); // dwReserved
+addFileHeader1(strh);
+    size += add4ByteString(fCurrentIOState->fIsVideo ? "vids" :
+			   fCurrentIOState->fIsAudio ? "auds" :
+			   "????"); // fccType
+    size += addWord(fCurrentIOState->fAVICodecHandlerType); // fccHandler
+    size += addWord(0); // dwFlags
+    size += addWord(0); // wPriority + wLanguage
+    size += addWord(0); // dwInitialFrames
+    size += addWord(fCurrentIOState->fAVIScale); // dwScale
+    size += addWord(fCurrentIOState->fAVIRate); // dwRate
+    size += addWord(0); // dwStart
+    fCurrentIOState->fSTRHFrameCountPosition = ftell(fOutFid);
+    size += addWord(0); // dwLength (fill in later)
+    size += addWord(fBufferSize); // dwSuggestedBufferSize
+    size += addWord((unsigned)-1); // dwQuality
+    size += addWord(fCurrentIOState->fAVISize); // dwSampleSize
+    size += addWord(0); // rcFrame (start)
+    if (fCurrentIOState->fIsVideo) {
+        size += addHalfWord(fMovieWidth);
+        size += addHalfWord(fMovieHeight);
+    } else {
+        size += addWord(0);
+    }
 addFileHeaderEnd;
 
-#if 0
-addAtom(ftyp);
-  size += add4ByteString("mp42");
-  size += addWord(0x00000000);
-  size += add4ByteString("mp42");
-  size += add4ByteString("isom");
-addAtomEnd;
-
-addAtom(moov);
-  size += addAtom_mvhd();
-
-  if (fGenerateMP4Format) {
-    size += addAtom_iods();
-  }
-
-  // Add a 'trak' atom for each subsession:
-  // (For some unknown reason, QuickTime Player (5.0 at least)
-  //  doesn't display the movie correctly unless the audio track
-  //  (if present) appears before the video track.  So ensure this here.)
-  MediaSubsessionIterator iter(fInputSession);
-  while ((fCurrentSubsession = iter.next()) != NULL) {
-    fCurrentIOState = (AVISubsessionIOState*)(fCurrentSubsession->miscPtr); 
-    if (fCurrentIOState == NULL) continue;
-    if (strcmp(fCurrentSubsession->mediumName(), "audio") != 0) continue;
-
-    size += addAtom_trak();
-
-    if (fCurrentIOState->hasHintTrack()) {
-      // This track has a hint track; output it also:
-      fCurrentIOState = fCurrentIOState->fHintTrackForUs;
-      size += addAtom_trak();
+addFileHeader1(strf);
+    if (fCurrentIOState->fIsVideo) {
+      // Add a BITMAPINFO header:
+      unsigned extraDataSize = 0;
+      size += addWord(10*4 + extraDataSize); // size
+      size += addWord(fMovieWidth);
+      size += addWord(fMovieHeight);
+      size += addHalfWord(1); // planes
+      size += addHalfWord(24); // bits-per-sample #####
+      size += addWord(fCurrentIOState->fAVICodecHandlerType); // compr. type
+      size += addWord(fCurrentIOState->fAVISize);
+      size += addZeroWords(4); // ??? #####
+      // Later, add extra data here (if any) #####
+    } else if (fCurrentIOState->fIsAudio) {
+      // Add a WAVFORMATEX header:
+      size += addZeroWords(10); // TEMP #####
     }
-  }
-  iter.reset();
-  while ((fCurrentSubsession = iter.next()) != NULL) {
-    fCurrentIOState = (AVISubsessionIOState*)(fCurrentSubsession->miscPtr); 
-    if (fCurrentIOState == NULL) continue;
-    if (strcmp(fCurrentSubsession->mediumName(), "audio") == 0) continue;
+addFileHeaderEnd;
 
-    size += addAtom_trak();
+#define AVI_MASTER_INDEX_SIZE   256
 
-    if (fCurrentIOState->hasHintTrack()) {
-      // This track has a hint track; output it also:
-      fCurrentIOState = fCurrentIOState->fHintTrackForUs;
-      size += addAtom_trak();
-    }
-  }
-addAtomEnd;
-
-addAtom(mvhd);
-  size += addWord(0x00000000); // Version + Flags
-  size += addWord(fAppleCreationTime); // Creation time
-  size += addWord(fAppleCreationTime); // Modification time
-
-  // For the "Time scale" field, use the largest RTP timestamp frequency
-  // that we saw in any of the subsessions.
-  size += addWord(movieTimeScale()); // Time scale
-
-  unsigned const duration = fMaxTrackDurationM;
-  fMVHD_durationPosn = ftell(fOutFid);
-  size += addWord(duration); // Duration
-
-  size += addWord(0x00010000); // Preferred rate
-  size += addWord(0x01000000); // Preferred volume + Reserved[0]
-  size += addZeroWords(2); // Reserved[1-2]
-  size += addWord(0x00010000); // matrix top left corner
-  size += addZeroWords(3); // matrix
-  size += addWord(0x00010000); // matrix center
-  size += addZeroWords(3); // matrix
-  size += addWord(0x40000000); // matrix bottom right corner
-  size += addZeroWords(6); // various time fields
-  size += addWord(AVISubsessionIOState::fCurrentTrackNumber+1);// Next track ID
-addAtomEnd;
-
-addAtom(iods);
-  size += addWord(0x00000000); // Version + Flags
-  size += addWord(0x10808080);
-  size += addWord(0x07004FFF);
-  size += addWord(0xFF0FFFFF);
-addAtomEnd;
-
-addAtom(trak);
-  size += addAtom_tkhd();
-
-  // If we're synchronizing the media streams (or are a hint track),
-  // add an edit list that helps do this:
-  if (fCurrentIOState->fHeadChunk != NULL
-      && (fSyncStreams || fCurrentIOState->isHintTrack())) {
-    size += addAtom_edts();
-  }
-
-  // If we're generating a hint track, add a 'tref' atom:
-  if (fCurrentIOState->isHintTrack()) size += addAtom_tref();
-
-  size += addAtom_mdia();
-
-  // If we're generating a hint track, add a 'udta' atom:
-  if (fCurrentIOState->isHintTrack()) size += addAtom_udta();
-addAtomEnd;
-
-addAtom(tkhd);
-  if (fCurrentIOState->fAVIEnableTrack) {
-    size += addWord(0x0000000F); // Version +  Flags
-  } else {
-    // Disable this track in the movie:
-    size += addWord(0x00000000); // Version +  Flags
-  }
-  size += addWord(fAppleCreationTime); // Creation time
-  size += addWord(fAppleCreationTime); // Modification time
-  size += addWord(fCurrentIOState->fTrackID); // Track ID
-  size += addWord(0x00000000); // Reserved
-
-  unsigned const duration = fCurrentIOState->fAVIDurationM; // movie units
-  fCurrentIOState->fTKHD_durationPosn = ftell(fOutFid);
-  size += addWord(duration); // Duration
-  size += addZeroWords(3); // Reserved+Layer+Alternate grp
-  size += addWord(0x01000000); // Volume + Reserved
-  size += addWord(0x00010000); // matrix top left corner
-  size += addZeroWords(3); // matrix
-  size += addWord(0x00010000); // matrix center
-  size += addZeroWords(3); // matrix
-  size += addWord(0x40000000); // matrix bottom right corner
-  if (strcmp(fCurrentIOState->fOurSubsession.mediumName(), "video") == 0) {
-    size += addWord(fMovieWidth<<16); // Track width
-    size += addWord(fMovieHeight<<16); // Track height
-  } else {
-    size += addZeroWords(2); // not video: leave width and height fields zero
-  }
-addAtomEnd;
-
-addAtom(edts);
-  size += addAtom_elst();
-addAtomEnd;
-
-#define addEdit1(duration,trackPosition) do { \
-      unsigned trackDuration \
-        = (unsigned) ((2*(duration)*movieTimeScale()+1)/2); \
-            /* in movie time units */ \
-      size += addWord(trackDuration); /* Track duration */ \
-      totalDurationOfEdits += trackDuration; \
-      size += addWord(trackPosition); /* Media time */ \
-      size += addWord(0x00010000); /* Media rate (1x) */ \
-      ++numEdits; \
-} while (0)
-#define addEdit(duration) addEdit1((duration),editTrackPosition)
-#define addEmptyEdit(duration) addEdit1((duration),(~0))
-
-addAtom(elst);
-  size += addWord(0x00000000); // Version + Flags
-
-  // Add a dummy "Number of entries" field
-  // (and remember its position).  We'll fill this field in later:
-  unsigned numEntriesPosition = ftell(fOutFid);
-  size += addWord(0); // dummy for "Number of entries"
-  unsigned numEdits = 0;
-  unsigned totalDurationOfEdits = 0; // in movie time units
-
-  // Run through our chunks, looking at their presentation times.
-  // From these, figure out the edits that need to be made to keep
-  // the track media data in sync with the presentation times.
-  
-  double const syncThreshold = 0.1; // 100 ms
-    // don't allow the track to get out of sync by more than this
-
-  struct timeval editStartTime = fFirstDataTime;
-  unsigned editTrackPosition = 0;
-  unsigned currentTrackPosition = 0;
-  double trackDurationOfEdit = 0.0;
-  unsigned chunkDuration = 0;
-
-  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
-  while (chunk != NULL) {
-    struct timeval const& chunkStartTime = chunk->fPresentationTime;
-    double movieDurationOfEdit
-      = (chunkStartTime.tv_sec - editStartTime.tv_sec)
-      + (chunkStartTime.tv_usec - editStartTime.tv_usec)/1000000.0;
-    trackDurationOfEdit = (currentTrackPosition-editTrackPosition)
-      / (double)(fCurrentIOState->fAVITimeScale);
-      
-    double outOfSync = movieDurationOfEdit - trackDurationOfEdit;
-
-    if (outOfSync > syncThreshold) {
-      // The track's data is too short, so end this edit, add a new
-      // 'empty' edit after it, and start a new edit
-      // (at the current track posn.):
-      if (trackDurationOfEdit > 0.0) addEdit(trackDurationOfEdit);
-      addEmptyEdit(outOfSync);
-
-      editStartTime = chunkStartTime;
-      editTrackPosition = currentTrackPosition;
-    } else if (outOfSync < -syncThreshold) {
-      // The track's data is too long, so end this edit, and start
-      // a new edit (pointing at the current track posn.):
-      if (movieDurationOfEdit > 0.0) addEdit(movieDurationOfEdit);
-
-      editStartTime = chunkStartTime;
-      editTrackPosition = currentTrackPosition;
-    }
-
-    // Note the duration of this chunk:
-    unsigned numChannels = fCurrentIOState->fOurSubsession.numChannels();
-    chunkDuration = chunk->fNumFrames*chunk->fFrameDuration/numChannels;
-    currentTrackPosition += chunkDuration;
-
-    chunk = chunk->fNextChunk;
-  }
-
-  // Write out the final edit
-  trackDurationOfEdit
-      += (double)chunkDuration/fCurrentIOState->fAVITimeScale;
-  if (trackDurationOfEdit > 0.0) addEdit(trackDurationOfEdit);
-
-  // Now go back and fill in the "Number of entries" field:
-  setWord(numEntriesPosition, numEdits);
-
-  // Also, if the sum of all of the edit durations exceeds the
-  // track duration that we already computed (from sample durations),
-  // then reset the track duration to this new value:
-  if (totalDurationOfEdits > fCurrentIOState->fAVIDurationM) {
-    fCurrentIOState->fAVIDurationM = totalDurationOfEdits;
-    setWord(fCurrentIOState->fTKHD_durationPosn, totalDurationOfEdits);
-
-    // Also, check whether the overall movie duration needs to change:
-    if (totalDurationOfEdits > fMaxTrackDurationM) {
-      fMaxTrackDurationM = totalDurationOfEdits;
-      setWord(fMVHD_durationPosn, totalDurationOfEdits);
-    }
-
-    // Also, convert to track time scale:
-    double scaleFactor
-      = fCurrentIOState->fAVITimeScale/(double)movieTimeScale();
-    fCurrentIOState->fAVIDurationT
-      = (unsigned)(totalDurationOfEdits*scaleFactor);
-  }
-addAtomEnd;
-
-addAtom(tref);
-  size += addAtom_hint();
-addAtomEnd;
-
-addAtom(hint);
-  AVISubsessionIOState* hintedTrack = fCurrentIOState->fTrackHintedByUs;
-    // Assert: hintedTrack != NULL
-  size += addWord(hintedTrack->fTrackID);
-addAtomEnd;
-
-addAtom(mdia);
-  size += addAtom_mdhd();
-  size += addAtom_hdlr();
-  size += addAtom_minf();
-addAtomEnd;
-
-addAtom(mdhd);
-  size += addWord(0x00000000); // Version + Flags
-  size += addWord(fAppleCreationTime); // Creation time
-  size += addWord(fAppleCreationTime); // Modification time
-
-  unsigned const timeScale = fCurrentIOState->fAVITimeScale;
-  size += addWord(timeScale); // Time scale
-
-  unsigned const duration = fCurrentIOState->fAVIDurationT; // track units
-  size += addWord(duration); // Duration
-
-  size += addWord(0x00000000); // Language+Quality
-addAtomEnd;
-
-addAtom(hdlr);
-  size += addWord(0x00000000); // Version + Flags
-  size += add4ByteString("mhlr"); // Component type
-  size += addWord(fCurrentIOState->fAVIcomponentSubtype);
-    // Component subtype
-  size += add4ByteString("appl"); // Component manufacturer
-  size += addWord(0x00000000); // Component flags
-  size += addWord(0x00000000); // Component flags mask
-  size += addArbitraryString(fCurrentIOState->fAVIcomponentName);
-    // Component name
-addAtomEnd;
-
-addAtom(minf);
-  AVISubsessionIOState::atomCreationFunc mediaInformationAtomCreator
-    = fCurrentIOState->fAVIMediaInformationAtomCreator;
-  size += (this->*mediaInformationAtomCreator)();
-  size += addAtom_hdlr2();
-  size += addAtom_dinf();
-  size += addAtom_stbl();
-addAtomEnd;
-
-addAtom(smhd);
-  size += addZeroWords(2); // Version+Flags+Balance+Reserved
-addAtomEnd;
-
-addAtom(vmhd);
-  size += addWord(0x00000001); // Version + Flags
-  size += addWord(0x00408000); // Graphics mode + Opcolor[red]
-  size += addWord(0x80008000); // Opcolor[green} + Opcolor[blue]
-addAtomEnd;
-
-addAtom(gmhd);
-  size += addAtom_gmin();
-addAtomEnd;
-
-addAtom(gmin);
-  size += addWord(0x00000000); // Version + Flags
-  // The following fields probably aren't used for hint tracks, so just
-  // use values that I've seen in other files:
-  size += addWord(0x00408000); // Graphics mode + Opcolor (1st 2 bytes)
-  size += addWord(0x80008000); // Opcolor (last 4 bytes)
-  size += addWord(0x00000000); // Balance + Reserved
-addAtomEnd;
-
-unsigned AVIFileSink::addAtom_hdlr2() {
-  unsigned initFilePosn = ftell(fOutFid);
-  unsigned size = addAtomHeader("hdlr");
-  size += addWord(0x00000000); // Version + Flags
-  size += add4ByteString("dhlr"); // Component type
-  size += add4ByteString("alis"); // Component subtype
-  size += add4ByteString("appl"); // Component manufacturer
-  size += addZeroWords(2); // Component flags+Component flags mask
-  size += addArbitraryString("Apple Alias Data Handler"); // Component name
-addAtomEnd;
-
-addAtom(dinf);
-  size += addAtom_dref();
-addAtomEnd;
-
-addAtom(dref);
-  size += addWord(0x00000000); // Version + Flags
-  size += addWord(0x00000001); // Number of entries
-  size += addAtom_alis();
-addAtomEnd;
-
-addAtom(alis);
-  size += addWord(0x00000001); // Version + Flags
-addAtomEnd;
-
-addAtom(stbl);
-  size += addAtom_stsd();
-  size += addAtom_stts();
-  size += addAtom_stsc();
-  size += addAtom_stsz();
-  size += addAtom_stco();
-addAtomEnd;
-
-addAtom(stsd);
-  size += addWord(0x00000000); // Version+Flags
-  size += addWord(0x00000001); // Number of entries
-  AVISubsessionIOState::atomCreationFunc mediaDataAtomCreator
-    = fCurrentIOState->fAVIMediaDataAtomCreator;
-  size += (this->*mediaDataAtomCreator)();
-addAtomEnd;
-
-unsigned AVIFileSink::addAtom_genericMedia() {
-  unsigned initFilePosn = ftell(fOutFid);
-
-  // Our source is assumed to be a "QuickTimeGenericRTPSource"
-  // Use its "sdAtom" state for our contents:
-  QuickTimeGenericRTPSource* rtpSource = (QuickTimeGenericRTPSource*)
-    fCurrentIOState->fOurSubsession.rtpSource();
-  QuickTimeGenericRTPSource::AVIState& qtState = rtpSource->qtState;
-  char const* from = qtState.sdAtom;
-  unsigned size = qtState.sdAtomSize;
-  for (unsigned i = 0; i < size; ++i) addByte(from[i]);
-addAtomEnd;
-
-unsigned AVIFileSink::addAtom_soundMediaGeneral() {
-  unsigned initFilePosn = ftell(fOutFid);
-  unsigned size = addAtomHeader(fCurrentIOState->fAVIAudioDataType);
-
-// General sample description fields:
-  size += addWord(0x00000000); // Reserved
-  size += addWord(0x00000001); // Reserved+Data reference index
-// Sound sample description fields:
-  unsigned short const version = fCurrentIOState->fAVISoundSampleVersion;
-  size += addWord(version<<16); // Version+Revision level
-  size += addWord(0x00000000); // Vendor
-  unsigned short numChannels
-    = (unsigned short)(fCurrentIOState->fOurSubsession.numChannels());
-  size += addHalfWord(numChannels); // Number of channels
-  size += addHalfWord(0x0010); // Sample size
-  //  size += addWord(0x00000000); // Compression ID+Packet size
-  size += addWord(0xfffe0000); // Compression ID+Packet size #####
-
-  unsigned const sampleRateFixedPoint = fCurrentIOState->fAVITimeScale << 16;
-  size += addWord(sampleRateFixedPoint); // Sample rate
-addAtomEnd;
-
-unsigned AVIFileSink::addAtom_Qclp() {
-  // The beginning of this atom looks just like a general Sound Media atom,
-  // except with a version field of 1:
-  unsigned initFilePosn = ftell(fOutFid);
-  fCurrentIOState->fAVIAudioDataType = "Qclp";
-  fCurrentIOState->fAVISoundSampleVersion = 1;
-  unsigned size = addAtom_soundMediaGeneral();
-
-  // Next, add the four fields that are particular to version 1:
-  // (Later, parameterize these #####)
-  size += addWord(0x000000a0); // samples per packet
-  size += addWord(0x00000000); // ???
-  size += addWord(0x00000000); // ???
-  size += addWord(0x00000002); // bytes per sample (uncompressed)
-
-  // Other special fields are in a 'wave' atom that follows:
-  size += addAtom_wave();
-addAtomEnd;
-
-addAtom(wave);
-  size += addAtom_frma();
-  if (strcmp(fCurrentIOState->fAVIAudioDataType, "Qclp") == 0) {
-    size += addWord(0x00000014); // ???
-    size += add4ByteString("Qclp"); // ???
-    if (fCurrentIOState->fAVIBytesPerFrame == 35) {
-      size += addAtom_Fclp(); // full-rate QCELP
+addFileHeader1(JUNK);
+    if (fJunkNumber == 0) {
+      size += addHalfWord(4); // wLongsPerEntry
+      size += addHalfWord(0); // bIndexSubType + bIndexType
+      size += addWord(0); // nEntriesInUse #####
+      size += addWord(fCurrentIOState->fAVISubsessionTag); // dwChunkId
+      size += addZeroWords(2); // dwReserved
+      size += addZeroWords(AVI_MASTER_INDEX_SIZE*4);
     } else {
-      size += addAtom_Hclp(); // half-rate QCELP
-    } // what about other QCELP 'rates'??? #####
-    size += addWord(0x00000008); // ???
-    size += addWord(0x00000000); // ???
-    size += addWord(0x00000000); // ???
-    size += addWord(0x00000008); // ???
-  } else if (strcmp(fCurrentIOState->fAVIAudioDataType, "mp4a") == 0) {
-    size += addWord(0x0000000c); // ???
-    size += add4ByteString("mp4a"); // ???
-    size += addWord(0x00000000); // ???
-    size += addAtom_esds(); // ESDescriptor
-    size += addWord(0x00000008); // ???
-    size += addWord(0x00000000); // ???
-  }
-addAtomEnd;
-
-addAtom(frma);
-  size += add4ByteString(fCurrentIOState->fAVIAudioDataType); // ???
-addAtomEnd;
-
-addAtom(Fclp);
- size += addWord(0x00000000); // ???
-addAtomEnd;
-
-addAtom(Hclp);
- size += addWord(0x00000000); // ???
-addAtomEnd;
-
-unsigned AVIFileSink::addAtom_mp4a() {
-  // The beginning of this atom looks just like a general Sound Media atom,
-  // except with a version field of 1:
-  unsigned initFilePosn = ftell(fOutFid);
-  fCurrentIOState->fAVIAudioDataType = "mp4a";
-  fCurrentIOState->fAVISoundSampleVersion = 1;
-  unsigned size = addAtom_soundMediaGeneral();
-
-  if (fGenerateMP4Format) {
-    size += addAtom_esds();
-  } else {
-    // Next, add the four fields that are particular to version 1:
-    // (Later, parameterize these #####)
-    size += addWord(fCurrentIOState->fAVITimeUnitsPerSample);
-    size += addWord(0x00000001); // ???
-    size += addWord(0x00000001); // ???
-    size += addWord(0x00000002); // bytes per sample (uncompressed)
-
-    // Other special fields are in a 'wave' atom that follows:
-    size += addAtom_wave();
-  }
-addAtomEnd;
-
-addAtom(esds);
-  //#####
-  MediaSubsession& subsession = fCurrentIOState->fOurSubsession;
-  if (strcmp(subsession.mediumName(), "audio") == 0) {
-    // MPEG-4 audio
-    size += addWord(0x00000000); // ???
-    size += addWord(0x03808080); // ???
-    size += addWord(0x2a000000); // ???
-    size += addWord(0x04808080); // ???
-    size += addWord(0x1c401500); // ???
-    size += addWord(0x18000000); // ???
-    size += addWord(0x6d600000); // ???
-    size += addWord(0x6d600580); // ???
-    size += addByte(0x80); size += addByte(0x80); // ???
-  } else if (strcmp(subsession.mediumName(), "video") == 0) {
-    // MPEG-4 video
-    size += addWord(0x00000000); // ???
-    size += addWord(0x03370000); // ???
-    size += addWord(0x1f042f20); // ???
-    size += addWord(0x1104fd46); // ???
-    size += addWord(0x000d4e10); // ???
-    size += addWord(0x000d4e10); // ???
-    size += addByte(0x05); // ???
-  }
-
-  // Add the source's 'config' information:
-  unsigned configSize;
-  unsigned char* config
-    = parseGeneralConfigStr(subsession.fmtp_config(), configSize);
-  if (configSize > 0) --configSize; // remove trailing '\0';
-  size += addByte(configSize);
-  for (unsigned i = 0; i < configSize; ++i) {
-    size += addByte(config[i]);
-  }
-
-  if (strcmp(subsession.mediumName(), "audio") == 0) {
-    // MPEG-4 audio
-    size += addWord(0x06808080); // ???
-    size += addByte(0x01); // ???
-  } else {
-    // MPEG-4 video
-    size += addHalfWord(0x0601); // ???
-    size += addByte(0x02); // ???
-  }
-  //#####
-addAtomEnd;
-
-addAtom(srcq);
-  //#####
-  size += addWord(0x00000040); // ???
-  //#####
-addAtomEnd;
-
-addAtom(h263);
-// General sample description fields:
-  size += addWord(0x00000000); // Reserved
-  size += addWord(0x00000001); // Reserved+Data reference index
-// Video sample description fields:
-  size += addWord(0x00020001); // Version+Revision level
-  size += add4ByteString("appl"); // Vendor
-  size += addWord(0x00000000); // Temporal quality
-  size += addWord(0x000002fc); // Spatial quality
-  unsigned const widthAndHeight = (fMovieWidth<<16)|fMovieHeight;
-  size += addWord(widthAndHeight); // Width+height
-  size += addWord(0x00480000); // Horizontal resolution
-  size += addWord(0x00480000); // Vertical resolution
-  size += addWord(0x00000000); // Data size
-  size += addWord(0x00010548); // Frame count+Compressor name (start)
-    // "H.263"
-  size += addWord(0x2e323633); // Compressor name (continued)
-  size += addZeroWords(6); // Compressor name (continued - zero)
-  size += addWord(0x00000018); // Compressor name (final)+Depth
-  size += addHalfWord(0xffff); // Color table id
-addAtomEnd;
-
-addAtom(mp4v);
-// General sample description fields:
-  size += addWord(0x00000000); // Reserved
-  size += addWord(0x00000001); // Reserved+Data reference index
-// Video sample description fields:
-  size += addWord(0x00020001); // Version+Revision level
-  size += add4ByteString("appl"); // Vendor
-  size += addWord(0x00000200); // Temporal quality
-  size += addWord(0x00000400); // Spatial quality
-  unsigned const widthAndHeight = (fMovieWidth<<16)|fMovieHeight;
-  size += addWord(widthAndHeight); // Width+height
-  size += addWord(0x00480000); // Horizontal resolution
-  size += addWord(0x00480000); // Vertical resolution
-  size += addWord(0x00000000); // Data size
-  size += addWord(0x00010c4d); // Frame count+Compressor name (start)
-    // "MPEG-4 Video"
-  size += addWord(0x5045472d); // Compressor name (continued)
-  size += addWord(0x34205669); // Compressor name (continued)
-  size += addWord(0x64656f00); // Compressor name (continued)
-  size += addZeroWords(4); // Compressor name (continued - zero)
-  size += addWord(0x00000018); // Compressor name (final)+Depth
-  size += addHalfWord(0xffff); // Color table id
-  size += addAtom_esds(); // ESDescriptor
-  size += addWord(0x00000000); // ???
-addAtomEnd;
-
-unsigned AVIFileSink::addAtom_rtp() {
-  unsigned initFilePosn = ftell(fOutFid);
-  unsigned size = addAtomHeader("rtp ");
-
-  size += addWord(0x00000000); // Reserved (1st 4 bytes)
-  size += addWord(0x00000001); // Reserved (last 2 bytes) + Data ref index
-  size += addWord(0x00010001); // Hint track version + Last compat htv
-  size += addWord(1450); // Max packet size
-
-  size += addAtom_tims();
-addAtomEnd;
-
-addAtom(tims);
-  size += addWord(fCurrentIOState->fOurSubsession.rtpTimestampFrequency());
-addAtomEnd;
-
-addAtom(stts); // Time-to-Sample
-  size += addWord(0x00000000); // Version+flags
-
-  // First, add a dummy "Number of entries" field
-  // (and remember its position).  We'll fill this field in later:
-  unsigned numEntriesPosition = ftell(fOutFid);
-  size += addWord(0); // dummy for "Number of entries"
-
-  // Then, run through the chunk descriptors, and enter the entries
-  // in this (compressed) Time-to-Sample table:
-  unsigned numEntries = 0, numSamplesSoFar = 0;
-  unsigned prevSampleDuration = 0;
-  unsigned const samplesPerFrame = fCurrentIOState->fAVISamplesPerFrame;
-  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
-  while (chunk != NULL) {
-    unsigned const sampleDuration = chunk->fFrameDuration/samplesPerFrame;
-    if (sampleDuration != prevSampleDuration) {
-      // This chunk will start a new table entry,
-      // so write out the old one (if any):
-      if (chunk != fCurrentIOState->fHeadChunk) {
-	++numEntries;
-	size += addWord(numSamplesSoFar); // Sample count
-	size += addWord(prevSampleDuration); // Sample duration
-	numSamplesSoFar = 0;
-      }
+      size += add4ByteString("odml");
+      size += add4ByteString("dmlh");
+      unsigned wtfCount = 248;
+      size += addWord(wtfCount); // ??? #####
+      size += addZeroWords(wtfCount/4);
     }
+addFileHeaderEnd;
 
-    unsigned const numSamples = chunk->fNumFrames*samplesPerFrame;
-    numSamplesSoFar += numSamples;
-    prevSampleDuration = sampleDuration;
-    chunk = chunk->fNextChunk;
-  }
-
-  // Then, write out the last entry:
-  ++numEntries;
-  size += addWord(numSamplesSoFar); // Sample count
-  size += addWord(prevSampleDuration); // Sample duration
-
-  // Now go back and fill in the "Number of entries" field:
-  setWord(numEntriesPosition, numEntries);
-addAtomEnd;
-
-addAtom(stsc); // Sample-to-Chunk
-  size += addWord(0x00000000); // Version+flags
-
-  // First, add a dummy "Number of entries" field
-  // (and remember its position).  We'll fill this field in later:
-  unsigned numEntriesPosition = ftell(fOutFid);
-  size += addWord(0); // dummy for "Number of entries"
-
-  // Then, run through the chunk descriptors, and enter the entries
-  // in this (compressed) Sample-to-Chunk table:
-  unsigned numEntries = 0, chunkNumber = 0;
-  unsigned prevSamplesPerChunk = ~0;
-  unsigned const samplesPerFrame = fCurrentIOState->fAVISamplesPerFrame;
-  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
-  while (chunk != NULL) {
-    ++chunkNumber;
-    unsigned const samplesPerChunk = chunk->fNumFrames*samplesPerFrame;
-    if (samplesPerChunk != prevSamplesPerChunk) {
-      // This chunk will be a new table entry:
-      ++numEntries;
-      size += addWord(chunkNumber); // Chunk number
-      size += addWord(samplesPerChunk); // Samples per chunk
-      size += addWord(0x00000001); // Sample description ID
-
-      prevSamplesPerChunk = samplesPerChunk;
-    }
-    chunk = chunk->fNextChunk;
-  }
-
-  // Now go back and fill in the "Number of entries" field:
-  setWord(numEntriesPosition, numEntries);
-addAtomEnd;
-
-addAtom(stsz); // Sample Size
-  size += addWord(0x00000000); // Version+flags
-
-  // Begin by checking whether our chunks all have the same
-  // 'bytes-per-sample'.  This determines whether this atom's table
-  // has just a single entry, or multiple entries.
-  Boolean haveSingleEntryTable = True;
-  double firstBPS = 0.0;
-  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
-  while (chunk != NULL) {
-    double bps
-      = (double)(chunk->fFrameSize)/(fCurrentIOState->fAVISamplesPerFrame);
-    if (bps < 1.0) {
-      // I don't think a multiple-entry table would make sense in
-      // this case, so assume a single entry table ??? #####
-      break;
-    }
-
-    if (firstBPS == 0.0) {
-      firstBPS = bps;
-    } else if (bps != firstBPS) {
-      haveSingleEntryTable = False;
-      break;
-    }
-
-    chunk = chunk->fNextChunk;
-  }
-
-  unsigned sampleSize;
-  if (haveSingleEntryTable) {
-    if (fCurrentIOState->isHintTrack()
-	&& fCurrentIOState->fHeadChunk != NULL) {
-      sampleSize = fCurrentIOState->fHeadChunk->fFrameSize
-	              / fCurrentIOState->fAVISamplesPerFrame;
-    } else {
-      // The following doesn't seem right, but seems to do the right thing:
-      sampleSize = fCurrentIOState->fAVITimeUnitsPerSample; //???
-    }
-  } else {
-    sampleSize = 0; // indicates a multiple-entry table
-  }
-  size += addWord(sampleSize); // Sample size
-  unsigned const totNumSamples = fCurrentIOState->fAVITotNumSamples;
-  size += addWord(totNumSamples); // Number of entries
-
-  if (!haveSingleEntryTable) {
-    // Multiple-entry table:
-    // Run through the chunk descriptors, entering the sample sizes:
-    ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
-    while (chunk != NULL) {
-      unsigned numSamples
-	= chunk->fNumFrames*(fCurrentIOState->fAVISamplesPerFrame);
-      unsigned sampleSize
-	= chunk->fFrameSize/(fCurrentIOState->fAVISamplesPerFrame);
-      for (unsigned i = 0; i < numSamples; ++i) {
-	size += addWord(sampleSize);
-      }
-
-      chunk = chunk->fNextChunk;
-    }
-  }
-addAtomEnd;
-
-addAtom(stco); // Chunk Offset
-  size += addWord(0x00000000); // Version+flags
-  size += addWord(fCurrentIOState->fNumChunks); // Number of entries
-
-  // Run through the chunk descriptors, entering the file offsets:
-  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
-  while (chunk != NULL) {
-    size += addWord(chunk->fOffsetInFile);
-
-    chunk = chunk->fNextChunk;
-  }
-addAtomEnd;
-
-addAtom(udta);
-  size += addAtom_name();
-  size += addAtom_hnti();
-  size += addAtom_hinf();
-addAtomEnd;
-
-addAtom(name);
-  char description[100];
-  sprintf(description, "Hinted %s track",
-	  fCurrentIOState->fOurSubsession.mediumName());
-  size += addArbitraryString(description, False); // name of object
-addAtomEnd;
-
-addAtom(hnti);
-  size += addAtom_sdp(); 
-addAtomEnd;
-
-unsigned AVIFileSink::addAtom_sdp() {
-  unsigned initFilePosn = ftell(fOutFid);
-  unsigned size = addAtomHeader("sdp ");
-
-  // Add this subsession's SDP lines: 
-  char const* sdpLines = fCurrentIOState->fOurSubsession.savedSDPLines();
-  // We need to change any "a=control:trackID=" values to be this
-  // track's actual track id:
-  char* newSDPLines = new char[strlen(sdpLines)+100/*overkill*/];
-  char const* searchStr = "a=control:trackid=";
-  Boolean foundSearchString = False;
-  char const *p1, *p2, *p3;
-  for (p1 = sdpLines; *p1 != '\0'; ++p1) {
-    for (p2 = p1,p3 = searchStr; tolower(*p2) == *p3; ++p2,++p3) {}
-    if (*p3 == '\0') {
-      // We found the end of the search string, at p2.
-      int beforeTrackNumPosn = p2-sdpLines;
-      // Look for the subsequent track number, and skip over it: 
-      int trackNumLength;
-      if (sscanf(p2, " %*d%n", &trackNumLength) < 0) break;
-      int afterTrackNumPosn = beforeTrackNumPosn + trackNumLength;
-      
-      // Replace the old track number with the correct one: 
-      int i;
-      for (i = 0; i < beforeTrackNumPosn; ++i) newSDPLines[i] = sdpLines[i];
-      sprintf(&newSDPLines[i], "%d", fCurrentIOState->fTrackID);
-      i = afterTrackNumPosn;
-      int j = i + strlen(&newSDPLines[i]);
-      while (1) {
-	if ((newSDPLines[j] = sdpLines[i]) == '\0') break;
-	++i; ++j;
-      }
-
-      foundSearchString = True;
-      break;
-    }
-  }
-
-  if (!foundSearchString) {
-    // Because we didn't find a "a=control:trackID=<trackId>" line,
-    // add one of our own:
-    sprintf(newSDPLines, "%s%s%d\r\n",
-	    sdpLines, searchStr, fCurrentIOState->fTrackID);
-  }
-
-  size += addArbitraryString(newSDPLines, False);
-  delete[] newSDPLines;
-addAtomEnd;
-
-addAtom(hinf);
-  size += addAtom_totl();
-  size += addAtom_npck();
-  size += addAtom_tpay();
-  size += addAtom_trpy();
-  size += addAtom_nump();
-  size += addAtom_tpyl();
-  // Is 'maxr' required? #####
-  size += addAtom_dmed();
-  size += addAtom_dimm();
-  size += addAtom_drep();
-  size += addAtom_tmin();
-  size += addAtom_tmax();
-  size += addAtom_pmax();
-  size += addAtom_dmax();
-  size += addAtom_payt(); 
-addAtomEnd;
-
-addAtom(totl);
- size += addWord(fCurrentIOState->fHINF.trpy.lo);
-addAtomEnd;
-
-addAtom(npck);
- size += addWord(fCurrentIOState->fHINF.nump.lo);
-addAtomEnd;
-
-addAtom(tpay);
- size += addWord(fCurrentIOState->fHINF.tpyl.lo);
-addAtomEnd;
-
-addAtom(trpy);
- size += addWord(fCurrentIOState->fHINF.trpy.hi);
- size += addWord(fCurrentIOState->fHINF.trpy.lo);
-addAtomEnd;
-
-addAtom(nump);
- size += addWord(fCurrentIOState->fHINF.nump.hi);
- size += addWord(fCurrentIOState->fHINF.nump.lo);
-addAtomEnd;
-
-addAtom(tpyl);
- size += addWord(fCurrentIOState->fHINF.tpyl.hi);
- size += addWord(fCurrentIOState->fHINF.tpyl.lo);
-addAtomEnd;
-
-addAtom(dmed);
- size += addWord(fCurrentIOState->fHINF.dmed.hi);
- size += addWord(fCurrentIOState->fHINF.dmed.lo);
-addAtomEnd;
-
-addAtom(dimm);
- size += addWord(fCurrentIOState->fHINF.dimm.hi);
- size += addWord(fCurrentIOState->fHINF.dimm.lo);
-addAtomEnd;
-
-addAtom(drep);
- size += addWord(0);
- size += addWord(0);
-addAtomEnd;
-
-addAtom(tmin);
- size += addWord(0);
-addAtomEnd;
-
-addAtom(tmax);
- size += addWord(0);
-addAtomEnd;
-
-addAtom(pmax);
- size += addWord(fCurrentIOState->fHINF.pmax);
-addAtomEnd;
-
-addAtom(dmax);
- size += addWord(fCurrentIOState->fHINF.dmax);
-addAtomEnd;
-
-addAtom(payt);
-  MediaSubsession& ourSubsession = fCurrentIOState->fOurSubsession; 
-  RTPSource* rtpSource = ourSubsession.rtpSource();
-  size += addByte(rtpSource->rtpPayloadFormat());
-  
-  // Also, add a 'rtpmap' string: <mime-subtype>/<rtp-frequency>
-  unsigned rtpmapStringLength = strlen(ourSubsession.codecName()) + 20;
-  char* rtpmapString = new char[rtpmapStringLength];
-  sprintf(rtpmapString, "%s/%d",
-	  ourSubsession.codecName(), rtpSource->timestampFrequency());
-  size += addArbitraryString(rtpmapString);
-  delete[] rtpmapString;
-addAtomEnd;
-
-// A dummy atom (with name "????"):
-unsigned AVIFileSink::addAtom_dummy() {
-    unsigned initFilePosn = ftell(fOutFid);
-    unsigned size = addAtomHeader("????");
-addAtomEnd;
-#endif
+addFileHeader(LIST,movi);
+    fMoviSizePosition = headerSizePosn;
+    fMoviSizeValue = size-ignoredSize;
+addFileHeaderEnd;

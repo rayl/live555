@@ -115,7 +115,7 @@ void FileSink::addData(unsigned char* data, unsigned dataSize,
   if (!packetIsLost)
 #endif
   if (fOutFid != NULL && data != NULL) {
-    fwrite(data, dataSize, 1, fOutFid);
+    fwrite(data, 1, dataSize, fOutFid);
   }
 }
 

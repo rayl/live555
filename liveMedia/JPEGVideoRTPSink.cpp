@@ -66,7 +66,7 @@ void JPEGVideoRTPSink
   mainJPEGHeader[7] = source->height();
   setSpecialHeaderBytes(mainJPEGHeader, sizeof mainJPEGHeader);
 
-  if (source->qFactor() >= 128) {
+  if (fragmentationOffset == 0 && source->qFactor() >= 128) {
     // There is also a Quantization Header:
     u_int8_t precision;
     u_int16_t length;
@@ -107,7 +107,7 @@ unsigned JPEGVideoRTPSink::specialHeaderSize() const {
 
   unsigned headerSize = 8; // by default
 
-  if (source->qFactor() >= 128) {
+  if (curFragmentationOffset() == 0 && source->qFactor() >= 128) {
     // There is also a Quantization Header:
     u_int8_t dummy;
     u_int16_t quantizationTablesSize;

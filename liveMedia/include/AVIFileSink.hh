@@ -66,21 +66,11 @@ private:
   FILE* fOutFid;
   unsigned fBufferSize;
   Boolean fPacketLossCompensate;
-#if 0
-  Boolean fSyncStreams, fGenerateMP4Format;
-  struct timeval fNewestSyncTime, fFirstDataTime;
-#endif
   Boolean fAreCurrentlyBeingPlayed;
   afterPlayingFunc* fAfterFunc;
   void* fAfterClientData;
-#if 0
-  unsigned fAppleCreationTime;
-  unsigned fLargestRTPtimestampFrequency;
-#endif
   unsigned fNumSubsessions;
-#if 0
-  unsigned fNumSyncedSubsessions;
-#endif
+  unsigned fNumBytesWritten;
   struct timeval fStartTime;
   Boolean fHaveCompletedOutputFile;
 
@@ -88,26 +78,14 @@ private:
   ///// Definitions specific to the AVI file format:
 
   unsigned addWord(unsigned word); // outputs "word" in little-endian order
-#if 0
   unsigned addHalfWord(unsigned short halfWord);
-#endif
   unsigned AVIFileSink::addByte(unsigned char byte) {
     putc(byte, fOutFid);
     return 1;
   }
   unsigned addZeroWords(unsigned numWords);
   unsigned add4ByteString(char const* str);
-#if 0
-  unsigned addArbitraryString(char const* str,
-			      Boolean oneByteLength = True);
-  unsigned addAtomHeader(char const* atomName);
-      // strlen(atomName) must be 4
-#endif
   void setWord(unsigned filePosn, unsigned size);
-
-#if 0
-  unsigned movieTimeScale() const {return fLargestRTPtimestampFrequency;}
-#endif
 
   // Define member functions for outputting various types of file header:
 #define _header(name) unsigned addFileHeader_##name()
@@ -117,15 +95,17 @@ private:
           _header(strl);
               _header(strh);
               _header(strf);
+              _header(JUNK);
+//        _header(JUNK);
+      _header(movi);
 private:
   unsigned short fMovieWidth, fMovieHeight;
   unsigned fMovieFPS;
-#if 0
-  unsigned fMDATposition;
-  unsigned fMVHD_durationPosn;
-  unsigned fMaxTrackDurationM; // in movie time units
-#endif
+  unsigned fRIFFSizePosition, fRIFFSizeValue;
+  unsigned fAVIHFrameCountPosition;
+  unsigned fMoviSizePosition, fMoviSizeValue;
   class AVISubsessionIOState* fCurrentIOState;
+  unsigned fJunkNumber;
 };
 
 #endif

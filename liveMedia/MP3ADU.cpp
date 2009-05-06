@@ -571,6 +571,14 @@ Boolean SegmentQueue::sqAfterGettingCommon(Segment& seg,
     return False;
   }
   
+  // If we've just read an ADU (rather than a regular MP3 frame), then use the
+  // entire "numBytesRead" data for the 'aduSize', so that we include any
+  // 'ancillary data' that may be present at the end of the ADU:
+  if (!fDirectionIsToADU) {
+    unsigned newADUSize
+      = numBytesRead - seg.descriptorSize - 4/*header size*/ - seg.sideInfoSize;
+    if (newADUSize > seg.aduSize) seg.aduSize = newADUSize;
+  }
   fTotalDataSize += seg.dataHere();
   fNextFreeIndex = nextIndex(fNextFreeIndex);
 
