@@ -100,7 +100,7 @@ class StreamState {
 public:
   StreamState(Port const& serverRTPPort, Port const& serverRTCPPort,
 	      RTPSink* rtpSink, BasicUDPSink* udpSink,
-	      unsigned totalBW, char* CNAME,
+	      float streamDuration, unsigned totalBW, char* CNAME,
 	      FramedSource* mediaSource,
 	      Groupsock* rtpGS, Groupsock* rtcpGS);
   virtual ~StreamState();
@@ -118,6 +118,8 @@ public:
 
   RTPSink const* rtpSink() const { return fRTPSink; }
 
+  float streamDuration() const { return fStreamDuration; }
+
   FramedSource* mediaSource() const { return fMediaSource; }
 
 private:
@@ -129,6 +131,7 @@ private:
   RTPSink* fRTPSink;
   BasicUDPSink* fUDPSink;
 
+  float fStreamDuration;
   unsigned fTotalBW; char* fCNAME; RTCPInstance* fRTCPInstance;
 
   FramedSource* fMediaSource;
@@ -216,7 +219,7 @@ void OnDemandServerMediaSubsession
     // Set up the state of the stream.  The stream will get started later:
     streamToken = fLastStreamToken
       = new StreamState(serverRTPPort, serverRTCPPort, rtpSink, udpSink,
-			streamBitrate, fCNAME, mediaSource,
+			duration(), streamBitrate, fCNAME, mediaSource,
 			rtpGroupsock, rtcpGroupsock);
   }
   
@@ -374,23 +377,27 @@ void OnDemandServerMediaSubsession
 ////////// StreamState implementation //////////
 
 static void afterPlayingStreamState(void* clientData) {
-  // When the input stream ends, keep it alive, in case the client wants to
-  // subsequently re-play the stream starting from somewhere other than the end.
-  // If, instead, you want to terminate the stream, enable the following code.
-#if 0
   StreamState* streamState = (StreamState*)clientData;
-  streamState->reclaim();
-#endif
+  if (streamState->streamDuration() == 0.0) {
+    // When the input stream ends, tear it down.  This will cause a RTCP "BYE"
+    // to be sent to each client, teling it that the stream has ended.
+    // (Because the stream didn't have a known duration, there was no other
+    //  way for clients to know when the stream ended.)
+    streamState->reclaim();
+  }
+  // Otherwise, keep the stream alive, in case a client wants to
+  // subsequently re-play the stream starting from somewhere other than the end.
+  // (This can be done only on streams that have a known duration.)
 }
 
 StreamState::StreamState(Port const& serverRTPPort, Port const& serverRTCPPort,
 			 RTPSink* rtpSink, BasicUDPSink* udpSink,
-			 unsigned totalBW, char* CNAME,
+			 float streamDuration, unsigned totalBW, char* CNAME,
 			 FramedSource* mediaSource,
 			 Groupsock* rtpGS, Groupsock* rtcpGS)
   : fAreCurrentlyPlaying(False), fReferenceCount(1),
     fServerRTPPort(serverRTPPort), fServerRTCPPort(serverRTCPPort),
-    fRTPSink(rtpSink), fUDPSink(udpSink),
+    fRTPSink(rtpSink), fUDPSink(udpSink), fStreamDuration(streamDuration),
     fTotalBW(totalBW), fCNAME(CNAME), fRTCPInstance(NULL) /* created later */,
     fMediaSource(mediaSource), fRTPgs(rtpGS), fRTCPgs(rtcpGS) {
 }  
