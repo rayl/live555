@@ -140,7 +140,7 @@ int main(int argc, char const** argv) {
   const unsigned short rtcpPortNumAudio = rtpPortNumAudio+1;
   const unsigned short rtpPortNumVideo = 8888;
   const unsigned short rtcpPortNumVideo = rtpPortNumVideo+1;
-  const unsigned char ttl = 7; // low, in case routers don't admin scope
+  const unsigned char ttl = 255;
 
   const Port rtpPortAudio(rtpPortNumAudio);
   const Port rtcpPortAudio(rtcpPortNumAudio);

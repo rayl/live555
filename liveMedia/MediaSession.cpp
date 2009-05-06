@@ -690,9 +690,11 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
     } else if (  strcmp(fCodecName, "PCMU") == 0 // PCM u-law audio
 	       || strcmp(fCodecName, "GSM") == 0 // GSM audio
 	       || strcmp(fCodecName, "PCMA") == 0 // PCM a-law audio
+	       || strcmp(fCodecName, "L16") == 0 // 16-bit linear audio
 	       || strcmp(fCodecName, "MP1S") == 0 // MPEG-1 System Stream
 	       || strcmp(fCodecName, "MP2T") == 0 // MPEG-2 Transport Str
 	       || strcmp(fCodecName, "MP2P") == 0 // MPEG-2 Program Stream
+	       || strcmp(fCodecName, "L8") == 0 // 8-bit linear audio
 	       || strcmp(fCodecName, "SPEEX") == 0 // SPEEX audio
 	      ) {
       createSimpleRTPSource = True;

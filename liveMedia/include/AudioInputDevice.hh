@@ -35,26 +35,31 @@ public:
 
 class AudioInputDevice: public FramedSource {
 public:
+  unsigned char bitsPerSample() const { return fBitsPerSample; }
   unsigned char numChannels() const { return fNumChannels; }
   unsigned samplingFrequency() const { return fSamplingFrequency; }
 
   virtual Boolean setInputPort(int portIndex) = 0;
   virtual double getAverageLevel() const = 0;
 
-  static AudioInputDevice* createNew(UsageEnvironment& env, int inputPortNumber,
-	unsigned char numChannels, unsigned samplingFrequency,
-	unsigned granularityInMS = 20);
+  static AudioInputDevice*
+  createNew(UsageEnvironment& env, int inputPortNumber,
+	    unsigned char bitsPerSample, unsigned char numChannels,
+	    unsigned samplingFrequency, unsigned granularityInMS = 20);
   static AudioPortNames* getPortNames();
 
 protected:
   AudioInputDevice(UsageEnvironment& env,
-	unsigned char numChannels, unsigned samplingFrequency, unsigned granularityInMS);
+		   unsigned char bitsPerSample,
+		   unsigned char numChannels,
+		   unsigned samplingFrequency,
+		   unsigned granularityInMS);
 	// we're an abstract base class
 
   virtual ~AudioInputDevice();
 
 protected:
-  unsigned char fNumChannels;
+  unsigned char fBitsPerSample, fNumChannels;
   unsigned fSamplingFrequency;
   unsigned fGranularityInMS;
 };

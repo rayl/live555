@@ -19,11 +19,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include <AudioInputDevice.hh>
 
-AudioInputDevice::AudioInputDevice(UsageEnvironment& env,
-								   unsigned char numChannels, unsigned samplingFrequency,
-								   unsigned granularityInMS)
-  : FramedSource(env), fNumChannels(numChannels),
-  fSamplingFrequency(samplingFrequency), fGranularityInMS(granularityInMS) {
+AudioInputDevice
+::AudioInputDevice(UsageEnvironment& env, unsigned char bitsPerSample,
+		   unsigned char numChannels,
+		   unsigned samplingFrequency, unsigned granularityInMS)
+  : FramedSource(env), fBitsPerSample(bitsPerSample),
+    fNumChannels(numChannels), fSamplingFrequency(samplingFrequency),
+    fGranularityInMS(granularityInMS) {
 }
 
 AudioInputDevice::~AudioInputDevice() {

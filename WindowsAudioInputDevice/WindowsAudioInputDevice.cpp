@@ -50,16 +50,21 @@ public:
 
 ////////// AudioInputDevice (remaining) implementation //////////
 
-AudioInputDevice* AudioInputDevice::createNew(UsageEnvironment& env, int inputPortNumber,
-									unsigned char numChannels, unsigned samplingFrequency,
-									unsigned granularityInMS) {
-	Boolean success;
-	WindowsAudioInputDevice* newSource
-		= new WindowsAudioInputDevice(env, inputPortNumber, numChannels,
-				samplingFrequency, granularityInMS, success);
-	if (!success) {delete newSource; newSource = NULL;}
+AudioInputDevice*
+AudioInputDevice::createNew(UsageEnvironment& env, int inputPortNumber,
+			    unsigned char bitsPerSample,
+			    unsigned char numChannels,
+			    unsigned samplingFrequency,
+			    unsigned granularityInMS) {
+  Boolean success;
+  WindowsAudioInputDevice* newSource
+    = new WindowsAudioInputDevice(env, inputPortNumber,
+					bitsPerSample, numChannels,
+					samplingFrequency, granularityInMS,
+					success);
+  if (!success) {delete newSource; newSource = NULL;}
 
-	return newSource;
+  return newSource;
 }
 
 AudioPortNames* AudioInputDevice::getPortNames() {
@@ -110,12 +115,17 @@ AudioPortNames* AudioInputDevice::getPortNames() {
 
 ////////// WindowsAudioInputDevice implementation //////////
 
+static unsigned _bitsPerSample = 16;
+
 WindowsAudioInputDevice::WindowsAudioInputDevice(UsageEnvironment& env, int inputPortNumber,
-								   unsigned char numChannels, unsigned samplingFrequency,
-								   unsigned granularityInMS, Boolean& success)
-  : AudioInputDevice(env, numChannels, samplingFrequency, granularityInMS), fCurMixerId(-1), fCurPortIndex(-1),
-  fHaveStarted(False) {
-	if (!setInputPort(inputPortNumber)) {
+								   unsigned char bitsPerSample, unsigned char numChannels,
+								   unsigned samplingFrequency, unsigned granularityInMS,
+								   Boolean& success)
+  : AudioInputDevice(env, bitsPerSample, numChannels, samplingFrequency, granularityInMS),
+  fCurMixerId(-1), fCurPortIndex(-1), fHaveStarted(False) {
+  _bitsPerSample = bitsPerSample;
+
+  if (!setInputPort(inputPortNumber)) {
 		char buf[100]; sprintf(buf, "%d", inputPortNumber);
 		env.setResultMsg("AudioInputDevice::AudioInputDevice(): Failed to set audio input port number to ", buf);
 		success = False;
@@ -450,9 +460,8 @@ Mixer::~Mixer() {
 void Mixer::open(unsigned numChannels, unsigned samplingFrequency, unsigned granularityInMS) {
 	HMIXER newHMixer = NULL;
 	do {
-		unsigned const bitsPerSample = 16;
-		WindowsAudioInputDevice::uSecsPerByte
-			= (8*1e6)/(bitsPerSample*numChannels*samplingFrequency);
+	  WindowsAudioInputDevice::uSecsPerByte
+	    = (8*1e6)/(_bitsPerSample*numChannels*samplingFrequency);
 
         MIXERCAPS mc;
         if (mixerGetDevCaps(index, &mc, sizeof mc) != MMSYSERR_NOERROR) break;
@@ -495,8 +504,8 @@ void Mixer::open(unsigned numChannels, unsigned samplingFrequency, unsigned gran
         wfx.wFormatTag      = WAVE_FORMAT_PCM;
         wfx.nChannels       = numChannels;
         wfx.nSamplesPerSec  = samplingFrequency;
-        wfx.wBitsPerSample  = bitsPerSample;
-        wfx.nBlockAlign     = (numChannels*bitsPerSample)/8;
+        wfx.wBitsPerSample  = _bitsPerSample;
+        wfx.nBlockAlign     = (numChannels*_bitsPerSample)/8;
         wfx.nAvgBytesPerSec = samplingFrequency*wfx.nBlockAlign;
         wfx.cbSize          = 0;
 

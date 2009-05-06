@@ -31,7 +31,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class WindowsAudioInputDevice: public AudioInputDevice {
 protected:
   WindowsAudioInputDevice(UsageEnvironment& env, int inputPortNumber,
-	unsigned char numChannels, unsigned samplingFrequency, unsigned granularityInMS,
+	unsigned char bitsPerSample, unsigned char numChannels,
+	unsigned samplingFrequency, unsigned granularityInMS,
 	Boolean& success);
 	// called only by createNew()
 
