@@ -100,10 +100,13 @@ protected:
   Socket(UsageEnvironment& env, Port port,
 	 Boolean setLoopback = True); // virtual base class
   
+  Boolean changePort(Port newPort); // will also cause socketNum() to change
+
 private:
   int fSocketNum;
   UsageEnvironment& fEnv;
   Port fPort;
+  Boolean fSetLoopback;
 };
 
 UsageEnvironment& operator<<(UsageEnvironment& s, const Socket& sock);

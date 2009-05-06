@@ -100,7 +100,7 @@ void PassiveServerMediaSubsession
 		      u_int8_t& destinationTTL,
 		      Boolean& isMulticast,
 		      Port& serverRTPPort,
-		      Port& /*serverRTCPPort*/,
+		      Port& serverRTCPPort,
 		      void*& streamToken) {
   isMulticast = True;
   Groupsock& gs = fRTPSink.groupsockBeingUsed();
@@ -116,7 +116,10 @@ void PassiveServerMediaSubsession
     }
   }
   serverRTPPort = gs.port();
-  // serverRTCPPort is not needed, so we don't set it
+  if (fRTCPInstance != NULL) {
+    Groupsock* rtcpGS = fRTCPInstance->RTCPgs();
+    serverRTCPPort = rtcpGS->port();
+  }
   streamToken = NULL; // not used
 }
 

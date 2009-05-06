@@ -93,12 +93,18 @@ DirectedNetInterface* DirectedNetInterfaceSet::Iterator::next() {
 int Socket::DebugLevel = 1; // default value
 
 Socket::Socket(UsageEnvironment& env, Port port, Boolean setLoopback)
-	: fEnv(DefaultUsageEnvironment != NULL ? *DefaultUsageEnvironment : env), fPort(port) {
-	fSocketNum = setupDatagramSocket(fEnv, port, setLoopback);
+  : fEnv(DefaultUsageEnvironment != NULL ? *DefaultUsageEnvironment : env), fPort(port), fSetLoopback(setLoopback) {
+  fSocketNum = setupDatagramSocket(fEnv, port, setLoopback);
 }
 
 Socket::~Socket() {
-	closeSocket(fSocketNum);
+  closeSocket(fSocketNum);
+}
+
+Boolean Socket::changePort(Port newPort) {
+  closeSocket(fSocketNum);
+  fSocketNum = setupDatagramSocket(fEnv, newPort, fSetLoopback);
+  return fSocketNum >= 0;
 }
 
 UsageEnvironment& operator<<(UsageEnvironment& s, const Socket& sock) {

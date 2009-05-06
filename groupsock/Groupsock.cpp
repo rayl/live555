@@ -196,6 +196,13 @@ Groupsock::changeDestinationParameters(struct in_addr const& newDestAddr,
 
   portNumBits destPortNum = fDests->fGroupEId.portNum();
   if (newDestPort.num() != 0) {
+    if (newDestPort.num() != destPortNum
+	&& IsMulticastAddress(destAddr.s_addr)) {
+      // Also bind to the new port number:
+      changePort(newDestPort);
+      // And rejoin the multicast group:
+      socketJoinGroup(env(), socketNum(), destAddr.s_addr);
+    }
     destPortNum = newDestPort.num();
     fDests->fPort = newDestPort;
   }
