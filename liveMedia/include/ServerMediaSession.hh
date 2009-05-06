@@ -110,7 +110,8 @@ public:
 				   ) = 0;
   virtual void startStream(void* streamToken);
   virtual void pauseStream(void* streamToken);
-  virtual void stopStream(void* streamToken);
+  virtual void endStream(void* streamToken);
+  virtual void deleteStream(void* streamToken);
 
 protected: // we're a virtual base class
   ServerMediaSubsession(UsageEnvironment& env);

@@ -394,7 +394,7 @@ char* RTSPClient::sendOptionsCmd(char const* url) {
     unsigned responseCode;
     if (!parseResponseCode(firstLine, responseCode)) break;
     if (responseCode != 200) {
-      envir().setResultMsg("cannot handle SETUP response: ", firstLine);
+      envir().setResultMsg("cannot handle OPTIONS response: ", firstLine);
       break;
     }
 

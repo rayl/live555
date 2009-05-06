@@ -206,6 +206,12 @@ RTSPServer::RTSPClientSession::~RTSPClientSession() {
   envir().taskScheduler().turnOffBackgroundReadHandling(fClientSocket);
 
   ::_close(fClientSocket);
+
+  for (unsigned i = 0; i < fNumStreamStates; ++i) {
+    if (fStreamStates[i].subsession != NULL) {
+      fStreamStates[i].subsession->deleteStream(fStreamStates[i].streamToken);
+    }
+  }
   delete[] fStreamStates;
 }
 
@@ -440,8 +446,7 @@ void RTSPServer::RTSPClientSession
   for (unsigned i = 0; i < fNumStreamStates; ++i) {
     if (subsession == 0 /* means: aggregate operation */
 	|| subsession == fStreamStates[i].subsession) {
-      fStreamStates[i].subsession->stopStream(fStreamStates[i].streamToken);
-      fStreamStates[i].streamToken = NULL;
+      fStreamStates[i].subsession->endStream(fStreamStates[i].streamToken);
     }
   }
   sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\n\r\n", cseq);

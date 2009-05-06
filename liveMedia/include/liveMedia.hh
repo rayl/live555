@@ -74,5 +74,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "AMRAudioFileServerMediaSubsession.hh"
 #include "AMRAudioFileSource.hh"
 #include "AMRAudioRTPSink.hh"
+#include "MP3AudioFileServerMediaSubsession.hh"
+#include "MPEG1or2VideoFileServerMediaSubsession.hh"
 
 #endif

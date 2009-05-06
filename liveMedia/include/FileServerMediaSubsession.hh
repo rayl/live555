@@ -44,7 +44,8 @@ private: // redefined virtual functions
                                    void*& streamToken);
   virtual void startStream(void* streamToken);
   virtual void pauseStream(void* streamToken);
-  virtual void stopStream(void* streamToken);
+  virtual void endStream(void* streamToken);
+  virtual void deleteStream(void* streamToken);
 
 protected: // new virtual functions
   virtual char const* getAuxSDPLine(RTPSink* rtpSink,

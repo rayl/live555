@@ -71,6 +71,7 @@ public:
 
   void startPlaying();
   void pause();
+  void endPlaying();
 
 private:
   Groupsock* fRTPGroupsock;
@@ -129,7 +130,12 @@ void FileServerMediaSubsession::pauseStream(void* streamToken) {
   if (streamState != NULL) streamState->pause();
 }
 
-void FileServerMediaSubsession::stopStream(void* streamToken) {
+void FileServerMediaSubsession::endStream(void* streamToken) {
+  StreamState* streamState = (StreamState*)streamToken; 
+  if (streamState != NULL) streamState->endPlaying();
+}
+
+void FileServerMediaSubsession::deleteStream(void* streamToken) {
   StreamState* streamState = (StreamState*)streamToken; 
   delete streamState;
 }
@@ -173,6 +179,7 @@ void FileServerMediaSubsession
   }
   unsigned rtpmapLineSize = strlen(rtpmapLine);
   char const* auxSDPLine = getAuxSDPLine(rtpSink, inputSource);
+  if (auxSDPLine == NULL) auxSDPLine = "";
   unsigned auxSDPLineSize = strlen(auxSDPLine);
   
   char const* const sdpFmt =
@@ -203,7 +210,7 @@ void FileServerMediaSubsession
 
 static void afterPlayingStreamState(void* clientData) {
   StreamState* streamState = (StreamState*)clientData;
-  delete streamState;
+  streamState->endPlaying();
 }
 
 StreamState::StreamState(Groupsock* rtpGroupsock, RTPSink* rtpSink,
@@ -225,10 +232,7 @@ StreamState::StreamState(Groupsock* rtpGroupsock, RTPSink* rtpSink,
 }  
 
 StreamState::~StreamState() {
-  // Delete allocated media objects, and corresponding 'groupsock's:
-  Medium::close(fRTPSink); delete fRTPGroupsock;
-  Medium::close(fRTCPInstance); delete fRTCPGroupsock;
-  Medium::close(fMediaSource);
+  endPlaying();
 }
 
 void StreamState::startPlaying() {
@@ -239,4 +243,13 @@ void StreamState::startPlaying() {
 
 void StreamState::pause() {
   if (fRTPSink != NULL) fRTPSink->stopPlaying();
+}
+
+void StreamState::endPlaying() {
+  // Delete allocated media objects, and corresponding 'groupsock's:
+  Medium::close(fRTPSink); fRTPSink = NULL;
+  delete fRTPGroupsock; fRTPGroupsock = NULL;
+  Medium::close(fRTCPInstance); fRTCPInstance = NULL;
+  delete fRTCPGroupsock /* will send a RTCP BYE */; fRTCPGroupsock = NULL;
+  Medium::close(fMediaSource); fMediaSource = NULL;
 }
