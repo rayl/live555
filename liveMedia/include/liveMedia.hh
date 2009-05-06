@@ -31,6 +31,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEGVideoHTTPSink.hh"
 #include "GSMAudioRTPSink.hh"
 #include "H263plusVideoRTPSink.hh"
+#include "JPEGVideoRTPSink.hh"
 #include "SimpleRTPSink.hh"
 #include "uLawAudioFilter.hh"
 #include "ByteStreamMultiFileSource.hh"

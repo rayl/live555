@@ -23,7 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 H263plusVideoRTPSink
 ::H263plusVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 		       unsigned char rtpPayloadFormat)
-  : MultiFramedRTPSink(env, RTPgs, rtpPayloadFormat, 90000, "H263-1998"),
+  : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 90000, "H263-1998"),
     fAreInFragmentedFrame(False) {
 }
 
@@ -90,8 +90,4 @@ unsigned H263plusVideoRTPSink::specialHeaderSize() const {
   // (or only) fragment of a frame, then we reuse the first 2 bytes of
   // the payload instead.
   return fAreInFragmentedFrame ? 2 : 0;
-}
-
-char const* H263plusVideoRTPSink::sdpMediaType() const {
-  return "video";
 }

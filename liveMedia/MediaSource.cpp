@@ -40,8 +40,13 @@ char const* MediaSource::MIMEtype() const {
 Boolean MediaSource::isFramedSource() const {
   return False; // default implementation
 }
-
 Boolean MediaSource::isRTPSource() const {
+  return False; // default implementation
+}
+Boolean MediaSource::isMPEGVideoStreamFramer() const {
+  return False; // default implementation
+}
+Boolean MediaSource::isJPEGVideoSource() const {
   return False; // default implementation
 }
 

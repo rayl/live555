@@ -23,7 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 AC3AudioRTPSink::AC3AudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 				 u_int8_t rtpPayloadFormat,
 				 u_int32_t rtpTimestampFrequency)
-  : MultiFramedRTPSink(env, RTPgs, rtpPayloadFormat,
+  : AudioRTPSink(env, RTPgs, rtpPayloadFormat,
 		       rtpTimestampFrequency, "AC3") {
 }
 
@@ -89,8 +89,4 @@ unsigned AC3AudioRTPSink::specialHeaderSize() const {
   // the RTP packet, but since we (for now) pack only one frame in
   // each RTP packet, we also count this here:
   return 1 + 1;
-}
-
-char const* AC3AudioRTPSink::sdpMediaType() const {
-  return "audio";
 }

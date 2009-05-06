@@ -21,11 +21,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _MPEG_VIDEO_RTP_SINK_HH
 #define _MPEG_VIDEO_RTP_SINK_HH
 
-#ifndef _MULTI_FRAMED_RTP_SINK_HH
-#include "MultiFramedRTPSink.hh"
+#ifndef _VIDEO_RTP_SINK_HH
+#include "VideoRTPSink.hh"
 #endif
 
-class MPEGVideoRTPSink: public MultiFramedRTPSink {
+class MPEGVideoRTPSink: public VideoRTPSink {
 public:
   static MPEGVideoRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs);
 
@@ -36,6 +36,8 @@ protected:
   virtual ~MPEGVideoRTPSink();
 
 private: // redefined virtual functions:
+  virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
+
   virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
                                       unsigned char* frameStart,
                                       unsigned numBytesInFrame,
@@ -45,8 +47,6 @@ private: // redefined virtual functions:
   Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
 					 unsigned numBytesInFrame) const;
   virtual unsigned specialHeaderSize() const;
-
-  virtual char const* sdpMediaType() const;
 
 private:
   // MPEG video-specific state, used to decide how to fill out the

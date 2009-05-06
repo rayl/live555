@@ -266,6 +266,10 @@ double MPEGVideoStreamFramer::getCurrentTimestamp() const {
   return fPresentationTime.tv_sec + fPresentationTime.tv_usec/1000000.0;
 }
 
+Boolean MPEGVideoStreamFramer::isMPEGVideoStreamFramer() const {
+  return True;
+}
+
 ////////// MPEGVideoStreamParser implementation //////////
 
 MPEGVideoStreamParser

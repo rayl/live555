@@ -15,7 +15,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2001 Live Networks, Inc.  All rights reserved.
-// JPEG Video RTP Sources
+// JPEG Video (RFC 2435) RTP Sources 
 // C++ header
 
 #ifndef _JPEG_VIDEO_RTP_SOURCE_HH

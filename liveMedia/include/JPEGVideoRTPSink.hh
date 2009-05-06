@@ -15,41 +15,40 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
-// RTP sink for 'ADUized' MP3 frames ("mpa-robust")
+// RTP sink for JPEG video (RFC 2435)
 // C++ header
 
-#ifndef _MP3_ADU_RTP_SINK_HH
-#define _MP3_ADU_RTP_SINK_HH
+#ifndef _JPEG_VIDEO_RTP_SINK_HH
+#define _JPEG_VIDEO_RTP_SINK_HH
 
-#ifndef _AUDIO_RTP_SINK_HH
-#include "AudioRTPSink.hh"
+#ifndef _VIDEO_RTP_SINK_HH
+#include "VideoRTPSink.hh"
 #endif
 
-class MP3ADURTPSink: public AudioRTPSink {
+class JPEGVideoRTPSink: public VideoRTPSink {
 public:
-  static MP3ADURTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs,
-				  unsigned char RTPPayloadType);
-
+  static JPEGVideoRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs,
+				     unsigned char rtpPayloadFormat);
+  
 protected:
-  virtual ~MP3ADURTPSink();
-
-private:
-  MP3ADURTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		unsigned char RTPPayloadType);
+  JPEGVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
+		   unsigned char rtpPayloadFormat);
 	// called only by createNew()
 
+  virtual ~JPEGVideoRTPSink();
 
-private:
-  // Redefined virtual functions:
+private: // redefined virtual functions:
+  virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
+
   virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
                                       unsigned char* frameStart,
                                       unsigned numBytesInFrame,
                                       struct timeval frameTimestamp,
                                       unsigned numRemainingBytes);
+  virtual
+  Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
+					 unsigned numBytesInFrame) const;
   virtual unsigned specialHeaderSize() const;
-
-private:
-  unsigned fCurADUSize; // used when fragmenting over multiple RTP packets
 };
 
 #endif

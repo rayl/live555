@@ -22,7 +22,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 MP3ADURTPSink::MP3ADURTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 			     unsigned char RTPPayloadType)
-  : MultiFramedRTPSink(env, RTPgs, RTPPayloadType, 90000, "MPA-ROBUST") {
+  : AudioRTPSink(env, RTPgs, RTPPayloadType, 90000, "MPA-ROBUST") {
 }
 
 MP3ADURTPSink::~MP3ADURTPSink() {
@@ -116,8 +116,4 @@ unsigned MP3ADURTPSink::specialHeaderSize() const {
   }
 
   return specialHeaderSize;
-}
-
-char const* MP3ADURTPSink::sdpMediaType() const {
-  return "audio";
 }

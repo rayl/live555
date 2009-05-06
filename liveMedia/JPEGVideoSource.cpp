@@ -14,27 +14,19 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
-// RTP sink for GSM audio
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// JPEG video sources
 // Implementation
 
-#include "GSMAudioRTPSink.hh"
+#include "JPEGVideoSource.hh"
 
-GSMAudioRTPSink::GSMAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
-  : AudioRTPSink(env, RTPgs, 3, 8000, "GSM") {
+JPEGVideoSource::JPEGVideoSource(UsageEnvironment& env)
+  : FramedSource(env) {
 }
 
-GSMAudioRTPSink::~GSMAudioRTPSink() {
+JPEGVideoSource::~JPEGVideoSource() {
 }
 
-GSMAudioRTPSink*
-GSMAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
-  return new GSMAudioRTPSink(env, RTPgs);
-}
-
-Boolean GSMAudioRTPSink
-::frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
-				 unsigned /*numBytesInFrame*/) const {
-  // Allow at most 5 frames in a single packet:
-  return numFramesUsedSoFar() < 5;
+Boolean JPEGVideoSource::isJPEGVideoSource() const {
+  return True;
 }

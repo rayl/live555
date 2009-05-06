@@ -40,6 +40,7 @@ LIBS_FOR_CONSOLE_APPLICATION =
 LIBS_FOR_GUI_APPLICATION =
 MULTIMEDIA_LIBS =	winmm.lib
 EXE =			.exe
+PLATFORM = Windows
 
 rc32 = "$(TOOLS32)\bin\rc"
 .rc.res:

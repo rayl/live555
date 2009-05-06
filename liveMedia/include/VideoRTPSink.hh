@@ -14,27 +14,28 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
-// RTP sink for GSM audio
-// Implementation
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// A generic RTP sink for video codecs (abstract base class)
+// C++ header
 
-#include "GSMAudioRTPSink.hh"
+#ifndef _VIDEO_RTP_SINK_HH
+#define _VIDEO_RTP_SINK_HH
 
-GSMAudioRTPSink::GSMAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
-  : AudioRTPSink(env, RTPgs, 3, 8000, "GSM") {
-}
+#ifndef _MULTI_FRAMED_RTP_SINK_HH
+#include "MultiFramedRTPSink.hh"
+#endif
 
-GSMAudioRTPSink::~GSMAudioRTPSink() {
-}
+class VideoRTPSink: public MultiFramedRTPSink {
+protected:
+  VideoRTPSink(UsageEnvironment& env,
+	       Groupsock* rtpgs, unsigned char rtpPayloadType,
+	       unsigned rtpTimestampFrequency,
+	       char const* rtpPayloadFormatName);
+  // (we're an abstract base class)
+  virtual ~VideoRTPSink();
 
-GSMAudioRTPSink*
-GSMAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
-  return new GSMAudioRTPSink(env, RTPgs);
-}
+private: // redefined virtual functions:
+  virtual char const* sdpMediaType() const;
+};
 
-Boolean GSMAudioRTPSink
-::frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
-				 unsigned /*numBytesInFrame*/) const {
-  // Allow at most 5 frames in a single packet:
-  return numFramesUsedSoFar() < 5;
-}
+#endif

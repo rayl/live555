@@ -11,7 +11,7 @@
 #include <stdio.h>
 
 unsigned our_inet_addr(cp)
-	register /*#####const*/ char *cp;
+	char const* cp;
 {
 	return inet_addr(cp);
 }

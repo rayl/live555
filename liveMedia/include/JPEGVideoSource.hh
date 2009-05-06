@@ -14,27 +14,31 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
-// RTP sink for GSM audio
-// Implementation
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// JPEG video sources
+// C++ header
 
-#include "GSMAudioRTPSink.hh"
+#ifndef _JPEG_VIDEO_SOURCE_HH
+#define _JPEG_VIDEO_SOURCE_HH
 
-GSMAudioRTPSink::GSMAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
-  : AudioRTPSink(env, RTPgs, 3, 8000, "GSM") {
-}
+#ifndef _FRAMED_SOURCE_HH
+#include "FramedSource.hh"
+#endif
 
-GSMAudioRTPSink::~GSMAudioRTPSink() {
-}
+class JPEGVideoSource: public FramedSource {
+public:
+  virtual u_int8_t type() = 0;
+  virtual u_int8_t qFactor() = 0;
+  virtual u_int8_t width() = 0; // # pixels/8
+  virtual u_int8_t height() = 0; // # pixels/8
 
-GSMAudioRTPSink*
-GSMAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
-  return new GSMAudioRTPSink(env, RTPgs);
-}
+protected:
+  JPEGVideoSource(UsageEnvironment& env); // abstract base class
+  virtual ~JPEGVideoSource();
 
-Boolean GSMAudioRTPSink
-::frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
-				 unsigned /*numBytesInFrame*/) const {
-  // Allow at most 5 frames in a single packet:
-  return numFramesUsedSoFar() < 5;
-}
+private:
+  // redefined virtual functions:
+  virtual Boolean isJPEGVideoSource() const;
+};
+
+#endif

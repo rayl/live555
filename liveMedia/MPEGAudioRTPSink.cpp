@@ -21,7 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEGAudioRTPSink.hh"
 
 MPEGAudioRTPSink::MPEGAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
-  : MultiFramedRTPSink(env, RTPgs, 14, 90000, "MPA") {
+  : AudioRTPSink(env, RTPgs, 14, 90000, "MPA") {
 }
 
 MPEGAudioRTPSink::~MPEGAudioRTPSink() {
@@ -59,8 +59,4 @@ void MPEGAudioRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 unsigned MPEGAudioRTPSink::specialHeaderSize() const {
   // There's a 4 byte special audio header:
   return 4;
-}
-
-char const* MPEGAudioRTPSink::sdpMediaType() const {
-  return "audio";
 }

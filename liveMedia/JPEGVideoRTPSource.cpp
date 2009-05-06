@@ -16,7 +16,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // "liveMedia"
 // Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
 
-// JPEG Video RTP Sources
+// JPEG Video (RFC 2435) RTP Sources
 // Implementation
 // 09 26 2002 - Initial Implementation : Giom
 // Copyright (c) 1990-2002 Morgan Multimedia  All rights reserved.

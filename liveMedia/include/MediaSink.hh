@@ -43,6 +43,8 @@ protected:
   MediaSink(UsageEnvironment& env); // abstract base class
   virtual ~MediaSink();
 
+  virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
+      // called by startPlaying()
   virtual Boolean continuePlaying() = 0;
       // called by startPlaying()
 

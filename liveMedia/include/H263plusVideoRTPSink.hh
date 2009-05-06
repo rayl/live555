@@ -21,11 +21,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _H263_PLUS_VIDEO_RTP_SINK_HH
 #define _H263_PLUS_VIDEO_RTP_SINK_HH
 
-#ifndef _MULTI_FRAMED_RTP_SINK_HH
-#include "MultiFramedRTPSink.hh"
+#ifndef _VIDEO_RTP_SINK_HH
+#include "VideoRTPSink.hh"
 #endif
 
-class H263plusVideoRTPSink: public MultiFramedRTPSink {
+class H263plusVideoRTPSink: public VideoRTPSink {
 public:
   static H263plusVideoRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs,
 				    unsigned char rtpPayloadFormat);
@@ -47,8 +47,6 @@ private: // redefined virtual functions:
   Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
 					 unsigned numBytesInFrame) const;
   virtual unsigned specialHeaderSize() const;
-
-  virtual char const* sdpMediaType() const;
 
 private:
   Boolean fAreInFragmentedFrame;

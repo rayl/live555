@@ -21,11 +21,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _GSM_AUDIO_RTP_SINK_HH
 #define _GSM_AUDIO_RTP_SINK_HH
 
-#ifndef _MULTI_FRAMED_RTP_SINK_HH
-#include "MultiFramedRTPSink.hh"
+#ifndef _AUDIO_RTP_SINK_HH
+#include "AudioRTPSink.hh"
 #endif
 
-class GSMAudioRTPSink: public MultiFramedRTPSink {
+class GSMAudioRTPSink: public AudioRTPSink {
 public:
   static GSMAudioRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs);
 
@@ -39,8 +39,6 @@ private: // redefined virtual functions:
   virtual
   Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
 					 unsigned numBytesInFrame) const;
-
-  virtual char const* sdpMediaType() const;
 };
 
 #endif

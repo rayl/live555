@@ -22,7 +22,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEGVideoStreamFramer.hh" // hack #####
 
 MPEGVideoRTPSink::MPEGVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
-  : MultiFramedRTPSink(env, RTPgs, 32, 90000, "MPV") {
+  : VideoRTPSink(env, RTPgs, 32, 90000, "MPV") {
   fPictureState.temporal_reference = 0;
   fPictureState.picture_coding_type = fPictureState.vector_code_bits = 0;
 }
@@ -33,6 +33,10 @@ MPEGVideoRTPSink::~MPEGVideoRTPSink() {
 MPEGVideoRTPSink*
 MPEGVideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
   return new MPEGVideoRTPSink(env, RTPgs);
+}
+
+Boolean MPEGVideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
+  return source.isMPEGVideoStreamFramer();
 }
 
 Boolean MPEGVideoRTPSink
@@ -164,8 +168,4 @@ void MPEGVideoRTPSink
 unsigned MPEGVideoRTPSink::specialHeaderSize() const {
   // There's a 4 byte special audio header:
   return 4;
-}
-
-char const* MPEGVideoRTPSink::sdpMediaType() const {
-  return "video";
 }

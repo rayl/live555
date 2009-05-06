@@ -59,6 +59,7 @@ private:
 
 private:
   // redefined virtual functions:
+  virtual Boolean isMPEGVideoStreamFramer() const;
   virtual void doGetNextFrame();
   virtual float getPlayTime(unsigned numFrames) const; 
 

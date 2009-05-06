@@ -21,11 +21,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _MPEG_AUDIO_RTP_SINK_HH
 #define _MPEG_AUDIO_RTP_SINK_HH
 
-#ifndef _MULTI_FRAMED_RTP_SINK_HH
-#include "MultiFramedRTPSink.hh"
+#ifndef _AUDIO_RTP_SINK_HH
+#include "AudioRTPSink.hh"
 #endif
 
-class MPEGAudioRTPSink: public MultiFramedRTPSink {
+class MPEGAudioRTPSink: public AudioRTPSink {
 public:
   static MPEGAudioRTPSink* createNew(UsageEnvironment& env,
 				     Groupsock* RTPgs);
@@ -43,8 +43,6 @@ private: // redefined virtual functions:
                                       struct timeval frameTimestamp,
                                       unsigned numRemainingBytes);
   virtual unsigned specialHeaderSize() const;
-
-  virtual char const* sdpMediaType() const;
 };
 
 #endif
