@@ -1192,12 +1192,12 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
   return False;
 }
 
-Boolean RTSPClient::setMediaSessionParameter(MediaSession& session,
+Boolean RTSPClient::setMediaSessionParameter(MediaSession& /*session*/,
 					     char const* parameterName,
 					     char const* parameterValue) {
   char* cmd = NULL;
   do {
-    // First, make sure that we have a RTSP session in progreee
+    // First, make sure that we have a RTSP session in progress
     if (fLastSessionId == NULL) {
       envir().setResultMsg("No RTSP session is currently in progress\n");
       break;
@@ -1269,7 +1269,7 @@ Boolean RTSPClient::setMediaSessionParameter(MediaSession& session,
   return False;
 }
 
-Boolean RTSPClient::teardownMediaSession(MediaSession& session) {
+Boolean RTSPClient::teardownMediaSession(MediaSession& /*session*/) {
   char* cmd = NULL;
   do {
     // First, make sure that we have a RTSP session in progreee

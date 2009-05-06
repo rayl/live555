@@ -27,6 +27,14 @@ JPEGVideoSource::JPEGVideoSource(UsageEnvironment& env)
 JPEGVideoSource::~JPEGVideoSource() {
 }
 
+u_int8_t const* JPEGVideoSource::quantizationTables(u_int8_t& precision,
+						    u_int16_t& length) {
+  // Default implementation
+  precision = 0;
+  length = 0;
+  return NULL;
+}
+
 Boolean JPEGVideoSource::isJPEGVideoSource() const {
   return True;
 }

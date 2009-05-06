@@ -38,7 +38,7 @@ private:
 
 class MPEG4GenericBufferedPacketFactory: public BufferedPacketFactory {
 private: // redefined virtual functions
-  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
+  virtual BufferedPacket* createNewPacket(MultiFramedRTPSource* ourSource);
 };
 
 
@@ -175,7 +175,7 @@ MPEG4GenericBufferedPacket::~MPEG4GenericBufferedPacket() {
 }
 
 unsigned MPEG4GenericBufferedPacket
-::nextEnclosedFrameSize(unsigned char*& framePtr, unsigned dataSize) {
+::nextEnclosedFrameSize(unsigned char*& /*framePtr*/, unsigned dataSize) {
   // WE CURRENTLY DON'T IMPLEMENT INTERLEAVING.  FIX THIS! #####
   AUHeader* auHeader = fOurSource->fAUHeaders;
   unsigned numAUHeaders = fOurSource->fNumAUHeaders;
@@ -193,7 +193,7 @@ unsigned MPEG4GenericBufferedPacket
 }
 
 BufferedPacket* MPEG4GenericBufferedPacketFactory
-::createNew(MultiFramedRTPSource* ourSource) {
+::createNewPacket(MultiFramedRTPSource* ourSource) {
   return new MPEG4GenericBufferedPacket((MPEG4GenericRTPSource*)ourSource);
 }
 

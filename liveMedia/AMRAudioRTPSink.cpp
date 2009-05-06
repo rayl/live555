@@ -108,8 +108,8 @@ void AMRAudioRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 }
 
 Boolean AMRAudioRTPSink
-::frameCanAppearAfterPacketStart(unsigned char const* frameStart,
-				 unsigned numBytesInFrame) const {
+::frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
+				 unsigned /*numBytesInFrame*/) const {
   // For now, pack only one AMR frame into each outgoing RTP packet: #####
   return False;
 }

@@ -703,7 +703,7 @@ void RTSPServer::RTSPClientSession
 }
 
 void RTSPServer::RTSPClientSession
-  ::handleCmd_TEARDOWN(ServerMediaSubsession* subsession, char const* cseq) {
+::handleCmd_TEARDOWN(ServerMediaSubsession* /*subsession*/, char const* cseq) {
   snprintf((char*)fBuffer, sizeof fBuffer,
 	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%s\r\n",
 	   cseq, dateHeader());

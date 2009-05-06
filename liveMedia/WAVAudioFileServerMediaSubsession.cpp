@@ -102,7 +102,7 @@ RTPSink* WAVAudioFileServerMediaSubsession
 	if (fSamplingFrequency == 8000 && fNumChannels == 1) {
 	  payloadFormatCode = 0; // a static RTP payload type
 	} else {
-	  payloadFormatCode = 96; // a dynamic RTP payload type
+	  payloadFormatCode = rtpPayloadTypeIfDynamic;
 	}
       } else {
 	mimeType = "L16";
@@ -111,12 +111,12 @@ RTPSink* WAVAudioFileServerMediaSubsession
 	} else if (fSamplingFrequency == 44100 && fNumChannels == 1) {
 	  payloadFormatCode = 11; // a static RTP payload type
 	} else {
-	  payloadFormatCode = 96; // a dynamic RTP payload type
+	  payloadFormatCode = rtpPayloadTypeIfDynamic;
 	}
       }
     } else { // fBitsPerSample == 8
       mimeType = "L8";
-      payloadFormatCode = 96; // a dynamic RTP payload type
+      payloadFormatCode = rtpPayloadTypeIfDynamic;
     }
 
     return SimpleRTPSink::createNew(envir(), rtpGroupsock,

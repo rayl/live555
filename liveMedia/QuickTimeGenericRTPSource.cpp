@@ -39,14 +39,8 @@ private:
 };
 
 class QTGenericBufferedPacketFactory: public BufferedPacketFactory {
-public:
-  QTGenericBufferedPacketFactory(QuickTimeGenericRTPSource& ourSource);
-
 private: // redefined virtual functions
-  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
-
-private:
-  QuickTimeGenericRTPSource& fOurSource;
+  virtual BufferedPacket* createNewPacket(MultiFramedRTPSource* ourSource);
 };
 
 
@@ -70,7 +64,7 @@ QuickTimeGenericRTPSource
 			    char const* mimeTypeString)
   : MultiFramedRTPSource(env, RTPgs,
 			 rtpPayloadFormat, rtpTimestampFrequency,
-			 new QTGenericBufferedPacketFactory(*this)),
+			 new QTGenericBufferedPacketFactory),
     fMIMEtypeString(strDup(mimeTypeString)) {
   qtState.PCK = 0;
   qtState.timescale = 0;
@@ -274,12 +268,7 @@ unsigned QTGenericBufferedPacket::
   return sampleLength < dataSize ? sampleLength : dataSize;
 }
 
-QTGenericBufferedPacketFactory
-::QTGenericBufferedPacketFactory(QuickTimeGenericRTPSource& ourSource)
-  : fOurSource(ourSource) {
-}
-
 BufferedPacket* QTGenericBufferedPacketFactory
-::createNew(MultiFramedRTPSource* /*ourSource*/) {
-  return new QTGenericBufferedPacket(fOurSource);
+::createNewPacket(MultiFramedRTPSource* ourSource) {
+  return new QTGenericBufferedPacket((QuickTimeGenericRTPSource&)(*ourSource));
 }

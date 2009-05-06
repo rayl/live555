@@ -238,11 +238,11 @@ char const* ServerMediaSubsession::trackId() {
   return fTrackId;
 }
 
-void ServerMediaSubsession::pauseStream(unsigned clientSessionId,
+void ServerMediaSubsession::pauseStream(unsigned /*clientSessionId*/,
 					void* /*streamToken*/) {
   // default implementation: do nothing
 }
-void ServerMediaSubsession::deleteStream(unsigned clientSessionId,
+void ServerMediaSubsession::deleteStream(unsigned /*clientSessionId*/,
 					 void*& /*streamToken*/) {
   // default implementation: do nothing
 }

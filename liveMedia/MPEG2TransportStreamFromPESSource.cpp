@@ -98,9 +98,9 @@ void MPEG2TransportStreamFromPESSource
 
 void MPEG2TransportStreamFromPESSource
 ::afterGettingFrame1(unsigned frameSize,
-		     unsigned numTruncatedBytes,
-		     struct timeval presentationTime,
-		     unsigned durationInMicroseconds) {
+		     unsigned /*numTruncatedBytes*/,
+		     struct timeval /*presentationTime*/,
+		     unsigned /*durationInMicroseconds*/) {
   if (frameSize >= 4) {
     u_int8_t stream_id = fInputBuffer[3];
     // Use this stream_id directly as our PID.

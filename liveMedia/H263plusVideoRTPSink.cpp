@@ -37,8 +37,8 @@ H263plusVideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 }
 
 Boolean H263plusVideoRTPSink
-::frameCanAppearAfterPacketStart(unsigned char const* frameStart,
-				 unsigned numBytesInFrame) const {
+::frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
+				 unsigned /*numBytesInFrame*/) const {
   // A packet can contain only one frame
   return False;
 }

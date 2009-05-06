@@ -132,11 +132,11 @@ private:
 
 // A 'factory' class for creating "BufferedPacket" objects.
 // If you want to subclass "BufferedPacket", then you'll also
-// want to subclass this, to redefine createNew()
+// want to subclass this, to redefine createNewPacket()
 
 class BufferedPacketFactory {
 public:
-  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
+  virtual BufferedPacket* createNewPacket(MultiFramedRTPSource* ourSource);
 };
 
 #endif

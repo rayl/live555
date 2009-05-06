@@ -81,8 +81,8 @@ Boolean MPEG4ESVideoRTPSink::allowFragmentationAfterStart() const {
 }
 
 Boolean MPEG4ESVideoRTPSink
-::frameCanAppearAfterPacketStart(unsigned char const* frameStart,
-				 unsigned numBytesInFrame) const {
+::frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
+				 unsigned /*numBytesInFrame*/) const {
   // Once we've packed a VOP into the packet, then no other
   // frame can be packed into it:
   return !fVOPIsPresent;

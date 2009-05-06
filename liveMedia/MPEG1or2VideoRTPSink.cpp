@@ -41,8 +41,8 @@ Boolean MPEG1or2VideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
 }
 
 Boolean MPEG1or2VideoRTPSink
-::frameCanAppearAfterPacketStart(unsigned char const* frameStart,
-				 unsigned numBytesInFrame) const {
+::frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
+				 unsigned /*numBytesInFrame*/) const {
   // A frame can appear at other than the first position in a packet
   // only if the previous frame was not a slice.
   return !fPreviousFrameWasSlice;

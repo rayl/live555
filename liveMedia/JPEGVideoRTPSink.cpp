@@ -39,16 +39,16 @@ Boolean JPEGVideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
 }
 
 Boolean JPEGVideoRTPSink
-::frameCanAppearAfterPacketStart(unsigned char const* frameStart,
-				 unsigned numBytesInFrame) const {
+::frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
+				 unsigned /*numBytesInFrame*/) const {
   // A packet can contain only one frame
   return False;
 }
 
 void JPEGVideoRTPSink
 ::doSpecialFrameHandling(unsigned fragmentationOffset,
-			 unsigned char* frameStart,
-			 unsigned numBytesInFrame,
+			 unsigned char* /*frameStart*/,
+			 unsigned /*numBytesInFrame*/,
 			 struct timeval frameTimestamp,
 			 unsigned numRemainingBytes) {
   // Our source is known to be a JPEGVideoSource
@@ -66,6 +66,30 @@ void JPEGVideoRTPSink
   mainJPEGHeader[7] = source->height();
   setSpecialHeaderBytes(mainJPEGHeader, sizeof mainJPEGHeader);
 
+  if (source->qFactor() >= 128) {
+    // There is also a Quantization Header:
+    u_int8_t precision;
+    u_int16_t length;
+    u_int8_t const* quantizationTables
+      = source->quantizationTables(precision, length);
+    
+    unsigned const quantizationHeaderSize = 4 + length;
+    u_int8_t* quantizationHeader = new u_int8_t[quantizationHeaderSize];
+
+    quantizationHeader[0] = 0; // MBZ
+    quantizationHeader[1] = precision;
+    quantizationHeader[2] = length >> 8;
+    quantizationHeader[3] = length&0xFF;
+    if (quantizationTables != NULL) { // sanity check
+      for (u_int16_t i = 0; i < length; ++i) {
+	quantizationHeader[4+i] = quantizationTables[i];
+      }
+    }
+
+    setSpecialHeaderBytes(quantizationHeader, quantizationHeaderSize,
+			  sizeof mainJPEGHeader /* start position */);
+  }
+
   if (numRemainingBytes == 0) {
     // This packet contains the last (or only) fragment of the frame.
     // Set the RTP 'M' ('marker') bit:
@@ -78,9 +102,21 @@ void JPEGVideoRTPSink
 
 
 unsigned JPEGVideoRTPSink::specialHeaderSize() const {
-  // In the current implementation, we generate just the 8-byte
-  // "main JPEG header", under the assumption that
-  // (i) no restart markers are used, and
-  // (ii) no custom quantization tables are used.
-  return 8;
+  // Our source is known to be a JPEGVideoSource
+  JPEGVideoSource* source = (JPEGVideoSource*)fSource; 
+
+  unsigned headerSize = 8; // by default
+
+  if (source->qFactor() >= 128) {
+    // There is also a Quantization Header:
+    u_int8_t dummy;
+    u_int16_t quantizationTablesSize;
+    (void)(source->quantizationTables(dummy, quantizationTablesSize));
+
+    headerSize += 4 + quantizationTablesSize;
+  }
+
+  // Note: We assume that there are no 'restart markers'
+
+  return headerSize;
 }

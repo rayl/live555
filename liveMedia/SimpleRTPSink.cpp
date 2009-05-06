@@ -80,8 +80,8 @@ void SimpleRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 }
 
 Boolean SimpleRTPSink::
-frameCanAppearAfterPacketStart(unsigned char const* frameStart,
-			       unsigned numBytesInFrame) const {
+frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
+			       unsigned /*numBytesInFrame*/) const {
   return fAllowMultipleFramesPerPacket;
 }
 

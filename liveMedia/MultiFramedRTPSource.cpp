@@ -379,7 +379,7 @@ void BufferedPacket::use(unsigned char* to, unsigned toSize,
 }
 
 BufferedPacket* BufferedPacketFactory
-::createNew(MultiFramedRTPSource* /*ourSource*/) {
+::createNewPacket(MultiFramedRTPSource* /*ourSource*/) {
   return new BufferedPacket;
 }
 
@@ -407,12 +407,12 @@ ReorderingPacketBuffer::~ReorderingPacketBuffer() {
 BufferedPacket* ReorderingPacketBuffer
 ::getFreePacket(MultiFramedRTPSource* ourSource) {
   if (fSavedPacket == NULL) { // we're being called for the first time
-    fSavedPacket = fPacketFactory->createNew(ourSource);
+    fSavedPacket = fPacketFactory->createNewPacket(ourSource);
   }
 
   return fHeadPacket == NULL
     ? fSavedPacket
-    : fPacketFactory->createNew(ourSource);
+    : fPacketFactory->createNewPacket(ourSource);
 }
 
 void ReorderingPacketBuffer::storePacket(BufferedPacket* bPacket) {

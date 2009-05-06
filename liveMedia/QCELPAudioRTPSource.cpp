@@ -131,14 +131,8 @@ private:
 };
 
 class QCELPBufferedPacketFactory: public BufferedPacketFactory {
-public:
-  QCELPBufferedPacketFactory(RawQCELPRTPSource& ourSource);
-
 private: // redefined virtual functions
-  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
-
-private:
-  RawQCELPRTPSource& fOurSource;
+  virtual BufferedPacket* createNewPacket(MultiFramedRTPSource* ourSource);
 };
 
 
@@ -158,7 +152,7 @@ RawQCELPRTPSource::RawQCELPRTPSource(UsageEnvironment& env,
 				     unsigned rtpTimestampFrequency)
   : MultiFramedRTPSource(env, RTPgs, rtpPayloadFormat,
 			 rtpTimestampFrequency,
-                         new QCELPBufferedPacketFactory(*this)),
+                         new QCELPBufferedPacketFactory),
   fInterleaveL(0), fInterleaveN(0), fFrameIndex(0),
   fNumSuccessiveSyncedPackets(0) {
 }
@@ -251,14 +245,9 @@ unsigned QCELPBufferedPacket::
   return frameSize;
 }
 
-QCELPBufferedPacketFactory
-::QCELPBufferedPacketFactory(RawQCELPRTPSource& ourSource)
-  : fOurSource(ourSource) {
-}
-
 BufferedPacket* QCELPBufferedPacketFactory
-::createNew(MultiFramedRTPSource* ourSource) {
-  return new QCELPBufferedPacket(fOurSource);
+::createNewPacket(MultiFramedRTPSource* ourSource) {
+  return new QCELPBufferedPacket((RawQCELPRTPSource&)(*ourSource));
 }
 
 ///////// QCELPDeinterleavingBuffer /////////

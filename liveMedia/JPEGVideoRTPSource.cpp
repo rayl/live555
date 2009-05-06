@@ -42,7 +42,7 @@ private:
 
 class JPEGBufferedPacketFactory: public BufferedPacketFactory {
 private: // redefined virtual functions
-  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
+  virtual BufferedPacket* createNewPacket(MultiFramedRTPSource* ourSource);
 };
 
 
@@ -456,6 +456,6 @@ unsigned JPEGBufferedPacket
 }
 
 BufferedPacket* JPEGBufferedPacketFactory
-::createNew(MultiFramedRTPSource* /*ourSource*/) {
+::createNewPacket(MultiFramedRTPSource* /*ourSource*/) {
   return new JPEGBufferedPacket;
 }
