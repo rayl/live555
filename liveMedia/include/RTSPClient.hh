@@ -113,7 +113,7 @@ private:
   void useAuthenticator(AuthRecord const* authenticator); // in future reqs
   void resetCurrentAuthenticator();
   Boolean sendRequest(char const* requestString);
-  int getResponse(char* responseBuffer, unsigned responseBufferSize);
+  int getResponse(char*& responseBuffer, unsigned responseBufferSize);
   Boolean parseResponseCode(char const* line, unsigned& responseCode);
   Boolean parseTransportResponse(char const* line,
 				 char*& serverAddressStr,

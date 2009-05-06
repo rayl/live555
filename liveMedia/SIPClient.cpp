@@ -401,7 +401,7 @@ unsigned SIPClient::getResponseCode() {
   do {
     // Get the response from the server:
     unsigned const readBufSize = 10000;
-    char readBuf[readBufSize+1];
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
 
     char* firstLine = NULL;
     char* nextLineStart = NULL;
@@ -506,7 +506,8 @@ unsigned SIPClient::getResponseCode() {
         unsigned numExtraBytesNeeded = contentLength - numBodyBytes;
 #ifdef USING_TCP
 	// THIS CODE WORKS ONLY FOR TCP: #####
-        unsigned remainingBufferSize = readBufSize - bytesRead;
+        unsigned remainingBufferSize
+          = readBufSize - (bytesRead + (readBuf - readBuffer));
         if (numExtraBytesNeeded > remainingBufferSize) {
           char tmpBuf[200];
           sprintf(tmpBuf, "Read buffer size (%d) is too small for \"Content-length:\" %d (need a buffer size of >= %d bytes\n",
@@ -846,36 +847,50 @@ Boolean SIPClient::sendRequest(char const* requestString,
 			    requestLength);
 }
 
-int SIPClient::getResponse(char* responseBuffer,
-			    unsigned responseBufferSize) {
+int SIPClient::getResponse(char*& responseBuffer,
+			   unsigned responseBufferSize) {
   if (responseBufferSize == 0) return 0; // just in case...
   responseBuffer[0] = '\0'; // ditto
 
-  // Read data from the socket until we see "\r\n\r\n"
-  // (or until we fill up our buffer).  Don't read any more than this.
+  // Keep reading data from the socket until we see "\r\n\r\n" (except
+  // at the start), or until we fill up our buffer.
+  // Don't read any more than this.
+  char* p = responseBuffer;
+  Boolean haveSeenNonCRLF = False;
   int bytesRead = 0;
-  while (1) {
+  while (bytesRead < (int)responseBufferSize) {
     unsigned bytesReadNow;
     struct sockaddr_in fromAddr;
     unsigned char* toPosn = (unsigned char*)(responseBuffer+bytesRead);
     Boolean readSuccess
       = fOurSocket->handleRead(toPosn, responseBufferSize-bytesRead,
 			       bytesReadNow, fromAddr);
-    bytesRead += bytesReadNow;
     if (!readSuccess || bytesReadNow == 0) {
       envir().setResultMsg("SIP response was truncated");
       break;
     }
-    if (bytesRead >= (int)responseBufferSize) return responseBufferSize;
+    bytesRead += bytesReadNow;
     
     // Check whether we have "\r\n\r\n":
     char* lastToCheck = responseBuffer+bytesRead-4;
     if (lastToCheck < responseBuffer) continue;
-    for (char* p = responseBuffer; p <= lastToCheck; ++p) {
-      if (*p == '\r' && *(p+1) == '\n' &&
-	  *(p+2) == '\r' && *(p+3) == '\n') {
-	responseBuffer[bytesRead] = '\0';
-	return bytesRead;
+    for (; p <= lastToCheck; ++p) {
+      if (haveSeenNonCRLF) {
+        if (*p == '\r' && *(p+1) == '\n' &&
+            *(p+2) == '\r' && *(p+3) == '\n') {
+          responseBuffer[bytesRead] = '\0';
+
+          // Before returning, trim any \r or \n from the start:
+          while (*responseBuffer == '\r' || *responseBuffer == '\n') {
+            ++responseBuffer;
+            --bytesRead;
+          }
+          return bytesRead;
+        }
+      } else {
+        if (*p != '\r' && *p != '\n') {
+          haveSeenNonCRLF = True;
+        }
       }
     }
   }

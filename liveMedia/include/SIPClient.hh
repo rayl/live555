@@ -95,7 +95,7 @@ private:
   void resetValidAuthenticator();
   Boolean sendRequest(char const* requestString, unsigned requestLength);
   unsigned getResponseCode();
-  int getResponse(char* responseBuffer, unsigned responseBufferSize);
+  int getResponse(char*& responseBuffer, unsigned responseBufferSize);
   Boolean parseResponseCode(char const* line, unsigned& responseCode);
 
 private:

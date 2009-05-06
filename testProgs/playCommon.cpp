@@ -40,7 +40,7 @@ void sessionTimerHandler(void* clientData);
 void shutdown(int exitCode = 1);
 void signalHandlerShutdown(int sig);
 void checkForPacketArrival(void* clientData);
-Boolean setupDestinationRTSPServer(); // WORK IN PROGRESS #####
+Boolean setupDestinationRTSPServer();
 
 char const* progName;
 UsageEnvironment* env;
@@ -272,7 +272,6 @@ int main(int argc, char** argv) {
     }
 
     case 'R': { // inject received data into a RTSP server
-      // WORK IN PROGRESS #####
       destRTSPURL = argv[2];
       ++argv; --argc;
       break;
@@ -423,7 +422,6 @@ int main(int argc, char** argv) {
       // Announce the session into a (separate) RTSP server,
       // and create one or more "RTPTranslator"s to tie the source
       // and destination together:
-      // WORK IN PROGRESS #####
       if (setupDestinationRTSPServer()) {
 	fprintf(stderr,
 		"Set up destination RTSP session for \"%s\"\n",

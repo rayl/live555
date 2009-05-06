@@ -162,11 +162,12 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 
     // Get the response from the server:
     unsigned const readBufSize = 20000;
-    char readBuf[readBufSize+1];
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received DESCRIBE response: %s\n", readBuf); fflush(stderr);
+      fprintf(stderr, "Received DESCRIBE response: %s\n", readBuf);
+      fflush(stderr);
     }
 
     // Inspect the first line to check whether it's a result code that
@@ -267,7 +268,8 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 	// We need to read more data.  First, make sure we have enough
 	// space for it:
 	unsigned numExtraBytesNeeded = contentLength - numBodyBytes;
-	unsigned remainingBufferSize = readBufSize - bytesRead;
+	unsigned remainingBufferSize
+	  = readBufSize - (bytesRead + (readBuf - readBuffer));
 	if (numExtraBytesNeeded > remainingBufferSize) {
 	  char tmpBuf[200];
 	  sprintf(tmpBuf, "Read buffer size (%d) is too small for \"Content-length:\" %d (need a buffer size of >= %d bytes\n",
@@ -290,7 +292,8 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 	  if (bytesRead2 < 0) break;
 	  ptr[bytesRead2] = '\0';
 	  if (fVerbosityLevel >= 1) {
-	    fprintf(stderr, "Read %d extra bytes: %s\n", bytesRead2, ptr); fflush(stderr);
+	    fprintf(stderr, "Read %d extra bytes: %s\n", bytesRead2, ptr);
+	    fflush(stderr);
 	  }
 
 	  bytesRead += bytesRead2;
@@ -366,11 +369,12 @@ Boolean RTSPClient::sendOptionsCmd() {
 
     // Get the response from the server:
     unsigned const readBufSize = 10000;
-    char readBuf[readBufSize+1];
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received OPTIONS response: %s\n", readBuf); fflush(stderr);
+      fprintf(stderr, "Received OPTIONS response: %s\n", readBuf);
+      fflush(stderr);
     }
 
     // For now, don't bother looking at the response #####
@@ -458,11 +462,12 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
 
     // Get the response from the server:
     unsigned const readBufSize = 10000;
-    char readBuf[readBufSize+1];
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received ANNOUNCE response: %s\n", readBuf); fflush(stderr);
+      fprintf(stderr, "Received ANNOUNCE response: %s\n", readBuf);
+      fflush(stderr);
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -653,11 +658,12 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 
     // Get the response from the server:
     unsigned const readBufSize = 10000;
-    char readBuf[readBufSize+1];
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received SETUP response: %s\n", readBuf); fflush(stderr);
+      fprintf(stderr, "Received SETUP response: %s\n", readBuf);
+      fflush(stderr);
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -775,11 +781,12 @@ Boolean RTSPClient::playMediaSession(MediaSession& session) {
 
     // Get the response from the server:
     unsigned const readBufSize = 10000;
-    char readBuf[readBufSize+1];
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received PLAY response: %s\n", readBuf); fflush(stderr);
+      fprintf(stderr, "Received PLAY response: %s\n", readBuf);
+      fflush(stderr);
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -857,11 +864,12 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
 
     // Get the response from the server:
     unsigned const readBufSize = 10000;
-    char readBuf[readBufSize+1];
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received PLAY response: %s\n", readBuf); fflush(stderr);
+      fprintf(stderr, "Received PLAY response: %s\n", readBuf);
+      fflush(stderr);
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -932,11 +940,12 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
 
     // Get the response from the server:
     unsigned const readBufSize = 10000;
-    char readBuf[readBufSize+1];
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received RECORD response: %s\n", readBuf); fflush(stderr);
+      fprintf(stderr, "Received RECORD response: %s\n", readBuf);
+      fflush(stderr);
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -1009,11 +1018,12 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
 #ifdef GET_TEARDOWN_RESPONSE
     // Get the response from the server:
     unsigned const readBufSize = 10000;
-    char readBuf[readBufSize+1];
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received TEARDOWN response: %s\n", readBuf); fflush(stderr);
+      fprintf(stderr, "Received TEARDOWN response: %s\n", readBuf);
+      fflush(stderr);
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -1197,7 +1207,7 @@ Boolean RTSPClient::sendRequest(char const* requestString) {
   return send(fSocketNum, requestString, strlen(requestString), 0) >= 0;
 }
 
-int RTSPClient::getResponse(char* responseBuffer,
+int RTSPClient::getResponse(char*& responseBuffer,
 			    unsigned responseBufferSize) {
   struct sockaddr_in fromAddress;
   
@@ -1252,27 +1262,43 @@ int RTSPClient::getResponse(char* responseBuffer,
   }
   if (!success) return 0;
     
-  // Keep reading data from the socket until we see "\r\n\r\n"
-  // (or until we fill up our buffer).  Don't read any more than this.
+  // Keep reading data from the socket until we see "\r\n\r\n" (except
+  // at the start), or until we fill up our buffer.
+  // Don't read any more than this.
+  char* p = responseBuffer;
+  Boolean haveSeenNonCRLF = False;
   int bytesRead = 1; // because we've already read the first byte
-  while (1) {
-    bytesRead += readSocket(envir(), fSocketNum,
-			    (unsigned char*)(responseBuffer+bytesRead),
-			    1, fromAddress);
-    if (bytesRead == 0) {
+  while (bytesRead < (int)responseBufferSize) {
+    unsigned bytesReadNow
+      = readSocket(envir(), fSocketNum,
+		   (unsigned char*)(responseBuffer+bytesRead),
+		   1, fromAddress);
+    if (bytesReadNow == 0) {
       envir().setResultMsg("RTSP response was truncated");
       break;
     }
-    if (bytesRead >= (int)responseBufferSize) return responseBufferSize;
+    bytesRead += bytesReadNow;
     
     // Check whether we have "\r\n\r\n":
     char* lastToCheck = responseBuffer+bytesRead-4;
     if (lastToCheck < responseBuffer) continue;
-    for (char* p = responseBuffer; p <= lastToCheck; ++p) {
-      if (*p == '\r' && *(p+1) == '\n' &&
-	  *(p+2) == '\r' && *(p+3) == '\n') {
-	responseBuffer[bytesRead] = '\0';
-	return bytesRead;
+    for (; p <= lastToCheck; ++p) {
+      if (haveSeenNonCRLF) {
+	if (*p == '\r' && *(p+1) == '\n' &&
+	    *(p+2) == '\r' && *(p+3) == '\n') {
+	  responseBuffer[bytesRead] = '\0';
+
+	  // Before returning, trim any \r or \n from the start:
+	  while (*responseBuffer == '\r' || *responseBuffer == '\n') {
+	    ++responseBuffer;
+	    --bytesRead;
+	  }
+	  return bytesRead;
+	}
+      } else {
+	if (*p != '\r' && *p != '\n') {
+	  haveSeenNonCRLF = True;
+	}
       }
     }
   }
