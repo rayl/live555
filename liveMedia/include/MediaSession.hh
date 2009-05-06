@@ -125,6 +125,7 @@ public:
   char const* savedSDPLines() const { return fSavedSDPLines; }
   char const* mediumName() const { return fMediumName; }
   char const* codecName() const { return fCodecName; }
+  char const* protocolName() const { return fProtocolName; }
   char const* controlPath() const { return fControlPath; }
   Boolean isSSM() const { return fSourceFilterAddr.s_addr != 0; }
 
@@ -248,6 +249,7 @@ private:
   char* fSavedSDPLines;
   char* fMediumName;
   char* fCodecName;
+  char* fProtocolName;
   unsigned fRTPTimestampFrequency;
   char* fControlPath;
   struct in_addr fSourceFilterAddr; // used for SSM

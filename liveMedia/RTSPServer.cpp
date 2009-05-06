@@ -765,6 +765,9 @@ Boolean RTSPServer::RTSPClientSession
 
     // Next, the username has to be known to us:
     char const* password = fOurServer.fAuthDB->lookupPassword(username);
+#ifdef DEBUG
+    fprintf(stderr, "lookupPassword(%s) returned password %s\n", username, password);
+#endif
     if (password == NULL) break;
     fCurrentAuthenticator.
       setUsernameAndPassword(username, password,
@@ -915,11 +918,13 @@ UserAuthenticationDatabase::~UserAuthenticationDatabase() {
 
 void UserAuthenticationDatabase::addUserRecord(char const* username,
 					       char const* password) {
-  fTable->Add(username, (void*)password);
+  fTable->Add(username, (void*)(strDup(password)));
 }
 
 void UserAuthenticationDatabase::removeUserRecord(char const* username) {
+  char* password = (char*)(fTable->Lookup(username));
   fTable->Remove(username);
+  delete[] password;
 }
 
 char const* UserAuthenticationDatabase::lookupPassword(char const* username) {
