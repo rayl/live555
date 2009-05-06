@@ -74,6 +74,7 @@ unsigned short movieWidth = 240;
 unsigned short movieHeight = 180;
 unsigned movieFPS = 15;
 char* fileNamePrefix = "";
+unsigned fileSinkBufferSize = 10000;
 Boolean packetLossCompensate = False;
 Boolean syncStreams = False;
 Boolean generateHintTracks = False;
@@ -95,7 +96,7 @@ void usage() {
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "")
-       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] <url> (or " << progName << " -o [-V] <url>)\n";
+       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-S <file-sink-buffer-size>] <url> (or " << progName << " -o [-V] <url>)\n";
   //##### Add "-R <dest-rtsp-url>" #####
   shutdown();
 }
@@ -283,6 +284,14 @@ int main(int argc, char** argv) {
 
     case 'F': { // specify a prefix for the audio and video output files
       fileNamePrefix = argv[2];
+      ++argv; --argc;
+      break;
+    }
+
+    case 'S': { // specify the size of buffers for "FileSink"s
+      if (sscanf(argv[2], "%u", &fileSinkBufferSize) != 1) {
+	usage();
+      }
       ++argv; --argc;
       break;
     }
@@ -510,7 +519,8 @@ int main(int argc, char** argv) {
 	} else {
 	  sprintf(outFileName, "stdout");
 	}
-	FileSink* fileSink = FileSink::createNew(*env, outFileName);
+	FileSink* fileSink
+	  = FileSink::createNew(*env, outFileName, fileSinkBufferSize);
 	subsession->sink = fileSink;
 	if (subsession->sink == NULL) {
 	  *env << "Failed to create FileSink for \"" << outFileName

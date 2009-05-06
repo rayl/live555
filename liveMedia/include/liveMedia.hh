@@ -45,6 +45,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MP3ADURTPSource.hh"
 #include "QCELPAudioRTPSource.hh"
 #include "JPEGVideoRTPSource.hh"
+#include "JPEGVideoSource.hh"
 #include "MPEG1or2VideoRTPSource.hh"
 #include "H261VideoRTPSource.hh"
 #include "H263plusVideoRTPSource.hh"

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
 // File Sinks
 // C++ header
 
@@ -27,13 +27,17 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class FileSink: public MediaSink {
 public:
-  static FileSink* createNew(UsageEnvironment& env, char const* fileName);
+  static FileSink* createNew(UsageEnvironment& env, char const* fileName,
+			     unsigned bufferSize = 10000);
+  // "bufferSize" should be at least as large as the largest expected
+  // input frame.
 
   FILE* fid() const { return fOutFid; }
   // (Available in case a client wants to add extra data to the output file)
 
 protected:
-  FileSink(UsageEnvironment& env, FILE* fid); // called only by createNew()
+  FileSink(UsageEnvironment& env, FILE* fid, unsigned bufferSize);
+      // called only by createNew()
   virtual ~FileSink();
 
   static FILE* openFileByName(UsageEnvironment& env, char const* fileName);
@@ -44,7 +48,8 @@ protected:
   friend void afterGettingFrame(void*, unsigned, struct timeval);
 
   FILE* fOutFid;
-  unsigned char fBuffer[10000]; // size should really be an attribute of source #####
+  unsigned char* fBuffer;
+  unsigned fBufferSize;
 
 private: // redefined virtual functions:
   virtual Boolean continuePlaying();

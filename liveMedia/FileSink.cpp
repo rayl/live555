@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
 // File sinks
 // Implementation
 
@@ -27,22 +27,25 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// FileSink //////////
 
-FileSink::FileSink(UsageEnvironment& env, FILE* fid)
-  : MediaSink(env), fOutFid(fid) {
+FileSink::FileSink(UsageEnvironment& env, FILE* fid, unsigned bufferSize)
+  : MediaSink(env), fOutFid(fid), fBufferSize(bufferSize) {
+  fBuffer = new unsigned char[bufferSize];
 }
 
 FileSink::~FileSink() {
+  delete[] fBuffer;
   fclose(fOutFid);
 }
 
-FileSink* FileSink::createNew(UsageEnvironment& env, char const* fileName) {
+FileSink* FileSink::createNew(UsageEnvironment& env, char const* fileName,
+			      unsigned bufferSize) {
   FileSink* newSink = NULL;
 
   do {
     FILE* fid = openFileByName(env, fileName);
     if (fid == NULL) break;
 
-    newSink = new FileSink(env, fid);
+    newSink = new FileSink(env, fid, bufferSize);
     if (newSink == NULL) break;
 
     return newSink;
@@ -81,7 +84,7 @@ FILE* FileSink::openFileByName(UsageEnvironment& env,
 Boolean FileSink::continuePlaying() {
   if (fSource == NULL) return False;
 
-  fSource->getNextFrame(fBuffer, sizeof fBuffer,
+  fSource->getNextFrame(fBuffer, fBufferSize,
 			afterGettingFrame, this,
 			onSourceClosure, this);
 

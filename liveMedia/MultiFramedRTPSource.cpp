@@ -164,6 +164,10 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 
       if (frameSize >= fMaxSize || fCurrentPacketCompletesFrame) {
 	// We have all the data that the client wants.
+	if (frameSize >= fMaxSize) {
+	  envir() << "MultiFramedRTPSource::doGetNextFrame1(): The total received frame size exceeds the client's buffer size ("
+		  << fSavedMaxSize << ").  Trailing data will be dropped!\n";
+	}
 	// Call our own 'after getting' function.  Because we're preceded
 	// by a network read, we can call this directly, without risking
 	// infinite recursion.
@@ -344,7 +348,8 @@ void BufferedPacket::use(unsigned char* to, unsigned toSize,
   unsigned char* origFramePtr = &fBuf[fHead];
   unsigned char* newFramePtr = origFramePtr; //may change in the call below
   unsigned frameSize = nextEnclosedFrameSize(newFramePtr, fTail - fHead);
-  bytesUsed = (frameSize > toSize) ? toSize : frameSize;
+  if (frameSize > toSize) frameSize = toSize;
+  bytesUsed = frameSize;
 
   memmove(to, newFramePtr, bytesUsed);
   fHead += (newFramePtr - origFramePtr) + frameSize;
