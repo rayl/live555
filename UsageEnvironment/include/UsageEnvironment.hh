@@ -96,7 +96,7 @@ public:
   virtual ~TaskScheduler();
 
   virtual TaskToken scheduleDelayedTask(int microseconds, TaskFunc* proc,
-					 void* clientData) = 0;
+					void* clientData) = 0;
 	// Schedules a task to occur (after a delay) when we next
 	// reach a scheduling point.
 	// (Does not delay if "microseconds" <= 0)
@@ -105,6 +105,13 @@ public:
 
   virtual void unscheduleDelayedTask(TaskToken& prevTask) = 0;
 	// (Has no effect if "prevTask" == NULL)
+        // Sets "prevTask" to NULL afterwards.
+
+  virtual void rescheduleDelayedTask(TaskToken& task,
+				     int microseconds, TaskFunc* proc,
+				     void* clientData);
+  // Combines "unscheduleDelayedTask()" with "scheduleDelayedTask()"
+  // (setting "task" to the new task token).
 
   // For handling socket reads in the background:
   typedef void BackgroundHandlerProc(void* clientData, int mask);

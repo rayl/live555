@@ -62,9 +62,14 @@ protected:
 class RTSPServer: public Medium {
 public:
   static RTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554,
-			       UserAuthenticationDatabase* authDatabase = NULL);
-      // if ourPort.num() == 0, we'll choose the port number
+			       UserAuthenticationDatabase* authDatabase = NULL,
+			       unsigned reclamationTestSeconds = 0);
+      // If ourPort.num() == 0, we'll choose the port number
       // Note: The caller is responsible for reclaiming "authDatabase"
+      // If "reclamationTestSeconds" > 0, then the "RTSPClientSession" state for
+      //     each client will get reclaimed (and the corresponding RTP stream(s)
+      //     torn down) if no RTSP commands from the client are received in at least 
+      //     "reclamationTestSeconds" seconds.
 
   static Boolean lookupByName(UsageEnvironment& env, char const* name,
 			      RTSPServer*& resultServer);
@@ -83,7 +88,8 @@ public:
 protected:
   RTSPServer(UsageEnvironment& env,
 	     int ourSocket, Port ourPort,
-	     UserAuthenticationDatabase* authDatabase);
+	     UserAuthenticationDatabase* authDatabase,
+	     unsigned reclamationTestSeconds);
       // called only by createNew();
   virtual ~RTSPServer();
 
@@ -139,6 +145,8 @@ private:
 			       unsigned resultURLSuffixMaxSize, 
 			       char* resultCSeq,
 			       unsigned resultCSeqMaxSize); 
+    void noteClientLiveness();
+    static void livenessTimeoutTask(RTSPClientSession* clientSession);
 
   private:
     RTSPServer& fOurServer;
@@ -146,6 +154,7 @@ private:
     ServerMediaSession* fOurServerMediaSession;
     int fClientSocket;
     struct sockaddr_in fClientAddr;
+    TaskToken fLivenessCheckTask;
     unsigned char fBuffer[RTSP_BUFFER_SIZE];
     unsigned char fResponseBuffer[RTSP_BUFFER_SIZE];
     Boolean fSessionIsActive, fStreamAfterSETUP;
@@ -163,6 +172,7 @@ private:
   int fServerSocket;
   Port fServerPort;
   UserAuthenticationDatabase* fAuthDB;
+  unsigned fReclamationTestSeconds;
   HashTable* fServerMediaSessions;
   unsigned fSessionIdCounter;
 };

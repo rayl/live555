@@ -40,7 +40,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 RTSPServer*
 RTSPServer::createNew(UsageEnvironment& env, Port ourPort,
-		      UserAuthenticationDatabase* authDatabase) {
+		      UserAuthenticationDatabase* authDatabase,
+		      unsigned reclamationTestSeconds) {
   int ourSocket = -1;
   RTSPServer* newServer = NULL;
 
@@ -48,7 +49,8 @@ RTSPServer::createNew(UsageEnvironment& env, Port ourPort,
     int ourSocket = setUpOurSocket(env, ourPort);
     if (ourSocket == -1) break;
 
-    return new RTSPServer(env, ourSocket, ourPort, authDatabase);
+    return new RTSPServer(env, ourSocket, ourPort, authDatabase,
+			  reclamationTestSeconds);
   } while (0);
 
   if (ourSocket != -1) ::closeSocket(ourSocket);
@@ -164,10 +166,11 @@ int RTSPServer::setUpOurSocket(UsageEnvironment& env, Port& ourPort) {
 
 RTSPServer::RTSPServer(UsageEnvironment& env,
 		       int ourSocket, Port ourPort,
-		       UserAuthenticationDatabase* authDatabase)
+		       UserAuthenticationDatabase* authDatabase,
+		       unsigned reclamationTestSeconds)
   : Medium(env),
     fServerSocket(ourSocket), fServerPort(ourPort),
-    fAuthDB(authDatabase),
+    fAuthDB(authDatabase), fReclamationTestSeconds(reclamationTestSeconds),
     fServerMediaSessions(HashTable::create(STRING_HASH_KEYS)), 
     fSessionIdCounter(0) {
 #ifdef USE_SIGNALS
@@ -243,14 +246,18 @@ RTSPServer::RTSPClientSession
   : fOurServer(ourServer), fOurSessionId(sessionId),
     fOurServerMediaSession(NULL),
     fClientSocket(clientSocket), fClientAddr(clientAddr),
-    fSessionIsActive(True), fStreamAfterSETUP(False),
+    fLivenessCheckTask(NULL), fSessionIsActive(True), fStreamAfterSETUP(False),
     fTCPStreamIdCount(0), fNumStreamStates(0), fStreamStates(NULL) {
   // Arrange to handle incoming requests:
   envir().taskScheduler().turnOnBackgroundReadHandling(fClientSocket,
      (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
+  noteClientLiveness();
 }
 
 RTSPServer::RTSPClientSession::~RTSPClientSession() {
+  // Turn off any liveness checking:
+  envir().taskScheduler().unscheduleDelayedTask(fLivenessCheckTask);
+
   // Turn off background read handling:
   envir().taskScheduler().turnOffBackgroundReadHandling(fClientSocket);
 
@@ -285,6 +292,8 @@ void RTSPServer::RTSPClientSession
 }
 
 void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
+  noteClientLiveness();
+
   struct sockaddr_in dummy; // 'from' address, meaningless in this case
   int bytesLeft = sizeof fBuffer;
   int totalBytes = 0;
@@ -1014,7 +1023,7 @@ void RTSPServer::RTSPClientSession
 }
 
 void RTSPServer::RTSPClientSession
-::handleCmd_GET_PARAMETER(ServerMediaSubsession* /*subsession*/, char const* cseq,
+::handleCmd_GET_PARAMETER(ServerMediaSubsession* subsession, char const* cseq,
 			  char const* /*fullRequestStr*/) {
   // We implement "GET_PARAMETER" just as a 'keep alive',
   // and send back an empty response:
@@ -1244,6 +1253,22 @@ RTSPServer::RTSPClientSession
   if (!parseSucceeded) return False;
 
   return True;
+}
+
+void RTSPServer::RTSPClientSession
+::livenessTimeoutTask(RTSPClientSession* clientSession) {
+  // If this gets called, the client session is assumed to have timed out,
+  // so delete it:
+  delete clientSession;
+}
+
+void RTSPServer::RTSPClientSession::noteClientLiveness() {
+  if (fOurServer.fReclamationTestSeconds > 0) {
+    envir().taskScheduler()
+      .rescheduleDelayedTask(fLivenessCheckTask,
+			     fOurServer.fReclamationTestSeconds*1000000,
+			     (TaskFunc*)livenessTimeoutTask, this);
+  }
 }
 
 

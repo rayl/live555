@@ -375,7 +375,7 @@ ServerMediaSubsession::rangeSDPLine() const {
   if (fParentSession == NULL) return NULL;
 
   // If all of our parent's subsessions have the same duration
-  // (as indicated by "fParentSession->duration() < 0"), there's no "a=range:" line:
+  // (as indicated by "fParentSession->duration() >= 0"), there's no "a=range:" line:
   if (fParentSession->duration() >= 0.0) return strDup("");
 
   // Use our own duration for a "a=range:" line:
