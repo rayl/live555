@@ -1324,7 +1324,7 @@ Boolean RTSPClient::parseRTSPURL(UsageEnvironment& env, char const* url,
     NetAddressList addresses(parseBuffer);
     if (addresses.numAddresses() == 0) {
       env.setResultMsg("Failed to find network address for \"",
-			   parseBuffer, "\"");
+		       parseBuffer, "\"");
       break;
     }
     address = *(addresses.firstAddress());
@@ -1560,6 +1560,11 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
 					   portNumBits& serverPortNum,
 					   unsigned char& rtpChannelId,
 					   unsigned char& rtcpChannelId) {
+  // Initialize the return parameters to 'not found' values:
+  serverAddressStr = NULL;
+  serverPortNum = 0;
+  rtpChannelId = rtcpChannelId = 0xFF;
+
   char* foundServerAddressStr = NULL;
   Boolean foundServerPortNum = False;
   Boolean foundChannelIds = False;
@@ -1592,10 +1597,8 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
   }
   delete[] field;
 
-  if (foundServerPortNum) {
+  if (foundServerPortNum || foundChannelIds) {
     serverAddressStr = foundServerAddressStr;
-    return True;
-  } else if (foundChannelIds) {
     return True;
   }
 

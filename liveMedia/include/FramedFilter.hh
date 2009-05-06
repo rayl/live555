@@ -36,6 +36,7 @@ private:
   virtual char const* MIMEtype() const;
   virtual void getAttributes() const;
   virtual float getPlayTime(unsigned numFrames) const;
+  virtual void doStopGettingFrames();
 
 protected:
   FramedSource* fInputSource;

@@ -162,7 +162,7 @@ float WindowsAudioInputDevice::getPlayTime(unsigned numFrames) const {
 
 void WindowsAudioInputDevice::doStopGettingFrames() {
   // Turn off the audio poller:
-  envir().taskScheduler().unscheduleDelayedTask(nextTask()); nextTask() = NULL;
+  envir().taskScheduler().unscheduleDelayedTask(nextTask());  
 }
 
 Boolean WindowsAudioInputDevice::setInputPort(int portIndex) {

@@ -48,3 +48,6 @@ float FramedFilter::getPlayTime(unsigned numFrames) const {
   return fInputSource->getPlayTime(numFrames);
 }
 
+void FramedFilter::doStopGettingFrames() {
+  fInputSource->stopGettingFrames();
+}

@@ -32,46 +32,50 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ////////// NetAddress //////////
 
 NetAddress::NetAddress(u_int8_t const* data, unsigned length) {
-	assign(data, length);
+  assign(data, length);
 }
 
 NetAddress::NetAddress(unsigned length) {
-	fData = new u_int8_t[length];
-	if (fData == NULL) return;
+  fData = new u_int8_t[length];
+  if (fData == NULL) {
+    fLength = 0;
+    return;
+  }
 
-	for (unsigned i = 0; i < length; ++i)
-		fData[i] = 0;
-	fLength = length;
+  for (unsigned i = 0; i < length; ++i)	fData[i] = 0;
+  fLength = length;
 }
 
 NetAddress::NetAddress(NetAddress const& orig) {
-	assign(orig.data(), orig.length());
+  assign(orig.data(), orig.length());
 }
 
 NetAddress& NetAddress::operator=(NetAddress const& rightSide) {
-	if (&rightSide != this) {
-		clean();
-		assign(rightSide.data(), rightSide.length());
-	}
-	return *this;
+  if (&rightSide != this) {
+    clean();
+    assign(rightSide.data(), rightSide.length());
+  }
+  return *this;
 }
 
 NetAddress::~NetAddress() {
-	clean();
+  clean();
 }
 
 void NetAddress::assign(u_int8_t const* data, unsigned length) {
-	fData = new u_int8_t[length];
-	if (fData == NULL) return;
+  fData = new u_int8_t[length];
+  if (fData == NULL) {
+    fLength = 0;
+    return;
+  }
 
-	for (unsigned i = 0; i < length; ++i)
-		fData[i] = data[i];
-	fLength = length;
+  for (unsigned i = 0; i < length; ++i)	fData[i] = data[i];
+  fLength = length;
 }
 
 void NetAddress::clean() {
-	delete[] fData;
-	fLength = 0;
+  delete[] fData; fData = NULL;
+  fLength = 0;
 }
 
 
@@ -129,115 +133,119 @@ NetAddressList::NetAddressList(char const* hostname)
 }
 
 NetAddressList::NetAddressList(NetAddressList const& orig) {
-	assign(orig.numAddresses(), orig.fAddressArray);
+  assign(orig.numAddresses(), orig.fAddressArray);
 }
 
 NetAddressList& NetAddressList::operator=(NetAddressList const& rightSide) {
-	if (&rightSide != this) {
-		clean();
-		assign(rightSide.numAddresses(), rightSide.fAddressArray);
-	}
-	return *this;
+  if (&rightSide != this) {
+    clean();
+    assign(rightSide.numAddresses(), rightSide.fAddressArray);
+  }
+  return *this;
 }
 
 NetAddressList::~NetAddressList() {
-	clean();
+  clean();
 }
 
 void NetAddressList::assign(unsigned numAddresses, NetAddress** addressArray) {
-	fAddressArray = new NetAddress*[numAddresses];
-	if (fAddressArray == NULL) return;
+  fAddressArray = new NetAddress*[numAddresses];
+  if (fAddressArray == NULL) {
+    fNumAddresses = 0;
+    return;
+  }
 
-	for (unsigned i = 0; i < numAddresses; ++i)
-		fAddressArray[i] = new NetAddress(*addressArray[i]);
-	fNumAddresses = numAddresses;
+  for (unsigned i = 0; i < numAddresses; ++i) {
+    fAddressArray[i] = new NetAddress(*addressArray[i]);
+  }
+  fNumAddresses = numAddresses;
 }
 
 void NetAddressList::clean() {
-	while (fNumAddresses-- > 0)
-		delete fAddressArray[fNumAddresses];
-	delete[] fAddressArray;
+  while (fNumAddresses-- > 0) {
+    delete fAddressArray[fNumAddresses];
+  }
+  delete[] fAddressArray; fAddressArray = NULL;
 }
 
 NetAddress const* NetAddressList::firstAddress() const {
-	if (fNumAddresses == 0) return NULL;
+  if (fNumAddresses == 0) return NULL;
 
-	return fAddressArray[0];
+  return fAddressArray[0];
 }
 
 ////////// NetAddressList::Iterator //////////
 NetAddressList::Iterator::Iterator(NetAddressList const& addressList)
-	: fAddressList(addressList), fNextIndex(0) {}
+  : fAddressList(addressList), fNextIndex(0) {}
 
 NetAddress const* NetAddressList::Iterator::nextAddress() {
-	if (fNextIndex >= fAddressList.numAddresses())
-		return NULL; // no more
-	return fAddressList.fAddressArray[fNextIndex++];
+  if (fNextIndex >= fAddressList.numAddresses()) return NULL; // no more
+  return fAddressList.fAddressArray[fNextIndex++];
 }
 
 
 ////////// Port //////////
 
 Port::Port(portNumBits num /* in host byte order */) {
-	fPortNum = htons(num);
+  fPortNum = htons(num);
 }
 
 UsageEnvironment& operator<<(UsageEnvironment& s, const Port& p) {
-	return s << ntohs(p.num());
+  return s << ntohs(p.num());
 }
 
 
 ////////// AddressPortLookupTable //////////
 
 AddressPortLookupTable::AddressPortLookupTable()
-	: fTable(HashTable::create(3)) { // three-word keys are used
+  : fTable(HashTable::create(3)) { // three-word keys are used
 }
 
 AddressPortLookupTable::~AddressPortLookupTable() {
-	delete fTable;
+  delete fTable;
 }
 
 void* AddressPortLookupTable::Add(netAddressBits address1,
 				  netAddressBits address2,
 				  Port port, void* value) {
-	int key[3];
-	key[0] = (int)address1;
-	key[1] = (int)address2;
-	key[2] = (int)port.num();
-	return fTable->Add((char*)key, value);
+  int key[3];
+  key[0] = (int)address1;
+  key[1] = (int)address2;
+  key[2] = (int)port.num();
+  return fTable->Add((char*)key, value);
 }
 
 void* AddressPortLookupTable::Lookup(netAddressBits address1,
 				     netAddressBits address2,
 				     Port port) {
-	int key[3];
-	key[0] = (int)address1;
-	key[1] = (int)address2;
-	key[2] = (int)port.num();
-	return fTable->Lookup((char*)key);
+  int key[3];
+  key[0] = (int)address1;
+  key[1] = (int)address2;
+  key[2] = (int)port.num();
+  return fTable->Lookup((char*)key);
 }
 
 Boolean AddressPortLookupTable::Remove(netAddressBits address1,
 				       netAddressBits address2,
 				       Port port) {
-	int key[3];
-	key[0] = (int)address1;
-	key[1] = (int)address2;
-	key[2] = (int)port.num();
-	return fTable->Remove((char*)key);
+  int key[3];
+  key[0] = (int)address1;
+  key[1] = (int)address2;
+  key[2] = (int)port.num();
+  return fTable->Remove((char*)key);
 }
 
 AddressPortLookupTable::Iterator::Iterator(AddressPortLookupTable& table)
-	: fIter(HashTable::Iterator::create(*(table.fTable))) {
+  : fIter(HashTable::Iterator::create(*(table.fTable))) {
 }
 
 AddressPortLookupTable::Iterator::~Iterator() {
-	delete fIter;
+  delete fIter;
 }
 
 void* AddressPortLookupTable::Iterator::next() {
-	char const* key; // dummy
-	return fIter->next(key);
+  char const* key; // dummy
+  return fIter->next(key);
 }
 
 ////////// Misc. //////////
