@@ -682,7 +682,8 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	// (one 'ADU'ized MP3 frame per packet; no headers)
 	fRTPSource
 	  = SimpleRTPSource::createNew(env(), fRTPSocket, fRTPPayloadFormat,
-				       90000, "audio/mpa-robust" /*hack*/);
+				       fRTPTimestampFrequency,
+				       "audio/MPA-ROBUST" /*hack*/);
 	if (fRTPSource == NULL) break;
 	
 	// Add a filter that converts these ADUs to MP3 frames:
