@@ -275,6 +275,8 @@ void ClientTrickPlayState::updateStateFromNPT(float npt) {
     // Note: We assume that we're asked to seek only in normal
     // (i.e., non trick play) mode, so we don't seek within the trick
     // play source (if any).
+
+    fFramer->clearPIDStatusTable();
   }
 }
 

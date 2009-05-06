@@ -63,11 +63,15 @@ MPEG2TransportStreamFramer
 }
 
 MPEG2TransportStreamFramer::~MPEG2TransportStreamFramer() {
+  clearPIDStatusTable();
+  delete fPIDStatusTable;
+}
+
+void MPEG2TransportStreamFramer::clearPIDStatusTable() {
   PIDStatus* pidStatus;
   while ((pidStatus = (PIDStatus*)fPIDStatusTable->RemoveNext()) != NULL) {
     delete pidStatus;
   }
-  delete fPIDStatusTable;
 }
 
 void MPEG2TransportStreamFramer::doGetNextFrame() {
@@ -82,11 +86,7 @@ void MPEG2TransportStreamFramer::doStopGettingFrames() {
   FramedFilter::doStopGettingFrames();
   fTSPacketCount = 0;
 
-  // Clear out the existing PID status table:
-  PIDStatus* pidStatus;
-  while ((pidStatus = (PIDStatus*)fPIDStatusTable->RemoveNext()) != NULL) {
-    delete pidStatus;
-  }
+  clearPIDStatusTable();
 }
 
 void MPEG2TransportStreamFramer
