@@ -122,13 +122,13 @@ void PassiveServerMediaSubsession
 
 void PassiveServerMediaSubsession::startStream(unsigned /*clientSessionId*/,
 					       void* /*streamToken*/,
-					       TaskFunc* rtcpRRHandler,
-					       void* rtcpRRHandlerClientData,
+					       TaskFunc* /*rtcpRRHandler*/,
+					       void* /*rtcpRRHandlerClientData*/,
 					       unsigned short& rtpSeqNum,
 					       unsigned& rtpTimestamp) {
-  if (fRTCPInstance != NULL) {
-    fRTCPInstance->setRRHandler(rtcpRRHandler, rtcpRRHandlerClientData);
-  }
+  // Note: We don't set a RTCP RR handler, because (i) we're called potentially
+  // many times on the same "RTCPInstance", and (ii) the "RTCPInstance" remains
+  // in existence after "stopStream()" is called.
   rtpSeqNum = fRTPSink.currentSeqNo();
   rtpTimestamp = fRTPSink.currentTimestamp();
 }

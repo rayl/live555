@@ -33,6 +33,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #define RTPINFO_INCLUDE_RTPTIME 1
 
+#define DEBUG 1
 ////////// RTSPServer //////////
 
 RTSPServer*
