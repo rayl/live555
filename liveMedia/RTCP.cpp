@@ -317,6 +317,8 @@ void RTCPInstance::incomingReportHandler1() {
   int typeOfPacket = PACKET_UNKNOWN_TYPE;
 
   do {
+    int tcpReadStreamSocketNum = fRTCPInterface.nextTCPReadStreamSocketNum();
+    unsigned char tcpReadStreamChannelId = fRTCPInterface.nextTCPReadStreamChannelId();
     if (!fRTCPInterface.handleRead(pkt, maxPacketSize,
 				   packetSize, fromAddress)) {
       break;
@@ -449,8 +451,19 @@ void RTCPInstance::incomingReportHandler1() {
 
 	    // Specific RR handler:
 	    if (fSpecificRRHandlerTable != NULL) {
-	      netAddressBits fromAddr = fromAddress.sin_addr.s_addr;
-	      Port fromPort(ntohs(fromAddress.sin_port)); 
+	      netAddressBits fromAddr;
+	      portNumBits fromPortNum;
+	      if (tcpReadStreamSocketNum < 0) {
+		// Normal case: We read the RTCP packet over UDP
+		fromAddr = fromAddress.sin_addr.s_addr;
+		fromPortNum = ntohs(fromAddress.sin_port);
+	      } else {
+		// Special case: We read the RTCP packet over TCP (interleaved)
+		// Hack: Use the TCP socket and channel id to look up the handler
+		fromAddr = tcpReadStreamSocketNum;
+		fromPortNum = tcpReadStreamChannelId;
+	      }
+	      Port fromPort(fromPortNum); 
 	      RRHandlerRecord* rrHandler
 		= (RRHandlerRecord*)(fSpecificRRHandlerTable->Lookup(fromAddr, (~0), fromPort));
 	      if (rrHandler != NULL) {

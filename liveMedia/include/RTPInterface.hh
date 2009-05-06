@@ -74,6 +74,10 @@ public:
     fAuxReadHandlerClientData = handlerClientData;
   }
 
+  // A hack for supporting handlers for RTCP packets arriving interleaved over TCP:
+  int nextTCPReadStreamSocketNum() const { return fNextTCPReadStreamSocketNum; }
+  unsigned char nextTCPReadStreamChannelId() const { return fNextTCPReadStreamChannelId; }
+
 private:
   friend class SocketDescriptor;
   Medium* fOwner;

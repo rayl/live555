@@ -92,7 +92,7 @@ RTPInterface::RTPInterface(Medium* owner, Groupsock* gs)
   : fOwner(owner), fGS(gs),
     fTCPStreams(NULL),
     fNextTCPReadSize(0), fNextTCPReadStreamSocketNum(-1),
-    fReadHandlerProc(NULL),
+    fNextTCPReadStreamChannelId(0xFF), fReadHandlerProc(NULL),
     fAuxReadHandlerFunc(NULL), fAuxReadHandlerClientData(NULL) {
 }
 
@@ -144,7 +144,7 @@ void RTPInterface::sendPacket(unsigned char* packet, unsigned packetSize) {
   // Normal case: Send as a UDP packet:
   fGS->output(envir(), fGS->ttl(), packet, packetSize);
 
-  // Also, send over each of our TCP socket:
+  // Also, send over each of our TCP sockets:
   for (tcpStreamRecord* streams = fTCPStreams; streams != NULL;
        streams = streams->fNext) {
     sendRTPOverTCP(packet, packetSize,
@@ -345,6 +345,7 @@ void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor,
 			fromAddress) != 2) break;
     rtpInterface->fNextTCPReadSize = ntohs(size);
     rtpInterface->fNextTCPReadStreamSocketNum = socketNum;
+    rtpInterface->fNextTCPReadStreamChannelId = streamChannelId;
 #ifdef DEBUG
     fprintf(stderr, "SocketDescriptor::tcpReadHandler() reading %d bytes on channel %d\n", rtpInterface->fNextTCPReadSize, streamChannelId);
 #endif

@@ -437,9 +437,6 @@ void StreamState
 				fRTPSink, NULL /* we're a server */);
         // Note: This starts RTCP running automatically
   }
-  if (fRTCPInstance != NULL)
-    fRTCPInstance->setSpecificRRHandler(dests->addr.s_addr, dests->rtcpPort,
-					rtcpRRHandler, rtcpRRHandlerClientData);
 
   if (dests->isTCP) {
     // Change RTP and RTCP to use the TCP socket instead of UDP:
@@ -448,12 +445,18 @@ void StreamState
     }
     if (fRTCPInstance != NULL) {
       fRTCPInstance->addStreamSocket(dests->tcpSocketNum, dests->rtcpChannelId);
+      fRTCPInstance->setSpecificRRHandler(dests->tcpSocketNum, dests->rtcpChannelId,
+					  rtcpRRHandler, rtcpRRHandlerClientData);
     }
   } else {
     // Tell the RTP and RTCP 'groupsocks' about this destination
     // (in case they don't already have it):
     if (fRTPgs != NULL) fRTPgs->addDestination(dests->addr, dests->rtpPort);
     if (fRTCPgs != NULL) fRTCPgs->addDestination(dests->addr, dests->rtcpPort);
+    if (fRTCPInstance != NULL) {
+      fRTCPInstance->setSpecificRRHandler(dests->addr.s_addr, dests->rtcpPort,
+					  rtcpRRHandler, rtcpRRHandlerClientData);
+    }
   }
 }
 
@@ -470,6 +473,8 @@ void StreamState::endPlaying(Destinations* dests) {
     }
     if (fRTCPInstance != NULL) {
       fRTCPInstance->removeStreamSocket(dests->tcpSocketNum, dests->rtcpChannelId);
+      fRTCPInstance->setSpecificRRHandler(dests->tcpSocketNum, dests->rtcpChannelId,
+					  NULL, NULL);
     }
   } else {
     // Tell the RTP and RTCP 'groupsocks' to stop using these destinations:
