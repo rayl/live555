@@ -132,6 +132,19 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
   return newSocket;
 }
 
+Boolean makeSocketNonBlocking(int sock) {
+#if defined(__WIN32__) || defined(_WIN32) || defined(IMN_PIM)
+  unsigned long arg = 1;
+  return ioctlsocket(sock, FIONBIO, &arg) == 0;
+#elif defined(VXWORKS)
+  int arg = 1;
+  return ioctl(sock, FIONBIO, (int)&arg) == 0;
+#else
+  int curFlags = fcntl(sock, F_GETFL, 0);
+  return fcntl(sock, F_SETFL, curFlags|O_NONBLOCK) >= 0;
+#endif
+}
+
 int setupStreamSocket(UsageEnvironment& env,
                       Port port, Boolean makeNonBlocking) {
   if (!initializeWinsockIfNecessary()) {
@@ -190,19 +203,7 @@ int setupStreamSocket(UsageEnvironment& env,
 #endif
 
   if (makeNonBlocking) {
-    // Make the socket non-blocking:
-#if defined(__WIN32__) || defined(_WIN32) || defined(IMN_PIM)
-    unsigned long arg = 1;
-    if (ioctlsocket(newSocket, FIONBIO, &arg) != 0) {
-
-#elif defined(VXWORKS)
-    int arg = 1;
-    if (ioctl(newSocket, FIONBIO, (int)&arg) != 0) {
-
-#else
-    int curFlags = fcntl(newSocket, F_GETFL, 0);
-    if (fcntl(newSocket, F_SETFL, curFlags|O_NONBLOCK) < 0) {
-#endif
+    if (!makeSocketNonBlocking(newSocket)) {
       socketErr(env, "failed to make non-blocking: ");
       closeSocket(newSocket);
       return -1;

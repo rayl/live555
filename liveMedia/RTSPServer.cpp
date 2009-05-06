@@ -220,6 +220,7 @@ void RTSPServer::incomingConnectionHandler1() {
     }
     return;
   }
+  makeSocketNonBlocking(clientSocket);
 #if defined(DEBUG) || defined(DEBUG_CONNECTIONS)
   fprintf(stderr, "accept()ed connection from %s\n", our_inet_ntoa(clientAddr.sin_addr));
 #endif
