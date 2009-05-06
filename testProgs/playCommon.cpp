@@ -984,8 +984,8 @@ static void scheduleNextQOSMeasurement() {
   struct timeval timeNow;
   gettimeofday(&timeNow, NULL);
   unsigned timeNowUSecs = timeNow.tv_sec*1000000 + timeNow.tv_usec;
-  unsigned usecsToDelay = nextQOSMeasurementUSecs < timeNowUSecs ? 0
-    : nextQOSMeasurementUSecs - timeNowUSecs;
+  unsigned usecsToDelay = nextQOSMeasurementUSecs - timeNowUSecs;
+     // Note: This works even when nextQOSMeasurementUSecs wraps around
 
   qosMeasurementTimerTask = env->taskScheduler().scheduleDelayedTask(
      usecsToDelay, (TaskFunc*)periodicQOSMeasurement, (void*)NULL);

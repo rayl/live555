@@ -858,6 +858,8 @@ void RTSPServer::RTSPClientSession
     handleCmd_PAUSE(subsession, cseq);
   } else if (strcmp(cmdName, "GET_PARAMETER") == 0) {
     handleCmd_GET_PARAMETER(subsession, cseq, fullRequestStr);
+  } else if (strcmp(cmdName, "SET_PARAMETER") == 0) {
+    handleCmd_SET_PARAMETER(subsession, cseq, fullRequestStr);
   }
 }
 
@@ -1067,6 +1069,13 @@ void RTSPServer::RTSPClientSession
   snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
 	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%sSession: %d\r\n\r\n",
 	   cseq, dateHeader(), fOurSessionId);
+}
+
+void RTSPServer::RTSPClientSession
+::handleCmd_SET_PARAMETER(ServerMediaSubsession* /*subsession*/, char const* cseq,
+			  char const* /*fullRequestStr*/) {
+  // By default, we don't implement "SET_PARAMETER":
+  handleCmd_notSupported(cseq);
 }
 
 static Boolean parseAuthorizationHeader(char const* buf,

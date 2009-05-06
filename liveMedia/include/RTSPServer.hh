@@ -109,43 +109,44 @@ protected:
 private: // redefined virtual functions
   virtual Boolean isRTSPServer() const;
 
-private:
-  static void incomingConnectionHandler(void*, int /*mask*/);
-  void incomingConnectionHandler1();
-
+protected:
   // The state of each individual session handled by a RTSP server:
   class RTSPClientSession {
   public:
     RTSPClientSession(RTSPServer& ourServer, unsigned sessionId,
 		      int clientSocket, struct sockaddr_in clientAddr);
     virtual ~RTSPClientSession();
+  protected:
+    // Make the handler functions for each command virtual, to allow subclasses to redefine them:
+    virtual void handleCmd_bad(char const* cseq);
+    virtual void handleCmd_notSupported(char const* cseq);
+    virtual void handleCmd_notFound(char const* cseq);
+    virtual void handleCmd_unsupportedTransport(char const* cseq);
+    virtual void handleCmd_OPTIONS(char const* cseq);
+    virtual void handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix,
+				    char const* fullRequestStr);
+    virtual void handleCmd_SETUP(char const* cseq,
+				 char const* urlPreSuffix, char const* urlSuffix,
+				 char const* fullRequestStr);
+    virtual void handleCmd_withinSession(char const* cmdName,
+					 char const* urlPreSuffix, char const* urlSuffix,
+					 char const* cseq, char const* fullRequestStr);
+    virtual void handleCmd_TEARDOWN(ServerMediaSubsession* subsession,
+				    char const* cseq);
+    virtual void handleCmd_PLAY(ServerMediaSubsession* subsession,
+				char const* cseq, char const* fullRequestStr);
+    virtual void handleCmd_PAUSE(ServerMediaSubsession* subsession,
+				 char const* cseq);
+    virtual void handleCmd_GET_PARAMETER(ServerMediaSubsession* subsession,
+					 char const* cseq, char const* fullRequestStr);
+    virtual void handleCmd_SET_PARAMETER(ServerMediaSubsession* subsession,
+					 char const* cseq, char const* fullRequestStr);
   private:
     UsageEnvironment& envir() { return fOurServer.envir(); }
     void reclaimStreamStates();
     void resetRequestBuffer();
     static void incomingRequestHandler(void*, int /*mask*/);
     void incomingRequestHandler1();
-    void handleCmd_bad(char const* cseq);
-    void handleCmd_notSupported(char const* cseq);
-    void handleCmd_notFound(char const* cseq);
-    void handleCmd_unsupportedTransport(char const* cseq);
-    void handleCmd_OPTIONS(char const* cseq);
-    void handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix,
-			    char const* fullRequestStr);
-    void handleCmd_SETUP(char const* cseq,
-			 char const* urlPreSuffix, char const* urlSuffix,
-			 char const* fullRequestStr);
-    void handleCmd_withinSession(char const* cmdName,
-				 char const* urlPreSuffix, char const* urlSuffix,
-				 char const* cseq, char const* fullRequestStr);
-    void handleCmd_TEARDOWN(ServerMediaSubsession* subsession,
-			    char const* cseq);
-    void handleCmd_PLAY(ServerMediaSubsession* subsession,
-			char const* cseq, char const* fullRequestStr);
-    void handleCmd_PAUSE(ServerMediaSubsession* subsession,
-			 char const* cseq);
-    void handleCmd_GET_PARAMETER(ServerMediaSubsession* subsession,
-				 char const* cseq, char const* fullRequestStr);
     Boolean authenticationOK(char const* cmdName, char const* cseq,
                              char const* urlSuffix,
                              char const* fullRequestStr);
@@ -153,7 +154,6 @@ private:
     Boolean isMulticast() const { return fIsMulticast; }
     static void noteClientLiveness(RTSPClientSession* clientSession);
     static void livenessTimeoutTask(RTSPClientSession* clientSession);
-
   private:
     RTSPServer& fOurServer;
     unsigned fOurSessionId;
@@ -174,6 +174,10 @@ private:
       void* streamToken;
     } * fStreamStates;
   };
+
+private:
+  static void incomingConnectionHandler(void*, int /*mask*/);
+  void incomingConnectionHandler1();
 
 private:
   friend class RTSPClientSession;
