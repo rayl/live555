@@ -142,11 +142,19 @@ public:
     // returns 0 for an unbounded session (the default)
     // returns > 0 for a bounded session
 
+  // The following may be called by (e.g.) SIP servers, for which the
+  // address and port number fields in SDP descriptions need to be non-zero:
+  void setServerAddressAndPortForSDP(netAddressBits addressBits,
+				     portNumBits portBits);
+
 protected: // we're a virtual base class
   ServerMediaSubsession(UsageEnvironment& env);
 
   char const* rangeSDPLine(ServerMediaSession& parentSession) const;
       // returns a string to be delete[]d
+
+  netAddressBits fServerAddressForSDP;
+  portNumBits fPortNumForSDP;
 
 private:
   friend class ServerMediaSession;

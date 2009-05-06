@@ -316,6 +316,7 @@ void ServerMediaSubsessionIterator::reset() {
 
 ServerMediaSubsession::ServerMediaSubsession(UsageEnvironment& env)
   : Medium(env),
+    fServerAddressForSDP(0), fPortNumForSDP(0),
     fNext(NULL), fTrackNumber(0), fTrackId(NULL) {
 }
 
@@ -360,6 +361,12 @@ void ServerMediaSubsession::testScaleFactor(float& scale) {
 float ServerMediaSubsession::duration() const {
   // default implementation: assume an unbounded session:
   return 0.0;
+}
+
+void ServerMediaSubsession::setServerAddressAndPortForSDP(netAddressBits addressBits,
+							  portNumBits portBits) {
+  fServerAddressForSDP = addressBits;
+  fPortNumForSDP = portBits;
 }
 
 char const*
