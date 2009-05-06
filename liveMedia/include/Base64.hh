@@ -26,7 +26,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 unsigned char* base64Decode(char* in, unsigned& resultSize,
-			    Boolean trimTrailingZeros = False);
+			    Boolean trimTrailingZeros = True);
     // returns a newly allocated array - of size "resultSize" - that
     // the caller is responsible for delete[]ing.
 

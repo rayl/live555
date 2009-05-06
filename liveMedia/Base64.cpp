@@ -32,9 +32,9 @@ static void initBase64DecodeTable() {
   for (i = 'A'; i <= 'Z'; ++i) base64DecodeTable[i] = 0 + (i - 'A');
   for (i = 'a'; i <= 'z'; ++i) base64DecodeTable[i] = 26 + (i - 'a');
   for (i = '0'; i <= '9'; ++i) base64DecodeTable[i] = 52 + (i - '0');
-  base64DecodeTable['+'] = 62;
-  base64DecodeTable['/'] = 63;
-  base64DecodeTable['='] = 0;
+  base64DecodeTable[(unsigned char)'+'] = 62;
+  base64DecodeTable[(unsigned char)'/'] = 63;
+  base64DecodeTable[(unsigned char)'='] = 0;
 }
 
 unsigned char* base64Decode(char* in, unsigned& resultSize,
@@ -53,7 +53,7 @@ unsigned char* base64Decode(char* in, unsigned& resultSize,
     char inTmp[4], outTmp[4];
     for (int i = 0; i < 4; ++i) {
       inTmp[i] = in[i+j];
-      outTmp[i] = base64DecodeTable[inTmp[i]];
+      outTmp[i] = base64DecodeTable[(unsigned char)inTmp[i]];
       if ((outTmp[i]&0x80) != 0) outTmp[i] = 0; // pretend the input was 'A'
     }
       
