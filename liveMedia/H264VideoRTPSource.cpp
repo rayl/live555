@@ -49,38 +49,32 @@ Boolean H264VideoRTPSource
   // The header has a minimum size of 0, since the NAL header is used
   // as a payload header
   unsigned expectedHeaderSize = 0;
-  if (packetSize < expectedHeaderSize) return False;
   
-  // Has to check if the type field says 28 (=> FU-A)
-  Boolean FUA = (headerStart[0]&0x1C) == 28;
-  if (FUA) {
-    // FU-A has 2 bytes payload header
-    // One byte FU indicator, and one byte FU header
-    // If it's the startbit is set, we reconstruct the original NAL header
-    if ((headerStart[1]&0x80) == 128) {
+  // Check if the type field is 28 (FU-A) or 29 (FU-B)
+  unsigned char nal_unit_type = (headerStart[0]&0x1F);
+  if (nal_unit_type == 28 || nal_unit_type == 29) {
+    // For these NALUs, the first two bytes are the FU indicator and the FU header.
+    // If the start bit is set, we reconstruct the original NAL header:
+    unsigned char startBit = headerStart[1]&0x80;
+    unsigned char endBit = headerStart[1]&0x40;
+    if (startBit) {
       expectedHeaderSize = 1;
-      headerStart[1] = (headerStart[0]&0xE0)+(headerStart[1]&0x1F); 
-      fCurrentPacketCompletesFrame = False;
-      
       if (packetSize < expectedHeaderSize) return False;
+
+      headerStart[1] = (headerStart[0]&0xE0)+(headerStart[1]&0x1F); 
+      fCurrentPacketBeginsFrame = True;
     } else {
       // If the startbit is not set, both the FU indicator and header
       // can be discarded
       expectedHeaderSize = 2;
       if (packetSize < expectedHeaderSize) return False;
-      
-      // Checking for end bit
-      if ((headerStart[1]&0x40) == 64) {
-	fCurrentPacketCompletesFrame = True;
-      }
-      else {
-	fCurrentPacketCompletesFrame = False;
-      }
+      fCurrentPacketBeginsFrame = False;
     }
+    fCurrentPacketCompletesFrame = (endBit != 0);
   } else {
     // Every arriving packet contains a decodable NAL unit
     // Other types, such as STAP-A has to be handled in the mediaplayer
-    fCurrentPacketCompletesFrame = True;
+    fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame = True;
   }
   
   resultSpecialHeaderSize = expectedHeaderSize;

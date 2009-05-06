@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
 // H.264 Video RTP Sources
 // C++ header
 
@@ -34,21 +34,13 @@ public:
 	    unsigned char rtpPayloadFormat,
 	    unsigned rtpTimestampFrequency = 90000);
 
-  // A data structure that stores copies of the special header bytes
-  // from the most recent frame's RTP packets:
-  unsigned char fNumSpecialHeaders;
-  unsigned fSpecialHeaderBytesLength;
-  unsigned char fSpecialHeaderBytes[SPECIAL_HEADER_BUFFER_SIZE];
-  unsigned fPacketSizes[256];
-
-protected:
-  virtual ~H264VideoRTPSource();
-
 private:
   H264VideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 			 unsigned char rtpPayloadFormat,
 			 unsigned rtpTimestampFrequency);
       // called only by createNew()
+
+  virtual ~H264VideoRTPSource();
 
 private:
   // redefined virtual functions:
