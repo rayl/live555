@@ -34,7 +34,7 @@ void* HashTable::RemoveNext() {
   Iterator* iter = Iterator::create(*this);
   char const* key;
   void* removedValue = iter->next(key);
-  Remove(key);
+  if (removedValue != 0) Remove(key);
 
   return removedValue;
 }

@@ -145,7 +145,8 @@ struct timeval AC3AudioStreamFramer::currentFramePlayTime() const {
 }
 
 void AC3AudioStreamFramer
-::handleNewData(void* clientData, unsigned char* ptr, unsigned size) {
+::handleNewData(void* clientData, unsigned char* ptr, unsigned size,
+		struct timeval /*presentationTime*/) {
   AC3AudioStreamFramer* framer = (AC3AudioStreamFramer*)clientData;
   framer->handleNewData(ptr, size);
 }

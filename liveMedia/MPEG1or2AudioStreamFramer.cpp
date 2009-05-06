@@ -56,11 +56,15 @@ static struct timezone Idunno;
 static int Idunno;
 #endif
 
-MPEG1or2AudioStreamFramer::MPEG1or2AudioStreamFramer(UsageEnvironment& env,
-					     FramedSource* inputSource)
-  : FramedFilter(env, inputSource) {
+MPEG1or2AudioStreamFramer
+::MPEG1or2AudioStreamFramer(UsageEnvironment& env, FramedSource* inputSource,
+			    Boolean syncWithInputSource)
+  : FramedFilter(env, inputSource),
+    fSyncWithInputSource(syncWithInputSource) {
   // Use the current wallclock time as the initial 'presentation time':
-  gettimeofday(&fNextFramePresentationTime, &Idunno);
+  struct timeval timeNow;
+  gettimeofday(&timeNow, &Idunno);
+  resetPresentationTime(timeNow);
 
   fParser = new MPEG1or2AudioStreamParser(this, inputSource);
 }
@@ -71,9 +75,15 @@ MPEG1or2AudioStreamFramer::~MPEG1or2AudioStreamFramer() {
 
 MPEG1or2AudioStreamFramer*
 MPEG1or2AudioStreamFramer::createNew(UsageEnvironment& env,
-				 FramedSource* inputSource) {
+				     FramedSource* inputSource,
+				     Boolean syncWithInputSource) {
   // Need to add source type checking here???  #####
-  return new MPEG1or2AudioStreamFramer(env, inputSource);
+  return new MPEG1or2AudioStreamFramer(env, inputSource, syncWithInputSource);
+}
+
+void MPEG1or2AudioStreamFramer
+::resetPresentationTime(struct timeval newPresentationTime) {
+  fNextFramePresentationTime = newPresentationTime;
 }
 
 void MPEG1or2AudioStreamFramer::doGetNextFrame() {
@@ -100,10 +110,14 @@ struct timeval MPEG1or2AudioStreamFramer::currentFramePlayTime() const {
   return result;
 }
 
-void MPEG1or2AudioStreamFramer::continueReadProcessing(void* clientData,
-						   unsigned char* /*ptr*/,
-						   unsigned /*size*/) {
+void MPEG1or2AudioStreamFramer
+::continueReadProcessing(void* clientData,
+			 unsigned char* /*ptr*/, unsigned /*size*/,
+			 struct timeval presentationTime) {
   MPEG1or2AudioStreamFramer* framer = (MPEG1or2AudioStreamFramer*)clientData;
+  if (framer->fSyncWithInputSource) {
+    framer->resetPresentationTime(presentationTime);
+  }
   framer->continueReadProcessing();
 }
 
@@ -117,7 +131,6 @@ void MPEG1or2AudioStreamFramer::continueReadProcessing() {
     // Also set the presentation time, and increment it for next time,
     // based on the length of this frame:
     fPresentationTime = fNextFramePresentationTime;
-
     struct timeval framePlayTime = currentFramePlayTime();
     fDurationInMicroseconds = framePlayTime.tv_sec*MILLION + framePlayTime.tv_usec;
     fNextFramePresentationTime.tv_usec += framePlayTime.tv_usec;

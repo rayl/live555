@@ -40,7 +40,8 @@ private:
   virtual ~AC3AudioStreamFramer();
 
   static void handleNewData(void* clientData,
-			    unsigned char* ptr, unsigned size);
+			    unsigned char* ptr, unsigned size,
+			    struct timeval presentationTime);
   void handleNewData(unsigned char* ptr, unsigned size);
 
   void parseNextFrame();

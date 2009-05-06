@@ -129,9 +129,10 @@ void MPEGVideoStreamFramer::doGetNextFrame() {
   continueReadProcessing();
 }
 
-void MPEGVideoStreamFramer::continueReadProcessing(void* clientData,
-						   unsigned char* /*ptr*/,
-						   unsigned /*size*/) {
+void MPEGVideoStreamFramer
+::continueReadProcessing(void* clientData,
+			 unsigned char* /*ptr*/, unsigned /*size*/,
+			 struct timeval /*presentationTime*/) {
   MPEGVideoStreamFramer* framer = (MPEGVideoStreamFramer*)clientData;
   framer->continueReadProcessing();
 }

@@ -23,6 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 //##### Eventually fix the following #include; we shouldn't know about tunnels
 #include "TunnelEncaps.hh"
 
+#ifndef NO_STRSTREAM
 #if (defined(__WIN32__) || defined(_WIN32)) && !defined(__MINGW32__)
 #include <strstrea.h>
 #else
@@ -30,6 +31,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <strstream>
 #else
 #include <strstream.h>
+#endif
 #endif
 #endif
 #include <stdio.h>

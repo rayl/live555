@@ -208,9 +208,10 @@ Boolean MPEG1or2Demux::useSavedData(u_int8_t streamIdTag,
   return True;
 }
 
-void MPEG1or2Demux::continueReadProcessing(void* clientData,
-				       unsigned char* /*ptr*/,
-				       unsigned /*size*/) {
+void MPEG1or2Demux
+::continueReadProcessing(void* clientData,
+			 unsigned char* /*ptr*/, unsigned /*size*/,
+			 struct timeval /*presentationTime*/) {
   MPEG1or2Demux* demux = (MPEG1or2Demux*)clientData;
   demux->continueReadProcessing();
 }

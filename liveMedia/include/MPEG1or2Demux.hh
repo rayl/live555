@@ -88,7 +88,8 @@ private:
 		       void* afterGettingClientData);
 
   static void continueReadProcessing(void* clientData,
-				     unsigned char* ptr, unsigned size);
+				     unsigned char* ptr, unsigned size,
+				     struct timeval presentationTime);
   void continueReadProcessing();
 
 private:

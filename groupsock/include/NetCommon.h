@@ -21,8 +21,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _NET_COMMON_H
 #define _NET_COMMON_H
 
-#include <string.h>
-
 #if defined(IMN_PIM)
 #include "IMN_PIMNetCommon.h"
 
@@ -34,6 +32,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <ws2tcpip.h>
 #endif
 #include <windows.h>
+#include <string.h>
 
 #define _close closesocket
 #define EWOULDBLOCK WSAEWOULDBLOCK
@@ -65,6 +64,7 @@ typedef unsigned char u_int8_t;
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <strings.h>

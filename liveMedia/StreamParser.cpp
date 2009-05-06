@@ -94,7 +94,7 @@ void StreamParser::ensureValidBytes1(unsigned numBytesNeeded) {
 void StreamParser::afterGettingBytes(void* clientData,
 				     unsigned numBytesRead,
 				     unsigned /*numTruncatedBytes*/,
-				     struct timeval /*presentationTime*/,
+				     struct timeval presentationTime,
 				     unsigned /*durationInMicroseconds*/){
   StreamParser* buffer = (StreamParser*)clientData;
 
@@ -114,7 +114,7 @@ void StreamParser::afterGettingBytes(void* clientData,
       // Sigh... this is a crock; things would have been a lot simpler
       // here if we were using threads, with synchronous I/O...
   buffer->fClientContinueFunc(buffer->fClientContinueClientData,
-			      ptr, numBytesRead);
+			      ptr, numBytesRead, presentationTime);
 }
 
 void StreamParser::saveParserState() {

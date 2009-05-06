@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "NetInterface.hh"
 #include "GroupsockHelper.hh"
 
+#ifndef NO_STRSTREAM
 #if (defined(__WIN32__) || defined(_WIN32)) && !defined(__MINGW32__)
 #include <strstrea.h>
 #else
@@ -28,6 +29,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <strstream>
 #else
 #include <strstream.h>
+#endif
 #endif
 #endif
 

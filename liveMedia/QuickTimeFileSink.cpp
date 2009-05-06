@@ -22,13 +22,14 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <io.h>
 #include <fcntl.h>
 #endif
-#include <ctype.h>
 
 #include "QuickTimeFileSink.hh"
 #include "QuickTimeGenericRTPSource.hh"
 #include "GroupsockHelper.hh"
 #include "H263plusVideoRTPSource.hh"
 #include "MPEG4LATMAudioRTPSource.hh" // for "parseGeneralConfigStr()"
+
+#include <ctype.h>
 
 #define fourChar(x,y,z,w) ( ((x)<<24)|((y)<<16)|((z)<<8)|(w) )
 
@@ -607,7 +608,7 @@ Boolean SubsessionIOState::setQTstate() {
 	fQTSamplesPerFrame = 160;
       } else if (strcmp(fOurSubsession.codecName(), "MPEG4-GENERIC") == 0) {
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_mp4a;
-	fQTSamplesPerFrame = 1024;//???#####
+	fQTTimeUnitsPerSample = 1024; // QT considers each frame to be a 'sample'
       } else {
 	envir() << noCodecWarning1 << "Audio" << noCodecWarning2
 		<< fOurSubsession.codecName() << noCodecWarning3;
@@ -849,7 +850,7 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
     if (msDuration > fHINF.dmax) fHINF.dmax = msDuration;
     unsigned hintSampleDuration
       = (unsigned)((2*duration*fQTTimeScale+1)/2); // round
-    //  fprintf(stderr, "useFrameForHinting(%d) => hintSampleDuration %d\n", frameSize, hintSampleDuration); //#####@@@@@
+    fprintf(stderr, "useFrameForHinting(%d) => duration %f, hintSampleDuration %d\n", frameSize, duration, hintSampleDuration); //#####@@@@@
 
     unsigned const hintSampleDestFileOffset = ftell(fOurSink.fOutFid);
 
@@ -1550,14 +1551,7 @@ unsigned QuickTimeFileSink::addAtom_soundMediaGeneral() {
   //  size += addWord(0x00000000); // Compression ID+Packet size
   size += addWord(0xfffe0000); // Compression ID+Packet size #####
 
-  unsigned const timeScale = fCurrentIOState->fQTTimeScale;
-  unsigned const timeUnitsPerSample
-    = fCurrentIOState->fQTTimeUnitsPerSample;
-  double const sampleRate = timeScale/(double)timeUnitsPerSample;
-  unsigned const sampleRateIntPart = (unsigned)sampleRate;
-  unsigned const sampleRateFracPart = (unsigned)(sampleRate*65536);
-  unsigned const sampleRateFixedPoint
-    = (sampleRateIntPart<<16) | sampleRateFracPart;
+  unsigned const sampleRateFixedPoint = fCurrentIOState->fQTTimeScale << 16;
   size += addWord(sampleRateFixedPoint); // Sample rate
 addAtomEnd;
 
@@ -1626,9 +1620,9 @@ unsigned QuickTimeFileSink::addAtom_mp4a() {
 
   // Next, add the four fields that are particular to version 1:
   // (Later, parameterize these #####)
-  size += addWord(fCurrentIOState->fQTSamplesPerFrame); // samples per packet
+  size += addWord(fCurrentIOState->fQTTimeUnitsPerSample);
   size += addWord(0x00000001); // ???
-  size += addWord(0x00000002); // ???
+  size += addWord(0x00000001); // ???
   size += addWord(0x00000002); // bytes per sample (uncompressed)
 
   // Other special fields are in a 'wave' atom that follows:
@@ -1642,12 +1636,12 @@ addAtom(esds);
     // MPEG-4 audio
     size += addWord(0x00000000); // ???
     size += addWord(0x03808080); // ???
-    size += addWord(0x22000000); // ???
+    size += addWord(0x2a000000); // ???
     size += addWord(0x04808080); // ???
-    size += addWord(0x14401500); // ???
-    size += addWord(0x06000000); // ???
-    size += addWord(0xbb800000); // ???
-    size += addWord(0xbb800580); // ???
+    size += addWord(0x1c401500); // ???
+    size += addWord(0x18000000); // ???
+    size += addWord(0x6d600000); // ???
+    size += addWord(0x6d600580); // ???
     size += addByte(0x80); size += addByte(0x80); // ???
   } else if (strcmp(subsession.mediumName(), "video") == 0) {
     // MPEG-4 video
@@ -1673,7 +1667,7 @@ addAtom(esds);
   if (strcmp(subsession.mediumName(), "audio") == 0) {
     // MPEG-4 audio
     size += addWord(0x06808080); // ???
-    size += addHalfWord(0x0102); // ???
+    size += addByte(0x01); // ???
   } else {
     // MPEG-4 video
     size += addHalfWord(0x0601); // ???
