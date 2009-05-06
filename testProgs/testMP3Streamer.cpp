@@ -107,14 +107,14 @@ int main(int argc, char** argv) {
 #endif
   
   // Create (and start) a 'RTCP instance' for this RTP sink:
-  const unsigned totalSessionBandwidth = 160; // in kbps; for RTCP b/w share
+  const unsigned estimatedSessionBandwidth = 160; // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
   CNAME[maxCNAMElen] = '\0'; // just in case
   sessionState.rtcpInstance
     = RTCPInstance::createNew(*env, sessionState.rtcpGroupsock,
-			      totalSessionBandwidth, CNAME,
+			      estimatedSessionBandwidth, CNAME,
 			      sessionState.sink, NULL /* we're a server */,
 			      isSSM);
   // Note: This starts RTCP running automatically

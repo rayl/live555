@@ -162,7 +162,7 @@ void play() {
 			       "audio", mimeType, numChannels);
   
   // Create (and start) a 'RTCP instance' for this RTP sink:
-  const unsigned totalSessionBandwidth = bitsPerSecond/1000;
+  const unsigned estimatedSessionBandwidth = bitsPerSecond/1000;
       // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
   unsigned char CNAME[maxCNAMElen+1];
@@ -170,7 +170,7 @@ void play() {
   CNAME[maxCNAMElen] = '\0'; // just in case
   sessionState.rtcpInstance
     = RTCPInstance::createNew(*env, sessionState.rtcpGroupsock,
-			      totalSessionBandwidth, CNAME,
+			      estimatedSessionBandwidth, CNAME,
 			      sessionState.sink, NULL /* we're a server */,
 			      True /* we're a SSM source*/);
   // Note: This starts RTCP running automatically

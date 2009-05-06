@@ -79,14 +79,14 @@ int main(int argc, char** argv) {
   }
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
-  const unsigned totalSessionBandwidthVideo = 500; // in kbps; for RTCP b/w share
+  const unsigned estimatedSessionBandwidthVideo = 500; // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
   CNAME[maxCNAMElen] = '\0'; // just in case
   RTCPInstance* videoRTCP =
     RTCPInstance::createNew(*env, &rtcpGroupsockVideo,
-			    totalSessionBandwidthVideo, CNAME,
+			    estimatedSessionBandwidthVideo, CNAME,
 			    videoSink, NULL /* we're a server */);
   // Note: This starts RTCP running automatically
 

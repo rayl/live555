@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
   audioSink = MPEG1or2AudioRTPSink::createNew(*env, &rtpGroupsockAudio);
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
-  const unsigned totalSessionBandwidthAudio = 160; // in kbps; for RTCP b/w share
+  const unsigned estimatedSessionBandwidthAudio = 160; // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
   RTCPInstance* audioRTCP =
 #endif
     RTCPInstance::createNew(*env, &rtcpGroupsockAudio,
-			    totalSessionBandwidthAudio, CNAME,
+			    estimatedSessionBandwidthAudio, CNAME,
 			    audioSink, NULL /* we're a server */, isSSM);
   // Note: This starts RTCP running automatically
 
@@ -110,12 +110,12 @@ int main(int argc, char** argv) {
   videoSink = MPEG1or2VideoRTPSink::createNew(*env, &rtpGroupsockVideo);
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
-  const unsigned totalSessionBandwidthVideo = 4500; // in kbps; for RTCP b/w share
+  const unsigned estimatedSessionBandwidthVideo = 4500; // in kbps; for RTCP b/w share
 #ifdef IMPLEMENT_RTSP_SERVER
   RTCPInstance* videoRTCP =
 #endif
     RTCPInstance::createNew(*env, &rtcpGroupsockVideo,
-			      totalSessionBandwidthVideo, CNAME,
+			      estimatedSessionBandwidthVideo, CNAME,
 			      videoSink, NULL /* we're a server */, isSSM);
   // Note: This starts RTCP running automatically
 

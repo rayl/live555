@@ -201,6 +201,24 @@ int main(int argc, char** argv) {
     delete[] url;
   }
 
+  // A MPEG-2 Transport Stream:
+  {
+    char const* streamName = "mpeg2TransportStreamTest";
+    char const* inputFileName = "test.ts";
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, streamName, streamName,
+				      descriptionString);
+    sms->addSubsession(MPEG2TransportFileServerMediaSubsession
+		       ::createNew(*env, inputFileName));
+    rtspServer->addServerMediaSession(sms);
+
+    char* url = rtspServer->rtspURL(sms);
+    *env << "\n\"" << streamName << "\" stream, from the file \""
+	 << inputFileName << "\"\n";
+    *env << "Play this stream using the URL \"" << url << "\"\n";
+    delete[] url;
+  }
+
   env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning

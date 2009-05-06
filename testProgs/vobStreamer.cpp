@@ -160,10 +160,10 @@ int main(int argc, char const** argv) {
     rtcpGroupsockAudio
       = new Groupsock(*env, destinationAddress, rtcpPortAudio, ttl);
     rtcpGroupsockAudio->multicastSendOnly(); // because we're a SSM source
-    const unsigned totalSessionBandwidthAudio
+    const unsigned estimatedSessionBandwidthAudio
       = 160; // in kbps; for RTCP b/w share
     audioRTCP = RTCPInstance::createNew(*env, rtcpGroupsockAudio,
-					totalSessionBandwidthAudio, CNAME,
+					estimatedSessionBandwidthAudio, CNAME,
 					audioSink, NULL /* we're a server */,
 					True /* we're a SSM source */);
     // Note: This starts RTCP running automatically
@@ -181,10 +181,10 @@ int main(int argc, char const** argv) {
     rtcpGroupsockVideo
       = new Groupsock(*env, destinationAddress, rtcpPortVideo, ttl);
     rtcpGroupsockVideo->multicastSendOnly(); // because we're a SSM source
-    const unsigned totalSessionBandwidthVideo
+    const unsigned estimatedSessionBandwidthVideo
       = 4500; // in kbps; for RTCP b/w share
     videoRTCP = RTCPInstance::createNew(*env, rtcpGroupsockVideo,
-					totalSessionBandwidthVideo, CNAME,
+					estimatedSessionBandwidthVideo, CNAME,
 					videoSink, NULL /* we're a server */,
 					True /* we're a SSM source */);
     // Note: This starts RTCP running automatically

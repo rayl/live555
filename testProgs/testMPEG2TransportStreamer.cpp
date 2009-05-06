@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // Copyright (c) 1996-2004, Live Networks, Inc.  All rights reserved
-// A test program that reads a MPEG-4 Video Elementary Stream file,
+// A test program that reads a MPEG-2 Transport Stream file,
 // and streams it using RTP
 // main program
 
@@ -22,9 +22,25 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "BasicUsageEnvironment.hh"
 #include "GroupsockHelper.hh"
 
+// To stream using "source-specific multicast" (SSM), uncomment the following:
+//#define USE_SSM 1
+#ifdef USE_SSM
+Boolean const isSSM = True;
+#else
+Boolean const isSSM = False;
+#endif
+
+// To set up an internal RTSP server, uncomment the following:
+//#define IMPLEMENT_RTSP_SERVER 1
+// (Note that this RTSP server works for multicast only)
+
+#define TRANSPORT_PACKET_SIZE 188
+#define TRANSPORT_PACKETS_PER_NETWORK_PACKET 7
+// The product of these two numbers must be enough to fit within a network packet
+
 UsageEnvironment* env;
-char const* inputFileName = "test.m4v";
-MPEG4VideoStreamFramer* videoSource;
+char const* inputFileName = "test.ts";
+FramedSource* videoSource;
 RTPSink* videoSink;
 
 void play(); // forward
@@ -35,57 +51,72 @@ int main(int argc, char** argv) {
   env = BasicUsageEnvironment::createNew(*scheduler);
 
   // Create 'groupsocks' for RTP and RTCP:
-  struct in_addr destinationAddress;
-  destinationAddress.s_addr = chooseRandomIPv4SSMAddress(*env);
-  // Note: This is a multicast address.  If you wish instead to stream
-  // using unicast, then you should use the "testOnDemandRTSPServer"
-  // test program - not this test program - as a model.
-
-  const unsigned short rtpPortNum = 18888;
+  char* destinationAddressStr
+#ifdef USE_SSM
+    = "232.255.42.42";
+#else
+    = "239.255.42.42";
+  // Note: This is a multicast address.  If you wish to stream using
+  // unicast instead, then replace this string with the unicast address
+  // of the (single) destination.  (You may also need to make a similar
+  // change to the receiver program.)
+#endif
+  const unsigned short rtpPortNum = 1234;
   const unsigned short rtcpPortNum = rtpPortNum+1;
-  const unsigned char ttl = 255;
+  const unsigned char ttl = 7; // low, in case routers don't admin scope
 
+  struct in_addr destinationAddress;
+  destinationAddress.s_addr = our_inet_addr(destinationAddressStr);
   const Port rtpPort(rtpPortNum);
   const Port rtcpPort(rtcpPortNum);
 
   Groupsock rtpGroupsock(*env, destinationAddress, rtpPort, ttl);
-  rtpGroupsock.multicastSendOnly(); // we're a SSM source
   Groupsock rtcpGroupsock(*env, destinationAddress, rtcpPort, ttl);
-  rtcpGroupsock.multicastSendOnly(); // we're a SSM source
+#ifdef USE_SSM
+  rtpGroupsock.multicastSendOnly();
+  rtcpGroupsock.multicastSendOnly();
+#endif
 
-  // Create a 'MPEG-4 Video RTP' sink from the RTP 'groupsock':
-  videoSink = MPEG4ESVideoRTPSink::createNew(*env, &rtpGroupsock, 96);
+  // Create an appropriate 'RTP sink' from the RTP 'groupsock':
+  videoSink =
+    SimpleRTPSink::createNew(*env, &rtpGroupsock, 33, 90000, "video", "mp2t");
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
-  const unsigned estimatedSessionBandwidth = 500; // in kbps; for RTCP b/w share
+  const unsigned estimatedSessionBandwidth = 5000; // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
   CNAME[maxCNAMElen] = '\0'; // just in case
-  RTCPInstance* rtcp
-  = RTCPInstance::createNew(*env, &rtcpGroupsock,
+#ifdef IMPLEMENT_RTSP_SERVER
+  RTCPInstance* rtcp =
+#endif
+    RTCPInstance::createNew(*env, &rtcpGroupsock,
 			    estimatedSessionBandwidth, CNAME,
-			    videoSink, NULL /* we're a server */,
-			    True /* we're a SSM source */);
+			    videoSink, NULL /* we're a server */, isSSM);
   // Note: This starts RTCP running automatically
 
-  RTSPServer* rtspServer = RTSPServer::createNew(*env, 7070);
+#ifdef IMPLEMENT_RTSP_SERVER
+  RTSPServer* rtspServer = RTSPServer::createNew(*env);
+  // Note that this (attempts to) start a server on the default RTSP server
+  // port: 554.  To use a different port number, add it as an extra
+  // (optional) parameter to the "RTSPServer::createNew()" call above.
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
   }
   ServerMediaSession* sms
     = ServerMediaSession::createNew(*env, "testStream", inputFileName,
-		   "Session streamed by \"testMPEG4VideoStreamer\"",
-					   True /*SSM*/);
+		   "Session streamed by \"testMPEG2TransportStreamer\"",
+					   isSSM);
   sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink, rtcp));
   rtspServer->addServerMediaSession(sms);
 
   char* url = rtspServer->rtspURL(sms);
   *env << "Play this stream using the URL \"" << url << "\"\n";
   delete[] url;
+#endif
 
-  // Start the streaming:
+  // Finally, start the streaming:
   *env << "Beginning streaming...\n";
   play();
 
@@ -100,25 +131,25 @@ void afterPlaying(void* /*clientData*/) {
   Medium::close(videoSource);
   // Note that this also closes the input file that this source read from.
 
-  // Start playing once again:
   play();
 }
 
 void play() {
+  unsigned const inputDataChunkSize
+    = TRANSPORT_PACKETS_PER_NETWORK_PACKET*TRANSPORT_PACKET_SIZE;
+
   // Open the input file as a 'byte-stream file source':
   ByteStreamFileSource* fileSource
-    = ByteStreamFileSource::createNew(*env, inputFileName);
+    = ByteStreamFileSource::createNew(*env, inputFileName, inputDataChunkSize);
   if (fileSource == NULL) {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as a byte-stream file source\n";
     exit(1);
   }
   
-  FramedSource* videoES = fileSource;
+  // Create a 'framer' for the input source (to give us proper inter-packet gaps):
+  videoSource = MPEG2TransportStreamFramer::createNew(*env, fileSource);
 
-  // Create a framer for the Video Elementary Stream:
-  videoSource = MPEG4VideoStreamFramer::createNew(*env, videoES);
-  
   // Finally, start playing:
   *env << "Beginning to read from file...\n";
   videoSink->startPlaying(*videoSource, afterPlaying, videoSink);

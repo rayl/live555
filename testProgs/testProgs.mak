@@ -1,3 +1,52 @@
+INCLUDES = -I../UsageEnvironment/include -I../groupsock/include -I../liveMedia/include -I../BasicUsageEnvironment/include
+##### Change the following for your environment: 
+# Comment out the following line to produce Makefiles that generate debuggable code:
+NODEBUG=1
+
+# The following definition ensures that we are properly matching
+# the WinSock2 library file with the correct header files.
+# (will link with "ws2_32.lib" and include "winsock2.h" & "Ws2tcpip.h")
+TARGETOS = WINNT
+
+# If for some reason you wish to use WinSock1 instead, uncomment the
+# following two definitions.
+# (will link with "wsock32.lib" and include "winsock.h")
+#TARGETOS = WIN95
+#APPVER = 4.0
+
+!include    <ntwin32.mak>
+
+UI_OPTS =		$(guilflags) $(guilibsdll)
+# Use the following to get a console (e.g., for debugging):
+CONSOLE_UI_OPTS =		$(conlflags) $(conlibsdll)
+CPU=i386
+
+TOOLS32	=		c:\Program Files\DevStudio\Vc
+COMPILE_OPTS =		$(INCLUDES) $(cdebug) $(cflags) $(cvarsdll) -I. -I"$(TOOLS32)\include"
+C =			c
+C_COMPILER =		"$(TOOLS32)\bin\cl"
+C_FLAGS =		$(COMPILE_OPTS)
+CPP =			cpp
+CPLUSPLUS_COMPILER =	$(C_COMPILER)
+CPLUSPLUS_FLAGS =	$(COMPILE_OPTS)
+OBJ =			obj
+LINK =			$(link) -out:
+LIBRARY_LINK =		lib -out:
+LINK_OPTS_0 =		$(linkdebug) msvcirt.lib
+LIBRARY_LINK_OPTS =	
+LINK_OPTS =		$(LINK_OPTS_0) $(UI_OPTS)
+CONSOLE_LINK_OPTS =	$(LINK_OPTS_0) $(CONSOLE_UI_OPTS)
+SERVICE_LINK_OPTS =     kernel32.lib advapi32.lib shell32.lib -subsystem:console,$(APPVER)
+LIB_SUFFIX =		lib
+LIBS_FOR_CONSOLE_APPLICATION =
+LIBS_FOR_GUI_APPLICATION =
+MULTIMEDIA_LIBS =	winmm.lib
+EXE =			.exe
+PLATFORM = Windows
+
+rc32 = "$(TOOLS32)\bin\rc"
+.rc.res:
+	$(rc32) $<
 ##### End of variables to change
 
 MULTICAST_STREAMER_APPS = testMP3Streamer$(EXE) testMPEG1or2VideoStreamer$(EXE) testMPEG1or2AudioVideoStreamer$(EXE) testMPEG2TransportStreamer$(EXE) testMPEG4VideoStreamer$(EXE) testWAVAudioStreamer$(EXE) testAMRAudioStreamer$(EXE) vobStreamer$(EXE)
@@ -11,8 +60,9 @@ UNICAST_APPS = $(UNICAST_STREAMER_APPS) $(UNICAST_RECEIVER_APPS)
 
 MISC_APPS = testMPEG1or2Splitter$(EXE) testMPEG1or2ProgramToTransportStream$(EXE)
 
-ALL = $(MULTICAST_APPS) $(UNICAST_APPS) $(MISC_APPS)
-all: $(ALL)
+all::	$(MULTICAST_APPS)
+all::	$(UNICAST_APPS)
+all::	$(MISC_APPS)
 
 extra:	testGSMStreamer$(EXE)
 

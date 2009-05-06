@@ -87,14 +87,14 @@ int main(int argc, char** argv) {
   sessionState.source = MPEG1or2VideoRTPSource::createNew(*env, &rtpGroupsock);
 
   // Create (and start) a 'RTCP instance' for the RTP source:
-  const unsigned totalSessionBandwidth = 160; // in kbps; for RTCP b/w share
+  const unsigned estimatedSessionBandwidth = 160; // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
   CNAME[maxCNAMElen] = '\0'; // just in case
   sessionState.rtcpInstance
     = RTCPInstance::createNew(*env, &rtcpGroupsock,
-			      totalSessionBandwidth, CNAME,
+			      estimatedSessionBandwidth, CNAME,
 			      NULL /* we're a client */, sessionState.source);
   // Note: This starts RTCP running automatically
 

@@ -57,14 +57,14 @@ int main(int argc, char** argv) {
   audioSink = AMRAudioRTPSink::createNew(*env, &rtpGroupsock, 96);
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
-  const unsigned totalSessionBandwidth = 10; // in kbps; for RTCP b/w share
+  const unsigned estimatedSessionBandwidth = 10; // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
   CNAME[maxCNAMElen] = '\0'; // just in case
   RTCPInstance* rtcp
     = RTCPInstance::createNew(*env, &rtcpGroupsock,
-			      totalSessionBandwidth, CNAME,
+			      estimatedSessionBandwidth, CNAME,
 			      audioSink, NULL /* we're a server */,
 			      True /* we're a SSM source */);
   // Note: This starts RTCP running automatically
