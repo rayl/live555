@@ -52,6 +52,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEG1or2VideoRTPSource.hh"
 #include "MPEG2TransportStreamFromPESSource.hh"
 #include "MPEG2TransportStreamFramer.hh"
+#include "ADTSAudioFileSource.hh"
 #include "H261VideoRTPSource.hh"
 #include "H263plusVideoRTPSource.hh"
 #include "H264VideoRTPSource.hh"
@@ -87,6 +88,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEG1or2VideoFileServerMediaSubsession.hh"
 #include "MPEG1or2FileServerDemux.hh"
 #include "MPEG2TransportFileServerMediaSubsession.hh"
+#include "ADTSAudioFileServerMediaSubsession.hh"
 #include "DarwinInjector.hh"
 
 #endif

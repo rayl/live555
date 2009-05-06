@@ -129,4 +129,5 @@ void PassiveServerMediaSubsession::startStream(unsigned /*clientSessionId*/,
 }
 
 PassiveServerMediaSubsession::~PassiveServerMediaSubsession() {
+  delete[] fSDPLines;
 }

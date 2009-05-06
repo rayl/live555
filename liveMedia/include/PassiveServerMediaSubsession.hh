@@ -38,12 +38,12 @@ public:
   static PassiveServerMediaSubsession* createNew(RTPSink& rtpSink,
 						 RTCPInstance* rtcpInstance = NULL);
 
-private:
+protected:
   PassiveServerMediaSubsession(RTPSink& rtpSink, RTCPInstance* rtcpInstance);
       // called only by createNew();
   virtual ~PassiveServerMediaSubsession();
 
-private: // redefined virtual functions
+protected: // redefined virtual functions
   virtual char const* sdpLines();
   virtual void getStreamParameters(unsigned clientSessionId,
 				   netAddressBits clientAddress,

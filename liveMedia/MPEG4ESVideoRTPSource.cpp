@@ -46,8 +46,11 @@ MPEG4ESVideoRTPSource::~MPEG4ESVideoRTPSource() {
 Boolean MPEG4ESVideoRTPSource
 ::processSpecialHeader(BufferedPacket* packet,
 		       unsigned& resultSpecialHeaderSize) {
-  fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame;
-          // whether the *previous* packet ended a frame
+  // The packet begins a frame iff its data begins with a system code
+  // (i.e., 0x000001??)
+  fCurrentPacketBeginsFrame
+    = packet->dataSize() >= 4 && (packet->data())[0] == 0
+    && (packet->data())[1] == 0 && (packet->data())[2] == 1;
 
   // The RTP "M" (marker) bit indicates the last fragment of a frame:
   fCurrentPacketCompletesFrame = packet->rtpMarkerBit();

@@ -451,8 +451,8 @@ char* RTSPClient
     return describeResult;
   }
 
-  // The "realm" and "nonce" fields should have been filled in:
-  if (authenticator.realm() == NULL || authenticator.nonce() == NULL) {
+  // The "realm" field should have been filled in:
+  if (authenticator.realm() == NULL) {
     // We haven't been given enough information to try again, so fail:
     return NULL;
   }
@@ -632,8 +632,8 @@ Boolean RTSPClient
     return True;
   }
 
-  // The "realm" and "nonce" fields should have been filled in:
-  if (authenticator.realm() == NULL || authenticator.nonce() == NULL) {
+  // The "realm" field should have been filled in:
+  if (authenticator.realm() == NULL) {
     // We haven't been given enough information to try again, so fail:
     return False;
   }
@@ -923,6 +923,8 @@ static char* createRangeString(float start, float end) {
   return strDup(buf);
 }
       
+static char const* NoSessionErr = "No RTSP session is currently in progress\n";
+
 Boolean RTSPClient::playMediaSession(MediaSession& session,
 				     float start, float end, float scale) {
 #ifdef SUPPORT_REAL_RTSP
@@ -937,7 +939,7 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
   do {
     // First, make sure that we have a RTSP session in progress
     if (fLastSessionId == NULL) {
-      envir().setResultMsg("No RTSP session is currently in progress\n");
+      envir().setResultMsg(NoSessionErr);
       break;
     }
 
@@ -1015,7 +1017,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
   do {
     // First, make sure that we have a RTSP session in progress
     if (subsession.sessionId == NULL) {
-      envir().setResultMsg("No RTSP session is currently in progress\n");
+      envir().setResultMsg(NoSessionErr);
       break;
     }
 
@@ -1107,7 +1109,7 @@ Boolean RTSPClient::pauseMediaSession(MediaSession& session) {
   do {
     // First, make sure that we have a RTSP session in progress
     if (fLastSessionId == NULL) {
-      envir().setResultMsg("No RTSP session is currently in progress\n");
+      envir().setResultMsg(NoSessionErr);
       break;
     }
 
@@ -1162,7 +1164,7 @@ Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession) {
   do {
     // First, make sure that we have a RTSP session in progress
     if (subsession.sessionId == NULL) {
-      envir().setResultMsg("No RTSP session is currently in progress\n");
+      envir().setResultMsg(NoSessionErr);
       break;
     }
     
@@ -1221,7 +1223,7 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
   do {
     // First, make sure that we have a RTSP session in progress
     if (subsession.sessionId == NULL) {
-      envir().setResultMsg("No RTSP session is currently in progress\n");
+      envir().setResultMsg(NoSessionErr);
       break;
     }
 
@@ -1281,7 +1283,7 @@ Boolean RTSPClient::setMediaSessionParameter(MediaSession& /*session*/,
   do {
     // First, make sure that we have a RTSP session in progress
     if (fLastSessionId == NULL) {
-      envir().setResultMsg("No RTSP session is currently in progress\n");
+      envir().setResultMsg(NoSessionErr);
       break;
     }
 
@@ -1338,7 +1340,7 @@ Boolean RTSPClient::teardownMediaSession(MediaSession& /*session*/) {
   do {
     // First, make sure that we have a RTSP session in progreee
     if (fLastSessionId == NULL) {
-      envir().setResultMsg("No RTSP session is currently in progress\n");
+      envir().setResultMsg(NoSessionErr);
       break;
     }
 
@@ -1397,7 +1399,7 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
   do {
     // First, make sure that we have a RTSP session in progreee
     if (subsession.sessionId == NULL) {
-      envir().setResultMsg("No RTSP session is currently in progress\n");
+      envir().setResultMsg(NoSessionErr);
       break;
     }
 
@@ -1615,60 +1617,6 @@ Boolean RTSPClient::parseRTSPURLUsernamePassword(char const* url,
   return False;
 }
 
-char*
-RTSPClient::createAuthenticatorString(Authenticator const* authenticator,
-				      char const* cmd, char const* url) {
-  if (authenticator != NULL
-      && authenticator->realm() != NULL  && authenticator->nonce() != NULL
-      && authenticator->username() != NULL && authenticator->password() != NULL) {
-    // We've been provided a filled-in authenticator, so use it:
-    char* const authFmt = "Authorization: Digest username=\"%s\", realm=\"%s\", nonce=\"%s\", uri=\"%s\", response=\"%s\"\r\n";
-    char const* response = authenticator->computeDigestResponse(cmd, url);
-    unsigned authBufSize = strlen(authFmt)
-      + strlen(authenticator->username()) + strlen(authenticator->realm())
-      + strlen(authenticator->nonce()) + strlen(url) + strlen(response);
-    char* authenticatorStr = new char[authBufSize];
-    sprintf(authenticatorStr, authFmt,
-	    authenticator->username(), authenticator->realm(),
-	    authenticator->nonce(), url, response);
-    authenticator->reclaimDigestResponse(response);
-
-    return authenticatorStr;
-  }
-
-  return strDup("");
-}
-
-void RTSPClient::checkForAuthenticationFailure(unsigned responseCode,
-					       char*& nextLineStart,
-					       Authenticator* authenticator) {
-  if (responseCode == 401 && authenticator != NULL) {
-    // We have an authentication failure, so fill in "authenticator"
-    // using the contents of a following "WWW-Authenticate:" line.
-    // (Once we compute a 'response' for "authenticator", it can be
-    //  used in a subsequent request - that will hopefully succeed.)
-    char* lineStart;
-    while (1) {
-      lineStart = nextLineStart;
-      if (lineStart == NULL) break;
-
-      nextLineStart = getLine(lineStart);
-      if (lineStart[0] == '\0') break; // this is a blank line
-
-      char* realm = strDupSize(lineStart);
-      char* nonce = strDupSize(lineStart);
-      Boolean foundAuthenticateHeader = False;
-      if (sscanf(lineStart, "WWW-Authenticate: Digest realm=\"%[^\"]\", nonce=\"%[^\"]\"",
-		 realm, nonce) == 2) {
-	authenticator->setRealmAndNonce(realm, nonce);
-	foundAuthenticateHeader = True;
-      }
-      delete[] realm; delete[] nonce;
-      if (foundAuthenticateHeader) break;
-    } 
-  }
-}
-
 static const char base64Char[] =
 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -1705,6 +1653,80 @@ static char* base64Encode(char const* orig) {
 
   result[numResultBytes] = '\0';
   return result;
+}
+
+char*
+RTSPClient::createAuthenticatorString(Authenticator const* authenticator,
+				      char const* cmd, char const* url) {
+  if (authenticator != NULL && authenticator->realm() != NULL
+      && authenticator->username() != NULL && authenticator->password() != NULL) {
+    // We've been provided a filled-in authenticator, so use it:
+    char* authenticatorStr;
+    if (authenticator->nonce() != NULL) { // Digest authentication
+      char* const authFmt =
+	"Authorization: Digest username=\"%s\", realm=\"%s\", "
+	"nonce=\"%s\", uri=\"%s\", response=\"%s\"\r\n";
+      char const* response = authenticator->computeDigestResponse(cmd, url);
+      unsigned authBufSize = strlen(authFmt)
+	+ strlen(authenticator->username()) + strlen(authenticator->realm())
+	+ strlen(authenticator->nonce()) + strlen(url) + strlen(response);
+      authenticatorStr = new char[authBufSize];
+      sprintf(authenticatorStr, authFmt,
+	      authenticator->username(), authenticator->realm(),
+	      authenticator->nonce(), url, response);
+      authenticator->reclaimDigestResponse(response);
+    } else { // Basic authentication
+      char* const authFmt = "Authorization: Basic %s\r\n";
+      char* usernamePassword
+	= new char[strlen(authenticator->username())
+		  + strlen(authenticator->password()) + 2];
+      sprintf(usernamePassword, "%s:%s",
+	      authenticator->username(), authenticator->password());
+      char* response = base64Encode(usernamePassword);
+      unsigned authBufSize = strlen(authFmt) + strlen(response);
+      authenticatorStr = new char[authBufSize];
+      sprintf(authenticatorStr, authFmt, response);
+      delete[] response; delete[] usernamePassword;
+    }
+
+    return authenticatorStr;
+  }
+
+  return strDup("");
+}
+
+void RTSPClient::checkForAuthenticationFailure(unsigned responseCode,
+					       char*& nextLineStart,
+					       Authenticator* authenticator) {
+  if (responseCode == 401 && authenticator != NULL) {
+    // We have an authentication failure, so fill in "authenticator"
+    // using the contents of a following "WWW-Authenticate:" line.
+    // (Once we compute a 'response' for "authenticator", it can be
+    //  used in a subsequent request - that will hopefully succeed.)
+    char* lineStart;
+    while (1) {
+      lineStart = nextLineStart;
+      if (lineStart == NULL) break;
+
+      nextLineStart = getLine(lineStart);
+      if (lineStart[0] == '\0') break; // this is a blank line
+
+      char* realm = strDupSize(lineStart);
+      char* nonce = strDupSize(lineStart);
+      Boolean foundAuthenticateHeader = False;
+      if (sscanf(lineStart, "WWW-Authenticate: Digest realm=\"%[^\"]\", nonce=\"%[^\"]\"",
+		 realm, nonce) == 2) {
+	authenticator->setRealmAndNonce(realm, nonce);
+	foundAuthenticateHeader = True;
+      } else if (sscanf(lineStart, "WWW-Authenticate: Basic realm=\"%[^\"]\"",
+		 realm) == 1) {
+	authenticator->setRealmAndNonce(realm, NULL); // Basic authentication
+	foundAuthenticateHeader = True;
+      }
+      delete[] realm; delete[] nonce;
+      if (foundAuthenticateHeader) break;
+    } 
+  }
 }
 
 Boolean RTSPClient::sendRequest(char const* requestString, char const* tag,

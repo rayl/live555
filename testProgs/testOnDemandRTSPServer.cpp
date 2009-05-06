@@ -33,6 +33,9 @@ Boolean reuseFirstSource = False;
 // change the following "False" to "True":
 Boolean iFramesOnly = False;
 
+static void announceStream(RTSPServer* rtspServer, ServerMediaSession* sms,
+			   char const* streamName, char const* inputFileName); // fwd
+
 int main(int argc, char** argv) {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
@@ -73,11 +76,7 @@ int main(int argc, char** argv) {
 		       ::createNew(*env, inputFileName, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
-    char* url = rtspServer->rtspURL(sms);
-    *env << "\n\"" << streamName << "\" stream, from the file \""
-	 << inputFileName << "\"\n";
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
+    announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
   // A MPEG-1 or 2 audio+video program stream:
@@ -94,11 +93,7 @@ int main(int argc, char** argv) {
     sms->addSubsession(demux->newAudioServerMediaSubsession());
     rtspServer->addServerMediaSession(sms);
 
-    char* url = rtspServer->rtspURL(sms);
-    *env << "\n\"" << streamName << "\" stream, from the file \""
-	 << inputFileName << "\"\n";
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
+    announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
   // A MPEG-1 or 2 video elementary stream:
@@ -113,11 +108,7 @@ int main(int argc, char** argv) {
 	       ::createNew(*env, inputFileName, reuseFirstSource, iFramesOnly));
     rtspServer->addServerMediaSession(sms);
 
-    char* url = rtspServer->rtspURL(sms);
-    *env << "\n\"" << streamName << "\" stream, from the file \""
-	 << inputFileName << "\"\n";
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
+    announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
   // A MP3 audio stream (actually, any MPEG-1 or 2 audio file will work):
@@ -149,11 +140,7 @@ int main(int argc, char** argv) {
 				   useADUs, interleaving));
     rtspServer->addServerMediaSession(sms);
 
-    char* url = rtspServer->rtspURL(sms);
-    *env << "\n\"" << streamName << "\" stream, from the file \""
-	 << inputFileName << "\"\n";
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
+    announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
   // A WAV audio stream:
@@ -170,11 +157,7 @@ int main(int argc, char** argv) {
 	       ::createNew(*env, inputFileName, reuseFirstSource, convertToULaw));
     rtspServer->addServerMediaSession(sms);
 
-    char* url = rtspServer->rtspURL(sms);
-    *env << "\n\"" << streamName << "\" stream, from the file \""
-	 << inputFileName << "\"\n";
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
+    announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
   // An AMR audio stream:
@@ -188,11 +171,7 @@ int main(int argc, char** argv) {
 		       ::createNew(*env, inputFileName, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
-    char* url = rtspServer->rtspURL(sms);
-    *env << "\n\"" << streamName << "\" stream, from the file \""
-	 << inputFileName << "\"\n";
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
+    announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
   // A 'VOB' file (e.g., from an unencrypted DVD):
@@ -209,11 +188,7 @@ int main(int argc, char** argv) {
     sms->addSubsession(demux->newAC3AudioServerMediaSubsession());
     rtspServer->addServerMediaSession(sms);
 
-    char* url = rtspServer->rtspURL(sms);
-    *env << "\n\"" << streamName << "\" stream, from the file \""
-	 << inputFileName << "\"\n";
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
+    announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
   // A MPEG-2 Transport Stream:
@@ -227,14 +202,20 @@ int main(int argc, char** argv) {
 		       ::createNew(*env, inputFileName, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
-    char* url = rtspServer->rtspURL(sms);
-    *env << "\n\"" << streamName << "\" stream, from the file \""
-	 << inputFileName << "\"\n";
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
+    announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
   env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning
+}
+
+static void announceStream(RTSPServer* rtspServer, ServerMediaSession* sms,
+			   char const* streamName, char const* inputFileName) {
+  char* url = rtspServer->rtspURL(sms);
+  UsageEnvironment& env = rtspServer->envir(); 
+  env << "\n\"" << streamName << "\" stream, from the file \""
+      << inputFileName << "\"\n";
+  env << "Play this stream using the URL \"" << url << "\"\n";
+  delete[] url;
 }
