@@ -60,12 +60,12 @@ void DeviceSource::deliverFrame() {
   // This would be called when new frame data is available from the device.
   // This function should deliver the next frame of data from the device,
   // using the following parameters (class members):
-  // 'in' parameters:
+  // 'in' parameters (these should *not* be modified by this function):
   //     fTo: The frame data is copied to this address.
   //     fMaxSize: This is the maximum number of bytes that can be copied
   //         (If the actual frame is larger than this, then it should
   //          be truncated, and "fNumTruncatedBytes" set accordingly.)
-  // 'out' parameters:
+  // 'out' parameters (these are modified by this function):
   //     fFrameSize: Should be set to the delivered frame size (<= fMaxSize).
   //     fNumTruncatedBytes: Should be set iff the delivered frame would have been
   //         bigger than "fMaxSize", in which case it's set to the number of bytes

@@ -105,7 +105,7 @@ MPEG4LATMAudioRTPSource.$(CPP):	include/MPEG4LATMAudioRTPSource.hh
 include/MPEG4LATMAudioRTPSource.hh:	include/MultiFramedRTPSource.hh
 MPEG4ESVideoRTPSource.$(CPP):	include/MPEG4ESVideoRTPSource.hh
 include/MPEG4ESVideoRTPSource.hh:	include/MultiFramedRTPSource.hh
-MPEG4GenericRTPSource.$(CPP):	include/MPEG4GenericRTPSource.hh
+MPEG4GenericRTPSource.$(CPP):	include/MPEG4GenericRTPSource.hh BitVector.hh include/MPEG4LATMAudioRTPSource.hh
 include/MPEG4GenericRTPSource.hh:	include/MultiFramedRTPSource.hh
 MP3FileSource.$(CPP):	include/MP3FileSource.hh MP3StreamState.hh
 include/MP3FileSource.hh:	include/FramedFileSource.hh
@@ -225,7 +225,7 @@ MPEG1or2DemuxedServerMediaSubsession.$(CPP): include/MPEG1or2DemuxedServerMediaS
 include/MPEG1or2DemuxedServerMediaSubsession.hh: include/OnDemandServerMediaSubsession.hh include/MPEG1or2FileServerDemux.hh
 MPEG2TransportFileServerMediaSubsession.$(CPP):	include/MPEG2TransportFileServerMediaSubsession.hh include/SimpleRTPSink.hh include/ByteStreamFileSource.hh include/MPEG2TransportStreamFramer.hh
 include/MPEG2TransportFileServerMediaSubsession.hh:	include/FileServerMediaSubsession.hh
-QuickTimeFileSink.$(CPP):	include/QuickTimeFileSink.hh include/H263plusVideoRTPSource.hh
+QuickTimeFileSink.$(CPP):	include/QuickTimeFileSink.hh include/QuickTimeGenericRTPSource.hh include/H263plusVideoRTPSource.hh include/MPEG4GenericRTPSource.hh include/MPEG4LATMAudioRTPSource.hh
 include/QuickTimeFileSink.hh:	include/ServerMediaSession.hh
 QuickTimeGenericRTPSource.$(CPP):	include/QuickTimeGenericRTPSource.hh
 include/QuickTimeGenericRTPSource.hh:	include/MultiFramedRTPSource.hh

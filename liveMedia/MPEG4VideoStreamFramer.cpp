@@ -98,13 +98,15 @@ unsigned char* MPEG4VideoStreamFramer
 }
 
 MPEG4VideoStreamFramer::MPEG4VideoStreamFramer(UsageEnvironment& env,
-					       FramedSource* inputSource)
+					       FramedSource* inputSource,
+					       Boolean createParser)
   : MPEGVideoStreamFramer(env, inputSource),
     fProfileAndLevelIndication(0),
     fConfigBytes(NULL), fNumConfigBytes(0),
     fNewConfigBytes(NULL), fNumNewConfigBytes(0) {
-  fParser
-    = new MPEG4VideoStreamParser(this, inputSource);
+  fParser = createParser
+    ? new MPEG4VideoStreamParser(this, inputSource)
+    : NULL;
 }
 
 MPEG4VideoStreamFramer::~MPEG4VideoStreamFramer() {

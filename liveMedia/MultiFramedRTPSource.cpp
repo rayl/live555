@@ -262,18 +262,6 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
 			  source->timestampFrequency(),
 			  usableInJitterCalculation, presentationTime,
 			  hasBeenSyncedUsingRTCP, bPacket->dataSize());
-#if 0
-    static unsigned snLast = 0;//#####@@@@@
-    static unsigned tsLast = 0;//#####@@@@@
-    static struct timeval ptLast; //#####@@@@@
-    unsigned snDiff = rtpSeqNo - snLast;//#####@@@@@
-    unsigned tsDiff = rtpTimestamp - tsLast; //#####@@@@@
-    unsigned ptDiff = (presentationTime.tv_sec - ptLast.tv_sec)*1000000 + (presentationTime.tv_usec - ptLast.tv_usec);//#####@@@@@
-    fprintf(stderr, "%d byte packet: snDiff %d, marker %d, tsDiff %d, ptDiff %d, synced %d\n", bPacket->dataSize(), snDiff, rtpMarkerBit, tsDiff, ptDiff, hasBeenSyncedUsingRTCP);//#####@@@@@
-    snLast = rtpSeqNo;//#####@@@@@ 
-    tsLast = rtpTimestamp;//#####@@@@@
-    ptLast = presentationTime; //#####@@@@@
-#endif
   
     // Fill in the rest of the packet descriptor, and store it:
     struct timeval timeNow;

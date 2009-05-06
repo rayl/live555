@@ -26,7 +26,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "QuickTimeFileSink.hh"
 #include "QuickTimeGenericRTPSource.hh"
 #include "GroupsockHelper.hh"
-#include "H263plusVideoRTPSource.hh"
+#include "H263plusVideoRTPSource.hh" // for the special header
+#include "MPEG4GenericRTPSource.hh" //for "samplingFrequencyFromAudioSpecificConfig()"
 #include "MPEG4LATMAudioRTPSource.hh" // for "parseGeneralConfigStr()"
 
 #include <ctype.h>
@@ -195,7 +196,7 @@ private:
     unsigned startSampleNumber;
     unsigned short seqNum;
     unsigned rtpHeader;
-    unsigned char numSpecialHeaders; // used when our RTP source is H.263+
+    unsigned char numSpecialHeaders; // used when our RTP source has special headers
     unsigned specialHeaderBytesLength; // ditto
     unsigned char specialHeaderBytes[SPECIAL_HEADER_BUFFER_SIZE]; // ditto
     unsigned packetSizes[256];
@@ -609,6 +610,11 @@ Boolean SubsessionIOState::setQTstate() {
       } else if (strcmp(fOurSubsession.codecName(), "MPEG4-GENERIC") == 0) {
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_mp4a;
 	fQTTimeUnitsPerSample = 1024; // QT considers each frame to be a 'sample'
+	// The time scale (frequency) comes from the 'config' information.
+	// It might be different from the RTP timestamp frequency (e.g., aacPlus).
+	unsigned frequencyFromConfig
+	  = samplingFrequencyFromAudioSpecificConfig(fOurSubsession.fmtp_config());
+	if (frequencyFromConfig != 0) fQTTimeScale = frequencyFromConfig;
       } else {
 	envir() << noCodecWarning1 << "Audio" << noCodecWarning2
 		<< fOurSubsession.codecName() << noCodecWarning3;
@@ -833,9 +839,12 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
 					   unsigned startSampleNumber) {
   // At this point, we have a single, combined frame - not individual packets.
   // For the hint track, we need to split the frame back up into separate packets.
-  // However, if the source is H.263+, then we also need to reuse the special
+  // However, for some RTP sources, then we also need to reuse the special
   // header bytes that were at the start of each of the RTP packets.
   Boolean hack263 = strcmp(fOurSubsession.codecName(), "H263-1998") == 0;
+  Boolean hackm4a = strcmp(fOurSubsession.mediumName(), "audio") == 0
+    && strcmp(fOurSubsession.codecName(), "MPEG4-GENERIC") == 0;
+  Boolean haveSpecialHeaders = (hack263 || hackm4a);
 
   // If there has been a previous frame, then output a 'hint sample' for it.
   // (We use the current frame's presentation time to compute the previous
@@ -850,7 +859,21 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
     if (msDuration > fHINF.dmax) fHINF.dmax = msDuration;
     unsigned hintSampleDuration
       = (unsigned)((2*duration*fQTTimeScale+1)/2); // round
-    fprintf(stderr, "useFrameForHinting(%d) => duration %f, hintSampleDuration %d\n", frameSize, duration, hintSampleDuration); //#####@@@@@
+    if (hackm4a) {
+      // Because multiple AAC frames can appear in a RTP packet, the presentation
+      // times of the second and subsequent frames will not be accurate.
+      // So, use the known "hintSampleDuration" instead:
+      hintSampleDuration = fTrackHintedByUs->fQTTimeUnitsPerSample;
+
+      // Also, if the 'time scale' was different from the RTP timestamp frequency,
+      // (as can happen with aacPlus), then we need to scale "hintSampleDuration"
+      // accordingly:
+      if (fTrackHintedByUs->fQTTimeScale != fOurSubsession.rtpTimestampFrequency()) {
+	unsigned const scalingFactor
+	  = fOurSubsession.rtpTimestampFrequency()/fTrackHintedByUs->fQTTimeScale ;
+	hintSampleDuration *= scalingFactor;
+      }
+    }
 
     unsigned const hintSampleDestFileOffset = ftell(fOurSink.fOutFid);
 
@@ -859,7 +882,7 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
       = (fPrevFrameState.frameSize + (maxPacketSize-1))/maxPacketSize; // normal case
     unsigned char* immediateDataPtr = NULL;
     unsigned immediateDataBytesRemaining = 0;
-    if (hack263) { // special case
+    if (haveSpecialHeaders) { // special case
       numPTEntries = fPrevFrameState.numSpecialHeaders;
       immediateDataPtr = fPrevFrameState.specialHeaderBytes;
       immediateDataBytesRemaining
@@ -885,22 +908,28 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
       unsigned sampleNumber = fPrevFrameState.startSampleNumber;
 
       unsigned char immediateDataLen = 0;
-      if (hack263) { // special case
+      if (haveSpecialHeaders) { // special case
 	++numDTEntries; // to include a Data Table entry for the special hdr
 	if (immediateDataBytesRemaining > 0) {
-	  immediateDataLen = *immediateDataPtr++;
-	  --immediateDataBytesRemaining;
-	  if (immediateDataLen > immediateDataBytesRemaining) {
-	    // shouldn't happen (length byte was bad)
-	    immediateDataLen = immediateDataBytesRemaining;
+	  if (hack263) {
+	    immediateDataLen = *immediateDataPtr++;
+	    --immediateDataBytesRemaining;
+	    if (immediateDataLen > immediateDataBytesRemaining) {
+	      // shouldn't happen (length byte was bad)
+	      immediateDataLen = immediateDataBytesRemaining;
+	    }
+	  } else {
+	    immediateDataLen = fPrevFrameState.specialHeaderBytesLength;
 	  }
 	}
 	dataFrameSize = fPrevFrameState.packetSizes[i] - immediateDataLen;
 
-	Boolean PbitSet
-	  = immediateDataLen >= 1 && (immediateDataPtr[0]&0x4) != 0;
-	if (PbitSet) {
-	  offsetWithinSample += 2; // to omit the two leading 0 bytes
+	if (hack263) {
+	  Boolean PbitSet
+	    = immediateDataLen >= 1 && (immediateDataPtr[0]&0x4) != 0;
+	  if (PbitSet) {
+	    offsetWithinSample += 2; // to omit the two leading 0 bytes
+	  }
 	}
       }
 
@@ -913,7 +942,7 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
       unsigned totalPacketSize = 0;
 
       // Output the Data Table:
-      if (hack263) {
+      if (haveSpecialHeaders) {
 	//   use the "Immediate Data" format (1):
 	hintSampleSize += fOurSink.addByte(1); // Source
 	unsigned char len = immediateDataLen > 14 ? 14 : immediateDataLen;
@@ -937,7 +966,6 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
       totalPacketSize += dataFrameSize; fHINF.dmed += dataFrameSize;
       hintSampleSize += fOurSink.addWord(sampleNumber); // Sample number
       hintSampleSize += fOurSink.addWord(offsetWithinSample); // Offset
-      //fprintf(stderr, "added hint entry: size %d, sample %d, offset %d\n", dataFrameSize, sampleNumber, offsetWithinSample);//#####@@@@@
       // Get "bytes|samples per compression block" from the hinted track:
       unsigned short const bytesPerCompressionBlock
 	= fTrackHintedByUs->fQTBytesPerFrame;
@@ -969,18 +997,33 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
     = rs->curPacketMarkerBit()<<23
     | (rs->rtpPayloadFormat()&0x7F)<<16;
   if (hack263) {
-      H263plusVideoRTPSource* rs_263 = (H263plusVideoRTPSource*)rs;
-      fPrevFrameState.numSpecialHeaders = rs_263->fNumSpecialHeaders;
-      fPrevFrameState.specialHeaderBytesLength
-	= rs_263->fSpecialHeaderBytesLength;
-      unsigned i;
-      for (i = 0; i < rs_263->fSpecialHeaderBytesLength; ++i) {
-	fPrevFrameState.specialHeaderBytes[i]
-	  = rs_263->fSpecialHeaderBytes[i];
-      }
-      for (i = 0; i < rs_263->fNumSpecialHeaders; ++i) {
-	fPrevFrameState.packetSizes[i] = rs_263->fPacketSizes[i];
-      }
+    H263plusVideoRTPSource* rs_263 = (H263plusVideoRTPSource*)rs;
+    fPrevFrameState.numSpecialHeaders = rs_263->fNumSpecialHeaders;
+    fPrevFrameState.specialHeaderBytesLength = rs_263->fSpecialHeaderBytesLength;
+    unsigned i;
+    for (i = 0; i < rs_263->fSpecialHeaderBytesLength; ++i) {
+      fPrevFrameState.specialHeaderBytes[i] = rs_263->fSpecialHeaderBytes[i];
+    }
+    for (i = 0; i < rs_263->fNumSpecialHeaders; ++i) {
+      fPrevFrameState.packetSizes[i] = rs_263->fPacketSizes[i];
+    }
+  } else if (hackm4a) {
+    // Synthesize a special header, so that this frame can be in its own RTP packet.
+    unsigned const sizeLength = fOurSubsession.fmtp_sizelength();
+    unsigned const indexLength = fOurSubsession.fmtp_indexlength();
+    if (sizeLength + indexLength != 16) {
+      envir() << "Warning: unexpected 'sizeLength' " << sizeLength
+	      << " and 'indexLength' " << indexLength
+	      << "seen when creating hint track\n";
+    }
+    fPrevFrameState.numSpecialHeaders = 1;
+    fPrevFrameState.specialHeaderBytesLength = 4;
+    fPrevFrameState.specialHeaderBytes[0] = 0; // AU_headers_length (high byte)
+    fPrevFrameState.specialHeaderBytes[1] = 16; // AU_headers_length (low byte)
+    fPrevFrameState.specialHeaderBytes[2] = ((frameSize<<indexLength)&0xFF00)>>8;
+    fPrevFrameState.specialHeaderBytes[3] = (frameSize<<indexLength);
+    fPrevFrameState.packetSizes[0]
+      = fPrevFrameState.specialHeaderBytesLength + frameSize;
   }
 }
 

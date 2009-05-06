@@ -41,10 +41,11 @@ public:
 
   unsigned char* getConfigBytes(unsigned& numBytes) const;
 
-private:
+protected:
   MPEG4VideoStreamFramer(UsageEnvironment& env,
-			 FramedSource* inputSource);
-      // called only by createNew()
+			 FramedSource* inputSource,
+			 Boolean createParser = True);
+      // called only by createNew(), or by subclass constructors
   virtual ~MPEG4VideoStreamFramer();
 
   void startNewConfig();
@@ -56,10 +57,12 @@ private:
   // redefined virtual functions:
   virtual Boolean isMPEG4VideoStreamFramer() const;
 
-private:
+protected:
   u_int8_t fProfileAndLevelIndication;
   unsigned char* fConfigBytes;
   unsigned fNumConfigBytes;
+
+private:
   unsigned char* fNewConfigBytes;
   unsigned fNumNewConfigBytes;
   friend class MPEG4VideoStreamParser; // hack

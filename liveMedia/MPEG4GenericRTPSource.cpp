@@ -20,6 +20,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "MPEG4GenericRTPSource.hh"
 #include "BitVector.hh"
+#include "MPEG4LATMAudioRTPSource.hh" // for parseGeneralConfigStr()
 
 ////////// MPEG4GenericBufferedPacket and MPEG4GenericBufferedPacketFactory
 
@@ -194,4 +195,34 @@ unsigned MPEG4GenericBufferedPacket
 BufferedPacket* MPEG4GenericBufferedPacketFactory
 ::createNew(MultiFramedRTPSource* ourSource) {
   return new MPEG4GenericBufferedPacket((MPEG4GenericRTPSource*)ourSource);
+}
+
+
+////////// samplingFrequencyFromAudioSpecificConfig() implementation //////////
+
+static unsigned samplingFrequencyFromIndex[16] = {
+  96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050,
+  16000, 12000, 11025, 8000, 7350, 0, 0, 0
+};
+
+unsigned samplingFrequencyFromAudioSpecificConfig(char const* configStr) {
+  do {
+    // Begin by parsing the config string:
+    unsigned configSize;
+    unsigned char* config = parseGeneralConfigStr(configStr, configSize);
+    if (config == NULL) break;
+
+    if (configSize < 2) break;
+    unsigned char samplingFrequencyIndex = ((config[0]&0x07)<<1) | (config[1]>>7);
+    if (samplingFrequencyIndex < 15) {
+      return samplingFrequencyFromIndex[samplingFrequencyIndex];
+    }
+    
+    // Index == 15 means that the actual frequency is next (24 bits):
+    if (configSize < 5) break;
+    return ((config[1]&0x7F)<<17) | (config[2]<<9) | (config[3]<<1) | (config[4]>>7);
+  } while (0);
+
+  // An error occurred:
+  return 0;
 }
