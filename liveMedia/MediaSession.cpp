@@ -212,7 +212,6 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
       if (subsession->parseSDPAttribute_range(sdpLine)) continue;
       if (subsession->parseSDPAttribute_fmtp(sdpLine)) continue;
       if (subsession->parseSDPAttribute_source_filter(sdpLine)) continue;
-      if (subsession->parseSDPAttribute_x_mct_slap(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_dimensions(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_framerate(sdpLine)) continue;
 #ifdef SUPPORT_REAL_RTSP
@@ -454,39 +453,15 @@ unsigned MediaSession::guessRTPTimestampFrequency(char const* mediumName,
   return 8000; // for "audio", and any other medium
 }
 
-static unsigned computeSeqNumStagger(unsigned staggerSeconds) {
-  // To compute the sequence number stagger, assume
-  // - one MP3 frame per packet
-  // - 1152 samples per MP3 frame (defined by MP3 standard)
-  // - a sampling frequency of 44100 Hz
-  // (Later, allow this to be parameterized)#####
-  unsigned const samplesPerFrame = 1152;
-  unsigned samplesPerSecond = 44100;
-  double secondsPerFrame = (double)samplesPerFrame/samplesPerSecond;
-  return (unsigned)(staggerSeconds/secondsPerFrame);
-}
-
 Boolean MediaSession
 ::initiateByMediaType(char const* mimeType,
 		      MediaSubsession*& resultSubsession,
-		      PrioritizedRTPStreamSelector*& resultMultiSource,
-		      int& resultMultiSourceSessionId,
 		      int useSpecialRTPoffset) {
   // Look through this session's subsessions for media that match "mimeType"
   resultSubsession = NULL;
-  resultMultiSource = NULL;
-  resultMultiSourceSessionId = 0;
-  unsigned maxStaggerSeconds = 0;
   MediaSubsessionIterator iter(*this);
   MediaSubsession* subsession;
   while ((subsession = iter.next()) != NULL) {
-    if (resultMultiSourceSessionId != 0
-	&& subsession->mctSLAPSessionId() != resultMultiSourceSessionId) {
-      // We're using a multi-source SLAP session, but this subsession
-      // isn't part of it
-      continue;
-    }
-
     Boolean wasAlreadyInitiated = subsession->readSource() != NULL;
     if (!wasAlreadyInitiated) {
       // Try to create a source for this subsession:
@@ -499,41 +474,13 @@ Boolean MediaSession
       continue;
     }
 
-    if (subsession->mctSLAPSessionId() == 0) {
-      // Normal case: a single session
-      resultSubsession = subsession;
-      break; // use this
-    } else {
-      // Special case: a multi-source SLAP session
-      resultMultiSourceSessionId = subsession->mctSLAPSessionId();
-      unsigned subsessionStaggerSeconds = subsession->mctSLAPStagger();
-      if (subsessionStaggerSeconds > maxStaggerSeconds) {
-	maxStaggerSeconds = subsessionStaggerSeconds;
-      }
-    }
+    resultSubsession = subsession;
+    break; // use this
   }
 
-  if (resultSubsession == NULL && resultMultiSourceSessionId == 0) {
+  if (resultSubsession == NULL) {
     envir().setResultMsg("Session has no usable media subsession");
     return False;
-  }
-
-  if (resultMultiSourceSessionId != 0) {
-    // We have a multi-source MCT SLAP session; create a selector for it:
-    unsigned seqNumStagger = computeSeqNumStagger(maxStaggerSeconds);
-    resultMultiSource
-      = PrioritizedRTPStreamSelector::createNew(envir(), seqNumStagger);
-    if (resultMultiSource == NULL) return False;
-    // Note: each subsession has its own RTCP instance; we don't return them
-
-    // Then run through the subsessions again, adding each of the sources:
-    iter.reset();
-    while ((subsession = iter.next()) != NULL) {
-      if (subsession->mctSLAPSessionId() == resultMultiSourceSessionId) {
-	resultMultiSource->addInputRTPStream(subsession->rtpSource(),
-					     subsession->rtcpInstance());
-      }
-    }
   }
 
   return True;
@@ -580,7 +527,6 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fCpresent(False), fRandomaccessindication(False),
     fConfig(NULL), fMode(NULL), fSpropParameterSets(NULL),
     fPlayEndTime(0.0),
-    fMCT_SLAP_SessionId(0), fMCT_SLAP_Stagger(0),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f),
     fRTPSocket(NULL), fRTCPSocket(NULL),
     fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL) {
@@ -1140,22 +1086,6 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
 Boolean MediaSubsession
 ::parseSDPAttribute_source_filter(char const* sdpLine) {
   return parseSourceFilterAttribute(sdpLine, fSourceFilterAddr);
-}
-
-Boolean MediaSubsession::parseSDPAttribute_x_mct_slap(char const* sdpLine) {
-  // Check for a "a=x-mct-slap:<slap-session-id> <stagger>" line:
-  Boolean parseSuccess = False;
-
-  int slapSessionId;
-  int slapStagger;
-  if (sscanf(sdpLine, "a=x-mct-slap: %d %d",
-	     &slapSessionId, &slapStagger) == 2) {
-    parseSuccess = True;
-    fMCT_SLAP_SessionId = slapSessionId;
-    fMCT_SLAP_Stagger = (unsigned)slapStagger;
-  }
-
-  return parseSuccess;
 }
 
 Boolean MediaSubsession::parseSDPAttribute_x_dimensions(char const* sdpLine) {

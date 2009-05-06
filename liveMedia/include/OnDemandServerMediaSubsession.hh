@@ -31,7 +31,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class OnDemandServerMediaSubsession: public ServerMediaSubsession {
 protected: // we're a virtual base class
-  OnDemandServerMediaSubsession(UsageEnvironment& env, Boolean reuseFirstSource);
+  OnDemandServerMediaSubsession(UsageEnvironment& env, Boolean reuseFirstSource,
+				portNumBits initialPortNum = 6970);
   virtual ~OnDemandServerMediaSubsession();
 
 protected: // redefined virtual functions
@@ -79,6 +80,7 @@ private:
 
 private:
   Boolean fReuseFirstSource;
+  portNumBits fInitialPortNum;
   HashTable* fDestinationsHashTable; // indexed by client session id
   void* fLastStreamToken;
   char* fSDPLines;

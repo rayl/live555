@@ -67,6 +67,8 @@ public:
     return *fTransmissionStatsDB;
   }
 
+  Boolean haveComputedFirstTimestamp() const { return fHaveComputedFirstTimestamp; }
+
   void setStreamSocket(int sockNum, unsigned char streamChannelId) {
     fRTPInterface.setStreamSocket(sockNum, streamChannelId);
   }

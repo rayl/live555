@@ -75,7 +75,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "DeviceSource.hh"
 #include "AudioInputDevice.hh"
 #include "WAVAudioFileSource.hh"
-#include "PrioritizedRTPStreamSelector.hh"
 #include "RTSPServer.hh"
 #include "RTSPClient.hh"
 #include "SIPClient.hh"

@@ -144,7 +144,3 @@ unsigned FramedSource::maxFrameSize() const {
   // By default, this source has no maximum frame size.
   return 0;
 } 
-
-Boolean FramedSource::isPrioritizedRTPStreamSelector() const {
-  return False; // default implementation
-}

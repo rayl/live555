@@ -27,9 +27,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _RTCP_HH
 #include "RTCP.hh"
 #endif
-#ifndef _PRIORITIZED_RTP_STREAM_SELELECTOR_HH
-#include "PrioritizedRTPStreamSelector.hh"
-#endif
 
 class MediaSubsession; // forward
 
@@ -53,11 +50,8 @@ public:
 
   Boolean initiateByMediaType(char const* mimeType,
 			      MediaSubsession*& resultSubsession,
-		      PrioritizedRTPStreamSelector*& resultMultiSource,
-			      int& resultMultiSourceSessionId,
 			      int useSpecialRTPoffset = -1);
-      // Initiates the first subsession with the specified MIME type (or
-      // perhaps multiple subsessions if MCT SLAP sessions are being used)
+      // Initiates the first subsession with the specified MIME type
       // Returns the resulting subsession, or 'multi source' (not both)
 
 #ifdef SUPPORT_REAL_RTSP
@@ -140,8 +134,6 @@ public:
   char const* controlPath() const { return fControlPath; }
   Boolean isSSM() const { return fSourceFilterAddr.s_addr != 0; }
 
-  int mctSLAPSessionId() const { return fMCT_SLAP_SessionId; }
-  unsigned mctSLAPStagger() const { return fMCT_SLAP_Stagger; }
   unsigned short videoWidth() const { return fVideoWidth; }
   unsigned short videoHeight() const { return fVideoHeight; }
   unsigned videoFPS() const { return fVideoFPS; }
@@ -245,7 +237,6 @@ private:
   Boolean parseSDPAttribute_range(char const* sdpLine);
   Boolean parseSDPAttribute_fmtp(char const* sdpLine);
   Boolean parseSDPAttribute_source_filter(char const* sdpLine);
-  Boolean parseSDPAttribute_x_mct_slap(char const* sdpLine);
   Boolean parseSDPAttribute_x_dimensions(char const* sdpLine);
   Boolean parseSDPAttribute_x_framerate(char const* sdpLine);
 
@@ -278,8 +269,6 @@ private:
   char *fConfig, *fMode, *fSpropParameterSets;
 
   float fPlayEndTime;
-  int fMCT_SLAP_SessionId; // 0 if not part of a MCT SLAP session
-  unsigned fMCT_SLAP_Stagger; // seconds (used only if the above is != 0)
   unsigned short fVideoWidth, fVideoHeight;
      // screen dimensions (set by an optional a=x-dimensions: <w>,<h> line)
   unsigned fVideoFPS;

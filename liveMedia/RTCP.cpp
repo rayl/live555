@@ -565,6 +565,9 @@ void RTCPInstance::onReceive(int typeOfPacket, int totPacketSize,
 }
 
 void RTCPInstance::sendReport() {
+  /// Note: Don't send a SR until at least one RTP packet has been sent. (David Bertrand, 2006.07.18)
+  if (fSink != NULL && !fSink->haveComputedFirstTimestamp()) return;
+
 #ifdef DEBUG
   fprintf(stderr, "sending REPORT\n");
 #endif

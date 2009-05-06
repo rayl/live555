@@ -39,6 +39,16 @@ static void socketErr(UsageEnvironment& env, char* errorMsg) {
 	env.setResultErrMsg(errorMsg);
 }
 
+static int reuseFlag = 1;
+
+NoReuse::NoReuse() {
+  reuseFlag = 0;
+}
+
+NoReuse::~NoReuse() {
+  reuseFlag = 1;
+}
+
 int setupDatagramSocket(UsageEnvironment& env, Port port,
 #ifdef IP_MULTICAST_LOOP
 			Boolean setLoopback
@@ -57,7 +67,6 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
     return newSocket;
   }
   
-  const int reuseFlag = 1;
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEADDR) error: ");
@@ -136,7 +145,6 @@ int setupStreamSocket(UsageEnvironment& env,
     return newSocket;
   }
   
-  const int reuseFlag = 1;
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEADDR) error: ");

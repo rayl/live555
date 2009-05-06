@@ -72,9 +72,6 @@ public:
 
   Boolean isCurrentlyAwaitingData() const {return fIsCurrentlyAwaitingData;}
 
-  // Tests for specific types of 'framed source': 
-  virtual Boolean isPrioritizedRTPStreamSelector() const;
-
 protected:
   FramedSource(UsageEnvironment& env); // abstract base class
   virtual ~FramedSource();
