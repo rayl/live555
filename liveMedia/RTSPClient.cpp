@@ -1119,12 +1119,13 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
       if (parseScaleHeader(lineStart, session.scale())) break;
     }
 
+    if (fTCPStreamIdCount == 0) { // we're not receiving RTP-over-TCP
+      // Arrange to handle incoming requests sent by the server
+      envir().taskScheduler().turnOnBackgroundReadHandling(fInputSocketNum,
+	   (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
+    }
+
     delete[] cmd;
-
-    // Arrange to handle incoming requests:
-    envir().taskScheduler().turnOnBackgroundReadHandling(fInputSocketNum,
-     (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
-
     return True;
   } while (0);
 
@@ -1324,7 +1325,7 @@ Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession) {
     delete[] authenticatorStr;
     
     if (!sendRequest(cmd, "PAUSE")) break;
-    
+
     if (fTCPStreamIdCount == 0) { // When TCP streaming, don't look for a response
       // Get the response from the server:
       unsigned bytesRead; unsigned responseCode;
@@ -1333,11 +1334,6 @@ Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession) {
     }
       
     delete[] cmd;
-
-    // Arrange to handle incoming requests:
-    envir().taskScheduler().turnOnBackgroundReadHandling(fInputSocketNum,
-     (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
-
     return True;
   } while (0);
   
