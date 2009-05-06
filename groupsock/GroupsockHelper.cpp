@@ -74,6 +74,9 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
     return -1;
   }
   
+#if defined(__WIN32__) || defined(_WIN32)
+  // Windoze doesn't properly handle SO_REUSEPORT or IP_MULTICAST_LOOP
+#else
 #ifdef SO_REUSEPORT
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEPORT,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
@@ -91,6 +94,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
     closeSocket(newSocket);
     return -1;
   }
+#endif
 #endif
   
   // Note: Windoze requires binding, even if the port number is 0
@@ -152,6 +156,9 @@ int setupStreamSocket(UsageEnvironment& env,
   // normally don't set them.  However, if you really want to do this
   // #define REUSE_FOR_TCP
 #ifdef REUSE_FOR_TCP
+#if defined(__WIN32__) || defined(_WIN32)
+  // Windoze doesn't properly handle SO_REUSEPORT
+#else
 #ifdef SO_REUSEPORT
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEPORT,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
@@ -159,6 +166,7 @@ int setupStreamSocket(UsageEnvironment& env,
     closeSocket(newSocket);
     return -1;
   }
+#endif
 #endif
 #endif
 

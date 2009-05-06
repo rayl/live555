@@ -99,31 +99,34 @@ void RTSPServer::removeServerMediaSession(char const* streamName) {
   removeServerMediaSession(lookupServerMediaSession(streamName));
 }
 
-char* RTSPServer
-::rtspURL(ServerMediaSession const* serverMediaSession) const {
+char* RTSPServer::rtspURLPrefix() const {
   struct in_addr ourAddress;
   ourAddress.s_addr = ReceivingInterfaceAddr != 0
     ? ReceivingInterfaceAddr
     : ourSourceAddressForMulticast(envir()); // hack
 
-  char const* sessionName = serverMediaSession->streamName();
-  unsigned sessionNameLength = strlen(sessionName);
-
-  char* urlBuffer = new char[100 + sessionNameLength];
-  char* resultURL;
+  char urlBuffer[100]; // more than big enough for "rtsp://<ip-address>:<port>/"
 
   portNumBits portNumHostOrder = ntohs(fServerPort.num());
   if (portNumHostOrder == 554 /* the default port number */) {
-    sprintf(urlBuffer, "rtsp://%s/%s", our_inet_ntoa(ourAddress),
-	    sessionName);
+    sprintf(urlBuffer, "rtsp://%s/", our_inet_ntoa(ourAddress));
   } else {
-    sprintf(urlBuffer, "rtsp://%s:%hu/%s",
-	    our_inet_ntoa(ourAddress), portNumHostOrder,
-	    sessionName);
+    sprintf(urlBuffer, "rtsp://%s:%hu/",
+	    our_inet_ntoa(ourAddress), portNumHostOrder);
   }
 
-  resultURL = strDup(urlBuffer);
-  delete[] urlBuffer;
+  return strDup(urlBuffer);
+}
+
+char* RTSPServer
+::rtspURL(ServerMediaSession const* serverMediaSession) const {
+  char* urlPrefix = rtspURLPrefix();
+  char const* sessionName = serverMediaSession->streamName();
+
+  char* resultURL = new char[strlen(urlPrefix) + strlen(sessionName) + 1];
+  sprintf(resultURL, "%s%s", urlPrefix, sessionName);
+
+  delete[] urlPrefix;
   return resultURL;
 }
 
