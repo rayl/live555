@@ -45,8 +45,14 @@ MPEG4VideoFileServerMediaSubsession
 static void afterPlayingDummy(void* clientData) {
   MPEG4VideoFileServerMediaSubsession* subsess
     = (MPEG4VideoFileServerMediaSubsession*)clientData;
+  subsess->afterPlayingDummy1();
+}
+
+void MPEG4VideoFileServerMediaSubsession::afterPlayingDummy1() {
+  // Unschedule any pending 'checking' task:
+  envir().taskScheduler().unscheduleDelayedTask(nextTask());
   // Signal the event loop that we're done:
-  subsess->setDoneFlag();
+  setDoneFlag();
 }
 
 static void checkForAuxSDPLine(void* clientData) {

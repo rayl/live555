@@ -31,14 +31,17 @@ public:
   static MPEG4VideoFileServerMediaSubsession*
   createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource);
 
-  void setDoneFlag() { fDoneFlag = ~0; }
+  // Used to implement "getAuxSDPLine()":
   void checkForAuxSDPLine1();
+  void afterPlayingDummy1();
 
 private:
   MPEG4VideoFileServerMediaSubsession(UsageEnvironment& env,
 				      char const* fileName, Boolean reuseFirstSource);
       // called only by createNew();
   virtual ~MPEG4VideoFileServerMediaSubsession();
+
+  void setDoneFlag() { fDoneFlag = ~0; }
 
 private: // redefined virtual functions
   virtual char const* getAuxSDPLine(RTPSink* rtpSink,
