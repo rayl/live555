@@ -64,23 +64,23 @@ private:
 H264VideoRTPSink
 ::H264VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 		   unsigned char rtpPayloadFormat,
-		   char const* profile_level_id_str,
+		   unsigned profile_level_id,
 		   char const* sprop_parameter_sets_str)
   : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 60000, "H264"),
     fOurFragmenter(NULL) {
   // Set up the "a=fmtp:" SDP line for this stream:
   char const* fmtpFmt =
     "a=fmtp:%d packetization-mode=1"
-    ";profile-level-id=%s"
+    ";profile-level-id=%06X"
     ";sprop-parameter-sets=%s\r\n";
   unsigned fmtpFmtSize = strlen(fmtpFmt)
     + 3 /* max char len */
-    + strlen(profile_level_id_str)
+    + 8 /* max unsigned len in hex */
     + strlen(sprop_parameter_sets_str);
   char* fmtp = new char[fmtpFmtSize];
   sprintf(fmtp, fmtpFmt,
           rtpPayloadFormat,
-	  profile_level_id_str,
+	  profile_level_id,
           sprop_parameter_sets_str);
   fFmtpSDPLine = strDup(fmtp);
   delete[] fmtp;
@@ -94,10 +94,10 @@ H264VideoRTPSink::~H264VideoRTPSink() {
 H264VideoRTPSink*
 H264VideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 			    unsigned char rtpPayloadFormat,
-			    char const* profile_level_id_str,
+			    unsigned profile_level_id,
 			    char const* sprop_parameter_sets_str) {
   return new H264VideoRTPSink(env, RTPgs, rtpPayloadFormat,
-			      profile_level_id_str, sprop_parameter_sets_str);
+			      profile_level_id, sprop_parameter_sets_str);
 }
 
 Boolean H264VideoRTPSink::continuePlaying() {
@@ -140,6 +140,7 @@ H264FUAFragmenter::H264FUAFragmenter(UsageEnvironment& env, FramedSource* inputS
 
 H264FUAFragmenter::~H264FUAFragmenter() {
   delete[] fInputBuffer;
+  fInputSource = NULL; // so that the subsequent ~FramedFilter doesn't delete it
 }
 
 void H264FUAFragmenter::doGetNextFrame() {

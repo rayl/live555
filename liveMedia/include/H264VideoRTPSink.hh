@@ -30,13 +30,13 @@ public:
   static H264VideoRTPSink* createNew(UsageEnvironment& env,
 				     Groupsock* RTPgs,
 				     unsigned char rtpPayloadFormat,
-				     char const* profile_level_id_str,
+				     unsigned profile_level_id,
 				     char const* sprop_parameter_sets_str);
 
 protected:
   H264VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 		   unsigned char rtpPayloadFormat,
-		   char const* profile_level_id_str,
+		   unsigned profile_level_id,
 		   char const* sprop_parameter_sets_str);
 	// called only by createNew()
 
