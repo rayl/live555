@@ -218,6 +218,8 @@ DummySink::~DummySink() {
 }
 
 Boolean DummySink::continuePlaying() {
+  if (fSource == NULL) return False; // sanity check
+
   fSource->getNextFrame(fBuf, sizeof fBuf,
 			afterGettingFrame, this,
 			onSourceClosure, this);

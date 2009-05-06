@@ -53,6 +53,7 @@ void JPEGVideoRTPSink
 			 unsigned numRemainingBytes) {
   // Our source is known to be a JPEGVideoSource
   JPEGVideoSource* source = (JPEGVideoSource*)fSource; 
+  if (source == NULL) return; // sanity check
 
   u_int8_t mainJPEGHeader[8]; // the special header
 

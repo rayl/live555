@@ -65,6 +65,7 @@ Boolean AMRAudioFileSink::sourceIsCompatibleWithUs(MediaSource& source) {
 void AMRAudioFileSink::afterGettingFrame1(unsigned frameSize,
 					  struct timeval presentationTime) {
   AMRAudioSource* source = (AMRAudioSource*)fSource;
+  if (source == NULL) return; // sanity check
 
   if (!fHaveWrittenHeader && fPerFrameFileNameBuffer == NULL) {
     // Output the appropriate AMR header to the start of the file.

@@ -94,6 +94,8 @@ void AMRAudioRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
   // Set the TOC field for the current frame, based on the "FT" and "Q"
   // values from our source:
   AMRAudioSource* amrSource = (AMRAudioSource*)fSource;
+  if (amrSource == NULL) return; // sanity check
+
   u_int8_t toc = amrSource->lastFrameHeader();
   // Clear the "F" bit, because we're the last frame in this packet: #####
   toc &=~ 0x80;
