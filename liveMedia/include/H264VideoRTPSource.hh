@@ -47,6 +47,10 @@ private:
   virtual Boolean processSpecialHeader(BufferedPacket* packet,
                                        unsigned& resultSpecialHeaderSize);
   virtual char const* MIMEtype() const; 
+
+private:
+  friend class H264BufferedPacket;
+  unsigned char fCurPacketNALUnitType;
 };
 
 class SPropRecord {
