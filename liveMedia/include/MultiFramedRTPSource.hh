@@ -92,6 +92,7 @@ public:
 			Boolean rtpMarkerBit, struct timeval timeReceived);
   void skip(unsigned numBytes); // used to skip over an initial header
   void removePadding(unsigned numBytes); // used to remove trailing bytes
+  void appendData(unsigned char* newData, unsigned numBytes);
   void use(unsigned char* to, unsigned toSize,
 	   unsigned& bytesUsed, unsigned& bytesTruncated,
 	   unsigned short& rtpSeqNo, unsigned& rtpTimestamp,

@@ -20,7 +20,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "AMRAudioRTPSource.hh"
 #include "MultiFramedRTPSource.hh"
-#include "BitVector.hh"
 #include <string.h>
 #include <stdlib.h>
 
@@ -34,8 +33,7 @@ public:
   static RawAMRRTPSource*
   createNew(UsageEnvironment& env,
 	    Groupsock* RTPgs, unsigned char rtpPayloadFormat,
-	    Boolean isWideband, Boolean isOctetAligned,
-	    Boolean isInterleaved, Boolean CRCsArePresent);
+	    Boolean isWideband, Boolean isInterleaved, Boolean CRCsArePresent);
 
   Boolean isWideband() const { return fIsWideband; }
   unsigned char ILL() const { return fILL; }
@@ -47,8 +45,7 @@ public:
 private:
   RawAMRRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 		  unsigned char rtpPayloadFormat,
-		  Boolean isWideband, Boolean isOctetAligned,
-		  Boolean isInterleaved, Boolean CRCsArePresent);
+		  Boolean isWideband, Boolean isInterleaved, Boolean CRCsArePresent);
       // called only by createNew()
 
   virtual ~RawAMRRTPSource();
@@ -62,7 +59,7 @@ private:
   virtual Boolean hasBeenSynchronizedUsingRTCP();
 
 private:
-  Boolean fIsWideband, fIsOctetAligned, fIsInterleaved, fCRCsArePresent;
+  Boolean fIsWideband, fIsInterleaved, fCRCsArePresent;
   unsigned char fILL, fILP;
   unsigned fTOCSize;
   unsigned char* fTOC;
@@ -117,8 +114,11 @@ AMRAudioRTPSource::createNew(UsageEnvironment& env,
 			     unsigned interleaving,
 			     Boolean robustSortingOrder,
 			     Boolean CRCsArePresent) {
-  // Perform sanity checks on the input parameters:
-  if (robustSortingOrder) {
+  // We don't yet support some modes:
+  if (!isOctetAligned) {
+    env << "AMRAudioRTPSource::createNew(): Bandwidth-efficient mode was specified, but we don't yet support this!\n";
+    return NULL;
+  } else if (robustSortingOrder) {
     env << "AMRAudioRTPSource::createNew(): 'Robust sorting order' was specified, but we don't yet support this!\n";
     return NULL;
   } else if (numChannels > MAX_NUM_CHANNELS) {
@@ -130,14 +130,6 @@ AMRAudioRTPSource::createNew(UsageEnvironment& env,
 	<< interleaving << ") is much too large!\n";
     return NULL;
   }
-
-  // 'Bandwidth-efficient mode' precludes some other options:
-  if (!isOctetAligned) {
-    if (interleaving > 0 || robustSortingOrder || CRCsArePresent) {
-      env << "AMRAudioRTPSource::createNew(): 'Bandwidth-efficient mode' was specified, along with interleaving, 'robust sorting order', and/or CRCs, so we assume 'octet-aligned mode' instead.\n";
-      isOctetAligned = True;
-    }
-  } 
 
   Boolean isInterleaved;
   unsigned maxInterleaveGroupSize; // in frames (not frame-blocks)
@@ -152,8 +144,7 @@ AMRAudioRTPSource::createNew(UsageEnvironment& env,
   RawAMRRTPSource* rawRTPSource;
   resultRTPSource = rawRTPSource
     = RawAMRRTPSource::createNew(env, RTPgs, rtpPayloadFormat,
-				 isWideband, isOctetAligned,
-				 isInterleaved, CRCsArePresent);
+				 isWideband, isInterleaved, CRCsArePresent);
   if (resultRTPSource == NULL) return NULL;
 
   AMRDeinterleaver* deinterleaver
@@ -201,23 +192,21 @@ private:
 RawAMRRTPSource*
 RawAMRRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 			   unsigned char rtpPayloadFormat,
-			   Boolean isWideband, Boolean isOctetAligned,
-			   Boolean isInterleaved, Boolean CRCsArePresent) {
+			   Boolean isWideband, Boolean isInterleaved,
+			   Boolean CRCsArePresent) {
   return new RawAMRRTPSource(env, RTPgs, rtpPayloadFormat,
-			     isWideband, isOctetAligned,
-			     isInterleaved, CRCsArePresent);
+			     isWideband, isInterleaved, CRCsArePresent);
 }
 
 RawAMRRTPSource
 ::RawAMRRTPSource(UsageEnvironment& env,
 		  Groupsock* RTPgs, unsigned char rtpPayloadFormat,
-		  Boolean isWideband, Boolean isOctetAligned,
-		  Boolean isInterleaved, Boolean CRCsArePresent)
+		  Boolean isWideband, Boolean isInterleaved, Boolean CRCsArePresent)
   : MultiFramedRTPSource(env, RTPgs, rtpPayloadFormat,
 			 isWideband ? 16000 : 8000,
                          new AMRBufferedPacketFactory(*this)),
-  fIsWideband(isWideband), fIsOctetAligned(isOctetAligned),
-  fIsInterleaved(isInterleaved), fCRCsArePresent(CRCsArePresent),
+  fIsWideband(isWideband), fIsInterleaved(isInterleaved),
+  fCRCsArePresent(CRCsArePresent),
   fILL(0), fILP(0), fTOCSize(0), fTOC(NULL), fFrameIndex(0),
   fNumSuccessiveSyncedPackets(0) {
 }
@@ -229,16 +218,9 @@ RawAMRRTPSource::~RawAMRRTPSource() {
 #define FT_SPEECH_LOST 14
 #define FT_NO_DATA 15
 
-static void unpackBandwidthEfficientData(BufferedPacket* packet,
-					 Boolean isWideband); // forward
-
 Boolean RawAMRRTPSource
 ::processSpecialHeader(BufferedPacket* packet,
 		       unsigned& resultSpecialHeaderSize) {
-  // If the data is 'bandwidth-efficient', first unpack it so that it's
-  // 'octet-aligned':
-  if (!fIsOctetAligned) unpackBandwidthEfficientData(packet, fIsWideband);
-
   unsigned char* headerStart = packet->data();
   unsigned packetSize = packet->dataSize();
 
@@ -345,13 +327,13 @@ AMRBufferedPacket::~AMRBufferedPacket() {
 // The mapping from the "FT" field to frame size.
 // Values of 65535 are invalid.
 #define FT_INVALID 65535
-static unsigned short frameBytesFromFT[16] = {
+static unsigned short frameSizeFromFT[16] = {
   12, 13, 15, 17,
   19, 20, 26, 31,
   5, FT_INVALID, FT_INVALID, FT_INVALID,
   FT_INVALID, FT_INVALID, FT_INVALID, 0
 };
-static unsigned short frameBytesFromFTWideband[16] = {
+static unsigned short frameSizeFromFTWideband[16] = {
   17, 23, 32, 36,
   40, 46, 50, 58,
   60, 5, FT_INVALID, FT_INVALID,
@@ -371,7 +353,7 @@ unsigned AMRBufferedPacket::
   unsigned char const FT = (tocByte&0x78) >> 3;
   // ASSERT: FT < 16
   unsigned short frameSize
-    = fOurSource.isWideband() ? frameBytesFromFTWideband[FT] : frameBytesFromFT[FT];
+    = fOurSource.isWideband() ? frameSizeFromFTWideband[FT] : frameSizeFromFT[FT];
   if (frameSize == FT_INVALID) {
     // Strange TOC entry!
     fOurSource.envir() << "AMRBufferedPacket::nextEnclosedFrameSize(): invalid FT: " << FT << "\n";
@@ -668,61 +650,4 @@ AMRDeinterleavingBuffer::FrameDescriptor::FrameDescriptor()
 
 AMRDeinterleavingBuffer::FrameDescriptor::~FrameDescriptor() {
   delete[] frameData;
-}
-
-// Unpack bandwidth-aligned data to octet-aligned:
-static unsigned short frameBitsFromFT[16] = {
-  95, 103, 118, 134,
-  148, 159, 204, 244,
-  39, 0, 0, 0,
-  0, 0, 0, 0
-};
-static unsigned short frameBitsFromFTWideband[16] = {
-  132, 177, 253, 285,
-  317, 365, 397, 461,
-  477, 40, 0, 0,
-  0, 0, 0, 0
-};
-
-static void unpackBandwidthEfficientData(BufferedPacket* packet,
-					 Boolean isWideband) {
-  BitVector fromBV(packet->data(), 0, 8*packet->dataSize());
-
-  unsigned const toBufferSize = 2*packet->dataSize(); // conservatively large
-  unsigned char* toBuffer = new unsigned char[toBufferSize];
-  unsigned toCount = 0;
-
-  // Begin with the payload header:
-  unsigned CMR = fromBV.getBits(4);
-  toBuffer[toCount++] = CMR << 4;
-
-  // Then, run through and unpack the TOC entries:
-  while (1) {
-    unsigned toc = fromBV.getBits(6);
-    toBuffer[toCount++] = toc << 2;
-
-    if ((toc&0x20) == 0) break; // the F bit is 0
-  }
-
-  // Then, using the TOC data, unpack each frame payload:
-  unsigned const tocSize = toCount - 1;
-  for (unsigned i = 1; i <= tocSize; ++i) {
-    unsigned char tocByte = toBuffer[i];
-    unsigned char const FT = (tocByte&0x78) >> 3;
-    unsigned short frameSizeBits
-      = isWideband ? frameBitsFromFTWideband[FT] : frameBitsFromFT[FT];
-    unsigned short frameSizeBytes = (frameSizeBits+7)/8;
-
-    shiftBits(&toBuffer[toCount], 0, // to
-	      packet->data(), fromBV.curBitIndex(), // from
-	      frameSizeBits // num bits
-	      );
-    fromBV.skipBits(frameSizeBits);
-    toCount += frameSizeBytes;
-  }  
-
-  // Finally, replace the current packet data with the unpacked data:
-  packet->removePadding(packet->dataSize()); // throws away current packet data
-  packet->appendData(toBuffer, toCount);
-  delete[] toBuffer;
 }

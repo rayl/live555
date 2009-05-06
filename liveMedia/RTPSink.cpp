@@ -185,8 +185,9 @@ void RTPTransmissionStatsDB::add(unsigned SSRC, RTPTransmissionStats* stats) {
 ////////// RTPTransmissionStats //////////
 
 RTPTransmissionStats::RTPTransmissionStats(RTPSink& rtpSink, unsigned SSRC)
-  : fOurRTPSink(rtpSink), fSSRC(SSRC), fLastPacketNumReceived(0), fPacketLossRatio(0),
-    fTotNumPacketsLost(0), fJitter(0), fLastSRTime(0), fDiffSR_RRTime(0),
+  : fOurRTPSink(rtpSink), fSSRC(SSRC), fLastPacketNumReceived(0),
+    fPacketLossRatio(0), fTotNumPacketsLost(0), fJitter(0),
+    fLastSRTime(0), fDiffSR_RRTime(0),
     fFirstPacket(True) {
 }
 
@@ -246,12 +247,6 @@ unsigned RTPTransmissionStats::packetsReceivedSinceLastRR() const {
   if (!fOldValid) return 0;
 
   return fLastPacketNumReceived-fOldLastPacketNumReceived;
-}
-
-u_int8_t RTPTransmissionStats::packetLossRatio() const {
-  if (!fOldValid) return 0;
-
-  return fPacketLossRatio;
 }
 
 int RTPTransmissionStats::packetsLostBetweenRR() const {

@@ -152,6 +152,8 @@ public:
   unsigned firstPacketNumReported() const {return fFirstPacketNumReported;}
   unsigned totNumPacketsLost() const {return fTotNumPacketsLost;}
   unsigned jitter() const {return fJitter;}
+  unsigned lastSRTime() const { return fLastSRTime; }
+  unsigned diffSR_RRTime() const { return fDiffSR_RRTime; }
   unsigned roundTripDelay() const;
       // The round-trip delay (in units of 1/65536 seconds) computed from
       // the most recently-received RTCP RR packet.
@@ -160,7 +162,8 @@ public:
   // Information which requires at least two RRs to have been received:
   Boolean oldValid() const {return fOldValid;} // Have two RRs been received?
   unsigned packetsReceivedSinceLastRR() const;
-  u_int8_t packetLossRatio() const; // as an 8-bit fixed-point number
+  u_int8_t packetLossRatio() const { return fPacketLossRatio; }
+     // as an 8-bit fixed-point number
   int packetsLostBetweenRR() const;
 
 private:

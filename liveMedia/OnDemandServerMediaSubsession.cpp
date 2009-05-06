@@ -291,9 +291,11 @@ void StreamState::pause() {
 
 void StreamState::endPlaying() {
   // Delete allocated media objects, and corresponding 'groupsock's:
+  Medium::close(fRTCPInstance) /* will send a RTCP BYE */; fRTCPInstance = NULL;
+  delete fRTCPGroupsock; fRTCPGroupsock = NULL;
+
   Medium::close(fRTPSink); fRTPSink = NULL;
   delete fRTPGroupsock; fRTPGroupsock = NULL;
-  Medium::close(fRTCPInstance); fRTCPInstance = NULL;
-  delete fRTCPGroupsock /* will send a RTCP BYE */; fRTCPGroupsock = NULL;
+
   Medium::close(fMediaSource); fMediaSource = NULL;
 }

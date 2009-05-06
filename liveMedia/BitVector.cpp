@@ -105,7 +105,7 @@ unsigned BitVector::getBits(unsigned numBits) {
 }
 
 unsigned BitVector::get1Bit() {
-  // The following is equivalent to "hgetbits(1)", except faster:
+  // The following is equivalent to "getBits(1)", except faster:
 
   if (fCurBitIndex >= fTotNumBits) { /* overflow */
     return 0;

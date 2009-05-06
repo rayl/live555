@@ -345,6 +345,12 @@ void BufferedPacket::removePadding(unsigned numBytes) {
   fTail -= numBytes;
 }
 
+void BufferedPacket::appendData(unsigned char* newData, unsigned numBytes) {
+  if (numBytes > fPacketSize-fTail) numBytes = fPacketSize - fTail;
+  memmove(&fBuf[fTail], newData, numBytes); 
+  fTail += numBytes;
+}
+
 void BufferedPacket::use(unsigned char* to, unsigned toSize,
 			 unsigned& bytesUsed, unsigned& bytesTruncated,
 			 unsigned short& rtpSeqNo, unsigned& rtpTimestamp,
