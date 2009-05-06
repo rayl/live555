@@ -1606,7 +1606,7 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
 
     fields += strlen(field);
     if (fields[0] == '\0') break;
-    ++fields; // skip over the ';'
+    while (fields[0] == ';') ++fields; // skip over all leading ';' chars
   }
   delete[] field;
 

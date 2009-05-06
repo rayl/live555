@@ -21,6 +21,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPServer.hh"
 #include <GroupsockHelper.hh>
 
+#define COMPENSATE_FOR_QUICKTIME_PLAYER_BUG 1
+
 ////////// RTSPServer //////////
 
 RTSPServer*
@@ -255,19 +257,23 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
     fprintf(stderr, "parseRequestString() failed!\n");
 #endif
     handleCmd_bad(cseq);
-  } else
-if (strcmp(cmdName, "OPTIONS") == 0) {
-    handleCmd_OPTIONS(cseq);
-  } else if (strcmp(cmdName, "DESCRIBE") == 0) {
-    handleCmd_DESCRIBE(cseq, urlSuffix);
-  } else if (strcmp(cmdName, "SETUP") == 0) {
-    handleCmd_SETUP(cseq, urlPreSuffix, urlSuffix, (char const*)fBuffer);
-  } else if (strcmp(cmdName, "TEARDOWN") == 0
-	     || strcmp(cmdName, "PLAY") == 0
-	     || strcmp(cmdName, "PAUSE") == 0) {
-    handleCmd_withinSession(cmdName, urlPreSuffix, urlSuffix, cseq);
   } else {
-    handleCmd_notSupported(cseq);
+#ifdef DEBUG
+    fprintf(stderr, "parseRequestString() returned cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\"\n", cmdName, urlPreSuffix, urlSuffix);
+#endif
+    if (strcmp(cmdName, "OPTIONS") == 0) {
+      handleCmd_OPTIONS(cseq);
+    } else if (strcmp(cmdName, "DESCRIBE") == 0) {
+      handleCmd_DESCRIBE(cseq, urlSuffix);
+    } else if (strcmp(cmdName, "SETUP") == 0) {
+      handleCmd_SETUP(cseq, urlPreSuffix, urlSuffix, (char const*)fBuffer);
+    } else if (strcmp(cmdName, "TEARDOWN") == 0
+	       || strcmp(cmdName, "PLAY") == 0
+	       || strcmp(cmdName, "PAUSE") == 0) {
+      handleCmd_withinSession(cmdName, urlPreSuffix, urlSuffix, cseq);
+    } else {
+      handleCmd_notSupported(cseq);
+    }
   }
     
 #ifdef DEBUG
@@ -308,37 +314,61 @@ void RTSPServer::RTSPClientSession::handleCmd_OPTIONS(char const* cseq) {
 
 void RTSPServer::RTSPClientSession
 ::handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix) {
-  // We should really check that the request contains an "Accept:" #####
-  // for "application/sdp", because that's what we're sending back #####
+  char* sdpDescription = NULL;
+  do {
+    // We should really check that the request contains an "Accept:" #####
+    // for "application/sdp", because that's what we're sending back #####
 
-  // Begin by looking up the "ServerMediaSession" object for the
-  // specified "urlSuffix":
-  ServerMediaSession* session
-    = (ServerMediaSession*)(fOurServer.fServerMediaSessions->Lookup(urlSuffix));
-  if (session == NULL) {
-    handleCmd_notFound(cseq);
-    return;
-  }
+    // Begin by looking up the "ServerMediaSession" object for the
+    // specified "urlSuffix":
+    ServerMediaSession* session
+      = (ServerMediaSession*)(fOurServer.fServerMediaSessions->Lookup(urlSuffix));
+    if (session == NULL) {
+      handleCmd_notFound(cseq);
+      break;
+    }
+#ifdef COMPENSATE_FOR_QUICKTIME_PLAYER_BUG
+    // QuickTime Player sometimes doesn't properly include the session name in
+    // the subsequent "SETUP" commands, so, to allow for this, set
+    // "fOurServerMediaSession" (and "fStreamStates") now:
+    //#####
+    fOurServerMediaSession = session;
 
-  // Then, assemble a SDP description for this session:
-  char* sdpDescription = session->generateSDPDescription();
-  if (sdpDescription == NULL) {
-    // This usually means that a file name that was specified for a
-    // "ServerMediaSubsession" does not exist.
-    sprintf((char*)fBuffer, "RTSP/1.0 404 File Not Found, Or In Incorrect Format\r\nCSeq: %s\r\n\r\n", cseq);
-    return;
-  }
+    // Set up our array of states for this session's subsessions (tracks):
+    reclaimStreamStates();
+    ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
+    for (fNumStreamStates = 0; iter.next() != NULL; ++fNumStreamStates) {}
+    fStreamStates = new struct streamState[fNumStreamStates];
+    iter.reset();
+    ServerMediaSubsession* subsession;
+    for (unsigned i = 0; i < fNumStreamStates; ++i) {
+      subsession = iter.next();
+      fStreamStates[i].subsession = subsession;
+      fStreamStates[i].streamToken = NULL; // for now; reset by SETUP later
+    }
+#endif
 
-  unsigned sdpDescriptionSize = strlen(sdpDescription);
-  if (sdpDescriptionSize > sizeof fBuffer - 200) { // sanity check
-    sprintf((char*)fBuffer, "RTSP/1.0 500 Internal Server Error\r\nCSeq: %s\r\n\r\n",
-	    cseq);
-    delete[] sdpDescription;
-    return;
-  }
+    // Then, assemble a SDP description for this session:
+    sdpDescription = session->generateSDPDescription();
+    if (sdpDescription == NULL) {
+      // This usually means that a file name that was specified for a
+      // "ServerMediaSubsession" does not exist.
+      sprintf((char*)fBuffer, "RTSP/1.0 404 File Not Found, Or In Incorrect Format\r\nCSeq: %s\r\n\r\n", cseq);
+     break;
+    }
+    unsigned sdpDescriptionSize = strlen(sdpDescription);
+
+    if (sdpDescriptionSize > sizeof fBuffer - 200) { // sanity check
+      sprintf((char*)fBuffer,
+	      "RTSP/1.0 500 Internal Server Error\r\nCSeq: %s\r\n\r\n", cseq);
+      break;
+    }
   
-  sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nContent-Type: application/sdp\r\nContent-Length: %d\r\n\r\n%s",
-	  cseq, sdpDescriptionSize, sdpDescription);
+    sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nContent-Type: application/sdp\r\nContent-Length: %d\r\n\r\n%s",
+	    cseq, sdpDescriptionSize, sdpDescription);
+  } while (0);
+
+  delete[] sdpDescription;
 }
 
 static void parseTransportHeader(char const* buf,
@@ -369,10 +399,17 @@ void RTSPServer::RTSPClientSession
   // Check whether we have existing session state, and, if so, whether it's
   // for the session that's named in "urlPreSuffix".  (Note that we don't
   // support more than one concurrent session on the same client connection.) #####
+#ifndef COMPENSATE_FOR_QUICKTIME_PLAYER_BUG
+  // QuickTime Player sometimes doesn't include the session (stream) name in
+  // the "urlPreSuffix".  Until this is fixed, we have to set
+  // "fOurServerMediaSession" (and "fStreamStates") when handling the
+  // earlier "DESCRIBE", and we also omit the following test:
+  //#####
   if (fOurServerMediaSession != NULL
       && strcmp(urlPreSuffix, fOurServerMediaSession->streamName()) != 0) {
     fOurServerMediaSession = NULL;
   }
+#endif
   if (fOurServerMediaSession == NULL) {
     // Set up this session's state.
 

@@ -36,7 +36,6 @@ int TimeCode::operator==(TimeCode const& arg2) {
     && minutes == arg2.minutes && hours == arg2.hours && days == arg2.days;
 }
 
-
 ////////// MPEGVideoStreamFramer implementation //////////
 
 #ifdef BSD
@@ -82,7 +81,7 @@ void MPEGVideoStreamFramer
     ++fPresentationTime.tv_sec;
   }
 #ifdef DEBUG_COMPUTE_PRESENTATION_TIME
-  fprintf(stderr, "MPEGVideoStreamFramer::computePresentationTime(%d) -> %u.%06d\n", numAdditionalPictures, fPresentationTime.tv_sec, fPresentationTime.tv_usec);
+  fprintf(stderr, "MPEGVideoStreamFramer::computePresentationTime(%d) -> %lu.%06ld\n", numAdditionalPictures, fPresentationTime.tv_sec, fPresentationTime.tv_usec);
 #endif
 }
 
@@ -136,7 +135,11 @@ void MPEGVideoStreamFramer::continueReadProcessing() {
     // "fPresentationTime" should have already been computed.
     // Compute "fDurationInMicroseconds" now:
     fDurationInMicroseconds
-      = fFrameRate == 0.0 ? 0 : (unsigned)((fPictureCount*1000000)/fFrameRate);
+      = (fFrameRate == 0.0 || ((int)fPictureCount) < 0) ? 0
+      : (unsigned)((fPictureCount*1000000)/fFrameRate);
+#ifdef DEBUG_COMPUTE_PRESENTATION_TIME
+    fprintf(stderr, "fDurationInMicroseconds: %d ((%d*1000000)/%f)\n", fDurationInMicroseconds, fPictureCount, fFrameRate);
+#endif
     fPictureCount = 0;
 
     // Call our own 'after getting' function.  Because we're not a 'leaf'

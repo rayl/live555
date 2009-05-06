@@ -132,10 +132,11 @@ char* ServerMediaSession::generateSDPDescription() {
     "o=- %ld%06ld %d IN IP4 %s\r\n"
     "s=%s\r\n"
     "i=%s\r\n"
-    "t=0 0\r\n"
     "a=tool:%s%s\r\n"
     "a=type:broadcast\r\n"
-    "%s";
+    "a=control:*\r\n"
+    "%s"
+    "t=0 0\r\n";
   unsigned sdpLength = strlen(sdpPrefixFmt)
     + 20 + 6 + 20 + ourIPAddressStrSize
     + strlen(fDescriptionSDPString)
