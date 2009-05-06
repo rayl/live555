@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2006 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
 // Inclusion of header files representing the interface
 // for the entire library
 //
@@ -38,6 +38,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "JPEGVideoRTPSink.hh"
 #include "SimpleRTPSink.hh"
 #include "uLawAudioFilter.hh"
+#include "MPEG2IndexFromTransportStream.hh"
+#include "MPEG2TransportStreamTrickModeFilter.hh"
 #include "ByteStreamMultiFileSource.hh"
 #include "BasicUDPSource.hh"
 #include "SimpleRTPSource.hh"

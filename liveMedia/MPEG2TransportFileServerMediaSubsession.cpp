@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2006 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
 // A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
 // on demand, from a MPEG-2 Transport Stream file.
 // Implementation
@@ -66,6 +66,6 @@ RTPSink* MPEG2TransportFileServerMediaSubsession
 		   unsigned char /*rtpPayloadTypeIfDynamic*/,
 		   FramedSource* /*inputSource*/) {
   return SimpleRTPSink::createNew(envir(), rtpGroupsock,
-				  33, 90000, "video", "mp2t",
+				  33, 90000, "video", "MP2T",
 				  1, True, False /*no 'M' bit*/);
 }

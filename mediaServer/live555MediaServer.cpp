@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
-// Copyright (c) 1996-2006, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2007, Live Networks, Inc.  All rights reserved
 // LIVE555 Media Server
 // main program
 
@@ -51,8 +51,8 @@ int main(int argc, char** argv) {
        << LIVEMEDIA_LIBRARY_VERSION_STRING << ").\n";
 
   char* urlPrefix = rtspServer->rtspURLPrefix();
-  *env << "Play streams from this server using the URL \""
-       << urlPrefix << "<filename>\"\n\twhere <filename> is a file present in the current directory.\n";
+  *env << "Play streams from this server using the URL\n\t"
+       << urlPrefix << "<filename>\nwhere <filename> is a file present in the current directory.\n";
   *env << "Each file's type is inferred from its name suffix:\n";
   *env << "\t\".aac\" => an AAC Audio (ADTS format) file\n";
   *env << "\t\".amr\" => an AMR Audio file\n";

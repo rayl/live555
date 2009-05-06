@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
-// Copyright (c) 1996-2006, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2007, Live Networks, Inc.  All rights reserved
 // A subclass of "RTSPServer" that creates "ServerMediaSession"s on demand,
 // based on whether or not the specified stream name exists as a file
 // Implementation
@@ -78,7 +78,11 @@ DynamicRTSPServer::lookupServerMediaSession(char const* streamName) {
   }
 }
 
-#define NEW_SMS(description) sms = ServerMediaSession::createNew(env, fileName, fileName, (description))
+#define NEW_SMS(description) do {\
+char* descStr = description\
+    ", streamed by the LIVE555 Media Server";\
+sms = ServerMediaSession::createNew(env, fileName, fileName, descStr);\
+} while(0)
 
 static ServerMediaSession* createNewSMS(UsageEnvironment& env,
 					char const* fileName, FILE* /*fid*/) {
