@@ -97,7 +97,8 @@ void RTPReceptionStatsDB
 ::noteIncomingPacket(unsigned SSRC, unsigned short seqNum,
 		     unsigned rtpTimestamp, unsigned timestampFrequency,
 		     Boolean useForJitterCalculation,
-		     struct timeval& resultPresentationTime) {
+		     struct timeval& resultPresentationTime,
+		     unsigned packetSize) {
   RTPReceptionStats* stats = lookup(SSRC);
   if (stats == NULL) {
     // This is the first time we've heard from this SSRC.
@@ -113,7 +114,7 @@ void RTPReceptionStatsDB
 
   stats->noteIncomingPacket(seqNum, rtpTimestamp, timestampFrequency,
 			    useForJitterCalculation,
-			    resultPresentationTime);
+			    resultPresentationTime, packetSize);
 }
 
 void RTPReceptionStatsDB
@@ -193,12 +194,17 @@ RTPReceptionStats::~RTPReceptionStats() {
 void RTPReceptionStats::init(unsigned SSRC) {
   fSSRC = SSRC;
   fTotNumPacketsReceived = 0;
+  fTotBytesReceived_hi = fTotBytesReceived_lo = 0;
   fHaveSeenInitialSequenceNumber = False;
   fLastTransit = ~0;
   fPreviousPacketRTPTimestamp = 0;
   fJitter = 0.0;
   fLastReceivedSR_NTPmsw = fLastReceivedSR_NTPlsw = 0;
   fLastReceivedSR_time.tv_sec = fLastReceivedSR_time.tv_usec = 0;
+  fLastPacketReceptionTime.tv_sec = fLastPacketReceptionTime.tv_usec = 0;
+  fMinInterPacketGapUS = 0x7FFFFFFF;
+  fMaxInterPacketGapUS = 0;
+  fTotalInterPacketGaps.tv_sec = fTotalInterPacketGaps.tv_usec = 0;
   fHasBeenSynchronized = False;
   fSyncTime.tv_sec = fSyncTime.tv_usec = 0;
   reset();
@@ -216,21 +222,32 @@ static struct timezone Idunno;
 static int Idunno;
 #endif
 
+#ifndef MILLION
+#define MILLION 1000000
+#endif
+
 void RTPReceptionStats
 ::noteIncomingPacket(unsigned short seqNum, unsigned rtpTimestamp,
 		     unsigned timestampFrequency,
 		     Boolean useForJitterCalculation,
-		     struct timeval& resultPresentationTime) {
+		     struct timeval& resultPresentationTime,
+		     unsigned packetSize) {
   if (!fHaveSeenInitialSequenceNumber) initSeqNum(seqNum);
 
   ++fNumPacketsReceivedSinceLastReset;
   ++fTotNumPacketsReceived;
+  u_int32_t prevTotBytesReceived_lo = fTotBytesReceived_lo;
+  fTotBytesReceived_lo += packetSize;
+  if (fTotBytesReceived_lo < prevTotBytesReceived_lo) { // wrap-around
+    ++fTotBytesReceived_hi;
+  }
 
   // Check whether the sequence number has wrapped around:
   unsigned seqNumCycle = (fHighestExtSeqNumReceived&0xFFFF0000);
   unsigned oldSeqNum = (fHighestExtSeqNumReceived&0xFFFF);
   unsigned seqNumDifference = (unsigned)((int)seqNum-(int)oldSeqNum);
-  if (seqNumDifference >= 0x8000) {
+  if (seqNumDifference >= 0x8000
+      && seqNumLT((unsigned short)oldSeqNum, seqNum)) {
     // sequence number wrapped around => start a new cycle:
     seqNumCycle += 0x10000;
   }
@@ -240,17 +257,36 @@ void RTPReceptionStats
     fHighestExtSeqNumReceived = newSeqNum;
   }
 
+  // Record the inter-packet delay
+  struct timeval timeNow;
+  gettimeofday(&timeNow, &Idunno);
+  if (fLastPacketReceptionTime.tv_sec != 0
+      || fLastPacketReceptionTime.tv_usec != 0) {
+    unsigned gap
+      = (timeNow.tv_sec - fLastPacketReceptionTime.tv_sec)*MILLION
+      + timeNow.tv_usec - fLastPacketReceptionTime.tv_usec; 
+    if (gap > fMaxInterPacketGapUS) {
+      fMaxInterPacketGapUS = gap;
+    }
+    if (gap < fMinInterPacketGapUS) {
+      fMinInterPacketGapUS = gap;
+    }
+    fTotalInterPacketGaps.tv_usec += gap;
+    if (fTotalInterPacketGaps.tv_usec >= MILLION) {
+      ++fTotalInterPacketGaps.tv_sec;
+      fTotalInterPacketGaps.tv_usec -= 1000000;
+    }
+  }
+  fLastPacketReceptionTime = timeNow;
+
   // Compute the current 'jitter' using the received packet's RTP timestamp,
   // and the RTP timestamp that would correspond to the current time.
   // (Use the code from appendix A.8 in the RTP spec.)
   // Note, however, that we don't use this packet if its timestamp is
   // the same as that of the previous packet (this indicates a multi-packet
   // fragment), or if we've been explicitly told not to use this packet.
-  struct timeval timeNow;
-  Boolean timeNowSet = False;
   if (useForJitterCalculation
       && rtpTimestamp != fPreviousPacketRTPTimestamp) {
-    gettimeofday(&timeNow, &Idunno); timeNowSet = True;
     unsigned arrival = (timestampFrequency*timeNow.tv_sec);
     arrival += (unsigned)
       ((2.0*timestampFrequency*timeNow.tv_usec + 1000000.0)/2000000);
@@ -269,7 +305,6 @@ void RTPReceptionStats
     // 'wall clock' time as the synchronization time.  (This will be
     // corrected later when we receive RTCP SRs.)
     fSyncTimestamp = rtpTimestamp;
-    if (!timeNowSet) { gettimeofday(&timeNow, &Idunno); timeNowSet = True; }
     fSyncTime = timeNow;
   }
 
@@ -326,6 +361,11 @@ void RTPReceptionStats::noteIncomingSR(unsigned ntpTimestampMSW,
   double microseconds = (ntpTimestampLSW*15625.0)/0x04000000; // 10^6/2^32
   fSyncTime.tv_usec = (unsigned)(microseconds+0.5);
   fHasBeenSynchronized = True;
+}
+
+double RTPReceptionStats::totNumKBytesReceived() const {
+  double const hiMultiplier = 0x20000000/125.0; // == (2^32)/(10^3)
+  return fTotBytesReceived_hi*hiMultiplier + fTotBytesReceived_lo/1000.0;
 }
 
 unsigned RTPReceptionStats::jitter() const {

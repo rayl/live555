@@ -122,7 +122,8 @@ public:
 			  unsigned rtpTimestamp,
 			  unsigned timestampFrequency,
 			  Boolean useForJitterCalculation,
-			  struct timeval& resultPresentationTime);
+			  struct timeval& resultPresentationTime,
+			  unsigned packetSize /* payload only */);
 
   // The following is called whenever a RTCP SR packet is received: 
   void noteIncomingSR(unsigned SSRC,
@@ -155,6 +156,8 @@ public:
     return fNumPacketsReceivedSinceLastReset;
   }
   unsigned totNumPacketsReceived() const { return fTotNumPacketsReceived; }
+  double totNumKBytesReceived() const;
+
   unsigned baseExtSeqNumReceived() const { return fBaseExtSeqNumReceived; }
   unsigned lastResetExtSeqNumReceived() const {
     return fLastResetExtSeqNumReceived;
@@ -171,6 +174,12 @@ public:
     return fLastReceivedSR_time;
   }
 
+  unsigned minInterPacketGapUS() const { return fMinInterPacketGapUS; }
+  unsigned maxInterPacketGapUS() const { return fMaxInterPacketGapUS; }
+  struct timeval const& totalInterPacketGaps() const {
+    return fTotalInterPacketGaps;
+  }
+
 private:
   // called only by RTPReceptionStatsDB:
   friend class RTPReceptionStatsDB;
@@ -183,7 +192,8 @@ private:
 			  unsigned rtpTimestamp,
 			  unsigned timestampFrequency,
 			  Boolean useForJitterCalculation,
-			  struct timeval& resultPresentationTime);
+			  struct timeval& resultPresentationTime,
+			  unsigned packetSize /* payload only */);
   void noteIncomingSR(unsigned ntpTimestampMSW, unsigned ntpTimestampLSW,
 		      unsigned rtpTimestamp);
   void init(unsigned SSRC);
@@ -197,6 +207,7 @@ private:
   unsigned fSSRC;
   unsigned fNumPacketsReceivedSinceLastReset;
   unsigned fTotNumPacketsReceived;
+  u_int32_t fTotBytesReceived_hi, fTotBytesReceived_lo;
   Boolean fHaveSeenInitialSequenceNumber;
   unsigned fBaseExtSeqNumReceived;
   unsigned fLastResetExtSeqNumReceived;
@@ -208,6 +219,9 @@ private:
   unsigned fLastReceivedSR_NTPmsw; // NTP timestamp (from SR), most-signif
   unsigned fLastReceivedSR_NTPlsw; // NTP timestamp (from SR), least-signif
   struct timeval fLastReceivedSR_time;
+  struct timeval fLastPacketReceptionTime;
+  unsigned fMinInterPacketGapUS, fMaxInterPacketGapUS;
+  struct timeval fTotalInterPacketGaps;
 
   // Used to convert from RTP timestamp to 'wall clock' time:
   Boolean fHasBeenSynchronized;

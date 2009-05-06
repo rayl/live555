@@ -30,11 +30,16 @@ char* getSDPDescriptionFromURL(Medium* client, char const* url,
 			       unsigned short /*proxyServerPortNum*/,
 			       unsigned short /*clientStartPort*/) {
   RTSPClient* rtspClient = (RTSPClient*)client;
+  char* result;
   if (username != NULL && password != NULL) {
-    return rtspClient->describeWithPassword(url, username, password);
+    result = rtspClient->describeWithPassword(url, username, password);
   } else {
-    return rtspClient->describeURL(url);
+    result = rtspClient->describeURL(url);
   }
+
+  extern unsigned statusCode;
+  statusCode = rtspClient->describeStatus();
+  return result;
 }
 
 Boolean clientSetupSubsession(Medium* client, MediaSubsession* subsession,

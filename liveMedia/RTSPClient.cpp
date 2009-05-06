@@ -125,6 +125,7 @@ static char* getLine(char* startOfLine) {
 
 char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
   char* cmd = NULL;
+  fDescribeStatusCode = 0;
   do {  
     // First, check whether "url" contains a username:password to be used:
     char* username; char* password;
@@ -324,6 +325,7 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
   } while (0);
 
   delete[] cmd;
+  if (fDescribeStatusCode == 0) fDescribeStatusCode = 2;
   return NULL;
 }
 
@@ -1096,6 +1098,7 @@ Boolean RTSPClient::openConnectionFromURL(char const* url) {
     return True; 
   } while (0);
 
+  fDescribeStatusCode = 1;
   return False;
 }
 

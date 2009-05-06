@@ -94,7 +94,7 @@ long DelayQueueEntry::tokenCounter = 0;
 DelayQueueEntry::DelayQueueEntry(DelayInterval delay)
   : fDeltaTimeRemaining(delay) {
   fNext = fPrev = this;
-  fToken = tokenCounter++;
+  fToken = ++tokenCounter;
 }
 
 void DelayQueueEntry::handleTimeout() {
@@ -165,10 +165,15 @@ DelayQueueEntry* DelayQueue::findEntryByToken(long tokenToFind) {
 }
 
 void DelayQueue::addEntry1(DelayQueueEntry* newEntry) {
+  EventTime timeNow = TimeNow();
   if (fLastAlarmTime.seconds() == 0) {
     // Hack: We're just starting up, so set "fLastAlarmTime" to now:
-    fLastAlarmTime = TimeNow();
+    fLastAlarmTime = timeNow;
   }
+
+  // Adjust for time elapsed since the last alarm:
+  DelayInterval timeSinceLastAlarm = timeNow - fLastAlarmTime;
+  newEntry->fDeltaTimeRemaining += timeSinceLastAlarm;
 
   DelayQueueEntry* cur = head();
   while (newEntry->fDeltaTimeRemaining >= cur->fDeltaTimeRemaining) {

@@ -65,11 +65,16 @@ char* getSDPDescriptionFromURL(Medium* client, char const* url,
   if (clientStartPortNum == 0) clientStartPortNum = 8000; // default
   sipClient->setClientStartPortNum(clientStartPortNum);
 
+  char* result;
   if (username != NULL && password != NULL) {
-    return sipClient->inviteWithPassword(url, username, password);
+    result = sipClient->inviteWithPassword(url, username, password);
   } else {
-    return sipClient->invite(url);
+    result = sipClient->invite(url);
   }
+
+  extern unsigned statusCode;
+  statusCode = sipClient->inviteStatus();
+  return result;
 }
 
 Boolean clientSetupSubsession(Medium* client, MediaSubsession* subsession,

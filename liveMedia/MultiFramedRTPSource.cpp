@@ -253,7 +253,8 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
     source->receptionStatsDB()
       .noteIncomingPacket(rtpSSRC, rtpSeqNo, rtpTimestamp,
 			  source->timestampFrequency(),
-			  usableInJitterCalculation, presentationTime);
+			  usableInJitterCalculation, presentationTime,
+			  bPacket->dataSize());
   
     // Fill in the rest of the packet descriptor, and store it:
     struct timeval timeNow;

@@ -99,6 +99,8 @@ public:
 					      char*& username,
 					      char*& password);
 
+  unsigned describeStatus() const { return fDescribeStatusCode; }
+
 protected:
   virtual ~RTSPClient();
 
@@ -141,6 +143,8 @@ private:
   AuthRecord* fCurrentAuthenticator; // if any
   unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
   char* fLastSessionId;
+  unsigned fDescribeStatusCode;
+  // 0: OK; 1: connection failed; 2: stream unavailable
 };
 
 #endif

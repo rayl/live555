@@ -45,3 +45,4 @@ extern Boolean allowProxyServers;
 extern Boolean controlConnectionUsesTCP;
 extern Boolean supportCodecSelection;
 extern char const* clientProtocolName;
+extern unsigned statusCode;
