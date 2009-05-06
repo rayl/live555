@@ -140,10 +140,6 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
       "DESCRIBE %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Accept: application/sdp\r\n"
-      // Uncomment the following to simulate a RealNetworks client
-      // (RealNetworks' servers sometimes behave differently if they
-      //  think the client is one of theirs.):
-      //"ClientID: WinNT_4.0_6.0.11.818_RealPlayer_RN10PD_en-us_686\r\n"
       "%s"
       "%s\r\n";
     unsigned cmdSize = strlen(cmdFmt)
@@ -698,7 +694,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       }
 
       char* serverAddressStr;
-      portNumBits serverPortNum;
+      unsigned short serverPortNum;
       unsigned char rtpChannelId, rtcpChannelId;
       if (parseTransportResponse(lineStart,
 				 serverAddressStr, serverPortNum,
@@ -1061,8 +1057,8 @@ Boolean RTSPClient::openConnectionFromURL(char const* url) {
 
     // Begin by parsing the URL:
     NetAddress destAddress;
-    portNumBits destPortNum;
-    if (!parseRTSPURL(envir(), url, destAddress, destPortNum)) break;
+    unsigned short destPortNum;
+    if (!parseURL(url, destAddress, destPortNum)) break;
     
     if (fSocketNum < 0) {
       // We don't yet have a TCP socket.  Set one up (blocking) now:
@@ -1088,16 +1084,15 @@ Boolean RTSPClient::openConnectionFromURL(char const* url) {
   return False;
 }
 
-Boolean RTSPClient::parseRTSPURL(UsageEnvironment& env, char const* url,
-				 NetAddress& address,
-				 portNumBits& portNum) {
+Boolean RTSPClient::parseURL(char const* url,
+			     NetAddress& address, unsigned short& portNum) {
   do {
     // Parse the URL as "rtsp://<address>:<port>/<etc>"
     // (with ":<port>" and "/<etc>" optional)
     char const* prefix = "rtsp://";
     unsigned const prefixLength = 7;
     if (_strncasecmp(url, prefix, prefixLength) != 0) {
-      env.setResultMsg("URL is not of the form \"", prefix, "\"");
+      envir().setResultMsg("URL is not of the form \"", prefix, "\"");
       break;
     }
 
@@ -1115,13 +1110,13 @@ Boolean RTSPClient::parseRTSPURL(UsageEnvironment& env, char const* url,
       *to++ = *from++;
     }
     if (i == parseBufferSize) {
-      env.setResultMsg("URL is too long");
+      envir().setResultMsg("URL is too long");
       break;
     }
 
     NetAddressList addresses(parseBuffer);
     if (addresses.numAddresses() == 0) {
-      env.setResultMsg("Failed to find network address for \"",
+      envir().setResultMsg("Failed to find network address for \"",
 			   parseBuffer, "\"");
       break;
     }
@@ -1132,14 +1127,14 @@ Boolean RTSPClient::parseRTSPURL(UsageEnvironment& env, char const* url,
     if (nextChar == ':') {
       int portNumInt;
       if (sscanf(++from, "%d", &portNumInt) != 1) {
-	env.setResultMsg("No port number follows ':'");
+	envir().setResultMsg("No port number follows ':'");
 	break;
       }
       if (portNumInt < 1 || portNumInt > 65535) {
-	env.setResultMsg("Bad port number");
+	envir().setResultMsg("Bad port number");
 	break;
       }
-      portNum = (portNumBits)portNumInt;
+      portNum = (unsigned short)portNumInt;
     }
 
     return True;
@@ -1323,7 +1318,7 @@ Boolean RTSPClient::parseResponseCode(char const* line,
 
 Boolean RTSPClient::parseTransportResponse(char const* line, 
 					   char*& serverAddressStr,
-					   portNumBits& serverPortNum,
+					   unsigned short& serverPortNum,
 					   unsigned char& rtpChannelId,
 					   unsigned char& rtcpChannelId) {
   char* foundServerAddressStr = NULL;

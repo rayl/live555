@@ -33,9 +33,6 @@ Medium* createClient(UsageEnvironment& env,
   }
 
   extern unsigned char desiredAudioRTPPayloadFormat;
-  if (desiredAudioRTPPayloadFormat == 0xFF) {
-    desiredAudioRTPPayloadFormat = 0; // PCMU
-  }
   return SIPClient::createNew(env, desiredAudioRTPPayloadFormat,
 			      verbosityLevel, applicationName);
 }

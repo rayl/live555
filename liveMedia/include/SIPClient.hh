@@ -40,9 +40,9 @@ public:
 			      char const* applicationName = NULL);
 
   void setProxyServer(unsigned proxyServerAddress,
-		      unsigned short proxyServerPortNum);
+		      portNumBits proxyServerPortNum);
 
-  void setClientStartPortNum(unsigned short clientStartPortNum) {
+  void setClientStartPortNum(portNumBits clientStartPortNum) {
     fClientStartPortNum = clientStartPortNum;
   }
 
@@ -57,6 +57,9 @@ public:
 
   Boolean sendACK(); // on current call
   Boolean sendBYE(); // on current call
+
+  static Boolean parseSIPURL(UsageEnvironment& env, char const* url,
+			     NetAddress& address, portNumBits& portNum);
 
 protected:
   virtual ~SIPClient();
@@ -73,8 +76,6 @@ private:
   // Routines used to implement invite*():
   char* invite1(AuthRecord* authenticator);
   Boolean processURL(char const* url);
-  Boolean parseURL(char const* url,
-		   NetAddress& address, unsigned short& portNum);
   Boolean sendINVITE();
   static void inviteResponseHandler(void* clientData, int mask);
   void doInviteStateMachine(unsigned responseCode); 
@@ -108,7 +109,7 @@ private:
   struct in_addr fOurAddress;
       char const* fOurAddressStr;
       unsigned fOurAddressStrSize;
-  unsigned short fOurPortNum;
+  portNumBits fOurPortNum;
   Groupsock* fOurSocket;
   char* fUserAgentHeaderStr;
       unsigned fUserAgentHeaderStrSize;
@@ -117,8 +118,8 @@ private:
   char const* fURL;
       unsigned fURLSize;
   struct in_addr fServerAddress;
-  unsigned short fServerPortNum; // in host order 
-  unsigned short fClientStartPortNum; // in host order
+  portNumBits fServerPortNum; // in host order 
+  portNumBits fClientStartPortNum; // in host order
   unsigned fCallId, fFromTag; // set by us
   char const* fToTagStr; // set by the responder
       unsigned fToTagStrSize;

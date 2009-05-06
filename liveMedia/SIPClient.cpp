@@ -120,7 +120,7 @@ void SIPClient::reset() {
 }
 
 void SIPClient::setProxyServer(unsigned proxyServerAddress,
-			       unsigned short proxyServerPortNum) {
+			       portNumBits proxyServerPortNum) {
   fServerAddress.s_addr = proxyServerAddress;
   fServerPortNum = proxyServerPortNum;
   if (fOurSocket != NULL) {
@@ -174,7 +174,7 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
       "t=0 0\r\n"
       "m=audio %u RTP/AVP %u\r\n";
     unsigned inviteSDPFmtSize = strlen(inviteSDPFmt)
-      + 20 /* max int len */ + 20 * fOurAddressStrSize
+      + 20 /* max int len */ + 20 + fOurAddressStrSize
       + fApplicationNameSize
       + fOurAddressStrSize
       + 5 /* max short len */ + 3 /* max char len */;
@@ -184,8 +184,7 @@ char* SIPClient::invite1(AuthRecord* authenticator) {
 	    fCallId, fCSeq, fOurAddressStr,
 	    fApplicationName,
 	    fOurAddressStr,
-	    fClientStartPortNum, 
-	    fDesiredAudioRTPPayloadFormat);
+	    fClientStartPortNum, fDesiredAudioRTPPayloadFormat);
     unsigned inviteSDPSize = strlen(fInviteSDPDescription);
 
     char* const cmdFmt =
@@ -700,7 +699,7 @@ Boolean SIPClient::processURL(char const* url) {
     // get these by parsing the URL:
     if (fServerAddress.s_addr == 0) {
       NetAddress destAddress;
-      if (!parseURL(url, destAddress, fServerPortNum)) break;
+      if (!parseSIPURL(envir(), url, destAddress, fServerPortNum)) break;
       fServerAddress.s_addr = *(unsigned*)(destAddress.data());
     
       if (fOurSocket != NULL) {
@@ -715,16 +714,16 @@ Boolean SIPClient::processURL(char const* url) {
   return False;
 }
 
-Boolean SIPClient::parseURL(char const* url,
-			    NetAddress& address,
-			    unsigned short& portNum) {
+Boolean SIPClient::parseSIPURL(UsageEnvironment& env, char const* url,
+			       NetAddress& address,
+			       portNumBits& portNum) {
   do {
     // Parse the URL as "sip:<username>@<address>:<port>/<etc>"
     // (with ":<port>" and "/<etc>" optional)
     char const* prefix = "sip:";
     unsigned const prefixLength = 4;
     if (_strncasecmp(url, prefix, prefixLength) != 0) {
-      envir().setResultMsg("URL is not of the form \"", prefix, "\"");
+      env.setResultMsg("URL is not of the form \"", prefix, "\"");
       break;
     }
 
@@ -745,13 +744,13 @@ Boolean SIPClient::parseURL(char const* url,
       *to++ = *from++;
     }
     if (i == parseBufferSize) {
-      envir().setResultMsg("URL is too long");
+      env.setResultMsg("URL is too long");
       break;
     }
 
     NetAddressList addresses(parseBuffer);
     if (addresses.numAddresses() == 0) {
-      envir().setResultMsg("Failed to find network address for \"",
+      env.setResultMsg("Failed to find network address for \"",
 			   parseBuffer, "\"");
       break;
     }
@@ -762,14 +761,14 @@ Boolean SIPClient::parseURL(char const* url,
     if (nextChar == ':') {
       int portNumInt;
       if (sscanf(++from, "%d", &portNumInt) != 1) {
-	envir().setResultMsg("No port number follows ':'");
+	env.setResultMsg("No port number follows ':'");
 	break;
       }
       if (portNumInt < 1 || portNumInt > 65535) {
-	envir().setResultMsg("Bad port number");
+	env.setResultMsg("Bad port number");
 	break;
       }
-      portNum = (unsigned short)portNumInt;
+      portNum = (portNumBits)portNumInt;
     }
 
     return True;

@@ -64,7 +64,7 @@ char* username = NULL;
 char* password = NULL;
 char* proxyServerName = NULL;
 unsigned short proxyServerPortNum = 0;
-unsigned char desiredAudioRTPPayloadFormat = 0xFF;
+unsigned char desiredAudioRTPPayloadFormat = 0;
 unsigned short movieWidth = 240;
 unsigned short movieHeight = 180;
 unsigned movieFPS = 15;
@@ -88,6 +88,7 @@ void usage() {
 	  ? " [<proxy-server> [<proxy-server-port>]]" : "",
 	  supportCodecSelection
 	  ? " [-A <audio-codec-rtp-payload-format-code>]" : "");
+  //##### Add "-D <dest-rtsp-url>" #####
   shutdown();
 }
 
@@ -714,6 +715,63 @@ void checkForPacketArrival(void* clientData) {
 }
 
 // WORK IN PROGRESS #####
+class RTPTranslator: public FramedFilter {
+public:
+  static RTPTranslator* createNew(UsageEnvironment& env,
+				  FramedSource* source);
+
+private:
+  RTPTranslator(UsageEnvironment& env, FramedSource* source);
+  virtual ~RTPTranslator();
+
+  static void afterGettingFrame(void* clientData,
+                                unsigned numBytesRead,
+                                struct timeval presentationTime);
+  void afterGettingFrame1(unsigned numBytesRead,
+			  struct timeval presentationTime);
+
+private: // redefined virtual function:
+  virtual void doGetNextFrame();
+
+private:
+  //unsigned char fBuffer[50000];//##### Later: parameterize
+};
+
+RTPTranslator* RTPTranslator::createNew(UsageEnvironment& env,
+					FramedSource* source) {
+  // Check whether source is a "RTPSource"??? #####
+  return new RTPTranslator(env, source);
+}
+
+RTPTranslator::RTPTranslator(UsageEnvironment& env, FramedSource* source)
+  : FramedFilter(env, source) {
+}
+
+RTPTranslator::~RTPTranslator() {
+}
+
+void RTPTranslator::doGetNextFrame() {
+  // For now, do a direct relay #####
+  fInputSource->getNextFrame(fTo, fMaxSize,
+			     afterGettingFrame, this,
+			     handleClosure, this);
+}
+
+void RTPTranslator::afterGettingFrame(void* clientData,
+				      unsigned numBytesRead,
+				      struct timeval presentationTime) {
+  RTPTranslator* rtpTranslator = (RTPTranslator*)clientData;
+  rtpTranslator->afterGettingFrame1(numBytesRead, presentationTime);
+}
+
+void RTPTranslator::afterGettingFrame1(unsigned numBytesRead,
+				       struct timeval presentationTime) {
+  fFrameSize = numBytesRead;
+  fPresentationTime = presentationTime;
+  afterGetting(this);
+}
+
+//#####
 RTSPClient* rtspClientOutgoing = NULL;
 Boolean setupDestinationRTSPServer() {
   do {
@@ -721,19 +779,43 @@ Boolean setupDestinationRTSPServer() {
       = RTSPClient::createNew(*env, verbosityLevel, progName);
     if (rtspClientOutgoing == NULL) break;
 
-    char* destSDPDescription =
-      // TEMP, FOR TESTING. FIX #####
-      "v=0\n"
-      "o=- 12345 6789 IN IP4 127.0.0.1\n"
-      "s=RTSP session, relayed through \"playSIP\"\n"
-      "i=RTSP session\n"
-      "t=0 0\n"
-      "c=IN IP4 66.80.62.34\n"
-      "a=control:*\n"
-      "m=audio 0 RTP/AVP 0\n"
-      "a=control:trackID=0\n"
-      ;
+    // Construct the SDP description to announce into the RTSP server:
 
+    // First, get our own IP address, and that of the RTSP server:
+    struct in_addr ourIPAddress;
+    ourIPAddress.s_addr = ourSourceAddressForMulticast(*env);
+    char* ourIPAddressStr = strdup(our_inet_ntoa(ourIPAddress));
+
+    NetAddress serverAddress;
+    portNumBits serverPortNum;
+    if (!RTSPClient::parseRTSPURL(*env, destRTSPURL,
+				  serverAddress, serverPortNum)) break;
+    struct in_addr serverIPAddress;
+    serverIPAddress.s_addr = *(unsigned*)(serverAddress.data());
+    char* serverIPAddressStr = strdup(our_inet_ntoa(serverIPAddress));
+
+    char const* destSDPFmt =
+      "v=0\r\n"
+      "o=- %u %u IN IP4 %s\r\n"
+      "s=RTSP session, relayed through \"%s\"\n"
+      "i=relayed RTSP session\n"
+      "t=0 0\n"
+      "c=IN IP4 %s\n"
+      "a=control:*\n"
+      "m=audio 0 RTP/AVP %u\n"
+      "a=control:trackID=0\n";
+    //#####LATER: Support video as well; multiple tracks; other codecs #####
+    unsigned destSDPFmtSize = strlen(destSDPFmt)
+      + 20 /* max int len */ + 20 + strlen(ourIPAddressStr)
+      + strlen(progName)
+      + strlen(serverIPAddressStr)
+      + 3 /* max char len */;
+    char* destSDPDescription = new char[destSDPFmtSize];
+    sprintf(destSDPDescription, destSDPFmt,
+	    our_random(), our_random(), ourIPAddressStr,
+	    progName,
+	    serverIPAddressStr,
+	    desiredAudioRTPPayloadFormat);
     Boolean announceResult;
     if (username != NULL) {
       announceResult
@@ -745,11 +827,65 @@ Boolean setupDestinationRTSPServer() {
 	= rtspClientOutgoing->announceSDPDescription(destRTSPURL,
 						     destSDPDescription);
     }
+    delete serverIPAddressStr; delete ourIPAddressStr;
     if (!announceResult) break;
+    
+    // Then, create a "MediaSession" object from this SDP description:
+    MediaSession* destSession
+      = MediaSession::createNew(*env, destSDPDescription);
+    delete destSDPDescription;
+    if (destSession == NULL) break;
+
+    // Initiate, setup and play "destSession".
+    // ##### TEMP HACK - take advantage of the fact that we have
+    // ##### a single audio session only.
+    MediaSubsession* destSubsession;
+    PrioritizedRTPStreamSelector* multiSource;
+    int multiSourceSessionId;
+    char const* mimeType
+      = desiredAudioRTPPayloadFormat == 0 ? "audio/PCMU" 
+      : desiredAudioRTPPayloadFormat == 3 ? "audio/GSM"
+      : "audio/???"; //##### FIX
+    if (!destSession->initiateByMediaType(mimeType, destSubsession,
+					  multiSource,
+					  multiSourceSessionId)) break;
+    if (!rtspClientOutgoing->setupMediaSubsession(*destSubsession,
+						  True, True)) break;
+    if (!rtspClientOutgoing->playMediaSubsession(*destSubsession,
+						 True/*hackForDSS*/)) break;
+
+    // Next, set up "RTPSink"s for the outgoing packets:
+    struct in_addr destAddr; destAddr.s_addr = 0; // because we're using TCP
+    Groupsock* destGS = new Groupsock(*env, destAddr, 0/*aud*/, 255);
+    if (destGS == NULL) break;
+    RTPSink* destRTPSink = NULL;
+    if (desiredAudioRTPPayloadFormat == 0) {
+      destRTPSink = SimpleRTPSink::createNew(*env, destGS, 0, 8000,
+					     "audio", "PCMU");
+    } else if (desiredAudioRTPPayloadFormat == 3) {
+      destRTPSink = GSMAudioRTPSink::createNew(*env, destGS);
+    }
+    if (destRTPSink == NULL) break;
+
+    // Tell the sink to stream using TCP:
+    destRTPSink->setStreamSocket(rtspClientOutgoing->socketNum(), 0/*aud*/);
+    // LATER: set up RTCPInstance also #####
 
     // Next, set up RTPTranslator(s) between source(s) and destination(s),
     // and start playing them.
-    // TO COMPLETE #####
+    MediaSubsessionIterator iter(*session);
+    MediaSubsession *sourceSubsession = NULL;
+    while ((sourceSubsession = iter.next()) != NULL) {
+      if (strcmp(sourceSubsession->mediumName(), "audio") == 0) break;
+    }
+    if (sourceSubsession == NULL) break;
+    RTPTranslator* rtpTranslator
+      = RTPTranslator::createNew(*env, sourceSubsession->readSource());
+    if (rtpTranslator == NULL) break;
+    destRTPSink->startPlaying(*rtpTranslator,
+			      subsessionAfterPlaying, sourceSubsession);
+    
+    // LATER: delete media on close #####
 
     return True;
   } while (0);

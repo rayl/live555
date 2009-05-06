@@ -178,7 +178,7 @@ NetAddress const* NetAddressList::Iterator::nextAddress() {
 
 ////////// Port //////////
 
-Port::Port(unsigned short num /* in host byte order */) {
+Port::Port(portNumBits num /* in host byte order */) {
 	fPortNum = htons(num);
 }
 

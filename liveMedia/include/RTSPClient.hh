@@ -92,6 +92,9 @@ public:
       // Issues a RTSP "TEARDOWN" command on "subsession".
       // Returns True iff this command succeeds
 
+  static Boolean parseRTSPURL(UsageEnvironment& env, char const* url,
+			      NetAddress& address, portNumBits& portNum);
+
 protected:
   virtual ~RTSPClient();
 
@@ -106,8 +109,6 @@ private:
   void reset();
 
   Boolean openConnectionFromURL(char const* url);
-  Boolean parseURL(char const* url,
-		   NetAddress& address, unsigned short& portNum);
   char* createAuthenticatorString(AuthRecord const* authenticator,
 				  char const* cmd, char const* url);
   void useAuthenticator(AuthRecord const* authenticator); // in future reqs
@@ -117,7 +118,7 @@ private:
   Boolean parseResponseCode(char const* line, unsigned& responseCode);
   Boolean parseTransportResponse(char const* line,
 				 char*& serverAddressStr,
-				 unsigned short& serverPortNum,
+				 portNumBits& serverPortNum,
 				 unsigned char& rtpChannelId,
 				 unsigned char& rtcpChannelId);
   void constructSubsessionURL(MediaSubsession const& subsession,

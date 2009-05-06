@@ -31,6 +31,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include <iostream.h>
 
+// Definition of a type representing a low-level network address.
+// At present, this is 32-bits, for IPv4.  Later, generalize it,
+// to allow for IPv6.
+typedef unsigned netAddressBits;
+
 class NetAddress {
     public:
 	NetAddress(unsigned char const* data,
@@ -40,9 +45,8 @@ class NetAddress {
 	NetAddress& operator=(NetAddress const& rightSide);
 	virtual ~NetAddress();
 
-	unsigned length() const
-		{ return fLength; }
-	const unsigned char* data() const // always in network byte order
+	unsigned length() const { return fLength; }
+	unsigned char const* data() const // always in network byte order
 		{ return fData; }
 
     private:
@@ -60,8 +64,7 @@ class NetAddressList {
 	NetAddressList& operator=(NetAddressList const& rightSide);
 	virtual ~NetAddressList();
 
-	unsigned numAddresses() const
-		{ return fNumAddresses; }
+	unsigned numAddresses() const { return fNumAddresses; }
 
 	NetAddress const* firstAddress() const;
 
@@ -76,7 +79,7 @@ class NetAddressList {
 	};
 
     private:
-	void assign(unsigned numAddresses, NetAddress** addressArray);
+	void assign(netAddressBits numAddresses, NetAddress** addressArray);
 	void clean();
 
 	friend class Iterator;
@@ -84,17 +87,19 @@ class NetAddressList {
 	NetAddress** fAddressArray;	
 };
 
+typedef unsigned short portNumBits;
+
 class Port {
     public:
-	Port(unsigned short num /* in host byte order */);
+	Port(portNumBits num /* in host byte order */);
 
-	unsigned short num() const // in network byte order
+	portNumBits num() const // in network byte order
 		{ return fPortNum; }
 
     private:
-	unsigned short fPortNum; // stored in network byte order
+	portNumBits fPortNum; // stored in network byte order
 #ifdef IRIX
-	unsigned short filler; // hack to overcome a bug in IRIX C++ compiler
+	portNumBits filler; // hack to overcome a bug in IRIX C++ compiler
 #endif
 };
 
@@ -107,11 +112,13 @@ class AddressPortLookupTable {
 	AddressPortLookupTable();
 	virtual ~AddressPortLookupTable();
 
-	void* Add(unsigned address1, unsigned address2, Port port,
-		  void* value);
+	void* Add(netAddressBits address1, netAddressBits address2,
+		  Port port, void* value);
 		// Returns the old value if different, otherwise 0
-	Boolean Remove(unsigned address1, unsigned address2, Port port);
-	void* Lookup(unsigned address1, unsigned address2, Port port);
+	Boolean Remove(netAddressBits address1, netAddressBits address2,
+		       Port port);
+	void* Lookup(netAddressBits address1, netAddressBits address2,
+		     Port port);
 		// Returns 0 if not found
 
 	// Used to iterate through the entries in the table
@@ -132,6 +139,6 @@ class AddressPortLookupTable {
 };
 
 
-Boolean IsMulticastAddress(unsigned address);
+Boolean IsMulticastAddress(netAddressBits address);
 
 #endif
