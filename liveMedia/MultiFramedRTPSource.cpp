@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2006 Live Networks, Inc.  All rights reserved.
 // RTP source for a common kind of payload format: Those that pack multiple,
 // complete codec frames (as many as possible) into each RTP packet.
 // Implementation
@@ -32,7 +32,7 @@ public:
   void reset();
 
   BufferedPacket* getFreePacket(MultiFramedRTPSource* ourSource);
-  void storePacket(BufferedPacket* bPacket);
+  Boolean storePacket(BufferedPacket* bPacket);
   BufferedPacket* getNextCompletedPacket(Boolean& packetLossPreceded);
   void releaseUsedPacket(BufferedPacket* packet);
   void freePacket(BufferedPacket* packet) {
@@ -275,7 +275,7 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
     bPacket->assignMiscParams(rtpSeqNo, rtpTimestamp, presentationTime,
 			      hasBeenSyncedUsingRTCP, rtpMarkerBit,
 			      timeNow);
-    source->fReorderingBuffer->storePacket(bPacket);
+    if (!source->fReorderingBuffer->storePacket(bPacket)) break;
 
     readSuccess = True;
   } while (0);
@@ -459,7 +459,7 @@ BufferedPacket* ReorderingPacketBuffer
     : fPacketFactory->createNewPacket(ourSource);
 }
 
-void ReorderingPacketBuffer::storePacket(BufferedPacket* bPacket) {
+Boolean ReorderingPacketBuffer::storePacket(BufferedPacket* bPacket) {
   unsigned short rtpSeqNo = bPacket->rtpSeqNo();
 
   if (!fHaveSeenFirstPacket) {
@@ -474,7 +474,7 @@ void ReorderingPacketBuffer::storePacket(BufferedPacket* bPacket) {
   unsigned short const seqNoThreshold = 100;
   if (seqNumLT(rtpSeqNo, fNextExpectedSeqNo)
       && seqNumLT(fNextExpectedSeqNo, rtpSeqNo+seqNoThreshold)) {
-    return;
+    return False;
   }
   
   // Figure out where the new packet will be stored in the queue:
@@ -484,7 +484,7 @@ void ReorderingPacketBuffer::storePacket(BufferedPacket* bPacket) {
     if (seqNumLT(rtpSeqNo, afterPtr->rtpSeqNo())) break; // it comes here
     if (rtpSeqNo == afterPtr->rtpSeqNo()) {
       // This is a duplicate packet - ignore it
-      return;
+      return False;
     }
     
     beforePtr = afterPtr;
@@ -498,6 +498,8 @@ void ReorderingPacketBuffer::storePacket(BufferedPacket* bPacket) {
   } else {
     beforePtr->nextPacket() = bPacket;
   }
+
+  return True;
 }
 
 void ReorderingPacketBuffer::releaseUsedPacket(BufferedPacket* packet) {

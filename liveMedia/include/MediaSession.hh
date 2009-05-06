@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2006 Live Networks, Inc.  All rights reserved.
 // A data structure that represents a session that consists of
 // potentially multiple (audio and/or video) sub-sessions
 // (This data structure is used for media *receivers* - i.e., clients.
@@ -238,7 +238,7 @@ private:
   Boolean parseSDPAttribute_fmtp(char const* sdpLine);
   Boolean parseSDPAttribute_source_filter(char const* sdpLine);
   Boolean parseSDPAttribute_x_dimensions(char const* sdpLine);
-  Boolean parseSDPAttribute_x_framerate(char const* sdpLine);
+  Boolean parseSDPAttribute_framerate(char const* sdpLine);
 
 private:
   // Linkage fields:
@@ -272,7 +272,7 @@ private:
   unsigned short fVideoWidth, fVideoHeight;
      // screen dimensions (set by an optional a=x-dimensions: <w>,<h> line)
   unsigned fVideoFPS;
-     // frame rate (set by an optional a=x-framerate: <fps> line)
+     // frame rate (set by an optional "a=framerate: <fps>" or "a=x-framerate: <fps>" line)
   unsigned fNumChannels;
      // optionally set by "a=rtpmap:" lines for audio sessions.  Default: 1
   float fScale; // set from a RTSP "Scale:" header

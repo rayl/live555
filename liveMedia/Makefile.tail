@@ -103,7 +103,7 @@ include/MPEG4VideoStreamFramer.hh:	include/MPEGVideoStreamFramer.hh
 MPEG4VideoStreamDiscreteFramer.$(CPP):	include/MPEG4VideoStreamDiscreteFramer.hh
 include/MPEG4VideoStreamDiscreteFramer.hh:	include/MPEG4VideoStreamFramer.hh
 H264VideoStreamFramer.$(CPP):	include/H264VideoStreamFramer.hh
-include/H264VideoStreamFramer.hh:	include/FramedSource.hh
+include/H264VideoStreamFramer.hh:	include/FramedFilter.hh
 MPEGVideoStreamParser.$(CPP):	MPEGVideoStreamParser.hh
 MPEG1or2AudioStreamFramer.$(CPP):	include/MPEG1or2AudioStreamFramer.hh StreamParser.hh MP3Internals.hh
 include/MPEG1or2AudioStreamFramer.hh:	include/FramedFilter.hh

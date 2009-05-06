@@ -111,7 +111,6 @@ private:
   private:
     UsageEnvironment& envir() { return fOurServer.envir(); }
     void reclaimStreamStates();
-    void resetRequestBuffer();
     static void incomingRequestHandler(void*, int /*mask*/);
     void incomingRequestHandler1();
     void handleCmd_bad(char const* cseq);
@@ -137,6 +136,15 @@ private:
 				 char const* cseq, char const* fullRequestStr);
     Boolean authenticationOK(char const* cmdName, char const* cseq,
 			     char const* fullRequestStr);
+    Boolean parseRequestString(char const *reqStr, unsigned reqStrSize,
+			       char *resultCmdName,
+			       unsigned resultCmdNameMaxSize, 
+			       char* resultURLPreSuffix,
+			       unsigned resultURLPreSuffixMaxSize, 
+			       char* resultURLSuffix,
+			       unsigned resultURLSuffixMaxSize, 
+			       char* resultCSeq,
+			       unsigned resultCSeqMaxSize); 
     void noteLiveness();
     Boolean isMulticast() const { return fIsMulticast; }
     static void noteClientLiveness(RTSPClientSession* clientSession);
@@ -149,9 +157,7 @@ private:
     int fClientSocket;
     struct sockaddr_in fClientAddr;
     TaskToken fLivenessCheckTask;
-    unsigned char fRequestBuffer[RTSP_BUFFER_SIZE];
-    unsigned fRequestBytesAlreadySeen, fRequestBufferBytesLeft;
-    unsigned char* fLastCRLF;
+    unsigned char fBuffer[RTSP_BUFFER_SIZE];
     unsigned char fResponseBuffer[RTSP_BUFFER_SIZE];
     Boolean fIsMulticast, fSessionIsActive, fStreamAfterSETUP;
     Authenticator fCurrentAuthenticator; // used if access control is needed

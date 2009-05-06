@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2006 Live Networks, Inc.  All rights reserved.
 // A data structure that represents a session that consists of
 // potentially multiple (audio and/or video) sub-sessions
 // Implementation
@@ -213,7 +213,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
       if (subsession->parseSDPAttribute_fmtp(sdpLine)) continue;
       if (subsession->parseSDPAttribute_source_filter(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_dimensions(sdpLine)) continue;
-      if (subsession->parseSDPAttribute_x_framerate(sdpLine)) continue;
+      if (subsession->parseSDPAttribute_framerate(sdpLine)) continue;
 #ifdef SUPPORT_REAL_RTSP
       if (RealParseSDPAttributes(subsession, sdpLine)) continue;
 #endif
@@ -1102,12 +1102,16 @@ Boolean MediaSubsession::parseSDPAttribute_x_dimensions(char const* sdpLine) {
   return parseSuccess;
 }
 
-Boolean MediaSubsession::parseSDPAttribute_x_framerate(char const* sdpLine) {
-  // Check for a "a=x-framerate:<fps>" line:
+Boolean MediaSubsession::parseSDPAttribute_framerate(char const* sdpLine) {
+  // Check for a "a=framerate: <fps>" or "a=x-framerate: <fps>" line:
   Boolean parseSuccess = False;
 
+  float frate;
   int rate;
-  if (sscanf(sdpLine, "a=x-framerate:%d", &rate) == 1) {
+  if (sscanf(sdpLine, "a=framerate: %f", &frate) == 1) {
+    parseSuccess = True;
+    fVideoFPS = (unsigned)frate;
+  } else if (sscanf(sdpLine, "a=x-framerate: %d", &rate) == 1) {
     parseSuccess = True;
     fVideoFPS = (unsigned)rate;
   }
