@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
 // (Note that this RTSP server works for multicast only)
 
 #ifdef IMPLEMENT_RTSP_SERVER
-ServerMediaSession* serverMediaSession;
+PassiveServerMediaSession* serverMediaSession;
 RTSPServer* rtspServer;
 #endif
 
@@ -159,7 +159,7 @@ void play() {
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER
-  serverMediaSession = ServerMediaSession
+  serverMediaSession = PassiveServerMediaSession
     ::createNew(*env, "Session streamed by \"testMP3Streamer\"");
   serverMediaSession->addSubsession(*sessionState.sink);
   rtspServer = RTSPServer::createNew(*env, *serverMediaSession);

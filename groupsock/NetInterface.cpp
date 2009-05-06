@@ -20,8 +20,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "NetInterface.hh"
 #include "GroupsockHelper.hh"
-#include "TunnelEncaps.hh"
-#include "IOHandlers.hh"
 
 #if defined(__WIN32__) || defined(_WIN32)
 #include <strstrea.h>
@@ -40,26 +38,6 @@ NetInterface::NetInterface() {
 }
 
 NetInterface::~NetInterface() {
-}
-
-//##### TEMP: Use a single buffer, sized for UDP tunnels:
-//##### This assumes that the I/O handlers are non-reentrant
-static unsigned const maxPacketLength = 50*1024; // bytes
-    // This is usually overkill, because UDP packets are usually no larger
-    // than the typical Ethernet MTU (1500 bytes).  However, I've seen reports
-    // of Windows Media Servers sending UDP packets as large as 27 kBytes.
-    // These will probably undego lots of IP-level fragmentation, but that
-    // occurs below us.  We just have to hope that fragments don't get lost.
-static unsigned const ioBufferSize
-	= maxPacketLength + TunnelEncapsulationTrailerMaxSize;
-static unsigned char ioBuffer[ioBufferSize];
-
-unsigned char* NetInterface::IOBuffer() {
-	return ioBuffer;
-}
-
-unsigned NetInterface::IOBufferSize() {
-	return ioBufferSize;
 }
 
 
@@ -113,12 +91,9 @@ int Socket::DebugLevel = 1; // default value
 Socket::Socket(UsageEnvironment& env, Port port, Boolean setLoopback)
 	: fEnv(DefaultUsageEnvironment != NULL ? *DefaultUsageEnvironment : env), fPort(port) {
 	fSocketNum = setupDatagramSocket(fEnv, port, setLoopback);
-	sanityHack = 42+fSocketNum;
 }
 
 Socket::~Socket() {
-	sanityHack = 0; // see IOHandlers.C
-
 	_close(fSocketNum);
 }
 

@@ -97,7 +97,7 @@ static unsigned parseAtom(unsigned char const* ptr, unsigned size) {
 
     if (offsetToEnclosedAtoms > 0) {
       levelPrint();
-      if (offsetToEnclosedAtoms <= 1000) {
+      if (offsetToEnclosedAtoms <= 2000) {
 	for (int i = 0; i < offsetToEnclosedAtoms; ++i) {
 	  if (i%4 == 0) fprintf(stderr, ":");
 	  fprintf(stderr, "%02x", ptr[i]);

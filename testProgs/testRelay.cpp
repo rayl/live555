@@ -68,6 +68,9 @@ int main(int argc, char** argv) {
 }
 
 
+static unsigned const maxPacketSize = 65536;
+static unsigned char pkt[maxPacketSize+1];
+
 void readHandler(void* clientData, int /*mask*/) {
   static OutputSocket* outputSocket = NULL;
   static unsigned outputAddress = 0;
@@ -81,10 +84,10 @@ void readHandler(void* clientData, int /*mask*/) {
 
   // Read the packet from the input socket:
   Groupsock* inputGroupsock = (Groupsock*)clientData;
-  unsigned char* pkt;
   unsigned packetSize;
   struct sockaddr_in fromAddress; // not used
-  if (!inputGroupsock->handleRead(pkt, packetSize, fromAddress)) return;
+  if (!inputGroupsock->handleRead(pkt, maxPacketSize,
+				  packetSize, fromAddress)) return;
 
   // And write it out to the output socket (with port 4444, TTL 255):
   outputSocket->write(outputAddress, 4444, 255, pkt, packetSize);

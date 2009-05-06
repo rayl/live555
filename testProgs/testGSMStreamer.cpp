@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
   return 0; // only to prevent compiler warning
 }
 
-ServerMediaSession* serverMediaSession;
+PassiveServerMediaSession* serverMediaSession;
 RTSPServer* rtspServer;
 
 void afterPlaying(void* clientData); // forward
@@ -113,7 +113,7 @@ void play() {
 			      sessionState.sink, NULL /* we're a server */);
   // Note: This starts RTCP running automatically
 
-  serverMediaSession = ServerMediaSession
+  serverMediaSession = PassiveServerMediaSession
     ::createNew(*env, "Session streamed by \"testGSMStreamer\"");
   rtspServer = RTSPServer::createNew(*env, *serverMediaSession, 7070);
   if (rtspServer == NULL) {

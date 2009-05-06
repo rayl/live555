@@ -467,7 +467,7 @@ static Boolean badAddress(unsigned addr) {
 Boolean loopbackWorks = 1;
 
 unsigned ourSourceAddressForMulticast(UsageEnvironment& env) {
-	static unsigned ourAddress = 0;
+  	static unsigned ourAddress = 0;
 	int sock = -1;
 	struct in_addr testAddr;
 

@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER
-  ServerMediaSession* serverMediaSession = ServerMediaSession
+  PassiveServerMediaSession* serverMediaSession = PassiveServerMediaSession
     ::createNew(*env, "Session streamed by \"testMPEGVideoStreamer\"");
   serverMediaSession->addSubsession(*videoSink);
   RTSPServer* rtspServer

@@ -32,47 +32,33 @@ class ServerMediaSubsession; // forward
 
 class ServerMediaSession: public Medium {
 public:
-  static ServerMediaSession* createNew(UsageEnvironment& env,
-				       char const* description = NULL,
-				       char const* info = NULL);
-
   static Boolean lookupByName(UsageEnvironment& env,
-			      char const* sourceName,
-			      ServerMediaSession*& resultSession);
-
-  void addSubsession(RTPSink& rtpSink);
-  void addSubsessionByComponents(struct in_addr const& ipAddress,
-				 unsigned short portNum /* host order */,
-				 unsigned char ttl,
-				 unsigned rtpTimestampFrequency,
-				 unsigned char rtpPayloadType,
-				 char const* mediaType,
-				 char const* rtpPayloadFormatName);
-      // As an alternative to specifying a subsession by adding a RTP Sink,
-      // you can call this routine to specify it by its components.
+                              char const* sourceName,
+                              ServerMediaSession*& resultSession);
 
   char* generateSDPDescription(); // based on the entire session
       // Note: The caller is responsible for freeing the returned string
 
-private: // redefined virtual functions
-  virtual Boolean isServerMediaSession() const;
-
-private:
+protected: // Abstract base class
   ServerMediaSession(UsageEnvironment& env, char const* info,
 		     char const* description);
-      // called only by createNew();
   virtual ~ServerMediaSession();
 
-private:
+protected:
   // Linkage fields:
   friend class ServerMediaSubsessionIterator;
   ServerMediaSubsession* fSubsessionsHead;
   ServerMediaSubsession* fSubsessionsTail;
 
+  unsigned fSubsessionCounter;
+
+private: // redefined virtual functions
+  virtual Boolean isServerMediaSession() const;
+
+private:
   char* fDescriptionSDPString;
   char* fInfoSDPString;
   struct timeval fCreationTime;
-  unsigned fSubsessionCounter;
 };
 
 
@@ -97,7 +83,7 @@ public:
   GroupEId const& groupEId() const { return fGroupEId; }
   char const* trackId() const { return fTrackId; }
 
-private:
+public:
   ServerMediaSubsession(GroupEId const& groupEId,
 			char const* trackId, char const* sdpLines);
 

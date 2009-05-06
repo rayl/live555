@@ -17,11 +17,10 @@ GroupEId.$(CPP):	include/GroupEId.hh
 Groupsock.$(CPP):	include/Groupsock.hh include/GroupsockHelper.hh include/TunnelEncaps.hh
 include/Groupsock.hh:	include/groupsock_version.hh include/NetInterface.hh include/GroupEId.hh
 include/NetInterface.hh:	include/NetAddress.hh
-NetInterface.$(CPP):	include/NetInterface.hh include/GroupsockHelper.hh include/TunnelEncaps.hh include/IOHandlers.hh
 include/TunnelEncaps.hh:	include/NetAddress.hh
-include/IOHandlers.hh:	include/NetInterface.hh
+NetInterface.$(CPP):	include/NetInterface.hh include/GroupsockHelper.hh
 NetAddress.$(CPP):	include/NetAddress.hh include/GroupsockHelper.hh
-IOHandlers.$(CPP):	include/IOHandlers.hh
+IOHandlers.$(CPP):	include/IOHandlers.hh include/TunnelEncaps.hh
 
 libgroupsock.$(LIB_SUFFIX): $(GROUPSOCK_LIB_OBJS) \
     $(PLATFORM_SPECIFIC_LIB_OBJS)

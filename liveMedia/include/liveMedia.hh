@@ -53,5 +53,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPClient.hh"
 #include "QuickTimeFileSink.hh"
 #include "QuickTimeGenericRTPSource.hh"
+#include "PassiveServerMediaSession.hh"
 
 #endif

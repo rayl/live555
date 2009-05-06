@@ -22,6 +22,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "BasicUsageEnvironment.hh"
 #include <stdio.h>
 
+static unsigned const maxPacketSize = 65536;
+static unsigned char packet[maxPacketSize+1];
+
 int main(int argc, char** argv) {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
@@ -42,10 +45,10 @@ int main(int argc, char** argv) {
   // (Because this is the only thing we do, we can just do this
   // synchronously, in a loop, so we don't need to set up an asynchronous
   // event handler like we do in most of the other test programs.)
-  unsigned char* packet;
   unsigned packetSize;
   struct sockaddr_in fromAddress;
-  while (inputGroupsock.handleRead(packet, packetSize, fromAddress)) {
+  while (inputGroupsock.handleRead(packet, maxPacketSize,
+				   packetSize, fromAddress)) {
     printf("\n[packet from %s (%d bytes)]\n",
 	   our_inet_ntoa(fromAddress.sin_addr), packetSize);
 

@@ -31,12 +31,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// ServerMediaSession //////////
 
-ServerMediaSession*
-ServerMediaSession::createNew(UsageEnvironment& env,
-			      char const* description, char const* info) {
-  return new ServerMediaSession(env, description, info);
-}
-
 Boolean ServerMediaSession::lookupByName(UsageEnvironment& env,
 				   char const* instanceName,
 				   ServerMediaSession*& resultSession) {
@@ -81,86 +75,6 @@ ServerMediaSession::~ServerMediaSession() {
 
 Boolean ServerMediaSession::isServerMediaSession() const {
   return True;
-}
-
-void ServerMediaSession::addSubsession(RTPSink& rtpSink) {
-  // Use the components from "rtpSink":
-  Groupsock const& gs = rtpSink.groupsockBeingUsed();
-  addSubsessionByComponents(gs.groupAddress(),
-			    ntohs(gs.port().num()),
-			    gs.ttl(), rtpSink.rtpTimestampFrequency(),
-			    rtpSink.rtpPayloadType(),
-			    rtpSink.sdpMediaType(),
-			    rtpSink.rtpPayloadFormatName());
-}
-			    
-void ServerMediaSession
-::addSubsessionByComponents(struct in_addr const& ipAddress,
-			    unsigned short portNum, unsigned char ttl,
-			    unsigned rtpTimestampFrequency,
-			    unsigned char rtpPayloadType,
-			    char const* mediaType,
-			    char const* rtpPayloadFormatName) {
-  // Construct a set of SDP lines that describe this subsession:
-
-  // For dynamic payload types, we need a "a=rtpmap:" line also:
-  char rtpmapBuffer[100];
-  if (rtpPayloadType >= 96) {
-    char const* rtpmapFormat = "a=rtpmap:%d %s/%d\r\n";
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf().  Warning!
-    sprintf(rtpmapBuffer, rtpmapFormat,
-	    rtpPayloadType, rtpPayloadFormatName, rtpTimestampFrequency);
-#else
-    snprintf(rtpmapBuffer, sizeof rtpmapBuffer, rtpmapFormat,
-	     rtpPayloadType, rtpPayloadFormatName, rtpTimestampFrequency);
-#endif    
-  } else {
-    // There's no "a=rtpmap:" line:
-    rtpmapBuffer[0] = '\0';
-  }
-
-  // Set up our 'track id':
-  char trackIdBuffer[100];
-  sprintf(trackIdBuffer, "track%d", ++fSubsessionCounter);
-
-  char sdpBuffer[1000];
-  char const* sdpFormat
-    = "m=%s %d RTP/AVP %d\r\n%sa=control:%s\r\nc=IN IP4 %s/%d\r\n"; 
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf().  Warning!
-  sprintf(sdpBuffer, sdpFormat, 
-	  mediaType, // m= <media>
-	  portNum, // m= <port>
-	  rtpPayloadType, // m= <fmt list>
-	  rtpmapBuffer, // a=rtpmap:... (if present)
-	  trackIdBuffer, // a=control:<track-id>
-	  our_inet_ntoa(ipAddress), // c= <connection address>
-	  ttl); // c= TTL
-#else
-  snprintf(sdpBuffer, sizeof sdpBuffer, sdpFormat, 
-	   mediaType, // m= <media>
-	   portNum, // m= <port>
-	   rtpPayloadType, // m= <fmt list>
-	   rtpmapBuffer, // a=rtpmap:... (if present)
-	   trackIdBuffer, // a=control:<track-id>
-	   our_inet_ntoa(ipAddress), // c= <connection address>
-	   ttl); // c= TTL
-#endif    
-
-  // Finally, create a new subsession description:
-  GroupEId const groupEId(ipAddress, portNum, ttl);
-  ServerMediaSubsession* subsession
-    = new ServerMediaSubsession(groupEId,
-				strdup(trackIdBuffer), strdup(sdpBuffer));
-  if (subsession == NULL) return;
-
-  if (fSubsessionsHead == NULL) {
-    fSubsessionsHead = fSubsessionsTail = subsession;
-  } else {
-    fSubsessionsTail->setNext(subsession);
-    fSubsessionsTail = subsession;
-  }
 }
 
 char* ServerMediaSession::generateSDPDescription() {

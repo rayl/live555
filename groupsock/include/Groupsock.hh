@@ -54,7 +54,7 @@ protected:
   unsigned short sourcePortNum() const {return fSourcePort.num();}
 
 private: // redefined virtual function
-  virtual Boolean handleRead(unsigned char*& resultData,
+  virtual Boolean handleRead(unsigned char* buffer, unsigned bufferMaxSize,
 			     unsigned& bytesRead,
 			     struct sockaddr_in& fromAddress);
 
@@ -68,135 +68,127 @@ private:
 // multicast, but it can send/receive unicast as well.
 
 class Groupsock: public OutputSocket {
-    public:
-	Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
-		  Port port, unsigned char ttl);
-            // used for a 'source-independent multicast' group
-	Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
-	  struct in_addr const& sourceFilterAddr,
-		  Port port);
-            // used for a 'source-specific multicast' group
-	virtual ~Groupsock();
+public:
+  Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
+	    Port port, unsigned char ttl);
+      // used for a 'source-independent multicast' group
+  Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
+	    struct in_addr const& sourceFilterAddr,
+	    Port port);
+      // used for a 'source-specific multicast' group
+  virtual ~Groupsock();
 
-        void changeDestinationParameters(struct in_addr const& newDestAddr,
-					 Port newDestPort, int newDestTTL);
-            // By default, the destination address, port and ttl for
-            // outgoing packets are those that were specified in
-            // the constructor.  This works OK for multicast sockets,
-            // but for unicast we usually want the destination port
-            // number, at least, to be different from the source port.
-            // (If a parameter is 0 (or ~0 for ttl), then no change made.)
+  void changeDestinationParameters(struct in_addr const& newDestAddr,
+				   Port newDestPort, int newDestTTL);
+      // By default, the destination address, port and ttl for
+      // outgoing packets are those that were specified in
+      // the constructor.  This works OK for multicast sockets,
+      // but for unicast we usually want the destination port
+      // number, at least, to be different from the source port.
+      // (If a parameter is 0 (or ~0 for ttl), then no change made.)
 
-	struct in_addr const& groupAddress() const {
-	  return fIncomingGroupEId.groupAddress();
-	}
-        struct in_addr const& sourceFilterAddress() const {
-	  return fIncomingGroupEId.sourceFilterAddress();
-	}
-	struct in_addr const& destAddress() const {
-	  return fOutgoingGroupEId.groupAddress();
-	}
-        Port destPort() const {
-          return fDestPort;
-	}
+  struct in_addr const& groupAddress() const {
+    return fIncomingGroupEId.groupAddress();
+  }
+  struct in_addr const& sourceFilterAddress() const {
+    return fIncomingGroupEId.sourceFilterAddress();
+  }
+  struct in_addr const& destAddress() const {
+    return fOutgoingGroupEId.groupAddress();
+  }
+  Port destPort() const {
+    return fDestPort;
+  }
+  
+  Boolean isSSM() const {
+    return fIncomingGroupEId.isSSM();
+  }
+  
+  unsigned char ttl() const {
+    return fOutgoingGroupEId.scope().ttl();
+  }
+  
+  Boolean output(UsageEnvironment& env, unsigned char ttl,
+		 unsigned char* buffer, unsigned bufferSize,
+		 DirectedNetInterface* interfaceNotToFwdBackTo = NULL);
+  
+  DirectedNetInterfaceSet& members() { return fMembers; }
+  
+  Boolean deleteIfNoMembers;
+  Boolean isSlave; // for tunneling
 
-        Boolean isSSM() const {
-	  return fIncomingGroupEId.isSSM();
-	}
-
-	unsigned char ttl() const {
-	  return fOutgoingGroupEId.scope().ttl();
-	}
-
-	Boolean output(UsageEnvironment& env, unsigned char ttl,
-		       unsigned char* buffer, unsigned bufferSize,
-		       DirectedNetInterface* interfaceNotToFwdBackTo = NULL);
-
-	DirectedNetInterfaceSet& members()
-		{ return fMembers; }
-
-	Boolean deleteIfNoMembers;
-	Boolean isSlave; // for tunneling
-
-        static NetInterfaceTrafficStats statsIncoming;
-        static NetInterfaceTrafficStats statsOutgoing;
-	static NetInterfaceTrafficStats statsRelayedIncoming;
-	static NetInterfaceTrafficStats statsRelayedOutgoing;
-        NetInterfaceTrafficStats statsGroupIncoming; // *not* static
-        NetInterfaceTrafficStats statsGroupOutgoing; // *not* static
-        NetInterfaceTrafficStats statsGroupRelayedIncoming; // *not* static
-        NetInterfaceTrafficStats statsGroupRelayedOutgoing; // *not* static
-
-	Boolean wasLoopedBackFromUs(UsageEnvironment& env,
-				    struct sockaddr_in& fromAddress);
-
-        static Groupsock* lookupByName(UsageEnvironment& env, char const* name);
-
-    public: // redefined virtual functions
-	virtual Boolean handleRead(unsigned char*& resultData,
-				   unsigned& bytesRead,
-				   struct sockaddr_in& fromAddress);
-
-    public:
-        // An alternative version of "handleRead()" that reads into a
-        // pre-specified buffer:
-	Boolean handleRead(unsigned char* buffer, unsigned bufferMaxSize,
-			   unsigned& bytesRead,
-			   struct sockaddr_in& fromAddress);
-
-    private:
-	int outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
-				     unsigned char ttlToFwd,
-				     unsigned char* data, unsigned size,
-				     unsigned sourceAddr);
-
-    private:
-        GroupEId fIncomingGroupEId, fOutgoingGroupEId;
-           // for multicast, these two "GroupEId"s will usually be the same
-        Port fDestPort;
-	DirectedNetInterfaceSet fMembers;
+  static NetInterfaceTrafficStats statsIncoming;
+  static NetInterfaceTrafficStats statsOutgoing;
+  static NetInterfaceTrafficStats statsRelayedIncoming;
+  static NetInterfaceTrafficStats statsRelayedOutgoing;
+  NetInterfaceTrafficStats statsGroupIncoming; // *not* static
+  NetInterfaceTrafficStats statsGroupOutgoing; // *not* static
+  NetInterfaceTrafficStats statsGroupRelayedIncoming; // *not* static
+  NetInterfaceTrafficStats statsGroupRelayedOutgoing; // *not* static
+  
+  Boolean wasLoopedBackFromUs(UsageEnvironment& env,
+			      struct sockaddr_in& fromAddress);
+  
+  static Groupsock* lookupByName(UsageEnvironment& env, char const* name);
+  
+public: // redefined virtual functions
+  virtual Boolean handleRead(unsigned char* buffer, unsigned bufferMaxSize,
+			     unsigned& bytesRead,
+			     struct sockaddr_in& fromAddress);
+  
+private:
+  int outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
+			       unsigned char ttlToFwd,
+			       unsigned char* data, unsigned size,
+			       unsigned sourceAddr);
+  
+private:
+  GroupEId fIncomingGroupEId, fOutgoingGroupEId;
+      // for multicast, these two "GroupEId"s will usually be the same
+  Port fDestPort;
+  DirectedNetInterfaceSet fMembers;
 };
 
 ostream& operator<<(ostream& s, const Groupsock& g);
 
-// A data structure for looking up a 'groupsock' by (multicast address, port)
-// or by socket number
+// A data structure for looking up a 'groupsock'
+// by (multicast address, port), or by socket number
 class GroupsockLookupTable {
-    public:
-	Groupsock* Fetch(UsageEnvironment& env, unsigned groupAddress,
-			 Port port, unsigned char ttl, Boolean& isNew);
-		// Creates a new Groupsock if none already exists
-	Groupsock* Fetch(UsageEnvironment& env, unsigned groupAddress,
-			 unsigned sourceFilterAddr, Port port, Boolean& isNew);
-		// Creates a new Groupsock if none already exists
-	Groupsock* Lookup(unsigned groupAddress, Port port);
-		// Returns NULL if none already exists
-	Groupsock* Lookup(unsigned groupAddress, unsigned sourceFilterAddr,
-			  Port port);
-		// Returns NULL if none already exists
-	Groupsock* Lookup(int sock);
-		// Returns NULL if none already exists
-	Boolean Remove(Groupsock const* groupsock);
+public:
+  Groupsock* Fetch(UsageEnvironment& env, unsigned groupAddress,
+		   Port port, unsigned char ttl, Boolean& isNew);
+      // Creates a new Groupsock if none already exists
+  Groupsock* Fetch(UsageEnvironment& env, unsigned groupAddress,
+		   unsigned sourceFilterAddr, Port port, Boolean& isNew);
+      // Creates a new Groupsock if none already exists
+  Groupsock* Lookup(unsigned groupAddress, Port port);
+      // Returns NULL if none already exists
+  Groupsock* Lookup(unsigned groupAddress, unsigned sourceFilterAddr,
+		    Port port);
+      // Returns NULL if none already exists
+  Groupsock* Lookup(int sock);
+      // Returns NULL if none already exists
+  Boolean Remove(Groupsock const* groupsock);
 
- 	// Used to iterate through the groupsocks in the table
-	class Iterator {
-	    public:
-		Iterator(GroupsockLookupTable& groupsocks);
-
-		Groupsock* next(); // NULL iff none
-
-	    private:
-		AddressPortLookupTable::Iterator fIter;
-	};
-
-    private:
-        Groupsock* AddNew(UsageEnvironment& env,
-			  unsigned groupAddress, unsigned sourceFilterAddress,
-			  Port port, unsigned char ttl);
-
-    private:
-	friend class Iterator;
-	AddressPortLookupTable fTable;
+  // Used to iterate through the groupsocks in the table
+  class Iterator {
+  public:
+    Iterator(GroupsockLookupTable& groupsocks);
+    
+    Groupsock* next(); // NULL iff none
+    
+  private:
+    AddressPortLookupTable::Iterator fIter;
+  };
+  
+private:
+  Groupsock* AddNew(UsageEnvironment& env,
+		    unsigned groupAddress, unsigned sourceFilterAddress,
+		    Port port, unsigned char ttl);
+  
+private:
+  friend class Iterator;
+  AddressPortLookupTable fTable;
 };
 
 #endif

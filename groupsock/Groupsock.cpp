@@ -80,9 +80,9 @@ Boolean OutputSocket::write(unsigned address, Port port, unsigned char ttl,
 }
 
 // By default, we don't do reads:
-Boolean OutputSocket::handleRead(unsigned char*& /*resultData*/,
-				 unsigned& /*bytesRead*/,
-				 struct sockaddr_in& /*fromAddress*/) {
+Boolean OutputSocket
+::handleRead(unsigned char* /*buffer*/, unsigned /*bufferMaxSize*/,
+	     unsigned& /*bytesRead*/, struct sockaddr_in& /*fromAddress*/) {
   return True;
 }
 
@@ -149,7 +149,6 @@ Groupsock::Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
 }
 
 Groupsock::~Groupsock() {
-  sanityHack = 0; // see "NetInterface.C" and "IOHandlers.C"
   if (isSSM()) {
     if (!socketLeaveGroupSSM(env(), socketNum(), groupAddress().s_addr,
 			     sourceFilterAddress().s_addr)) {
@@ -219,18 +218,6 @@ Boolean Groupsock::output(UsageEnvironment& env, unsigned char ttlToSend,
     env.setResultMsg(out.str());
   }
   return False;
-}
-
-Boolean Groupsock::handleRead(unsigned char*& resultData,
-			      unsigned& bytesRead,
-			      struct sockaddr_in& fromAddress) {
-  if (handleRead(IOBuffer(), IOBufferSize(), bytesRead, fromAddress)) {
-    resultData = IOBuffer();
-    return True;
-  } else {
-    resultData = NULL;
-    return False;
-  }
 }
 
 Boolean Groupsock::handleRead(unsigned char* buffer, unsigned bufferMaxSize,
