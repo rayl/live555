@@ -304,7 +304,7 @@ unsigned AC3AudioStreamParser::parseFrame(unsigned& numTruncatedBytes) {
     return frameSize;
   } catch (int /*e*/) {
 #ifdef DEBUG
-    envir() << "AC3AudioStreamParser::parseFrame() EXCEPTION\n";
+    fUsingSource->envir() << "AC3AudioStreamParser::parseFrame() EXCEPTION\n";
 #endif
     return 0;  // the parsing got interrupted
   }

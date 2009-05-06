@@ -208,7 +208,7 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
   do {
     if (!bPacket->fillInData(source->fRTPInterface)) break;
 #ifdef TEST_LOSS
-    setThresholdTime(0);
+    source->setPacketReorderingThresholdTime(0);
        // don't wait for 'lost' packets to arrive out-of-order later
     if ((our_random()%10) == 0) break; // simulate 10% packet loss
 #endif

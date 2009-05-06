@@ -59,6 +59,9 @@ MPEGVideoStreamFramer::~MPEGVideoStreamFramer() {
   delete fParser;
 }
 
+#ifdef DEBUG
+static struct timeval firstPT;
+#endif
 void MPEGVideoStreamFramer
 ::computePresentationTime(unsigned numAdditionalPictures) {
   // Computes "fPresentationTime" from the most recent GOP's
@@ -81,7 +84,15 @@ void MPEGVideoStreamFramer
     ++fPresentationTime.tv_sec;
   }
 #ifdef DEBUG
-  fprintf(stderr, "MPEGVideoStreamFramer::computePresentationTime(%d) -> %lu.%06ld\n", numAdditionalPictures, fPresentationTime.tv_sec, fPresentationTime.tv_usec);
+  if (firstPT.tv_sec == 0 && firstPT.tv_usec == 0) firstPT = fPresentationTime;
+  struct timeval diffPT;
+  diffPT.tv_sec = fPresentationTime.tv_sec - firstPT.tv_sec; 
+  diffPT.tv_usec = fPresentationTime.tv_usec - firstPT.tv_usec; 
+  if (fPresentationTime.tv_usec < firstPT.tv_usec) {
+    --diffPT.tv_sec;
+    diffPT.tv_usec += 1000000;
+  }
+  fprintf(stderr, "MPEGVideoStreamFramer::computePresentationTime(%d) -> %lu.%06ld [%lu.%06ld]\n", numAdditionalPictures, fPresentationTime.tv_sec, fPresentationTime.tv_usec, diffPT.tv_sec, diffPT.tv_usec);
 #endif
 }
 
