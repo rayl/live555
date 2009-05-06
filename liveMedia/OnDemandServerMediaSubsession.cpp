@@ -240,6 +240,7 @@ void OnDemandServerMediaSubsession::startStream(unsigned clientSessionId,
   Destinations* destinations
     = (Destinations*)(fDestinationsHashTable->Lookup((char const*)clientSessionId));
   if (streamState != NULL) {
+    if (fReuseFirstSource) rtcpRRHandler = NULL; // because we're sharing the RTCP
     streamState->startPlaying(destinations,
 			      rtcpRRHandler, rtcpRRHandlerClientData);
     if (streamState->rtpSink() != NULL) {
