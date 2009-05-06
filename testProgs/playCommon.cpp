@@ -73,6 +73,7 @@ char* mimeSubtype = NULL;
 unsigned short movieWidth = 240;
 unsigned short movieHeight = 180;
 unsigned movieFPS = 15;
+char* fileNamePrefix = "";
 Boolean packetLossCompensate = False;
 Boolean syncStreams = False;
 Boolean generateHintTracks = False;
@@ -94,7 +95,7 @@ void usage() {
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "")
-       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] <url> (or " << progName << " -o [-V] <url>)\n";
+       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] <url> (or " << progName << " -o [-V] <url>)\n";
   //##### Add "-R <dest-rtsp-url>" #####
   shutdown();
 }
@@ -276,6 +277,12 @@ int main(int argc, char** argv) {
       if (sscanf(argv[2], "%u", &movieFPS) != 1) {
 	usage();
       }
+      ++argv; --argc;
+      break;
+    }
+
+    case 'F': { // specify a prefix for the audio and video output files
+      fileNamePrefix = argv[2];
       ++argv; --argc;
       break;
     }
@@ -494,11 +501,12 @@ int main(int argc, char** argv) {
 	// Create an output file for each desired stream:
 	char outFileName[1000];
 	if (singleMedium == NULL) {
-	  // Output file name is "<medium_name>-<codec_name>-<counter>"
+	  // Output file name is
+	  //     "<filename-prefix><medium_name>-<codec_name>-<counter>"
 	  static unsigned streamCounter = 0;
-	  snprintf(outFileName, sizeof outFileName, "%s-%s-%d",
-		  subsession->mediumName(), subsession->codecName(),
-		  ++streamCounter);
+	  snprintf(outFileName, sizeof outFileName, "%s%s-%s-%d",
+		   fileNamePrefix, subsession->mediumName(),
+		   subsession->codecName(), ++streamCounter);
 	} else {
 	  sprintf(outFileName, "stdout");
 	}

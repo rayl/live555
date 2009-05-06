@@ -55,7 +55,7 @@ public:
 
   virtual char const* sdpMediaType() const; // for use in SDP m= lines
   virtual char const* auxSDPLine() const;
-      // optional SDP line (e.g. a=fmtp).  Dynamically allocated
+      // optional SDP line (e.g. a=fmtp:...)
 
   unsigned short currentSeqNo() const { return fSeqNo; }
   unsigned currentTimestamp() const { return fCurrentTimestamp; }

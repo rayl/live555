@@ -48,7 +48,7 @@ WAVAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
     }
 
     WAVAudioFileSource* newSource = new WAVAudioFileSource(env, fid);
-    if (newSource->bitsPerSample() == 0) {
+    if (newSource != NULL && newSource->bitsPerSample() == 0) {
       // The WAV file header was apparently invalid.
       delete newSource; newSource = NULL;
     }
@@ -93,9 +93,9 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
   // http://www.ringthis.com/dev/wave_format.htm
   // http://www.lightlink.com/tjweber/StripWav/Canon.html
   // http://www.borg.com/~jglatt/tech/wave.htm
+  // http://www.wotsit.org/download.asp?f=wavecomp
 
   Boolean success = False; // until we learn otherwise
-  env.setResultMsg("Bad WAV file format"); // ditto
   do {
     // RIFF Chunk:
     if (nextc != 'R' || nextc != 'I' || nextc != 'F' || nextc != 'F') break;
@@ -152,10 +152,10 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
 
     // The header is good; the remaining data are the sample bytes.
     success = True;
-    env.setResultMsg("");
   } while (0);
   
   if (!success) {
+    env.setResultMsg("Bad WAV file format");
     // Set "fBitsPerSample" to zero, to indicate failure:
     fBitsPerSample = 0;
     return;
@@ -216,8 +216,19 @@ void WAVAudioFileSource::doGetNextFrame() {
     = (unsigned)((fPlayTimePerSample*fFrameSize)/bytesPerSample);
 
   // Switch to another task, and inform the reader that he has data:
+#if defined(__WIN32__) || defined(_WIN32)
+  // HACK: One of our applications that uses this source uses an
+  // implementation of scheduleDelayedTask() that performs very badly
+  // (chewing up lots of CPU time, apparently polling) on Windows.
+  // Until this is fixed, we just call our "afterGetting()" function
+  // directly.  This avoids infinite recursion, as long as our sink
+  // is discontinuous, which is the case for the RTP sink that
+  // this application uses. #####
+  afterGetting(this);
+#else
   nextTask() = envir().taskScheduler().scheduleDelayedTask(0,
 			(TaskFunc*)FramedSource::afterGetting, this);
+#endif
 }
 
 float WAVAudioFileSource::getPlayTime(unsigned numFrames) const {
