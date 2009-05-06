@@ -1,5 +1,5 @@
 // Comment out the following to stop this program expiring:
-#define EXPIRATION 1041408000 /* 1/1/2003 */
+#define EXPIRATION 1044086400 /* 2/1/2003 */
 
 /**********
 This library is free software; you can redistribute it and/or modify it under

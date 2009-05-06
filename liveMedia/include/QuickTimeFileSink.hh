@@ -67,7 +67,6 @@ private:
   Boolean fPacketLossCompensate;
   Boolean fSyncStreams;
   struct timeval fNewestSyncTime, fFirstDataTime;
-  double fMaxTrackDuration;
   Boolean fAreCurrentlyBeingPlayed;
   afterPlayingFunc* fAfterFunc;
   void* fAfterClientData;
@@ -75,6 +74,7 @@ private:
   unsigned fLargestRTPtimestampFrequency;
   unsigned fNumSubsessions, fNumSyncedSubsessions;
   struct timeval fStartTime;
+  Boolean fHaveCompletedOutputFile;
 
 private:
   ///// Definitions specific to the QuickTime file format:
@@ -92,6 +92,8 @@ private:
   unsigned addAtomHeader(char const* atomName);
       // strlen(atomName) must be 4
   void setWord(unsigned filePosn, unsigned size);
+
+  unsigned movieTimeScale() const {return fLargestRTPtimestampFrequency;}
 
   // Define member functions for outputting various types of atom:
 #define _atom(name) unsigned addAtom_##name()
@@ -158,6 +160,8 @@ private:
   unsigned short fMovieWidth, fMovieHeight;
   unsigned fMovieFPS;
   unsigned fMDATposition;
+  unsigned fMVHD_durationPosn;
+  unsigned fMaxTrackDurationM; // in movie time units
   MediaSubsession* fCurrentSubsession;
   class SubsessionIOState* fCurrentIOState;
 };

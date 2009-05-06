@@ -119,7 +119,7 @@ Boolean MP3FileSource::doGetNextFrame1() {
   if (!fStreamState->readFrame(fTo, fMaxSize, fFrameSize)) {
     char tmp[200];
     sprintf(tmp,
-	    "Insufficient buffer size %d for reading MP3 frame (needed %d)\n",
+	    "Insufficient buffer size %d for reading MPEG audio frame (needed %d)\n",
 	    fMaxSize, fFrameSize);
     envir().setResultMsg(tmp);
     fFrameSize = fMaxSize;
@@ -142,9 +142,11 @@ void MP3FileSource::assignStream(FILE* fid, unsigned fileSize) {
 Boolean MP3FileSource::initializeStream() {
   // Make sure the file has an appropriate header near the start:
   if (fStreamState->findNextHeader(fFirstFramePresentationTime) == 0) {
-      envir().setResultMsg("not a MPEG layer III file");
+      envir().setResultMsg("not an MPEG audio file");
       return False;
   }
+
+  fStreamState->checkForXingHeader(); // in case this is a VBR file
 
   fHaveJustInitialized = True;
   return True;

@@ -53,6 +53,8 @@ public:
   void writeGetCmd(char const* hostName, unsigned short portNum,
 		   char const* fileName);
 
+  void checkForXingHeader(); // hack for Xing VBR files
+
 private:
   MP3FrameParams& fr() {return fCurrentFrame;}
   MP3FrameParams const& fr() const {return fCurrentFrame;}
@@ -67,6 +69,8 @@ private:
   FILE* fFid;
   Boolean fFidIsReallyASocket;
   unsigned fFileSize;
+  unsigned fNumFramesInFile;
+  Boolean fIsVBR;
 
   MP3FrameParams fCurrentFrame;
   struct timeval fNextFramePresentationTime;

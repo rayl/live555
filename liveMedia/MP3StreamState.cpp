@@ -70,6 +70,8 @@ void MP3StreamState::assignStream(FILE* fid, unsigned fileSize) {
     fFidIsReallyASocket = 0;
     fFileSize = fileSize;
   }
+  fNumFramesInFile = 0; // until we know otherwise
+  fIsVBR = False; // ditto
 
   // Set the first frame's 'presentation time' to the current wall time:
   gettimeofday(&fNextFramePresentationTime, &Idunno);
@@ -90,9 +92,13 @@ struct timeval MP3StreamState::currentFramePlayTime() const {
 }
 
 unsigned MP3StreamState::filePlayTime() const {
-  // Note: The following doesn't work for VBR files - need to fix #####
-  unsigned numFrames = fFileSize/(4 + fCurrentFrame.frameSize);
-  float playTime = getPlayTime(numFrames);
+  unsigned numFramesInFile = fNumFramesInFile;
+  if (numFramesInFile == 0) {
+    // Estimate the number of frames from the file size, and the
+    // size of the current frame:
+    numFramesInFile = fFileSize/(4 + fCurrentFrame.frameSize);
+  }
+  float playTime = getPlayTime(numFramesInFile);
   return (unsigned)(playTime + 0.5); // rounds to nearest integer
 }
 
@@ -141,16 +147,16 @@ Boolean MP3StreamState::readFrame(unsigned char* outBuf, unsigned outBufSize,
 
 void MP3StreamState::getAttributes(char* buffer, unsigned bufferSize) const {
   char const* formatStr
-    = "bandwidth %d MPEGnumber %d MPEGlayer %d samplingFrequency %d isStereo %d playTime %d";
+    = "bandwidth %d MPEGnumber %d MPEGlayer %d samplingFrequency %d isStereo %d playTime %d isVBR %d";
 #if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
   /* snprintf() isn't defined, so just use sprintf() - ugh! */
   sprintf(buffer, formatStr,
 	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().layer, fr().samplingFreq, fr().isStereo,
-	  filePlayTime());
+	  filePlayTime(), fIsVBR);
 #else
   snprintf(buffer, bufferSize, formatStr,
 	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().layer, fr().samplingFreq, fr().isStereo,
-	  filePlayTime());
+	  filePlayTime(), fIsVBR);
 #endif
 }
 
@@ -359,4 +365,20 @@ unsigned MP3StreamState::readFromStream(unsigned char* buf,
   } else {
     return fread(buf, 1, numChars, fFid);
   }
+}
+
+void MP3StreamState::checkForXingHeader() {
+  // Look for 'Xing' in the first 4 bytes after the 'side info':
+  if (fr().frameSize < fr().sideInfoSize + 12) return;
+  unsigned char* p = &(fr().frameBytes[fr().sideInfoSize]);
+  if (p[0] != 'X' || p[1] != 'i' || p[2] != 'n' || p[3] != 'g') return;
+
+  // We found it.
+  fIsVBR = True;
+
+  // Next, check whether there's a '# of frames' field:
+  if (!(p[7]&1)) return;
+
+  // The next 4 bytes are the number of frames:
+  fNumFramesInFile = (p[8]<<24)|(p[9]<<16)|(p[10]<<8)|(p[11]);
 }

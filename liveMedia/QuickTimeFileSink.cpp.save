@@ -138,12 +138,8 @@ public:
   // These next fields are derived from the ones above,
   // plus the information from each chunk:
   unsigned fQTTotNumSamples;
-  unsigned fQTDurationM; // in media time units
-  unsigned fQTDurationT; // in track time units
-  unsigned fTKHD_durationPosn;
-      // position of the duration in the output 'tkhd' atom
-  unsigned fQTInitialOffsetDuration;
-      // if there's a pause at the beginning
+  unsigned fQTDuration;
+  unsigned fQTInitialOffsetDuration; // if there's a pause at the beginning
 
   ChunkDescriptor *fHeadChunk, *fTailChunk;
   unsigned fNumChunks;
@@ -211,12 +207,12 @@ QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
 				     Boolean generateHintTracks)
   : Medium(env), fInputSession(inputSession), fOutFid(outFid),
     fPacketLossCompensate(packetLossCompensate),
-    fSyncStreams(syncStreams), fAreCurrentlyBeingPlayed(False),
+    fSyncStreams(syncStreams), fMaxTrackDuration(0.0),
+    fAreCurrentlyBeingPlayed(False),
     fLargestRTPtimestampFrequency(0),
     fNumSubsessions(0), fNumSyncedSubsessions(0),
-    fHaveCompletedOutputFile(False),
     fMovieWidth(movieWidth), fMovieHeight(movieHeight),
-    fMovieFPS(movieFPS), fMaxTrackDurationM(0) {
+    fMovieFPS(movieFPS){
   fNewestSyncTime.tv_sec = fNewestSyncTime.tv_usec = 0;
   fFirstDataTime.tv_sec = fFirstDataTime.tv_usec = (unsigned)(~0);
 
@@ -440,7 +436,7 @@ static Boolean timevalGE(struct timeval const& tv1,
 }
 
 void QuickTimeFileSink::completeOutputFile() {
-  if (fHaveCompletedOutputFile || fOutFid == NULL) return;
+  if (fOutFid == NULL) return;
 
   // Begin by filling in the initial "mdat" atom with the current
   // file size:
@@ -478,9 +474,6 @@ void QuickTimeFileSink::completeOutputFile() {
 
   // Then, add a "moov" atom for the file metadata:
   addAtom_moov();
-
-  // We're done:
-  fHaveCompletedOutputFile = True;
 }
 
 // NOTE: The following is the same code that's in "FileSink"
@@ -632,24 +625,41 @@ Boolean SubsessionIOState::setQTstate() {
 
 void SubsessionIOState::setFinalQTstate() {
   // Compute derived parameters, by running through the list of chunks:
-  fQTDurationT = 0;
+  fQTDuration = 0;
+  double duration;
 
   ChunkDescriptor* chunk = fHeadChunk;
   while (chunk != NULL) {
     unsigned const numFrames = chunk->fNumFrames;
     unsigned const dur = numFrames*chunk->fFrameDuration;
 
-    fQTDurationT += dur;
+    fQTDuration += dur;
 
     chunk = chunk->fNextChunk;
   }
+  duration = fQTDuration/(double)fQTTimeScale;
 
-  // Convert this duration from track to movie time scale:
-  double scaleFactor = fOurSink.movieTimeScale()/(double)fQTTimeScale;
-  fQTDurationM = (unsigned)(fQTDurationT*scaleFactor);
+  if (fOurSink.fSyncStreams
+      && fQTcomponentSubtype != fourChar('v','i','d','e')
+      && !isHintTrack()) {
+    // In this case, compute fQTDuration differently: using the
+    // presentation timestamps in the chunks (because we will be
+    // using an edit list to keep the stream synchronized).
+    if (fHeadChunk == 0) return;
+    struct timeval const& startTime = fOurSink.fFirstDataTime;
+    struct timeval const& endTime = fTailChunk->fPresentationTime;
+    duration = (endTime.tv_sec - startTime.tv_sec)
+      + (endTime.tv_usec - startTime.tv_usec)/1000000.0;
 
-  if (fQTDurationM > fOurSink.fMaxTrackDurationM) {
-    fOurSink.fMaxTrackDurationM = fQTDurationM;
+    // Add on the duration of the last chunk:
+    unsigned lastChunkDuration
+      = fTailChunk->fNumFrames*fTailChunk->fFrameDuration;
+    duration += lastChunkDuration/(double)fQTTimeScale;
+    fQTDuration = (unsigned)(duration*fQTTimeScale);
+  }
+
+  if (duration > fOurSink.fMaxTrackDuration) {
+    fOurSink.fMaxTrackDuration = duration;
   }
 }
 
@@ -1047,10 +1057,9 @@ void Count64::operator+=(unsigned arg) {
   lo = newLo;
 }
 
-ChunkDescriptor
-::ChunkDescriptor(unsigned offsetInFile, unsigned size,
-		  unsigned frameSize, unsigned frameDuration,
-		  struct timeval presentationTime)
+ChunkDescriptor::ChunkDescriptor(unsigned offsetInFile, unsigned size,
+				 unsigned frameSize, unsigned frameDuration,
+				 struct timeval presentationTime)
   : fNextChunk(NULL), fOffsetInFile(offsetInFile),
     fNumFrames(size/frameSize),
     fFrameSize(frameSize), fFrameDuration(frameDuration),
@@ -1218,10 +1227,10 @@ addAtom(mvhd);
 
   // For the "Time scale" field, use the largest RTP timestamp frequency
   // that we saw in any of the subsessions.
-  size += addWord(movieTimeScale()); // Time scale
+  unsigned const movieTimeScale = fLargestRTPtimestampFrequency;
+  size += addWord(movieTimeScale); // Time scale
 
-  unsigned const duration = fMaxTrackDurationM;
-  fMVHD_durationPosn = ftell(fOutFid);
+  unsigned const duration = (unsigned)(fMaxTrackDuration*movieTimeScale);
   size += addWord(duration); // Duration
 
   size += addWord(0x00010000); // Preferred rate
@@ -1267,9 +1276,13 @@ addAtom(tkhd);
   size += addWord(fCurrentIOState->fTrackID); // Track ID
   size += addWord(0x00000000); // Reserved
 
-  unsigned const duration = fCurrentIOState->fQTDurationM; // movie units
-  fCurrentIOState->fTKHD_durationPosn = ftell(fOutFid);
-  size += addWord(duration); // Duration
+  unsigned const movieTimeScale = fLargestRTPtimestampFrequency;
+  unsigned const trackTimeScale = fCurrentIOState->fQTTimeScale;
+  double trackToMovieTimeScale = movieTimeScale/(double)trackTimeScale;
+  unsigned const duration = fCurrentIOState->fQTDuration; // in track units
+  // Convert to the movie time scale:
+  unsigned const mduration = (unsigned)(duration*trackToMovieTimeScale);
+  size += addWord(mduration); // Duration
   size += addZeroWords(3); // Reserved+Layer+Alternate grp
   size += addWord(0x01000000); // Volume + Reserved
   size += addWord(0x00010000); // matrix top left corner
@@ -1287,10 +1300,9 @@ addAtomEnd;
 
 #define addEdit1(duration,trackPosition) do { \
       unsigned trackDuration \
-        = (unsigned) ((2*(duration)*movieTimeScale()+1)/2); \
+        = (unsigned) ((2*(duration)*movieTimeScale+1)/2); \
             /* in movie time units */ \
       size += addWord(trackDuration); /* Track duration */ \
-      totalDurationOfEdits += trackDuration; \
       size += addWord(trackPosition); /* Media time */ \
       size += addWord(0x00010000); /* Media rate (1x) */ \
       ++numEdits; \
@@ -1299,6 +1311,8 @@ addAtomEnd;
 #define addEmptyEdit(duration) addEdit1((duration),-1)
 
 addAtom(elst);
+  unsigned const movieTimeScale = fLargestRTPtimestampFrequency;
+
   size += addWord(0x00000000); // Version + Flags
 
   // Add a dummy "Number of entries" field
@@ -1306,7 +1320,6 @@ addAtom(elst);
   unsigned numEntriesPosition = ftell(fOutFid);
   size += addWord(0); // dummy for "Number of entries"
   unsigned numEdits = 0;
-  unsigned totalDurationOfEdits = 0; // in movie time units
 
   // Run through our chunks, looking at their presentation times.
   // From these, figure out the edits that need to be made to keep
@@ -1318,24 +1331,22 @@ addAtom(elst);
   struct timeval editStartTime = fFirstDataTime;
   unsigned editTrackPosition = 0;
   unsigned currentTrackPosition = 0;
-  double trackDurationOfEdit = 0.0;
+  double movieDurationOfEdit = 0.0;
   unsigned chunkDuration = 0;
 
   ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
   while (chunk != NULL) {
     struct timeval const& chunkStartTime = chunk->fPresentationTime;
-    double movieDurationOfEdit
-      = (chunkStartTime.tv_sec - editStartTime.tv_sec)
+    movieDurationOfEdit = (chunkStartTime.tv_sec - editStartTime.tv_sec)
       + (chunkStartTime.tv_usec - editStartTime.tv_usec)/1000000.0;
-    trackDurationOfEdit = (currentTrackPosition-editTrackPosition)
+    double trackDurationOfEdit = (currentTrackPosition-editTrackPosition)
       / (double)(fCurrentIOState->fQTTimeScale);
       
     double outOfSync = movieDurationOfEdit - trackDurationOfEdit;
 
     if (outOfSync > syncThreshold) {
-      // The track's data is too short, so end this edit, add a new
-      // 'empty' edit after it, and start a new edit
-      // (at the current track posn.):
+      // The track's data is too short, so end this edit, add a new 'empty'
+      // edit after it, and start a new edit (at the current track posn.):
       if (trackDurationOfEdit > 0.0) addEdit(trackDurationOfEdit);
       addEmptyEdit(outOfSync);
 
@@ -1357,33 +1368,15 @@ addAtom(elst);
     chunk = chunk->fNextChunk;
   }
 
-  // Write out the final edit
-  trackDurationOfEdit
-      += (double)chunkDuration/fCurrentIOState->fQTTimeScale;
-  if (trackDurationOfEdit > 0.0) addEdit(trackDurationOfEdit);
+  // Write out the final edit.  Use the presentation times (except for the
+  // final chunk) to compute the duration, to make the sum of the edit
+  // durations consistent with the track duration that we computed earlier.
+  movieDurationOfEdit
+    += (double)chunkDuration/fCurrentIOState->fQTTimeScale;
+  if (movieDurationOfEdit > 0.0) addEdit(movieDurationOfEdit);
 
   // Now go back and fill in the "Number of entries" field:
   setWord(numEntriesPosition, numEdits);
-
-  // Also, if the sum of all of the edit durations exceeds the
-  // track duration that we already computed (from sample durations),
-  // then reset the track duration to this new value:
-  if (totalDurationOfEdits > fCurrentIOState->fQTDurationM) {
-    fCurrentIOState->fQTDurationM = totalDurationOfEdits;
-    setWord(fCurrentIOState->fTKHD_durationPosn, totalDurationOfEdits);
-
-    // Also, check whether the overall movie duration needs to change:
-    if (totalDurationOfEdits > fMaxTrackDurationM) {
-      fMaxTrackDurationM = totalDurationOfEdits;
-      setWord(fMVHD_durationPosn, totalDurationOfEdits);
-    }
-
-    // Also, convert to track time scale:
-    double scaleFactor
-      = fCurrentIOState->fQTTimeScale/(double)movieTimeScale();
-    fCurrentIOState->fQTDurationT
-      = (unsigned)(totalDurationOfEdits*scaleFactor);
-  }
 addAtomEnd;
 
 addAtom(tref);
@@ -1410,7 +1403,7 @@ addAtom(mdhd);
   unsigned const timeScale = fCurrentIOState->fQTTimeScale;
   size += addWord(timeScale); // Time scale
 
-  unsigned const duration = fCurrentIOState->fQTDurationT; // track units
+  unsigned const duration = fCurrentIOState->fQTDuration;
   size += addWord(duration); // Duration
 
   size += addWord(0x00000000); // Language+Quality
