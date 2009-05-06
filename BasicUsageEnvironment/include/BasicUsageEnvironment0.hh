@@ -37,9 +37,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // An abstract base class, useful for subclassing
 // (e.g., to redefine the implementation of "operator<<")
 class BasicUsageEnvironment0: public UsageEnvironment {
+public:
+  virtual ~BasicUsageEnvironment0();
+  
 protected:
   BasicUsageEnvironment0(TaskScheduler& taskScheduler);
-  virtual ~BasicUsageEnvironment0();
 
 protected:
   // redefined virtual functions:
@@ -73,7 +75,9 @@ class BasicTaskScheduler0: public TaskScheduler {
 public:
   virtual ~BasicTaskScheduler0();
 
-  virtual void SingleStep() = 0;
+  virtual void SingleStep(unsigned maxDelayTime = 0) = 0;
+      // "maxDelayTime" is in microseconds.
+      // 0 means: There's no maximum; just look at the delay queue
   
 protected:
   BasicTaskScheduler0();

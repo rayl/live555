@@ -68,6 +68,7 @@ unsigned interPacketGapMaxTime = 0;
 unsigned totNumPacketsReceived = ~0; // used if checking inter-packet gaps
 Boolean playContinuously = False;
 int simpleRTPoffsetArg = -1;
+Boolean sendOptionsRequest = True;
 Boolean sendOptionsRequestOnly = False;
 Boolean oneFilePerFrame = False;
 Boolean notifyOnPacketArrival = False;
@@ -103,7 +104,7 @@ struct timeval startTime;
 
 void usage() {
   *env << "Usage: " << progName
-       << " [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-E <max-inter-packet-gap-time> [-c] [-s <offset>] [-n]"
+       << " [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-E <max-inter-packet-gap-time> [-c] [-s <offset>] [-n] [-O]"
 	   << (controlConnectionUsesTCP ? " [-t]" : "")
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
@@ -217,6 +218,11 @@ int main(int argc, char** argv) {
 	usage();
       }
       ++argv; --argc;
+      break;
+    }
+
+    case 'O': { // Don't send an "OPTIONS" request before "DESCRIBE"
+      sendOptionsRequest = False;
       break;
     }
 
@@ -387,6 +393,10 @@ int main(int argc, char** argv) {
     *env << "The -a and -v flags cannot both be used!\n";
     usage();
   }
+  if (sendOptionsRequestOnly && !sendOptionsRequest) {
+    *env << "The -o and -O flags cannot both be used!\n";
+    usage();
+  }
   if (!createReceivers && notifyOnPacketArrival) {
     *env << "Warning: Because we're not receiving stream data, the -n flag has no effect\n";
   }
@@ -407,18 +417,20 @@ int main(int argc, char** argv) {
     shutdown();
   }
 
-  // Begin by sending an "OPTIONS" command:
-  char* optionsResponse = getOptionsResponse(ourClient, url);
-  if (sendOptionsRequestOnly) {
-    if (optionsResponse == NULL) {
-      *env << clientProtocolName << " \"OPTIONS\" request failed: "
-	   << env->getResultMsg() << "\n";
-    } else {
-      *env << clientProtocolName << " \"OPTIONS\" request returned: "
-	   << optionsResponse << "\n";
-      delete[] optionsResponse;
+  if (sendOptionsRequest) {
+    // Begin by sending an "OPTIONS" command:
+    char* optionsResponse = getOptionsResponse(ourClient, url);
+    if (sendOptionsRequestOnly) {
+      if (optionsResponse == NULL) {
+	*env << clientProtocolName << " \"OPTIONS\" request failed: "
+	     << env->getResultMsg() << "\n";
+      } else {
+	*env << clientProtocolName << " \"OPTIONS\" request returned: "
+	     << optionsResponse << "\n";
+	delete[] optionsResponse;
+      }
+      shutdown();
     }
-    shutdown();
   }
 
   // Open the URL, to get a SDP description:

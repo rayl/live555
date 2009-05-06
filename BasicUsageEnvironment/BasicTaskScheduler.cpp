@@ -41,7 +41,11 @@ BasicTaskScheduler::BasicTaskScheduler()
 BasicTaskScheduler::~BasicTaskScheduler() {
 }
 
-void BasicTaskScheduler::SingleStep() {
+#ifndef MILLION
+#define MILLION 1000000
+#endif
+
+void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
   fd_set readSet = fReadSet; // make a copy for this select() call
   
   DelayInterval const& timeToDelay = fDelayQueue.timeToNextAlarm();
@@ -49,16 +53,22 @@ void BasicTaskScheduler::SingleStep() {
   tv_timeToDelay.tv_sec = timeToDelay.seconds();
   tv_timeToDelay.tv_usec = timeToDelay.useconds();
   // Very large "tv_sec" values cause select() to fail.
-  // Don't make it any larger than 1000000 seconds (11.5 days)
-  const long MAX_TV_SEC = 1000000;
+  // Don't make it any larger than 1 million seconds (11.5 days)
+  const long MAX_TV_SEC = MILLION;
   if (tv_timeToDelay.tv_sec > MAX_TV_SEC) {
     tv_timeToDelay.tv_sec = MAX_TV_SEC;
+  }
+  // Also check our "maxDelayTime" parameter:
+  if (maxDelayTime > 0 &&
+      (tv_timeToDelay.tv_sec*MILLION+tv_timeToDelay.tv_usec) > (long)maxDelayTime) {
+    tv_timeToDelay.tv_sec = maxDelayTime/MILLION;
+    tv_timeToDelay.tv_usec = maxDelayTime%MILLION;
   }
   
   int selectResult = select(fMaxNumSockets, &readSet, NULL, NULL,
 			    &tv_timeToDelay);
   if (selectResult < 0) {
-#if defined(__WIN32__) || defined(_WIN32) || defined(_WIN32_WCE)
+#if defined(__WIN32__) || defined(_WIN32)
     int err = WSAGetLastError();
     // For some unknown reason, select() in Windoze sometimes fails with WSAEINVAL if
     // it was called with no entries set in "readSet".  If this happens, ignore it:
@@ -72,12 +82,7 @@ void BasicTaskScheduler::SingleStep() {
 #endif
       {
 	// Unexpected error - treat this as fatal:
-#if defined(_WIN32_WCE)
-	MessageBox(NULL, L"BasicTaskScheduler::SingleStep(): select() fails",
-		   L"error", MB_OK);
-#else
 	perror("BasicTaskScheduler::SingleStep(): select() fails");
-#endif
 	exit(0);
       }
   }
