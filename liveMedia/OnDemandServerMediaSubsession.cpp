@@ -116,6 +116,7 @@ public:
   RTPSink const* rtpSink() const { return fRTPSink; }
 
 private:
+  Boolean fAreCurrentlyPlaying;
   unsigned fReferenceCount;
 
   Port fServerRTPPort, fServerRTCPPort;
@@ -344,7 +345,7 @@ StreamState::StreamState(Port const& serverRTPPort, Port const& serverRTCPPort,
 			 unsigned totalBW, char* CNAME,
 			 FramedSource* mediaSource,
 			 Groupsock* rtpGS, Groupsock* rtcpGS)
-  : fReferenceCount(1),
+  : fAreCurrentlyPlaying(False), fReferenceCount(1),
     fServerRTPPort(serverRTPPort), fServerRTCPPort(serverRTCPPort),
     fRTPSink(rtpSink),
     fTotalBW(totalBW), fCNAME(CNAME), fRTCPInstance(NULL) /* created later */,
@@ -357,9 +358,9 @@ StreamState::~StreamState() {
 
 void StreamState::startPlaying(Destinations* dests) {
   if (dests == NULL) return;
-  if (fRTCPInstance == NULL // we're being called for the first time
-      && fRTPSink != NULL && fMediaSource != NULL) {
+  if (!fAreCurrentlyPlaying && fRTPSink != NULL && fMediaSource != NULL) {
     fRTPSink->startPlaying(*fMediaSource, afterPlayingStreamState, this);
+    fAreCurrentlyPlaying = True;
   }
 
   if (fRTCPInstance == NULL && fRTPSink != NULL) {
@@ -389,6 +390,7 @@ void StreamState::startPlaying(Destinations* dests) {
 
 void StreamState::pause() {
   if (fRTPSink != NULL) fRTPSink->stopPlaying();
+  fAreCurrentlyPlaying = False;
 }
 
 void StreamState::endPlaying(Destinations* dests) {

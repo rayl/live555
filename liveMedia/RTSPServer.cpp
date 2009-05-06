@@ -719,8 +719,10 @@ void RTSPServer::RTSPClientSession
     "%s" // comma separator, if needed 
     "url=%s/%s"
     ";seq=%d"
-    ";rtptime=%d";
-  ;
+#ifdef RTPINFO_INCLUDE_RTPTIME
+    ";rtptime=%d"
+#endif
+    ;
   unsigned rtpInfoFmtSize = strlen(rtpInfoFmt);
   char* rtpInfo = strDup("RTP-Info: ");
   unsigned numRTPInfoItems = 0;
@@ -740,16 +742,20 @@ void RTSPServer::RTSPClientSession
 	+ 1
 	+ rtspURLSize + strlen(urlSuffix)
 	+ 5 /*max unsigned short len*/
+#ifdef RTPINFO_INCLUDE_RTPTIME
 	+ 10 /*max unsigned (32-bit) len*/
+#endif
 	+ 2 /*allows for trailing \r\n at final end of string*/; 
       rtpInfo = new char[rtpInfoSize];
       sprintf(rtpInfo, rtpInfoFmt,
 	      prevRTPInfo,
 	      numRTPInfoItems++ == 0 ? "" : ",",
 	      rtspURL, urlSuffix,
-	      rtpSeqNum,
-	      rtpTimestamp
-);
+	      rtpSeqNum
+#ifdef RTPINFO_INCLUDE_RTPTIME
+	      ,rtpTimestamp
+#endif
+	      );
       delete[] prevRTPInfo;
     }
   }
