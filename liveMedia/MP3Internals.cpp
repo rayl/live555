@@ -219,6 +219,7 @@ unsigned MP3FrameParams::computeSideInfoSize() {
 unsigned ComputeFrameSize(unsigned bitrate, unsigned samplingFreq,
 			  Boolean usePadding, Boolean isMPEG2,
 			  unsigned char layer) {
+  if (samplingFreq == 0) return 0;
   unsigned const bitrateMultiplier = (layer == 1) ? 12000*4 : 144000;
   unsigned framesize;
 
