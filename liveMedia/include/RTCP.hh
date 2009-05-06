@@ -73,6 +73,11 @@ public:
       // (respectively) arrives.  Unlike "setByeHandler()", the handler will
       // be called once for each incoming "SR" or "RR".  (To turn off handling,
       // call the function again with "handlerTask" (and "clientData") as NULL.
+  void setSpecificRRHandler(netAddressBits fromAddress, Port fromPort,
+			    TaskFunc* handlerTask, void* clientData);
+      // Like "setRRHandler()", but applies only to "RR" packets that come from
+      // a specific source address and port.  (Note that if both a specific
+      // and a general "RR" handler function is set, then both will be called.)
 
   Groupsock* RTCPgs() const { return fRTCPInterface.gs(); }
 
@@ -121,6 +126,8 @@ private:
   void incomingReportHandler1();
   void onReceive(int typeOfPacket, int totPacketSize, u_int32_t ssrc);
 
+  void unsetSpecificRRHandler(netAddressBits fromAddress, Port fromPort);
+
 private:
   unsigned char* fInBuf;
   OutPacketBuffer* fOutBuf;
@@ -155,6 +162,7 @@ private:
   void* fSRHandlerClientData;
   TaskFunc* fRRHandlerTask;
   void* fRRHandlerClientData;
+  AddressPortLookupTable* fSpecificRRHandlerTable;
 
 public: // because this stuff is used by an external "C" function
   void schedule(double nextTime);

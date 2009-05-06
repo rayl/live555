@@ -243,7 +243,6 @@ void OnDemandServerMediaSubsession::startStream(unsigned clientSessionId,
   Destinations* destinations
     = (Destinations*)(fDestinationsHashTable->Lookup((char const*)clientSessionId));
   if (streamState != NULL) {
-    if (fReuseFirstSource) rtcpRRHandler = NULL; // because we're sharing the RTCP
     streamState->startPlaying(destinations,
 			      rtcpRRHandler, rtcpRRHandlerClientData);
     if (streamState->rtpSink() != NULL) {
@@ -426,8 +425,9 @@ void StreamState
       = RTCPInstance::createNew(fRTPSink->envir(), fRTCPgs,
 				fTotalBW, (unsigned char*)fCNAME,
 				fRTPSink, NULL /* we're a server */);
-    // Note: This starts RTCP running automatically
-    fRTCPInstance->setRRHandler(rtcpRRHandler, rtcpRRHandlerClientData);
+        // Note: This starts RTCP running automatically
+    fRTCPInstance->setSpecificRRHandler(dests->addr.s_addr, dests->rtcpPort,
+					rtcpRRHandler, rtcpRRHandlerClientData);
   }
 
   if (dests->isTCP) {
@@ -464,6 +464,10 @@ void StreamState::endPlaying(Destinations* dests) {
     // Tell the RTP and RTCP 'groupsocks' to stop using these destinations:
     if (fRTPgs != NULL) fRTPgs->removeDestination(dests->addr, dests->rtpPort);
     if (fRTCPgs != NULL) fRTCPgs->removeDestination(dests->addr, dests->rtcpPort);
+    if (fRTCPInstance != NULL) {
+      fRTCPInstance->setSpecificRRHandler(dests->addr.s_addr, dests->rtcpPort,
+					  NULL, NULL);
+    }
   }
 }
 
