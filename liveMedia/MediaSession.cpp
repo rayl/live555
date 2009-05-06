@@ -599,6 +599,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
     struct in_addr tempAddr;
     tempAddr.s_addr = connectionEndpointAddress();
         // This could get changed later, as a result of a RTSP "SETUP"
+    unsigned short firstRTPPortNum = fClientPortNum&~1;
     while (1) {
       unsigned short rtpPortNum = fClientPortNum&~1;
       if (isSSM()) {
@@ -627,7 +628,8 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
       // Try again:
       delete oldGroupsock;
       oldGroupsock = fRTPSocket;
-      fClientPortNum = 0;
+      if (firstRTPPortNum > 0) break; // Because we were told what port number to use, we can't choose another ourself
+      fClientPortNum += 2; // so that the OS doesn't choose the same port number again
     }
     delete oldGroupsock;
     if (!success) break;

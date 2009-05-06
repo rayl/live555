@@ -485,13 +485,7 @@ Boolean ReorderingPacketBuffer::storePacket(BufferedPacket* bPacket) {
 
   // Ignore this packet if its sequence number is less than the one
   // that we're looking for (in this case, it's been excessively delayed).
-  // (But (sanity check) if the new packet's sequence number is a *lot*
-  // less, then accept it anyway.)
-  unsigned short const seqNoThreshold = 100;
-  if (seqNumLT(rtpSeqNo, fNextExpectedSeqNo)
-      && seqNumLT(fNextExpectedSeqNo, rtpSeqNo+seqNoThreshold)) {
-    return False;
-  }
+  if (seqNumLT(rtpSeqNo, fNextExpectedSeqNo)) return False;
 
   // Figure out where the new packet will be stored in the queue:
   BufferedPacket* beforePtr = NULL;

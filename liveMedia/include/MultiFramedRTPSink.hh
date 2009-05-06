@@ -80,9 +80,11 @@ protected:
 
   unsigned ourMaxPacketSize() const { return fOurMaxPacketSize; }
 
+public: // redefined virtual functions:
+  virtual void stopPlaying();
+
 protected: // redefined virtual functions:
   virtual Boolean continuePlaying();
-  virtual void stopPlaying();
 
 private:
   void buildAndSendPacket(Boolean isFirstPacket);
