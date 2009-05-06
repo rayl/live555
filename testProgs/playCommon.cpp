@@ -1386,4 +1386,102 @@ Boolean setupDestinationRTSPServer() {
     serverIPAddress.s_addr = *(unsigned*)(serverAddress.data());
     char* serverIPAddressStr = strDup(our_inet_ntoa(serverIPAddress));
 
-    char c
+    char const* destSDPFmt =
+      "v=0\r\n"
+      "o=- %u %u IN IP4 %s\r\n"
+      "s=RTSP session, relayed through \"%s\"\n"
+      "i=relayed RTSP session\n"
+      "t=0 0\n"
+      "c=IN IP4 %s\n"
+      "a=control:*\n"
+      "m=audio 0 RTP/AVP %u\n"
+      "a=control:trackID=0\n";
+    //#####LATER: Support video as well; multiple tracks; other codecs #####
+    unsigned destSDPFmtSize = strlen(destSDPFmt)
+      + 20 /* max int len */ + 20 + strlen(ourIPAddressStr)
+      + strlen(progName)
+      + strlen(serverIPAddressStr)
+      + 3 /* max char len */;
+    char* destSDPDescription = new char[destSDPFmtSize];
+    sprintf(destSDPDescription, destSDPFmt,
+	    our_random(), our_random(), ourIPAddressStr,
+	    progName,
+	    serverIPAddressStr,
+	    desiredAudioRTPPayloadFormat);
+    Boolean announceResult;
+    if (username != NULL) {
+      announceResult
+	= rtspClientOutgoing->announceWithPassword(destRTSPURL,
+						   destSDPDescription,
+						   username, password);
+    } else {
+      announceResult
+	= rtspClientOutgoing->announceSDPDescription(destRTSPURL,
+						     destSDPDescription);
+    }
+    delete[] serverIPAddressStr; delete[] ourIPAddressStr;
+    if (!announceResult) break;
+    
+    // Then, create a "MediaSession" object from this SDP description:
+    MediaSession* destSession
+      = MediaSession::createNew(*env, destSDPDescription);
+    delete[] destSDPDescription;
+    if (destSession == NULL) break;
+
+    // Initiate, setup and play "destSession".
+    // ##### TEMP HACK - take advantage of the fact that we have
+    // ##### a single audio session only.
+    MediaSubsession* destSubsession;
+    PrioritizedRTPStreamSelector* multiSource;
+    int multiSourceSessionId;
+    char const* mimeType
+      = desiredAudioRTPPayloadFormat == 0 ? "audio/PCMU" 
+      : desiredAudioRTPPayloadFormat == 3 ? "audio/GSM"
+      : "audio/???"; //##### FIX
+    if (!destSession->initiateByMediaType(mimeType, destSubsession,
+					  multiSource,
+					  multiSourceSessionId)) break;
+    if (!rtspClientOutgoing->setupMediaSubsession(*destSubsession,
+						  True, True)) break;
+    if (!rtspClientOutgoing->playMediaSubsession(*destSubsession,
+						 0.0, -1.0, 1.0,
+						 True/*hackForDSS*/)) break;
+
+    // Next, set up "RTPSink"s for the outgoing packets:
+    struct in_addr destAddr; destAddr.s_addr = 0; // because we're using TCP
+    Groupsock* destGS = new Groupsock(*env, destAddr, 0/*aud*/, 255);
+    if (destGS == NULL) break;
+    RTPSink* destRTPSink = NULL;
+    if (desiredAudioRTPPayloadFormat == 0) {
+      destRTPSink = SimpleRTPSink::createNew(*env, destGS, 0, 8000,
+					     "audio", "PCMU");
+    } else if (desiredAudioRTPPayloadFormat == 3) {
+      destRTPSink = GSMAudioRTPSink::createNew(*env, destGS);
+    }
+    if (destRTPSink == NULL) break;
+
+    // Tell the sink to stream using TCP:
+    destRTPSink->setStreamSocket(rtspClientOutgoing->socketNum(), 0/*aud*/);
+    // LATER: set up RTCPInstance also #####
+
+    // Next, set up RTPTranslator(s) between source(s) and destination(s),
+    // and start playing them.
+    MediaSubsessionIterator iter(*session);
+    MediaSubsession *sourceSubsession = NULL;
+    while ((sourceSubsession = iter.next()) != NULL) {
+      if (strcmp(sourceSubsession->mediumName(), "audio") == 0) break;
+    }
+    if (sourceSubsession == NULL) break;
+    RTPTranslator* rtpTranslator
+      = RTPTranslator::createNew(*env, sourceSubsession->readSource());
+    if (rtpTranslator == NULL) break;
+    destRTPSink->startPlaying(*rtpTranslator,
+			      subsessionAfterPlaying, sourceSubsession);
+    
+    // LATER: delete media on close #####
+
+    return True;
+  } while (0);
+
+  return False;
+}
