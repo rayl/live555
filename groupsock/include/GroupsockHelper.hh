@@ -86,6 +86,21 @@ netAddressBits chooseRandomIPv4SSMAddress(UsageEnvironment& env);
 // Returns a simple "hh:mm:ss" string, for use in debugging output (e.g.)
 char const* timestampString();
 
+
+#ifdef HAVE_SOCKADDR_LEN
+#define SET_SOCKADDR_SIN_LEN(var) var.sin_len = sizeof var
+#else
+#define SET_SOCKADDR_SIN_LEN(var)
+#endif 
+
+#define MAKE_SOCKADDR_IN(var,adr,prt) /*adr,prt must be in network order*/\
+    struct sockaddr_in var;\
+    var.sin_family = AF_INET;\
+    var.sin_addr.s_addr = (adr);\
+    var.sin_port = (prt);\
+    SET_SOCKADDR_SIN_LEN(var);
+
+
 #if (defined(__WIN32__) || defined(_WIN32)) && !defined(IMN_PIM)
 // For Windoze, we need to implement our own gettimeofday()
 extern int gettimeofday(struct timeval*, int*);

@@ -1689,11 +1689,8 @@ Boolean RTSPClient::openConnectionFromURL(char const* url) {
       if (fInputSocketNum < 0) break;
     
       // Connect to the remote endpoint:
-      struct sockaddr_in remoteName;
-      remoteName.sin_family = AF_INET;
-      remoteName.sin_port = htons(destPortNum);
-      remoteName.sin_addr.s_addr = fServerAddress
-	= *(unsigned*)(destAddress.data());
+      fServerAddress = *(unsigned*)(destAddress.data());
+      MAKE_SOCKADDR_IN(remoteName, fServerAddress, htons(destPortNum));
       if (connect(fInputSocketNum, (struct sockaddr*)&remoteName, sizeof remoteName)
 	  != 0) {
 	envir().setResultErrMsg("connect() failed: ");
@@ -2275,10 +2272,7 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix) {
     if (fOutputSocketNum < 0) break;
     
     // Connect to the remote endpoint:
-    struct sockaddr_in remoteName;
-    remoteName.sin_family = AF_INET;
-    remoteName.sin_port = htons(fTunnelOverHTTPPortNum);
-    remoteName.sin_addr.s_addr = fServerAddress;
+    MAKE_SOCKADDR_IN(remoteName, fServerAddress, htons(fTunnelOverHTTPPortNum));
     if (connect(fOutputSocketNum,
 		(struct sockaddr*)&remoteName, sizeof remoteName) != 0) {
       envir().setResultErrMsg("connect() failed: ");

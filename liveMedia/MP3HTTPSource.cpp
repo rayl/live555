@@ -38,10 +38,7 @@ MP3HTTPSource* MP3HTTPSource::createNew(UsageEnvironment& env,
     if (ourSocket < 0) break;
 
     // Connect to the remote endpoint:
-    struct sockaddr_in remoteName;
-    remoteName.sin_family = AF_INET;
-    remoteName.sin_port = remotePort.num();
-    remoteName.sin_addr.s_addr = *(unsigned*)(remoteAddress.data());
+    MAKE_SOCKADDR_IN(remoteName, *(unsigned*)(remoteAddress.data()), remotePort.num());
     if (connect(ourSocket, (struct sockaddr*)&remoteName, sizeof remoteName)
 	!= 0) {
       env.setResultErrMsg("connect() failed: ");

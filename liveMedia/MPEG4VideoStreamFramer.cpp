@@ -80,6 +80,7 @@ private:
   unsigned fixed_vop_time_increment; // used if 'fixed_vop_rate' is set
   unsigned fSecondsSinceLastTimeCode, fTotalTicksSinceLastTimeCode, fPrevNewTotalTicks; 
   unsigned fPrevPictureCountDelta;
+  Boolean fJustSawTimeCode;
 };
 
 
@@ -154,7 +155,7 @@ MPEG4VideoStreamParser
     vop_time_increment_resolution(0), fNumVTIRBits(0),
     fixed_vop_rate(0), fixed_vop_time_increment(0),
     fSecondsSinceLastTimeCode(0), fTotalTicksSinceLastTimeCode(0),
-    fPrevNewTotalTicks(0), fPrevPictureCountDelta(1) {
+    fPrevNewTotalTicks(0), fPrevPictureCountDelta(1), fJustSawTimeCode(False) {
 }
 
 MPEG4VideoStreamParser::~MPEG4VideoStreamParser() {
@@ -481,6 +482,7 @@ unsigned MPEG4VideoStreamParser::parseGroupOfVideoObjectPlane() {
 #if defined(DEBUG) || defined(DEBUG_TIMESTAMPS)
   fprintf(stderr, "time_code: 0x%05x, hours %d, minutes %d, marker_bit %d, seconds %d\n", time_code, time_code_hours, time_code_minutes, marker_bit, time_code_seconds);
 #endif
+  fJustSawTimeCode = True;
 
   // Now, copy all bytes that we see, up until we reach a VOP_START_CODE:
   u_int32_t next4Bytes = get4Bytes();
@@ -580,11 +582,11 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
       fSecondsSinceLastTimeCode += modulo_time_base;
     } else {
       if (newTotalTicks < fPrevNewTotalTicks && vop_coding_type != 2/*B*/
-	  && modulo_time_base == 0 && vop_time_increment == 0) {
+	  && modulo_time_base == 0 && vop_time_increment == 0 && !fJustSawTimeCode) {
 	// This is another kind of buggy MPEG-4 video stream, in which
 	// "vop_time_increment" wraps around, but without
-	// "modulo_time_base" changing.  Overcome this by pretending that
-	// "vop_time_increment" really did wrap around:
+	// "modulo_time_base" changing (or just having had a new time code).
+	// Overcome this by pretending that "vop_time_increment" *did* wrap around:
 #ifdef DEBUG
 	fprintf(stderr, "Buggy MPEG-4 video stream: \"vop_time_increment\" wrapped around, but without \"modulo_time_base\" changing!\n");
 #endif
@@ -603,6 +605,7 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
       }
     }
   }
+  fJustSawTimeCode = False; // for next time
   
   // The next thing to parse depends on the code that we just saw,
   // but we are assumed to have ended the current picture: 
