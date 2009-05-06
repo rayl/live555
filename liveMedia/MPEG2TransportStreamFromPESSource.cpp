@@ -26,6 +26,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #define PAT_FREQUENCY 1000 // # of packets between Program Association Tables
 #define PMT_FREQUENCY 5000 // # of packets between Program Map Tables
 
+#define PID_TABLE_SIZE 256
+
 MPEG2TransportStreamFromPESSource* MPEG2TransportStreamFromPESSource
 ::createNew(UsageEnvironment& env, MPEG1or2DemuxedElementaryStream* inputSource) {
   return new MPEG2TransportStreamFromPESSource(env, inputSource);

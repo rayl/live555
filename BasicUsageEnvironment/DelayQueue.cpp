@@ -96,6 +96,9 @@ DelayQueueEntry::DelayQueueEntry(DelayInterval delay)
   fToken = ++tokenCounter;
 }
 
+DelayQueueEntry::~DelayQueueEntry() {
+}
+
 void DelayQueueEntry::handleTimeout() {
   delete this;
 }

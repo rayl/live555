@@ -401,6 +401,12 @@ void BufferedPacket::use(unsigned char* to, unsigned toSize,
   }
 }
 
+BufferedPacketFactory::BufferedPacketFactory() {
+}
+
+BufferedPacketFactory::~BufferedPacketFactory() {
+}
+
 BufferedPacket* BufferedPacketFactory
 ::createNewPacket(MultiFramedRTPSource* /*ourSource*/) {
   return new BufferedPacket;

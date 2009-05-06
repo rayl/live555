@@ -145,6 +145,9 @@ private:
 
 class BufferedPacketFactory {
 public:
+  BufferedPacketFactory();
+  virtual ~BufferedPacketFactory();
+
   virtual BufferedPacket* createNewPacket(MultiFramedRTPSource* ourSource);
 };
 

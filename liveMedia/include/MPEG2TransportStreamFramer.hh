@@ -14,12 +14,12 @@
 #include "HashTable.hh"
 #endif
 
-#define PID_TABLE_SIZE 256
-
 class MPEG2TransportStreamFramer: public FramedFilter {
 public:
   static MPEG2TransportStreamFramer*
   createNew(UsageEnvironment& env, FramedSource* inputSource);
+
+  unsigned long tsPacketCount() const { return fTSPacketCount; }
 
 protected:
   MPEG2TransportStreamFramer(UsageEnvironment& env, FramedSource* inputSource);
@@ -29,6 +29,7 @@ protected:
 private:
   // Redefined virtual functions:
   virtual void doGetNextFrame();
+  virtual void doStopGettingFrames();
 
 private:
   static void afterGettingFrame(void* clientData, unsigned frameSize,
@@ -41,7 +42,7 @@ private:
   void updateTSPacketDurationEstimate(unsigned char* pkt);
 
 private:
-  unsigned fTSPacketCount;
+  unsigned long fTSPacketCount;
   double fTSPacketDurationEstimate;
   HashTable* fPIDStatusTable;
 };

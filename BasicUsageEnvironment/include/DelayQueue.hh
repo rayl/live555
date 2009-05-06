@@ -137,6 +137,8 @@ extern EventTime const THE_END_OF_TIME;
 
 class DelayQueueEntry {
 public:
+  virtual ~DelayQueueEntry();
+
   long token() {
     return fToken;
   }

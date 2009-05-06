@@ -34,7 +34,7 @@ protected:
 	 // abstract base class
   virtual ~FramedFilter();
 
-private:
+protected:
   // Redefined virtual functions (with default 'null' implementations):
   virtual char const* MIMEtype() const;
   virtual void getAttributes() const;
