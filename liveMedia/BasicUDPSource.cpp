@@ -42,6 +42,11 @@ void BasicUDPSource::doGetNextFrame() {
        (TaskScheduler::BackgroundHandlerProc*)&incomingPacketHandler, this);
 }
 
+void BasicUDPSource::doStopGettingFrames() {
+  envir().taskScheduler().turnOffBackgroundReadHandling(fInputGS->socketNum());
+}
+
+
 void BasicUDPSource::incomingPacketHandler(BasicUDPSource* source, int /*mask*/){
   source->incomingPacketHandler1();
 }

@@ -805,6 +805,10 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 		   || strcmp(fCodecName, "MP1S") == 0 // MPEG-1 System Stream
 		   || strcmp(fCodecName, "MP2P") == 0 // MPEG-2 Program Stream
 		   || strcmp(fCodecName, "L8") == 0 // 8-bit linear audio
+		   || strcmp(fCodecName, "G726-16") == 0 // G.726, 16 kbps
+		   || strcmp(fCodecName, "G726-24") == 0 // G.726, 24 kbps
+		   || strcmp(fCodecName, "G726-32") == 0 // G.726, 32 kbps
+		   || strcmp(fCodecName, "G726-40") == 0 // G.726, 40 kbps
 		   || strcmp(fCodecName, "SPEEX") == 0 // SPEEX audio
 		   ) {
 	createSimpleRTPSource = True;

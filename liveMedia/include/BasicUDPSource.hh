@@ -45,6 +45,7 @@ private:
 
 private: // redefined virtual functions:
   virtual void doGetNextFrame();
+  virtual void doStopGettingFrames();
 
 private:
   Groupsock* fInputGS;

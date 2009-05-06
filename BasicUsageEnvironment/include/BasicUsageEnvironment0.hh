@@ -37,11 +37,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // An abstract base class, useful for subclassing
 // (e.g., to redefine the implementation of "operator<<")
 class BasicUsageEnvironment0: public UsageEnvironment {
-protected:
-  BasicUsageEnvironment0(TaskScheduler& taskScheduler);
-  virtual ~BasicUsageEnvironment0();
-
-protected:
+public:
   // redefined virtual functions:
   virtual MsgString getResultMsg() const;
   
@@ -57,6 +53,10 @@ protected:
   
   virtual void reportBackgroundError();
   
+protected:
+  BasicUsageEnvironment0(TaskScheduler& taskScheduler);
+  virtual ~BasicUsageEnvironment0();
+
 private:
   void reset();
   
@@ -78,16 +78,16 @@ public:
       // on how long "select()" can delay, in case it wants to also do polling.
       // 0 (the default value) means: There's no maximum; just look at the delay queue
   
-protected:
-  BasicTaskScheduler0();
-
-protected:
+public:
   // Redefined virtual functions:
   virtual TaskToken scheduleDelayedTask(int microseconds, TaskFunc* proc,
 				void* clientData);
   virtual void unscheduleDelayedTask(TaskToken& prevTask);
   
   virtual void doEventLoop(char* watchVariable);
+
+protected:
+  BasicTaskScheduler0();
 
 protected:
   // To implement delayed operations:

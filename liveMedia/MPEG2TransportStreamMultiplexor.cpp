@@ -111,6 +111,8 @@ void MPEG2TransportStreamMultiplexor
       } else if ((stream_id&0xF0) == 0xE0) { // video
 	streamType = mpegVersion == 1 ? 1 : 2;
 	if (fPCR_PID == 0) fPCR_PID = fCurrentPID; // use this stream's SCR for PCR
+      } else if (stream_id == 0xBD) { // private_stream1 (usually AC-3)
+	streamType = 0x06; // for DVB; for ATSC, use 0x81 
       } else { // something else, e.g., AC-3 uses private_stream1 (0xBD)
 	streamType = 0x81; // private 
       }

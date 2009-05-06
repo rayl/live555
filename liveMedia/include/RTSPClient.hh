@@ -111,6 +111,12 @@ public:
       // Issues a RTSP "SET_PARAMETER" command on "subsession".
       // Returns True iff this command succeeds
 
+  Boolean getMediaSessionParameter(MediaSession& session,
+				   char const* parameterName,
+				   char*& parameterValue);
+      // Issues a RTSP "GET_PARAMETER" command on "subsession".
+      // Returns True iff this command succeeds
+
   Boolean teardownMediaSession(MediaSession& session);
       // Issues an aggregate RTSP "TEARDOWN" command on "session".
       // Returns True iff this command succeeds
@@ -168,6 +174,9 @@ private:
   Boolean parseRTPInfoHeader(char const* line, unsigned& trackId,
 			     u_int16_t& seqNum, u_int32_t& timestamp);
   Boolean parseScaleHeader(char const* line, float& scale);
+  Boolean parseGetParameterHeader(char const* line, 
+                                  const char* param,
+                                  char*& value);
   void constructSubsessionURL(MediaSubsession const& subsession,
 			      char const*& prefix,
 			      char const*& separator,
