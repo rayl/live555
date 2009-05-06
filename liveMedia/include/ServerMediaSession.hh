@@ -55,6 +55,8 @@ public:
 
   Boolean addSubsession(ServerMediaSubsession* subsession);
 
+  float duration() const { return fDuration; }
+
   unsigned referenceCount() const { return fReferenceCount; }
   void incrementReferenceCount() { ++fReferenceCount; }
   void decrementReferenceCount() { if (fReferenceCount > 0) --fReferenceCount; }
@@ -83,6 +85,10 @@ private:
   char* fDescriptionSDPString;
   char* fMiscSDPLines;
   struct timeval fCreationTime;
+  float fDuration;
+    // fDuration == 0 means an unbounded session (the default)
+    // fDuration < 0 means: use subsession durations instead (because they differ)
+    // fDuration > 0 means: this is the duration of a bounded session
   unsigned fReferenceCount;
   Boolean fDeleteWhenUnreferenced;
 };
@@ -108,7 +114,7 @@ public:
 
   unsigned trackNumber() const { return fTrackNumber; }
   char const* trackId();
-  virtual char const* sdpLines() = 0;
+  virtual char const* sdpLines(ServerMediaSession& parentSession) = 0;
   virtual void getStreamParameters(unsigned clientSessionId, // in
 				   netAddressBits clientAddress, // in
 				   Port const& clientRTPPort, // in
@@ -129,8 +135,15 @@ public:
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
   virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 
+  virtual float duration() const;
+    // returns 0 for an unbounded session (the default)
+    // returns > 0 for a bounded session
+
 protected: // we're a virtual base class
   ServerMediaSubsession(UsageEnvironment& env);
+
+  char const* rangeSDPLine(ServerMediaSession& parentSession) const;
+      // returns a string to be delete[]d
 
 private:
   friend class ServerMediaSession;

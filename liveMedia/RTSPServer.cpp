@@ -714,6 +714,25 @@ void RTSPServer::RTSPClientSession
   ::handleCmd_PLAY(ServerMediaSubsession* subsession, char const* cseq) {
   char* rtspURL = fOurServer.rtspURL(fOurServerMediaSession);
   unsigned rtspURLSize = strlen(rtspURL);
+
+  // Create a "Range:" line:
+  char* rangeHeader;
+  float duration = subsession == NULL /*aggregate op*/
+    ? fOurServerMediaSession->duration() : subsession->duration();
+  if (duration < 0.0) {
+    // We're an aggregate PLAY, but the subsessions have different durations.
+    // Use the largest of these durations in our header
+    duration = -duration;
+  }
+  if (duration == 0.0) {
+    rangeHeader = strDup("Range: npt=0.00-\r\n");
+  } else {
+    char buf[100];
+    sprintf(buf, "Range: npt=0.00-%.3f\r\n", duration);
+    rangeHeader = strDup(buf);
+  }
+
+  // Create a "RTP-Info:" line:
   char const* rtpInfoFmt =
     "%s" // "RTP-Info:", plus any preceding rtpInfo items
     "%s" // comma separator, if needed 
@@ -767,18 +786,21 @@ void RTSPServer::RTSPClientSession
     rtpInfo[rtpInfoLen+1] = '\n';
     rtpInfo[rtpInfoLen+2] = '\0';
   }
+
+  // Fill in the response:
   snprintf((char*)fBuffer, sizeof fBuffer,
 	   "RTSP/1.0 200 OK\r\n"
 	   "CSeq: %s\r\n"
 	   "%s"
-	   "Range: npt=0.00-\r\n"
+	   "%s"
 	   "Session: %d\r\n"
 	   "%s\r\n",
 	   cseq,
 	   dateHeader(),
+	   rangeHeader,
 	   fOurSessionId,
 	   rtpInfo);
-  delete[] rtpInfo;
+  delete[] rtpInfo; delete[] rangeHeader;
 }
 
 void RTSPServer::RTSPClientSession

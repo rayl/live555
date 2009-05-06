@@ -1543,7 +1543,10 @@ Boolean RTSPClient::getResponse(char const* tag,
   do {
     char* readBuf = fResponseBuffer;
     bytesRead = getResponse1(readBuf, fResponseBufferSize);
-    if (bytesRead == 0) break;
+    if (bytesRead == 0) {
+      envir().setResultErrMsg("Failed to read response: ");
+      break;
+    }
     if (fVerbosityLevel >= 1) {
       envir() << "Received " << tag << " response: " << readBuf << "\n";
     }

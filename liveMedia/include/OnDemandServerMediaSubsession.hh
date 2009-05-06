@@ -35,7 +35,7 @@ protected: // we're a virtual base class
   virtual ~OnDemandServerMediaSubsession();
 
 private: // redefined virtual functions
-  virtual char const* sdpLines();
+  virtual char const* sdpLines(ServerMediaSession& parentSession);
   virtual void getStreamParameters(unsigned clientSessionId,
 				   netAddressBits clientAddress,
                                    Port const& clientRTPPort,
@@ -68,7 +68,8 @@ protected: // new virtual functions, defined by subclasses
 				    FramedSource* inputSource) = 0;
 
 private:
-  void setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource);
+  void setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource,
+			      ServerMediaSession& parentSession);
       // used to implement "sdpLines()"
 
 private:

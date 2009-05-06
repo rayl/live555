@@ -124,6 +124,32 @@ char const* RTPSink::sdpMediaType() const {
   // default SDP media (m=) type, unless redefined by subclasses
 }
 
+char* RTPSink::rtpmapLine() const {
+  if (rtpPayloadType() >= 96) { // the payload format type is dynamic
+    char* encodingParamsPart;
+    if (numChannels() != 1) {
+      encodingParamsPart = new char[1 + 20 /* max int len */];
+      sprintf(encodingParamsPart, "/%d", numChannels());
+    } else {
+      encodingParamsPart = strDup("");
+    }
+    char const* const rtpmapFmt = "a=rtpmap:%d %s/%d%s\r\n";
+    unsigned rtpmapFmtSize = strlen(rtpmapFmt)
+      + 3 /* max char len */ + strlen(rtpPayloadFormatName())
+      + 20 /* max int len */ + strlen(encodingParamsPart);
+    char* rtpmapLine = new char[rtpmapFmtSize];
+    sprintf(rtpmapLine, rtpmapFmt,
+	    rtpPayloadType(), rtpPayloadFormatName(),
+	    rtpTimestampFrequency(), encodingParamsPart);
+    delete[] encodingParamsPart;
+
+    return rtpmapLine;
+  } else {
+    // The payload format is staic, so there's no "a=rtpmap:" line:
+    return strDup("");
+  }
+}
+
 char const* RTPSink::auxSDPLine() {
   return NULL; // by default
 }

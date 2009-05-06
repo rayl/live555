@@ -36,7 +36,8 @@ PassiveServerMediaSubsession
     fRTPSink(rtpSink), fRTCPInstance(rtcpInstance), fSDPLines(NULL) {
 }
 
-char const* PassiveServerMediaSubsession::sdpLines() {
+char const*
+PassiveServerMediaSubsession::sdpLines(ServerMediaSession& parentSession) {
   if (fSDPLines == NULL ) {
     // Construct a set of SDP lines that describe this subsession:
     // Use the components from "rtpSink":
@@ -44,48 +45,12 @@ char const* PassiveServerMediaSubsession::sdpLines() {
     struct in_addr const& ipAddress = gs.groupAddress();
     unsigned short portNum = ntohs(gs.port().num());
     unsigned char ttl = gs.ttl();
-    unsigned rtpTimestampFrequency = fRTPSink.rtpTimestampFrequency();
-    unsigned numChannels = fRTPSink.numChannels();
     unsigned char rtpPayloadType = fRTPSink.rtpPayloadType();
     char const* mediaType = fRTPSink.sdpMediaType();
-    char const* rtpPayloadFormatName = fRTPSink.rtpPayloadFormatName();
+    char* rtpmapLine = fRTPSink.rtpmapLine();
+    char const* rangeLine = rangeSDPLine(parentSession);
     char const* auxSDPLine = fRTPSink.auxSDPLine();
-
-    // For dynamic payload types, we need a "a=rtpmap:" line also:
-    char* rtpmapLine;
-    unsigned rtpmapLineSize;
-    if (rtpPayloadType >= 96) {
-      char* encodingParamsPart;
-      if (numChannels != 1) {
-	encodingParamsPart = new char[1 + 20 /* max int len */];
-	sprintf(encodingParamsPart, "/%d", numChannels);
-      } else {
-	encodingParamsPart = strDup("");
-      }
-      char const* const rtpmapFmt = "a=rtpmap:%d %s/%d%s\r\n";
-      unsigned rtpmapFmtSize = strlen(rtpmapFmt)
-	+ 3 /* max char len */ + strlen(rtpPayloadFormatName)
-	+ 20 /* max int len */ + strlen(encodingParamsPart);
-      rtpmapLine = new char[rtpmapFmtSize];
-      sprintf(rtpmapLine, rtpmapFmt,
-	      rtpPayloadType, rtpPayloadFormatName,
-	      rtpTimestampFrequency, encodingParamsPart);
-      rtpmapLineSize = strlen(rtpmapLine);
-      delete[] encodingParamsPart;
-    } else {
-      // There's no "a=rtpmap:" line:
-      // Static payload type => no "a=rtpmap:" line
-      rtpmapLine = strDup("");
-      rtpmapLineSize = 0;
-    }
-    
-    unsigned auxSDPLineSize;
-    if (auxSDPLine == NULL) {
-      auxSDPLine = "";
-      auxSDPLineSize = 0;
-    } else {
-      auxSDPLineSize = strlen(auxSDPLine);
-    }
+    if (auxSDPLine == NULL) auxSDPLine = "";
     
     char* const ipAddressStr = strDup(our_inet_ntoa(ipAddress));
     
@@ -94,12 +59,14 @@ char const* PassiveServerMediaSubsession::sdpLines() {
       "c=IN IP4 %s/%d\r\n" 
       "%s"
       "%s"
+      "%s"
       "a=control:%s\r\n";
     unsigned sdpFmtSize = strlen(sdpFmt)
       + strlen(mediaType) + 5 /* max short len */ + 3 /* max char len */
       + strlen(ipAddressStr) + 3 /* max char len */
-      + rtpmapLineSize
-      + auxSDPLineSize
+      + strlen(rtpmapLine)
+      + strlen(rangeLine)
+      + strlen(auxSDPLine)
       + strlen(trackId());
     char* sdpLines = new char[sdpFmtSize];
     sprintf(sdpLines, sdpFmt, 
@@ -109,6 +76,7 @@ char const* PassiveServerMediaSubsession::sdpLines() {
 	    ipAddressStr, // c= <connection address>
 	    ttl, // c= TTL
 	    rtpmapLine, // a=rtpmap:... (if present)
+	    rangeLine, // a=range:... (if present)
 	    auxSDPLine, // optional extra SDP line
 	    trackId()); // a=control:<track-id>
     delete[] ipAddressStr; delete[] rtpmapLine;

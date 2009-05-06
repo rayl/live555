@@ -68,7 +68,8 @@ OnDemandServerMediaSubsession::~OnDemandServerMediaSubsession() {
   delete[] fDestinationsHashTable;
 }
 
-char const* OnDemandServerMediaSubsession::sdpLines() {
+char const*
+OnDemandServerMediaSubsession::sdpLines(ServerMediaSession& parentSession) {
   if (fSDPLines == NULL) {
     // We need to construct a set of SDP lines that describe this
     // subsession (as a unicast stream).  To do so, we first create
@@ -85,7 +86,7 @@ char const* OnDemandServerMediaSubsession::sdpLines() {
     RTPSink* dummyRTPSink
       = createNewRTPSink(&dummyGroupsock, rtpPayloadType, inputSource);
 
-    setSDPLinesFromRTPSink(dummyRTPSink, inputSource);
+    setSDPLinesFromRTPSink(dummyRTPSink, inputSource, parentSession);
     Medium::close(dummyRTPSink);
     Medium::close(inputSource);
   }
@@ -274,59 +275,39 @@ char const* OnDemandServerMediaSubsession
 }
 
 void OnDemandServerMediaSubsession
-::setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource) {
+::setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource,
+			 ServerMediaSession& parentSession) {
   if (rtpSink == NULL) return;
 
   char const* mediaType = rtpSink->sdpMediaType();
   unsigned char rtpPayloadType = rtpSink->rtpPayloadType();
-  char const* rtpPayloadFormatName = rtpSink->rtpPayloadFormatName();
-  unsigned rtpTimestampFrequency = rtpSink->rtpTimestampFrequency();
-  unsigned numChannels = rtpSink->numChannels();
-  char* rtpmapLine;
-  if (rtpPayloadType >= 96) {
-    char* encodingParamsPart;
-    if (numChannels != 1) {
-      encodingParamsPart = new char[1 + 20 /* max int len */];
-      sprintf(encodingParamsPart, "/%d", numChannels);
-    } else {
-      encodingParamsPart = strDup("");
-    }
-    char const* const rtpmapFmt = "a=rtpmap:%d %s/%d%s\r\n";
-    unsigned rtpmapFmtSize = strlen(rtpmapFmt)
-      + 3 /* max char len */ + strlen(rtpPayloadFormatName)
-      + 20 /* max int len */ + strlen(encodingParamsPart);
-    rtpmapLine = new char[rtpmapFmtSize];
-    sprintf(rtpmapLine, rtpmapFmt,
-	    rtpPayloadType, rtpPayloadFormatName,
-	    rtpTimestampFrequency, encodingParamsPart);
-    delete[] encodingParamsPart;
-  } else {
-    // Static payload type => no "a=rtpmap:" line
-    rtpmapLine = strDup("");
-  }
-  unsigned rtpmapLineSize = strlen(rtpmapLine);
+  char* rtpmapLine = rtpSink->rtpmapLine();
+  char const* rangeLine = rangeSDPLine(parentSession);
   char const* auxSDPLine = getAuxSDPLine(rtpSink, inputSource);
   if (auxSDPLine == NULL) auxSDPLine = "";
-  unsigned auxSDPLineSize = strlen(auxSDPLine);
   
   char const* const sdpFmt =
     "m=%s 0 RTP/AVP %d\r\n"
     "c=IN IP4 0.0.0.0\r\n"
     "%s"
     "%s"
+    "%s"
     "a=control:%s\r\n";
   unsigned sdpFmtSize = strlen(sdpFmt)
     + strlen(mediaType) + 3 /* max char len */
-    + rtpmapLineSize
-    + auxSDPLineSize
+    + strlen(rtpmapLine)
+    + strlen(rangeLine)
+    + strlen(auxSDPLine)
     + strlen(trackId());
   char* sdpLines = new char[sdpFmtSize];
   sprintf(sdpLines, sdpFmt,
 	  mediaType, // m= <media>
 	  rtpPayloadType, // m= <fmt list>
 	  rtpmapLine, // a=rtpmap:... (if present)
+	  rangeLine, // a=range:... (if present)
 	  auxSDPLine, // optional extra SDP line
 	  trackId()); // a=control:<track-id>
+  delete[] rtpmapLine;
   
   fSDPLines = strDup(sdpLines);
   delete[] sdpLines;
