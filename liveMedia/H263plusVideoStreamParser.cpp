@@ -129,6 +129,8 @@ unsigned H263plusVideoStreamParser::parse(u_int64_t & currentDuration)
          //    if (h263Bitrates)
          //GetMaxBitrate(&fMaxBitrateCtx, frameSize, prevTrDifference);
          //prevTrDifference = trDifference;
+
+	 setParseState(); // Needed for the parsing process in StreamParser
       }
    } catch (int /*e*/) {
 #ifdef DEBUG
@@ -136,8 +138,6 @@ unsigned H263plusVideoStreamParser::parse(u_int64_t & currentDuration)
 #endif
       frameSize=0;
    }
-
-   setParseState(); // Needed for the parsing process in StreamParser
 
    return frameSize;
 }

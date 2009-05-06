@@ -106,6 +106,7 @@ void JPEGVideoRTPSink
 unsigned JPEGVideoRTPSink::specialHeaderSize() const {
   // Our source is known to be a JPEGVideoSource
   JPEGVideoSource* source = (JPEGVideoSource*)fSource; 
+  if (source == NULL) return 0; // sanity check
 
   unsigned headerSize = 8; // by default
 
