@@ -632,6 +632,11 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
       // A UDP-packetized stream (*not* a RTP stream)
       fReadSource = BasicUDPSource::createNew(env(), fRTPSocket);
       fRTPSource = NULL; // Note!
+
+      if (strcmp(fCodecName, "MP2T") == 0) { // MPEG-2 Transport Stream
+	fReadSource = MPEG2TransportStreamFramer::createNew(env(), fReadSource);
+	    // this sets "durationInMicroseconds" correctly, based on the PCR values
+      }
     } else {
       // Check "fCodecName" against the set of codecs that we support,
       // and create our RTP source accordingly
@@ -717,6 +722,12 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	  = MPEG1or2VideoRTPSource::createNew(env(), fRTPSocket,
 					      fRTPPayloadFormat,
 					      fRTPTimestampFrequency);
+      } else if (strcmp(fCodecName, "MP2T") == 0) { // MPEG-2 Transport Stream
+	fRTPSource = MPEG1or2VideoRTPSource::createNew(env(), fRTPSocket,
+						       fRTPPayloadFormat,
+						       fRTPTimestampFrequency);
+	fReadSource = MPEG2TransportStreamFramer::createNew(env(), fRTPSource);
+	    // this sets "durationInMicroseconds" correctly, based on the PCR values
       } else if (strcmp(fCodecName, "H261") == 0) { // H.261
 	fReadSource = fRTPSource
 	  = H261VideoRTPSource::createNew(env(), fRTPSocket,
@@ -765,7 +776,6 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 		   || strcmp(fCodecName, "PCMA") == 0 // PCM a-law audio
 		   || strcmp(fCodecName, "L16") == 0 // 16-bit linear audio
 		   || strcmp(fCodecName, "MP1S") == 0 // MPEG-1 System Stream
-		   || strcmp(fCodecName, "MP2T") == 0 // MPEG-2 Transport Str
 		   || strcmp(fCodecName, "MP2P") == 0 // MPEG-2 Program Stream
 		   || strcmp(fCodecName, "L8") == 0 // 8-bit linear audio
 		   || strcmp(fCodecName, "SPEEX") == 0 // SPEEX audio

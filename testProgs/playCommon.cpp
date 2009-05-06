@@ -1055,7 +1055,8 @@ void printQOSData(int exitCode) {
 	numPacketsExpected = curQOSRecord->totNumPacketsExpected;
       }
       *env << "num_packets_received\t" << numPacketsReceived << "\n";
-      *env << "num_packets_lost\t" << numPacketsExpected - numPacketsReceived << "\n";
+      *env << "num_packets_lost\t"
+	   << (int)(numPacketsExpected - numPacketsReceived) << "\n";
       
       if (curQOSRecord != NULL) {
 	unsigned secsDiff = curQOSRecord->measurementEndTime.tv_sec

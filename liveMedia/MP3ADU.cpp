@@ -27,6 +27,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupsockHelper.hh"
 #endif
 
+//#define DEBUG 1 //#####@@@@@
 // Segment data structures, used in the implementation below:
 
 #define SegmentBufSize 2000	/* conservatively high */
@@ -570,6 +571,7 @@ Boolean SegmentQueue::sqAfterGettingCommon(Segment& seg,
 			      seg.backpointer, seg.aduSize)) {
     return False;
   }
+  //  fprintf(stderr, "#####@@@@@GetADUInfo %d returns frameSize %d (diff %d)\n", numBytesRead, seg.frameSize, numBytesRead - seg.frameSize);
   
   fTotalDataSize += seg.dataHere();
   fNextFreeIndex = nextIndex(fNextFreeIndex);

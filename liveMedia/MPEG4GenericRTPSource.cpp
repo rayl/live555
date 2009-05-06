@@ -93,7 +93,8 @@ MPEG4GenericRTPSource
 
     fMode = strDup(mode);
     // Check for a "mode" that we don't yet support: //#####
-    if (mode == NULL || strcmp(mode, "aac-hbr") != 0) {
+    if (mode == NULL ||
+	(strcmp(mode, "aac-hbr") != 0 && strcmp(mode, "generic") != 0)) {
       envir() << "MPEG4GenericRTPSource Warning: Unknown or unsupported \"mode\": "
 	      << mode << "\n";
     }
@@ -178,9 +179,10 @@ unsigned MPEG4GenericBufferedPacket
 ::nextEnclosedFrameSize(unsigned char*& /*framePtr*/, unsigned dataSize) {
   // WE CURRENTLY DON'T IMPLEMENT INTERLEAVING.  FIX THIS! #####
   AUHeader* auHeader = fOurSource->fAUHeaders;
+  if (auHeader == NULL) return dataSize;
   unsigned numAUHeaders = fOurSource->fNumAUHeaders;
-  if (auHeader == NULL
-      || fOurSource->fNextAUHeader >= numAUHeaders) {
+
+  if (fOurSource->fNextAUHeader >= numAUHeaders) {
     fOurSource->envir() << "MPEG4GenericBufferedPacket::nextEnclosedFrameSize("
 			<< dataSize << "): data error ("
 			<< auHeader << "," << fOurSource->fNextAUHeader
