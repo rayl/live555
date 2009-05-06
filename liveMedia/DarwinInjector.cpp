@@ -128,13 +128,19 @@ Boolean DarwinInjector::setDestination(char const* remoteRTSPServerNameOrAddress
       "s=%s\r\n"
       "i=%s\r\n"
       "c=IN IP4 %s\r\n"
-      "t=0 0\r\n";
+      "t=0 0\r\n"
+      "a=x-qt-text-nam:%s\r\n"
+      "a=x-qt-text-inf:%s\r\n"
+      "a=x-qt-text-cmt:%s\r\n";
       // plus, %s for each substream SDP
     unsigned sdpLen = strlen(sdpFmt)
       + 20 /* max int len */ + 20 /* max int len */
       + strlen(sessionName)
       + strlen(sessionInfo)
       + strlen(remoteRTSPServerAddressStr)
+      + strlen(sessionName)
+      + strlen(sessionInfo)
+      + strlen(fApplicationName)
       + fSubstreamSDPSizes;
     unsigned const sdpSessionId = our_random();
     unsigned const sdpVersion = sdpSessionId;
@@ -143,7 +149,10 @@ Boolean DarwinInjector::setDestination(char const* remoteRTSPServerNameOrAddress
 	    sdpSessionId, sdpVersion, // o= line
 	    sessionName, // s= line
 	    sessionInfo, // i= line
-	    remoteRTSPServerAddressStr // c= line
+	    remoteRTSPServerAddressStr, // c= line
+	    sessionName, // a=x-qt-text-nam: line
+	    sessionInfo, // a=x-qt-text-inf: line
+	    fApplicationName // a=x-qt-text-cmt: line
 	    );
     char* p = &sdp[strlen(sdp)];
     SubstreamDescriptor* ss;

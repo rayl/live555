@@ -136,13 +136,17 @@ char* ServerMediaSession::generateSDPDescription() {
     "a=type:broadcast\r\n"
     "a=control:*\r\n"
     "%s"
-    "t=0 0\r\n";
+    "t=0 0\r\n"
+    "a=x-qt-text-nam:%s\r\n"
+    "a=x-qt-text-inf:%s\r\n";
   unsigned sdpLength = strlen(sdpPrefixFmt)
     + 20 + 6 + 20 + ourIPAddressStrSize
     + strlen(fDescriptionSDPString)
     + strlen(fInfoSDPString)
     + strlen(libNameStr) + strlen(libVersionStr)
-    + sourceFilterLineSize;
+    + sourceFilterLineSize
+    + strlen(fDescriptionSDPString)
+    + strlen(fInfoSDPString);
 
   // Add in the lengths of each subsession's media-level SDP lines: 
   ServerMediaSubsession* subsession;
@@ -164,7 +168,9 @@ char* ServerMediaSession::generateSDPDescription() {
 	  fDescriptionSDPString, // s= <description>
 	  fInfoSDPString, // i= <info>
 	  libNameStr, libVersionStr, // a=tool:
-	  sourceFilterLine); // a=source-filter: incl (if a SSM session)
+	  sourceFilterLine, // a=source-filter: incl (if a SSM session)
+	  fDescriptionSDPString, // a=x-qt-text-nam: line
+	  fInfoSDPString); // a=x-qt-text-inf: line
   delete[] sourceFilterLine; delete[] ourIPAddressStr;
 
   // Then, add the (media-level) lines for each subsession:
