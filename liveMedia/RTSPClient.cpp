@@ -879,6 +879,18 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
   return False;
 }
 
+static char* createScaleString(float scale) {
+  char buf[100];
+  if (scale == 1.0) {
+    // This is the default value; we don't need a "Scale:" header:
+    buf[0] = '\0';
+  } else {
+    sprintf(buf, "Scale: %f\r\n", scale);
+  }
+
+  return strDup(buf);
+}
+      
 static char* createRangeString(float start, float end) {
   char buf[100];
   if (start < 0) {
@@ -896,7 +908,7 @@ static char* createRangeString(float start, float end) {
 }
       
 Boolean RTSPClient::playMediaSession(MediaSession& session,
-				     float start, float end) {
+				     float start, float end, float scale) {
 #ifdef SUPPORT_REAL_RTSP
   if (session.isRealNetworksRDT) {
     // This is a RealNetworks stream; set the "Subscribe" parameter before proceeding:
@@ -918,6 +930,8 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
     // First, construct an authenticator string:
     char* authenticatorStr
       = createAuthenticatorString(&fCurrentAuthenticator, "PLAY", fBaseURL);
+    // And then a "Scale:" string:
+    char* scaleStr = createScaleString(scale);
     // And then a "Range:" string:
     char* rangeStr = createRangeString(start, end);
 
@@ -928,12 +942,14 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
       "%s"
       "%s"
       "%s"
+      "%s"
       "\r\n";
 
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(fBaseURL)
       + 20 /* max int len */
       + strlen(fLastSessionId)
+      + strlen(scaleStr)
       + strlen(rangeStr)
       + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize;
@@ -942,9 +958,11 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
 	    fBaseURL,
 	    ++fCSeq,
 	    fLastSessionId,
+	    scaleStr,
 	    rangeStr,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
+    delete[] scaleStr;
     delete[] rangeStr;
     delete[] authenticatorStr;
 
@@ -964,7 +982,7 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
 }
 
 Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
-					float start, float end,
+					float start, float end, float scale,
 					Boolean hackForDSS) {
   char* cmd = NULL;
   do {
@@ -979,6 +997,8 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
     // First, construct an authenticator string:
     char* authenticatorStr
       = createAuthenticatorString(&fCurrentAuthenticator, "PLAY", fBaseURL);
+    // And then a "Scale:" string:
+    char* scaleStr = createScaleString(scale);
     // And then a "Range:" string:
     char* rangeStr = createRangeString(start, end);
 
@@ -986,6 +1006,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
       "PLAY %s%s%s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
+      "%s"
       "%s"
       "%s"
       "%s"
@@ -1005,6 +1026,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
       + strlen(prefix) + strlen(separator) + strlen(suffix)
       + 20 /* max int len */
       + strlen(subsession.sessionId)
+      + strlen(scaleStr)
       + strlen(rangeStr)
       + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize;
@@ -1013,9 +1035,11 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
 	    prefix, separator, suffix,
 	    ++fCSeq,
 	    subsession.sessionId,
+	    scaleStr,
 	    rangeStr,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
+    delete[] scaleStr;
     delete[] rangeStr;
     delete[] authenticatorStr;
 

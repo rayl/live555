@@ -81,12 +81,14 @@ public:
       // Returns True iff this command succeeds
 
   Boolean playMediaSession(MediaSession& session,
-			   float start = 0.0, float end = -1.0);
+			   float start = 0.0, float end = -1.0,
+			   float scale = 1.0);
       // Issues an aggregate RTSP "PLAY" command on "session".
       // Returns True iff this command succeeds
       // (Note: start=-1 means 'resume'; end=-1 means 'play to end')
   Boolean playMediaSubsession(MediaSubsession& subsession,
 			      float start = 0.0, float end = -1.0,
+			      float scale = 1.0,
 			      Boolean hackForDSS = False);
       // Issues a RTSP "PLAY" command on "subsession".
       // Returns True iff this command succeeds

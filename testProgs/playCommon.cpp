@@ -1392,7 +1392,7 @@ Boolean setupDestinationRTSPServer() {
     if (!rtspClientOutgoing->setupMediaSubsession(*destSubsession,
 						  True, True)) break;
     if (!rtspClientOutgoing->playMediaSubsession(*destSubsession,
-						 0.0, -1.0,
+						 0.0, -1.0, 1.0,
 						 True/*hackForDSS*/)) break;
 
     // Next, set up "RTPSink"s for the outgoing packets:
