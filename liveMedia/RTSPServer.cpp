@@ -345,7 +345,8 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
     } else if (strcmp(cmdName, "TEARDOWN") == 0
 	       || strcmp(cmdName, "PLAY") == 0
 	       || strcmp(cmdName, "PAUSE") == 0) {
-      handleCmd_withinSession(cmdName, urlPreSuffix, urlSuffix, cseq);
+      handleCmd_withinSession(cmdName, urlPreSuffix, urlSuffix, cseq,
+			      (char const*)fBuffer);
     } else {
       handleCmd_notSupported(cseq);
     }
@@ -659,7 +660,7 @@ void RTSPServer::RTSPClientSession
 void RTSPServer::RTSPClientSession
 ::handleCmd_withinSession(char const* cmdName,
 			  char const* urlPreSuffix, char const* urlSuffix,
-			  char const* cseq) {
+			  char const* cseq, char const* fullRequestStr) {
   // This will either be:
   // - a non-aggregated operation, if "urlPreSuffix" is the session (stream)
   //   name and "urlSuffix" is the subsession (track) name, or
@@ -696,7 +697,7 @@ void RTSPServer::RTSPClientSession
   if (strcmp(cmdName, "TEARDOWN") == 0) {
     handleCmd_TEARDOWN(subsession, cseq);
   } else if (strcmp(cmdName, "PLAY") == 0) {
-    handleCmd_PLAY(subsession, cseq);
+    handleCmd_PLAY(subsession, cseq, fullRequestStr);
   } else if (strcmp(cmdName, "PAUSE") == 0) {
     handleCmd_PAUSE(subsession, cseq);
   }
@@ -711,7 +712,8 @@ void RTSPServer::RTSPClientSession
 }
 
 void RTSPServer::RTSPClientSession
-  ::handleCmd_PLAY(ServerMediaSubsession* subsession, char const* cseq) {
+  ::handleCmd_PLAY(ServerMediaSubsession* subsession, char const* cseq,
+		   char const* fullRequestStr) {
   char* rtspURL = fOurServer.rtspURL(fOurServerMediaSession);
   unsigned rtspURLSize = strlen(rtspURL);
 
@@ -946,7 +948,7 @@ RTSPServer::RTSPClientSession
   unsigned i;
   for (i = 0; i < resultCmdNameMaxSize-1 && i < reqStrSize; ++i) {
     char c = reqStr[i];
-    if (c == ' ') {
+    if (c == ' ' || c == '\t') {
       parseSucceeded = True;
       break;
     }
@@ -958,7 +960,7 @@ RTSPServer::RTSPClientSession
       
   // Skip over the prefix of any "rtsp://" URL that follows:
   unsigned j = i+1;
-  while (j < reqStrSize && reqStr[j] == ' ') ++j; // skip over any additional spaces
+  while (j < reqStrSize && (reqStr[j] == ' ' || reqStr[j] == '\t')) ++j; // skip over any additional white space
   for (j = i+1; j < reqStrSize-8; ++j) {
     if ((reqStr[j] == 'r' || reqStr[j] == 'R')
 	&& (reqStr[j+1] == 't' || reqStr[j+1] == 'T')

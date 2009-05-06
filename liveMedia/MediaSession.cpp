@@ -754,6 +754,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	// A RealNetworks 'RDT' stream (*not* a RTP stream)
 	fReadSource = RealRDTSource::createNew(env());
 	fRTPSource = NULL; // Note!
+	parentSession().isRealNetworksRDT = True;
 #endif
       } else if (  strcmp(fCodecName, "PCMU") == 0 // PCM u-law audio
 		   || strcmp(fCodecName, "GSM") == 0 // GSM audio

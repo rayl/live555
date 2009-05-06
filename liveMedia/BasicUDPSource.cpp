@@ -44,6 +44,8 @@ void BasicUDPSource::incomingPacketHandler(BasicUDPSource* source, int /*mask*/)
 }
 
 void BasicUDPSource::incomingPacketHandler1() {
+  if (!isCurrentlyAwaitingData()) return; // we're not ready for the data yet
+
   // Read the packet into our desired destination:
   struct sockaddr_in fromAddress;
   if (!fInputGS->handleRead(fTo, fMaxSize, fFrameSize, fromAddress)) return;

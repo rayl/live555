@@ -93,9 +93,6 @@ Boolean generateHintTracks = False;
 char* destRTSPURL = NULL;
 unsigned qosMeasurementIntervalMS = 0; // 0 means: Don't output QOS data
 unsigned statusCode = 0;
-#ifdef SUPPORT_REAL_RTSP
-Boolean isRealNetworksSession = False; // by default
-#endif
 
 #ifdef BSD
 static struct timezone Idunno;
@@ -589,7 +586,7 @@ int main(int argc, char** argv) {
 
       qtOut->startPlaying(sessionAfterPlaying, NULL);
 #ifdef SUPPORT_REAL_RTSP
-    } else if (isRealNetworksSession) {
+    } else if (session->isRealNetworksRDT) {
       // For RealNetworks' sessions, we create a single output file,
       // named "output.rm".
       char outFileName[1000];
@@ -883,7 +880,7 @@ public:
     measurementEndTime = measurementStartTime = startTime;
 
 #ifdef SUPPORT_REAL_RTSP
-    if (isRealNetworksSession) { // hack for RealMedia sessions (RDT, not RTP)
+    if (session->isRealNetworksRDT) { // hack for RealMedia sessions (RDT, not RTP)
       RealRDTSource* rdt = (RealRDTSource*)src;
       kBytesTotal = rdt->totNumKBytesReceived();
       totNumPacketsReceived = rdt->totNumPacketsReceived();
@@ -955,7 +952,7 @@ void qosMeasurementRecord
   measurementEndTime = timeNow;
 
 #ifdef SUPPORT_REAL_RTSP
-  if (isRealNetworksSession) { // hack for RealMedia sessions (RDT, not RTP)
+  if (session->isRealNetworksRDT) { // hack for RealMedia sessions (RDT, not RTP)
     RealRDTSource* rdt = (RealRDTSource*)fSource;
     double kBytesTotalNow = rdt->totNumKBytesReceived();
     double kBytesDeltaNow = kBytesTotalNow - kBytesTotal;
@@ -1015,7 +1012,7 @@ void beginQOSMeasurement() {
   while ((subsession = iter.next()) != NULL) {
     RTPSource* src = subsession->rtpSource();
 #ifdef SUPPORT_REAL_RTSP
-    if (isRealNetworksSession) src = (RTPSource*)(subsession->readSource()); // hack
+    if (session->isRealNetworksRDT) src = (RTPSource*)(subsession->readSource()); // hack
 #endif
     if (src == NULL) continue;
 
@@ -1044,7 +1041,7 @@ void printQOSData(int exitCode) {
     while ((subsession = iter.next()) != NULL) {
       RTPSource* src = subsession->rtpSource();
 #ifdef SUPPORT_REAL_RTSP
-      if (isRealNetworksSession) src = (RTPSource*)(subsession->readSource()); // hack
+      if (session->isRealNetworksRDT) src = (RTPSource*)(subsession->readSource()); // hack
 #endif
       if (src == NULL) continue;
 
@@ -1094,7 +1091,7 @@ void printQOSData(int exitCode) {
 	     << (packetLossFraction == 1.0 ? 100.0 : 100*curQOSRecord->packet_loss_fraction_max) << "\n";
 	
 #ifdef SUPPORT_REAL_RTSP
-	if (isRealNetworksSession) {
+	if (session->isRealNetworksRDT) {
 	  RealRDTSource* rdt = (RealRDTSource*)src;
 	  *env << "inter_packet_gap_ms_min\t" << rdt->minInterPacketGapUS()/1000.0 << "\n";
 	  struct timeval totalGaps = rdt->totalInterPacketGaps();

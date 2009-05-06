@@ -1368,8 +1368,12 @@ addAtom(tkhd);
   size += addWord(0x00010000); // matrix center
   size += addZeroWords(3); // matrix
   size += addWord(0x40000000); // matrix bottom right corner
-  size += addWord(fMovieWidth<<16); // Track width
-  size += addWord(fMovieHeight<<16); // Track height
+  if (strcmp(fCurrentIOState->fOurSubsession.mediumName(), "video") == 0) {
+    size += addWord(fMovieWidth<<16); // Track width
+    size += addWord(fMovieHeight<<16); // Track height
+  } else {
+    size += addZeroWords(2); // not video: leave width and height fields zero
+  }
 addAtomEnd;
 
 addAtom(edts);

@@ -144,9 +144,15 @@ RTCPInstance::RTCPInstance(UsageEnvironment& env, Groupsock* RTCPgs,
 
   fKnownMembers = new RTCPMemberDatabase;
   fInBuf = new unsigned char[maxPacketSize];
+  if (fKnownMembers == NULL || fInBuf == NULL) return;
+
+  // A hack to save buffer space, because RTCP packets are always small:
+  unsigned savedMaxSize = OutPacketBuffer::maxSize;
+  OutPacketBuffer::maxSize = maxPacketSize;
   fOutBuf = new OutPacketBuffer(preferredPacketSize, maxPacketSize);
-  if (fKnownMembers == NULL || fOutBuf == NULL) return;
-  
+  OutPacketBuffer::maxSize = savedMaxSize;
+  if (fOutBuf == NULL) return;
+
   // Arrange to handle incoming reports from others:
   TaskScheduler::BackgroundHandlerProc* handler
     = (TaskScheduler::BackgroundHandlerProc*)&incomingReportHandler;

@@ -115,11 +115,11 @@ private:
 			 char const* fullRequestStr);
     void handleCmd_withinSession(char const* cmdName,
 				 char const* urlPreSuffix, char const* urlSuffix,
-				 char const* cseq);
+				 char const* cseq, char const* fullRequestStr);
     void handleCmd_TEARDOWN(ServerMediaSubsession* subsession,
 			    char const* cseq);
     void handleCmd_PLAY(ServerMediaSubsession* subsession,
-			char const* cseq);
+			char const* cseq, char const* fullRequestStr);
     void handleCmd_PAUSE(ServerMediaSubsession* subsession,
 			 char const* cseq);
     Boolean authenticationOK(char const* cmdName, char const* cseq,

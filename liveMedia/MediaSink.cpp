@@ -104,13 +104,15 @@ Boolean MediaSink::isRTPSink() const {
 
 ////////// OutPacketBuffer //////////
 
-unsigned OutPacketBuffer::numPacketsLimit = 40; // by default
+unsigned OutPacketBuffer::maxSize = 60000; // by default
 
 OutPacketBuffer::OutPacketBuffer(unsigned preferredPacketSize,
 				 unsigned maxPacketSize)
   : fPreferred(preferredPacketSize), fMax(maxPacketSize),
-    fLimit(numPacketsLimit*maxPacketSize), fBuf(new unsigned char[fLimit]),
     fOverflowDataSize(0) {
+  unsigned maxNumPackets = (maxSize + (maxPacketSize-1))/maxPacketSize;
+  fLimit = maxNumPackets*maxPacketSize;
+  fBuf = new unsigned char[fLimit];
   resetPacketStart();
   resetOffset();
   resetOverflowData();

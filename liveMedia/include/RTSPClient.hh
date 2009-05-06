@@ -126,7 +126,7 @@ public:
   unsigned describeStatus() const { return fDescribeStatusCode; }
 
 #ifdef SUPPORT_REAL_RTSP
-  Boolean isRealNetworksSession() const { return fRealChallengeStr != NULL; }
+  Boolean usingRealNetworksChallengeResponse() const { return fRealChallengeStr != NULL; }
 #endif
 
 protected:

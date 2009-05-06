@@ -201,7 +201,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator) {
     Boolean wantRedirection = False;
     char* redirectionURL = NULL;
 #ifdef SUPPORT_REAL_RTSP
-    delete[] fRealETagStr; fRealETagStr = new char[fResponseBufferSize];
+    delete[] fRealETagStr; fRealETagStr = new char[readBufSize];
 #endif
     if (responseCode == 301 || responseCode == 302) {
       wantRedirection = True;
@@ -567,8 +567,9 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 
     char* transportStr = NULL;
 #ifdef SUPPORT_REAL_RTSP
-    if (usingRealNetworksChallengeResponse()) {
-      // Use a special "Transport:" header, and also add a 'challenge response'.
+    if (isRealNetworksSession()) {
+      // For RealNetworks streams, use a special "Transport:" header, and
+      // also add a 'challenge response'.
       char challenge2[64];
       char checksum[34];
       RealCalculateChallengeResponse(fRealChallengeStr, challenge2, checksum);
@@ -743,7 +744,7 @@ static char* createRangeString(float start, float end) {
 Boolean RTSPClient::playMediaSession(MediaSession& session,
 				     float start, float end) {
 #ifdef SUPPORT_REAL_RTSP
-  if (session.isRealNetworksRDT) {
+  if (isRealNetworksSession()) {
     // This is a RealNetworks stream; set the "Subscribe" parameter before proceeding:
     char* streamRuleString = RealGetSubscribeRuleString(&session);
     setMediaSessionParameter(session, "Subscribe", streamRuleString);
@@ -1757,7 +1758,6 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix) {
     envir() << "Requesting RTSP-over-HTTP tunneling (on port "
 	    << fTunnelOverHTTPPortNum << ")\n\n";
   }
-  if (urlSuffix == NULL || urlSuffix[0] == '\0') urlSuffix = "/";
   char* cmd = NULL;
 
   do {

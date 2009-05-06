@@ -70,7 +70,7 @@ public:
   OutPacketBuffer(unsigned preferredPacketSize, unsigned maxPacketSize);
   ~OutPacketBuffer();
 
-  static unsigned numPacketsLimit;
+  static unsigned maxSize;
 
   unsigned char* curPtr() const {return &fBuf[fPacketStart + fCurOffset];}
   unsigned totalBytesAvailable() const {

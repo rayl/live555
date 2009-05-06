@@ -66,5 +66,6 @@ RTPSink* MPEG2TransportFileServerMediaSubsession
 		   unsigned char /*rtpPayloadTypeIfDynamic*/,
 		   FramedSource* /*inputSource*/) {
   return SimpleRTPSink::createNew(envir(), rtpGroupsock,
-				  33, 90000, "video", "mp2t");
+				  33, 90000, "video", "mp2t",
+				  1, True, False /*no 'M' bit*/);
 }

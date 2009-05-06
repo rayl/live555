@@ -75,6 +75,7 @@ void DeviceSource::deliverFrame() {
   //     fPresentationTime: Should be set to the frame's presentation time
   //         (seconds, microseconds).
   //     fDurationInMicroseconds: Should be set to the frame's duration, if known.
+  if (!isCurrentlyAwaitingData()) return; // we're not ready for the data yet
 
   // Deliver the data here:
 

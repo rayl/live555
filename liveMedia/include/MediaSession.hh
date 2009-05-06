@@ -60,6 +60,7 @@ public:
 
 #ifdef SUPPORT_REAL_RTSP
   // Attributes specific to RealNetworks streams:
+  Boolean isRealNetworksRDT;
   unsigned fRealFlags;
   unsigned char* fRealTitle; unsigned fRealTitleSize;
   unsigned char* fRealAuthor; unsigned fRealAuthorSize;
