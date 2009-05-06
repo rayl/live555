@@ -33,7 +33,7 @@ public:
 
   float filePlayTime() const;
   void setPresentationTimeScale(unsigned scale);
-  void seekWithinFile(float seekNPT);
+  void seekWithinFile(double seekNPT);
 
 protected:
   MP3FileSource(UsageEnvironment& env, FILE* fid);

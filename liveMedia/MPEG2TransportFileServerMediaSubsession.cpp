@@ -40,7 +40,7 @@ public:
   ClientTrickPlayState(MPEG2TransportStreamIndexFile* indexFile);
 
   // Functions to bring "fNPT", "fTSRecordNum" and "fIxRecordNum" in sync:
-  void updateStateFromNPT(float npt);
+  void updateStateFromNPT(double npt);
   void updateStateOnScaleChange();
   void updateStateOnPlayChange(Boolean reverseToPreviousVSH);
 
@@ -151,7 +151,7 @@ void MPEG2TransportFileServerMediaSubsession
 }
 
 void MPEG2TransportFileServerMediaSubsession
-::seekStream(unsigned clientSessionId, void* streamToken, float seekNPT) {
+::seekStream(unsigned clientSessionId, void* streamToken, double seekNPT) {
   if (fIndexFile != NULL) { // we support 'trick play'
     ClientTrickPlayState* client = lookupClient(clientSessionId);
     if (client != NULL) {
@@ -259,8 +259,8 @@ ClientTrickPlayState::ClientTrickPlayState(MPEG2TransportStreamIndexFile* indexF
     fTSRecordNum(0), fIxRecordNum(0) {
 }
 
-void ClientTrickPlayState::updateStateFromNPT(float npt) {
-  fNPT = npt;
+void ClientTrickPlayState::updateStateFromNPT(double npt) {
+  fNPT = (float)npt;
   // Map "fNPT" to the corresponding Transport Stream and Index record numbers:
   unsigned long tsRecordNum, ixRecordNum;
   fIndexFile->lookupTSPacketNumFromNPT(fNPT, tsRecordNum, ixRecordNum);

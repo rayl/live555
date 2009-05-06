@@ -1026,7 +1026,7 @@ static char* createScaleString(float scale, float currentScale) {
   return strDup(buf);
 }
 
-static char* createRangeString(float start, float end) {
+static char* createRangeString(double start, double end) {
   char buf[100];
   if (start < 0) {
     // We're resuming from a PAUSE; there's no "Range:" header at all
@@ -1047,7 +1047,7 @@ static char* createRangeString(float start, float end) {
 static char const* NoSessionErr = "No RTSP session is currently in progress\n";
 
 Boolean RTSPClient::playMediaSession(MediaSession& session,
-				     float start, float end, float scale) {
+				     double start, double end, float scale) {
 #ifdef SUPPORT_REAL_RTSP
   if (session.isRealNetworksRDT) {
     // This is a RealNetworks stream; set the "Subscribe" parameter before proceeding:
@@ -1155,7 +1155,7 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
 }
 
 Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
-					float start, float end, float scale,
+					double start, double end, float scale,
 					Boolean hackForDSS) {
   char* cmd = NULL;
   do {

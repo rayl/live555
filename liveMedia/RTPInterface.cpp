@@ -130,13 +130,24 @@ void RTPInterface::addStreamSocket(int sockNum,
   fTCPStreams = new tcpStreamRecord(sockNum, streamChannelId, fTCPStreams);
 }
 
+static void deregisterSocket(UsageEnvironment& env, int sockNum, unsigned char streamChannelId) {
+  SocketDescriptor* socketDescriptor = lookupSocketDescriptor(env, sockNum);
+  if (socketDescriptor != NULL) {
+    socketDescriptor->deregisterRTPInterface(streamChannelId);
+        // Note: This may delete "socketDescriptor",
+        // if no more interfaces are using this socket
+  }
+}
+
 void RTPInterface::removeStreamSocket(int sockNum,
 				      unsigned char streamChannelId) {
   for (tcpStreamRecord** streamsPtr = &fTCPStreams; *streamsPtr != NULL;
        streamsPtr = &((*streamsPtr)->fNext)) {
     if ((*streamsPtr)->fStreamSocketNum == sockNum
 	&& (*streamsPtr)->fStreamChannelId == streamChannelId) {
-      // Remove the record pointed to by *streamsPtr :
+      deregisterSocket(envir(), sockNum, streamChannelId);
+
+      // Then remove the record pointed to by *streamsPtr :
       tcpStreamRecord* next = (*streamsPtr)->fNext;
       (*streamsPtr)->fNext = NULL;
       delete (*streamsPtr);
@@ -229,13 +240,7 @@ void RTPInterface::stopNetworkReading() {
   // Also turn off read handling on each of our TCP connections:
   for (tcpStreamRecord* streams = fTCPStreams; streams != NULL;
        streams = streams->fNext) {
-    SocketDescriptor* socketDescriptor
-      = lookupSocketDescriptor(envir(), streams->fStreamSocketNum);
-    if (socketDescriptor != NULL) {
-      socketDescriptor->deregisterRTPInterface(streams->fStreamChannelId);
-        // Note: This may delete "socketDescriptor",
-        // if no more interfaces are using this socket
-    }
+    deregisterSocket(envir(), streams->fStreamSocketNum, streams->fStreamChannelId);
   }
 }
 

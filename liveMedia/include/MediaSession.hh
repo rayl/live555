@@ -39,8 +39,8 @@ public:
 			      MediaSession*& resultSession);
 
   Boolean hasSubsessions() const { return fSubsessionsHead != NULL; }
-  float& playStartTime() { return fMaxPlayStartTime; }
-  float& playEndTime() { return fMaxPlayEndTime; }
+  double& playStartTime() { return fMaxPlayStartTime; }
+  double& playEndTime() { return fMaxPlayEndTime; }
   char* connectionEndpointName() const { return fConnectionEndpointName; }
   char const* CNAME() const { return fCNAME; }
   struct in_addr const& sourceFilterAddr() const { return fSourceFilterAddr; }
@@ -100,8 +100,8 @@ protected:
 
   // Fields set from a SDP description:
   char* fConnectionEndpointName;
-  float fMaxPlayStartTime;
-  float fMaxPlayEndTime;
+  double fMaxPlayStartTime;
+  double fMaxPlayEndTime;
   struct in_addr fSourceFilterAddr; // used for SSM
   float fScale; // set from a RTSP "Scale:" header
   char* fMediaSessionType; // holds a=type value
@@ -152,11 +152,11 @@ public:
     // This is the source that client sinks read from.  It is usually
     // (but not necessarily) the same as "rtpSource()"
 
-  float playStartTime() const;
-  float playEndTime() const;
+  double playStartTime() const;
+  double playEndTime() const;
   // Used only to set the local fields:
-  float& _playStartTime() { return fPlayStartTime; }
-  float& _playEndTime() { return fPlayEndTime; }
+  double& _playStartTime() { return fPlayStartTime; }
+  double& _playEndTime() { return fPlayEndTime; }
 
   Boolean initiate(int useSpecialRTPoffset = -1);
       // Creates a "RTPSource" for this subsession. (Has no effect if it's
@@ -221,7 +221,7 @@ public:
     Boolean infoIsNew; // not part of the RTSP header; instead, set whenever this struct is filled in
   } rtpInfo;
 
-  float getNormalPlayTime(struct timeval const& presentationTime);
+  double getNormalPlayTime(struct timeval const& presentationTime);
   // Computes the stream's "Normal Play Time" (NPT) from the given "presentationTime".
   // (For the definition of "Normal Play Time", see RFC 2326, section 3.6.)
   // This function is useful only if the "rtpInfo" structure was previously filled in
@@ -285,8 +285,8 @@ protected:
   Boolean fCpresent, fRandomaccessindication;
   char *fConfig, *fMode, *fSpropParameterSets;
 
-  float fPlayStartTime;
-  float fPlayEndTime;
+  double fPlayStartTime;
+  double fPlayEndTime;
   unsigned short fVideoWidth, fVideoHeight;
      // screen dimensions (set by an optional a=x-dimensions: <w>,<h> line)
   unsigned fVideoFPS;

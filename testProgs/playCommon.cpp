@@ -410,8 +410,8 @@ int main(int argc, char** argv) {
     }
 
     case 's': { // specify initial seek time (trick play)
-      float arg;
-      if (sscanf(argv[2], "%g", &arg) != 1 || arg < 0) {
+      double arg;
+      if (sscanf(argv[2], "%lg", &arg) != 1 || arg < 0) {
 	usage();
       }
       initialSeekTime = arg;

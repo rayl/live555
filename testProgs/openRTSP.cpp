@@ -72,7 +72,7 @@ Boolean clientStartPlayingSession(Medium* client,
 
   if (client == NULL || session == NULL) return False;
   RTSPClient* rtspClient = (RTSPClient*)client;
-  return rtspClient->playMediaSession(*session, (float)initialSeekTime, (float)endTime, (float)scale);
+  return rtspClient->playMediaSession(*session, initialSeekTime, endTime, (float)scale);
 }
 
 Boolean clientTearDownSession(Medium* client,

@@ -150,7 +150,7 @@ public:
 
 protected: // constructor and destructor, called only by RTPSource:
   friend class RTPSource;
-  RTPReceptionStatsDB(RTPSource& rtpSource);
+  RTPReceptionStatsDB();
   virtual ~RTPReceptionStatsDB();
 
 protected:
@@ -158,7 +158,6 @@ protected:
 
 protected:
   friend class Iterator;
-  RTPSource& fOurRTPSource;
   unsigned fNumActiveSourcesSinceLastReset;
 
 private:
@@ -204,9 +203,8 @@ public:
 protected:
   // called only by RTPReceptionStatsDB:
   friend class RTPReceptionStatsDB;
-  RTPReceptionStats(RTPSource& rtpSource, u_int32_t SSRC,
-		    u_int16_t initialSeqNum);
-  RTPReceptionStats(RTPSource& rtpSource, u_int32_t SSRC);
+  RTPReceptionStats(u_int32_t SSRC, u_int16_t initialSeqNum);
+  RTPReceptionStats(u_int32_t SSRC);
   virtual ~RTPReceptionStats();
 
 private:
@@ -225,7 +223,6 @@ private:
       // generate a reception report)
 
 protected:
-  RTPSource& fOurRTPSource;
   u_int32_t fSSRC;
   unsigned fNumPacketsReceivedSinceLastReset;
   unsigned fTotNumPacketsReceived;

@@ -62,7 +62,7 @@ public:
     reset();
     fData = new unsigned char[bufferSize];
   }
-  virtual ~SubsessionBuffer() { delete fData; }
+  virtual ~SubsessionBuffer() { delete[] fData; }
   void reset() { fBytesInUse = 0; }
   void addBytes(unsigned numBytes) { fBytesInUse += numBytes; }
 

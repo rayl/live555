@@ -134,7 +134,7 @@ Boolean parseRTSPRequestString(char const* reqStr,
   return True;
 }
 
-Boolean parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd) {
+Boolean parseRangeHeader(char const* buf, double& rangeStart, double& rangeEnd) {
   // First, find "Range:"
   while (1) {
     if (*buf == '\0') return False; // not found
@@ -145,12 +145,12 @@ Boolean parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd) {
   // Then, run through each of the fields, looking for ones we handle:
   char const* fields = buf + 7;
   while (*fields == ' ') ++fields;
-  float start, end;
+  double start, end;
   Locale("C", LC_NUMERIC);
-  if (sscanf(fields, "npt = %f - %f", &start, &end) == 2) {
+  if (sscanf(fields, "npt = %lf - %lf", &start, &end) == 2) {
     rangeStart = start;
     rangeEnd = end;
-  } else if (sscanf(fields, "npt = %f -", &start) == 1) {
+  } else if (sscanf(fields, "npt = %lf -", &start) == 1) {
     rangeStart = start;
     rangeEnd = 0.0;
   } else {

@@ -352,8 +352,8 @@ Boolean MediaSession::parseSDPAttribute_type(char const* sdpLine) {
   return parseSuccess;
 }
 
-static Boolean parseRangeAttribute(char const* sdpLine, float& startTime, float& endTime) {
-  return sscanf(sdpLine, "a=range: npt = %g - %g", &startTime, &endTime) == 2;
+static Boolean parseRangeAttribute(char const* sdpLine, double& startTime, double& endTime) {
+  return sscanf(sdpLine, "a=range: npt = %lg - %lg", &startTime, &endTime) == 2;
 }
 
 Boolean MediaSession::parseSDPAttribute_control(char const* sdpLine) {
@@ -375,8 +375,8 @@ Boolean MediaSession::parseSDPAttribute_range(char const* sdpLine) {
   // (Later handle other kinds of "a=range" attributes also???#####)
   Boolean parseSuccess = False;
 
-  float playStartTime;
-  float playEndTime;
+  double playStartTime;
+  double playEndTime;
   if (parseRangeAttribute(sdpLine, playStartTime, playEndTime)) {
     parseSuccess = True;
     if (playStartTime > fMaxPlayStartTime) {
@@ -571,13 +571,13 @@ MediaSubsession::~MediaSubsession() {
 #endif
 }
 
-float MediaSubsession::playStartTime() const {
+double MediaSubsession::playStartTime() const {
   if (fPlayStartTime > 0) return fPlayStartTime;
 
   return fParent.playStartTime();
 }
 
-float MediaSubsession::playEndTime() const {
+double MediaSubsession::playEndTime() const {
   if (fPlayEndTime > 0) return fPlayEndTime;
 
   return fParent.playEndTime();
@@ -930,7 +930,7 @@ void MediaSubsession::setDestinations(netAddressBits defaultDestAddress) {
   }
 }
 
-float MediaSubsession::getNormalPlayTime(struct timeval const& presentationTime) {
+double MediaSubsession::getNormalPlayTime(struct timeval const& presentationTime) {
   // First, check whether our "RTPSource" object has already been synchronized using RTCP.
   // If it hasn't, then - as a special case - we need to use the RTP timestamp to compute the NPT.
   if (rtpSource() == NULL || rtpSource()->timestampFrequency() == 0) return 0.0; // no RTP source, or bad freq!
@@ -938,8 +938,8 @@ float MediaSubsession::getNormalPlayTime(struct timeval const& presentationTime)
   if (!rtpSource()->hasBeenSynchronizedUsingRTCP()) {
     if (!rtpInfo.infoIsNew) return 0.0; // the "rtpInfo" structure has not been filled in
     u_int32_t timestampOffset = rtpSource()->curPacketRTPTimestamp() - rtpInfo.timestamp;
-    float nptOffset = (timestampOffset/(float)(rtpSource()->timestampFrequency()))*scale();
-    float npt = playStartTime() + nptOffset;
+    double nptOffset = (timestampOffset/(double)(rtpSource()->timestampFrequency()))*scale();
+    double npt = playStartTime() + nptOffset;
 
     return npt;
   } else {
@@ -951,8 +951,8 @@ float MediaSubsession::getNormalPlayTime(struct timeval const& presentationTime)
       // This is the first time we've been called with a synchronized presentation time since the "rtpInfo"
       // structure was last filled in.  Use this "presentationTime" to compute "fNPT_PTS_Offset":
       u_int32_t timestampOffset = rtpSource()->curPacketRTPTimestamp() - rtpInfo.timestamp;
-      float nptOffset = (timestampOffset/(float)(rtpSource()->timestampFrequency()))*scale();
-      float npt = playStartTime() + nptOffset;
+      double nptOffset = (timestampOffset/(double)(rtpSource()->timestampFrequency()))*scale();
+      double npt = playStartTime() + nptOffset;
       fNPT_PTS_Offset = npt - ptsDouble*scale();
       rtpInfo.infoIsNew = False; // for next time
 
@@ -960,7 +960,7 @@ float MediaSubsession::getNormalPlayTime(struct timeval const& presentationTime)
     } else {
       // Use the precomputed "fNPT_PTS_Offset" to compute the NPT from the PTS:
       if (fNPT_PTS_Offset == 0.0) return 0.0; // error: The "rtpInfo" structure was apparently never filled in
-      return (float)(ptsDouble*scale() + fNPT_PTS_Offset);
+      return (double)(ptsDouble*scale() + fNPT_PTS_Offset);
     }
   }
 }
@@ -1034,8 +1034,8 @@ Boolean MediaSubsession::parseSDPAttribute_range(char const* sdpLine) {
   // (Later handle other kinds of "a=range" attributes also???#####)
   Boolean parseSuccess = False;
 
-  float playStartTime;
-  float playEndTime;
+  double playStartTime;
+  double playEndTime;
   if (parseRangeAttribute(sdpLine, playStartTime, playEndTime)) {
     parseSuccess = True;
     if (playStartTime > fPlayStartTime) {

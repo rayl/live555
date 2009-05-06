@@ -58,7 +58,7 @@ public:
 
   float filePlayTime() const; // in seconds
   void setPresentationTimeScale(unsigned scale) { fPresentationTimeScale = scale; }
-  void seekWithinFile(float seekNPT);
+  void seekWithinFile(double seekNPT);
 
   void checkForXingHeader(); // hack for Xing VBR files
 

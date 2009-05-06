@@ -86,7 +86,7 @@ float MP3StreamState::filePlayTime() const {
   return numFramesInFile*(pt.tv_sec + pt.tv_usec/(float)MILLION);
 }
 
-void MP3StreamState::seekWithinFile(float seekNPT) {
+void MP3StreamState::seekWithinFile(double seekNPT) {
   if (fFidIsReallyASocket) return; // it's not seekable
 
   float fileDuration = filePlayTime();
@@ -95,7 +95,7 @@ void MP3StreamState::seekWithinFile(float seekNPT) {
   } else if (seekNPT > fileDuration) {
     seekNPT = fileDuration;
   }
-  float seekFraction = seekNPT/fileDuration;
+  float seekFraction = (float)seekNPT/fileDuration;
 
   unsigned seekByteNumber;
   if (fHasXingTOC) {

@@ -56,14 +56,14 @@ protected: // redefined virtual functions
 			   unsigned short& rtpSeqNum,
                            unsigned& rtpTimestamp);
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
-  virtual void seekStream(unsigned clientSessionId, void* streamToken, float seekNPT);
+  virtual void seekStream(unsigned clientSessionId, void* streamToken, double seekNPT);
   virtual void setStreamScale(unsigned clientSessionId, void* streamToken, float scale);
   virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 
 protected: // new virtual functions, possibly redefined by subclasses
   virtual char const* getAuxSDPLine(RTPSink* rtpSink,
 				    FramedSource* inputSource);
-  virtual void seekStreamSource(FramedSource* inputSource, float seekNPT);
+  virtual void seekStreamSource(FramedSource* inputSource, double seekNPT);
   virtual void setStreamSourceScale(FramedSource* inputSource, float scale);
   virtual void closeStreamSource(FramedSource *inputSource);
 

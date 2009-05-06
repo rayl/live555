@@ -703,7 +703,7 @@ void RTSPServer::RTSPClientSession
 
   // Next, check whether a "Range:" header is present in the request.
   // This isn't legal, but some clients do this to combine "SETUP" and "PLAY":
-  float rangeStart = 0.0, rangeEnd = 0.0;
+  double rangeStart = 0.0, rangeEnd = 0.0;
   fStreamAfterSETUP = parseRangeHeader(fullRequestStr, rangeStart, rangeEnd) ||
                       parsePlayNowHeader(fullRequestStr);
 
@@ -920,7 +920,7 @@ void RTSPServer::RTSPClientSession
   scaleHeader = strDup(buf);
 
   //// Parse the client's "Range:" header, if any:
-  float rangeStart = 0.0, rangeEnd = 0.0;
+  double rangeStart = 0.0, rangeEnd = 0.0;
   Boolean sawRangeHeader = parseRangeHeader(fullRequestStr, rangeStart, rangeEnd);
 
   // Use this information, plus the stream's duration (if known), to create
