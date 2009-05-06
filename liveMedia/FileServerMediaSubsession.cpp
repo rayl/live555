@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "FileServerMediaSubsession.hh"
 #include "RTCP.hh"
+#include <GroupsockHelper.hh>
 
 FileServerMediaSubsession
 ::FileServerMediaSubsession(UsageEnvironment& env, char const* fileName)
@@ -86,38 +87,62 @@ private:
 };
 
 void FileServerMediaSubsession
-::getStreamParameters(struct sockaddr_in clientAddress,
+::getStreamParameters(netAddressBits clientAddress,
 		      Port const& clientRTPPort,
 		      Port const& clientRTCPPort,
-		      GroupEId& groupEId, Boolean& isMulticast,
+		      Boolean& isMulticast,
+		      netAddressBits destinationAddress,
+		      u_int8_t destinationTTL,
+		      Port& serverRTPPort,
+		      Port& serverRTCPPort,
 		      void*& streamToken) {
   // Create a new unicast RTP/RTCP stream, directed to the client:
+  isMulticast = False;
+  destinationAddress = clientAddress;
 
   // Create the media source:
   unsigned streamBitrate;
   FramedSource* mediaSource = createNewStreamSource(streamBitrate);
 
   // Create a RTP sink for this stream:
+  // First, create a 'groupsock' for it, and make sure that its port number is even:
   struct in_addr dummyAddr; dummyAddr.s_addr = 0;
-  Groupsock* rtpGroupsock
-    = new Groupsock(envir(), dummyAddr, clientRTPPort, 255);
-  rtpGroupsock->changeDestinationParameters(clientAddress.sin_addr, 0, ~0);
+  Groupsock* rtpGroupsock_old = NULL;
+  Groupsock* rtpGroupsock;
+  portNumBits serverRTPPortNum = 0;
+  while (1) {
+    rtpGroupsock = new Groupsock(envir(), dummyAddr, 0, 255);
+    if (!getSourcePort(envir(), rtpGroupsock->socketNum(), serverRTPPort)) break;
+    serverRTPPortNum = ntohs(serverRTPPort.num());
+
+    // If the port number's even, we're done:
+    if ((serverRTPPortNum&1) == 0) break;
+
+    // Try again (while keeping the old 'groupsock' around, so that we get
+    // a different socket number next time):
+    delete rtpGroupsock_old;
+    rtpGroupsock_old = rtpGroupsock;
+  }
+  delete rtpGroupsock_old;
+
+  struct in_addr clientAddr; clientAddr.s_addr = clientAddress;
+  rtpGroupsock->changeDestinationParameters(clientAddr, clientRTPPort, ~0);
+  destinationTTL = rtpGroupsock->ttl();
+
   unsigned char rtpPayloadType = 96 + trackNumber()-1; // if dynamic
   RTPSink* rtpSink
     = createNewRTPSink(rtpGroupsock, rtpPayloadType, mediaSource);
 
   // Create a 'groupsock' for a 'RTCP instance' to be created later:
   Groupsock* rtcpGroupsock
-    = new Groupsock(envir(), dummyAddr, clientRTCPPort, 255);
-  rtcpGroupsock->changeDestinationParameters(clientAddress.sin_addr, 0, ~0);
+    = new Groupsock(envir(), dummyAddr, serverRTPPortNum+1, 255);
+  serverRTCPPort = rtcpGroupsock->port();
+  rtcpGroupsock->changeDestinationParameters(clientAddr, clientRTCPPort, ~0);
 
   // Set up the state of the stream.  The stream will get started later:
   streamToken
     = new StreamState(rtpGroupsock, rtpSink,
 		      rtcpGroupsock, streamBitrate, fCNAME, mediaSource);
-
-  groupEId = GroupEId(clientAddress.sin_addr, clientRTPPort.num(), 255);
-  isMulticast = False;
 }
 
 void FileServerMediaSubsession::startStream(void* streamToken) {

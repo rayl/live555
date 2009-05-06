@@ -120,14 +120,21 @@ char const* PassiveServerMediaSubsession::sdpLines() {
 }
 
 void PassiveServerMediaSubsession
-::getStreamParameters(struct sockaddr_in /*clientAddress*/,
+::getStreamParameters(netAddressBits /*clientAddress*/,
 		      Port const& /*clientRTPPort*/,
 		      Port const& /*clientRTCPPort*/,
-		      GroupEId& groupEId, Boolean& isMulticast,
+		      Boolean& isMulticast,
+		      netAddressBits destinationAddress,
+		      u_int8_t destinationTTL,
+		      Port& serverRTPPort,
+		      Port& serverRTCPPort,
 		      void*& streamToken) {
-  Groupsock const& gs = fRTPSink.groupsockBeingUsed();
-  groupEId = GroupEId(gs.groupAddress(), ntohs(gs.port().num()), gs.ttl());
   isMulticast = True;
+  Groupsock const& gs = fRTPSink.groupsockBeingUsed();
+  destinationAddress = gs.groupAddress().s_addr;
+  destinationTTL = gs.ttl();
+  serverRTPPort = gs.port();
+  // serverRTCPPort is not needed, so we don't set it
   streamToken = NULL; // not used
 }
 

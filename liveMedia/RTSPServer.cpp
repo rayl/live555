@@ -364,16 +364,16 @@ void RTSPServer::RTSPClientSession
 }
 
 static void parseTransportHeader(char const* buf,
-				 unsigned short& rtpPortNum,
-				 unsigned short& rtcpPortNum) {
+				 unsigned short& clientRTPPortNum,
+				 unsigned short& clientRTCPPortNum) {
   // Note: This is a quick-and-dirty implementation.  Should improve #####
   while (*buf != '\0') {
     if (*buf == 'c') {
       // Check for "client_port="
       unsigned short p1, p2;
       if (sscanf(buf, "client_port=%hu-%hu", &p1, &p2) == 2) {
-	rtpPortNum = p1;
-	rtcpPortNum = p2;
+	clientRTPPortNum = p1;
+	clientRTCPPortNum = p2;
 	return;
       }
     }
@@ -398,22 +398,41 @@ void RTSPServer::RTSPClientSession
 
   // Look for a "Transport:" header in the request string,
   // to extract client RTP and RTCP ports, if present:
-  unsigned short rtpPortNum = 0; // default
-  unsigned short rtcpPortNum = 1; // default
-  parseTransportHeader(fullRequestStr, rtpPortNum, rtcpPortNum);
+  unsigned short clientRTPPortNum = 0; // default
+  unsigned short clientRTCPPortNum = 1; // default
+  parseTransportHeader(fullRequestStr, clientRTPPortNum, clientRTCPPortNum);
+  Port clientRTPPort(clientRTPPortNum);
+  Port clientRTCPPort(clientRTCPPortNum);
 
-  GroupEId groupEId;
   Boolean isMulticast;
-  subsession->getStreamParameters(fClientAddr, rtpPortNum, rtcpPortNum,
-				  groupEId, isMulticast,
+  netAddressBits destinationAddress = 0;
+  u_int8_t destinationTTL = 255;
+  Port serverRTPPort(0);
+  Port serverRTCPPort(0);
+  subsession->getStreamParameters(fClientAddr.sin_addr.s_addr,
+				  clientRTPPort, clientRTCPPort,
+				  isMulticast, destinationAddress, destinationTTL,
+				  serverRTPPort, serverRTCPPort,
 				  fStreamStates[streamNum].streamToken);
   if (isMulticast) {
-    sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nTransport: RTP/AVP;multicast;destination=%s;port=%d;ttl=%d\r\nSession: %d\r\n\r\n",
-	    cseq, our_inet_ntoa(groupEId.groupAddress()),
-	    groupEId.portNum(), groupEId.scope().ttl(), fOurSessionId);
+    struct in_addr destinationAddr; destinationAddr.s_addr = destinationAddress;
+    sprintf((char*)fBuffer,
+	    "RTSP/1.0 200 OK\r\n"
+	    "CSeq: %s\r\n"
+	    "Transport: RTP/AVP;multicast;destination=%s;port=%d;ttl=%d\r\n"
+	    "Session: %d\r\n\r\n",
+	    cseq,
+	    our_inet_ntoa(destinationAddr), ntohs(serverRTPPort.num()), destinationTTL,
+	    fOurSessionId);
   } else {
-    sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nTransport: RTP/AVP;unicast\r\nSession: %d\r\n\r\n",
-	    cseq, fOurSessionId);
+    sprintf((char*)fBuffer,
+	    "RTSP/1.0 200 OK\r\n"
+	    "CSeq: %s\r\n"
+	    "Transport: RTP/AVP;unicast;client_port=%d-%d;server_port=%d-%d\r\n"
+	    "Session: %d\r\n\r\n",
+	    cseq,
+	    ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
+	    fOurSessionId);
   }
 }
 

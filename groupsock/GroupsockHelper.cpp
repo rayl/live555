@@ -439,15 +439,32 @@ Boolean socketLeaveGroupSSM(UsageEnvironment& /*env*/, int socket,
   return True;
 }
 
-Boolean getSourcePort(UsageEnvironment& env, int socket, Port& port) {
-  sockaddr_in test;
+static Boolean getSourcePort0(int socket, portNumBits& resultPortNum/*host order*/) {
+  sockaddr_in test; test.sin_port = 0;
   SOCKLEN_T len = sizeof test;
-  if (getsockname(socket, (struct sockaddr*)&test, &len) < 0) {
-    socketErr(env, "getsockname() error: ");
-    return False;
+  if (getsockname(socket, (struct sockaddr*)&test, &len) < 0) return False;
+  
+  resultPortNum = ntohs(test.sin_port);
+  return True;
+}
+
+Boolean getSourcePort(UsageEnvironment& env, int socket, Port& port) {
+  portNumBits portNum = 0;
+  if (!getSourcePort0(socket, portNum) || portNum == 0) {
+    // Hack - call bind(), then try again:
+    struct sockaddr_in name;
+    name.sin_family = AF_INET;
+    name.sin_port = 0;
+    name.sin_addr.s_addr = INADDR_ANY;
+    bind(socket, (struct sockaddr*)&name, sizeof name);
+
+    if (!getSourcePort0(socket, portNum) || portNum == 0) {
+      socketErr(env, "getsockname() error: ");
+      return False;
+    }
   }
   
-  port = *((Port*)&test.sin_port);
+  port = Port(portNum);
   return True;
 }
 

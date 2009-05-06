@@ -101,11 +101,15 @@ public:
   unsigned trackNumber() const { return fTrackNumber; }
   char const* trackId();
   virtual char const* sdpLines() = 0;
-  virtual void getStreamParameters(struct sockaddr_in clientAddress, // in
+  virtual void getStreamParameters(netAddressBits clientAddress, // in
 				   Port const& clientRTPPort, // in
 				   Port const& clientRTCPPort, // in
-				   GroupEId& groupEId, // out
 				   Boolean& isMulticast, // out
+				   netAddressBits destinationAddress,
+				   u_int8_t destinationTTL,
+				       // out; used only for multicast
+				   Port& serverRTPPort, // out
+				   Port& serverRTCPPort, // out; used only for unicast
 				   void*& streamToken // out
 				   ) = 0;
   virtual void startStream(void* streamToken);

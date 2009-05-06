@@ -498,26 +498,6 @@ MediaSubsession::~MediaSubsession() {
   delete fNext;
 }
 
-// Eventually make this a general library routine #####
-static Boolean getPortNumber(UsageEnvironment& env, int sock,
-			     unsigned short& resultPortNum /*host order*/) {
-  Port clientPort(0);
-  if (!getSourcePort(env, sock, clientPort) || clientPort.num() == 0) {
-    // Hack - call bind(), then try again:
-    struct sockaddr_in name;
-    name.sin_family = AF_INET;
-    name.sin_port = 0;
-    name.sin_addr.s_addr = INADDR_ANY;
-    bind(sock, (struct sockaddr*)&name, sizeof name);
-    if (!getSourcePort(env, sock, clientPort) || clientPort.num() == 0) {
-      return False;
-    }
-  }
-
-  resultPortNum = ntohs(clientPort.num());
-  return True;
-}
-
 float MediaSubsession::playEndTime() const {
   if (fPlayEndTime > 0) return fPlayEndTime;
 
@@ -554,9 +534,11 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
       }
 
       // Get the client port number, to make sure that it's even (for RTP):
-      if (!getPortNumber(env(), fRTPSocket->socketNum(), fClientPortNum)) {
+      Port clientPort(0);
+      if (!getSourcePort(env(), fRTPSocket->socketNum(), clientPort)) {
 	break;
       }
+      fClientPortNum = ntohs(clientPort.num());
 
       // If the port number's not even, try again:
       if ((fClientPortNum&1) == 0) {

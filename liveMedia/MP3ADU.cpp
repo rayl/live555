@@ -44,6 +44,7 @@ public:
   unsigned backpointer;
 
   struct timeval presentationTime;
+  unsigned durationInMicroseconds;
 };
 
 unsigned const Segment::headerSize = 4;
@@ -183,6 +184,7 @@ Boolean ADUFromMP3Source::doGetNextFrame1() {
   // Output an ADU from the tail segment:
   fFrameSize = tailSeg->headerSize+tailSeg->sideInfoSize+tailSeg->aduSize;
   fPresentationTime = tailSeg->presentationTime;
+  fDurationInMicroseconds = tailSeg->durationInMicroseconds;
   unsigned descriptorSize
     = fIncludeADUdescriptors ? ADUdescriptor::computeSize(fFrameSize) : 0;
 #ifdef DEBUG
@@ -320,7 +322,8 @@ void MP3FromADUSource::doGetNextFrame() {
     fSegments->enqueueNewSegment(fInputSource, this);
   } else {
     // Return a frame now:
-    generateFrameFromHeadADU(); // sets fFrameSize and fPresentationTime
+    generateFrameFromHeadADU();
+        // sets fFrameSize, fPresentationTime, and fDurationInMicroseconds
 
     // Call our own 'after getting' function.  Because we're not a 'leaf'
     // source, we can call this directly, without risking infinite recursion.
@@ -414,6 +417,7 @@ Boolean MP3FromADUSource::generateFrameFromHeadADU() {
     // output header and side info:
     fFrameSize = seg->frameSize;
     fPresentationTime = seg->presentationTime;
+    fDurationInMicroseconds = seg->durationInMicroseconds;
     memmove(toPtr, seg->dataStart(), seg->headerSize + seg->sideInfoSize);
     toPtr += seg->headerSize + seg->sideInfoSize;
     
@@ -508,11 +512,12 @@ void SegmentQueue::sqAfterGettingSegment(void* clientData,
 					 unsigned numBytesRead,
 					 unsigned /*numTruncatedBytes*/,
 					 struct timeval presentationTime,
-					 unsigned /*durationInMicroseconds*/) {
+					 unsigned durationInMicroseconds) {
   SegmentQueue* segQueue = (SegmentQueue*)clientData;
   Segment& seg = segQueue->nextFreeSegment();
 
   seg.presentationTime = presentationTime;
+  seg.durationInMicroseconds = durationInMicroseconds;
 
   if (segQueue->sqAfterGettingCommon(seg, numBytesRead)) {
 #ifdef DEBUG

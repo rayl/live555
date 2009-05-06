@@ -36,11 +36,14 @@ protected: // we're a virtual base class
 
 private: // redefined virtual functions
   virtual char const* sdpLines();
-  virtual void getStreamParameters(struct sockaddr_in clientAddress,
+  virtual void getStreamParameters(netAddressBits clientAddress,
                                    Port const& clientRTPPort,
                                    Port const& clientRTCPPort,
-                                   GroupEId& groupEId,
                                    Boolean& isMulticast,
+                                   netAddressBits destinationAddress,
+				   u_int8_t destinationTTL,
+                                   Port& serverRTPPort,
+                                   Port& serverRTCPPort,
                                    void*& streamToken);
   virtual void startStream(void* streamToken);
   virtual void pauseStream(void* streamToken);
