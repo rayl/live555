@@ -94,7 +94,7 @@ private:
   friend class ServerMediaSubsessionIterator;
   ServerMediaSubsession* fNext;
 
-  GroupEId const& fGroupEId;
+  GroupEId fGroupEId;
   char const* fTrackId;
   char const* fSDPLines;
 };

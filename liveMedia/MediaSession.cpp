@@ -131,6 +131,8 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
       delete mediumName;
       return False;
     }
+    subsession->serverPortNum = subsession->fClientPortNum; // by default
+
     char const* mStart = sdpLine;
     subsession->fSavedSDPLines = strdup(mStart);
 
