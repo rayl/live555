@@ -186,7 +186,11 @@ Boolean WindowsAudioInputDevice::setInputPort(int portIndex) {
   if (allowedDeviceNames != NULL) {
 	  int i;
 	  for (i = 0; allowedDeviceNames[i] != NULL; ++i) {
-		  if (strcmp(allowedDeviceNames[i], ourMixers[newMixerId].name) == 0) break; // allowed
+		  if (strncmp(ourMixers[newMixerId].name, allowedDeviceNames[i],
+			  strlen(allowedDeviceNames[i])) == 0) {
+			  // The allowed device name is a prefix of this mixer's name
+			  break; // this mixer is allowed
+		  }
 	  }
 	  if (allowedDeviceNames[i] == NULL) { // this mixer is not on the allowed list
 		envir().setResultMsg("Access to this audio device is not allowed\n");

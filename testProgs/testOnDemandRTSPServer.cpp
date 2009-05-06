@@ -143,6 +143,27 @@ int main(int argc, char** argv) {
     delete[] url;
   }
 
+  // A WAV audio stream:
+  {
+    char const* streamName = "wavAudioTest";
+    char const* inputFileName = "test.wav";
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, streamName, streamName,
+				      descriptionString);
+    // To convert 16-bit PCM data to 8-bit u-law, prior to streaming,
+    // change the following to True:
+    Boolean convertToULaw = False;
+    sms->addSubsession(WAVAudioFileServerMediaSubsession
+		       ::createNew(*env, inputFileName, convertToULaw));
+    rtspServer->addServerMediaSession(sms);
+
+    char* url = rtspServer->rtspURL(sms);
+    *env << "\n\"" << streamName << "\" stream, from the file \""
+	 << inputFileName << "\"\n";
+    *env << "Play this stream using the URL \"" << url << "\"\n";
+    delete[] url;
+  }
+
   // An AMR audio stream:
   {
     char const* streamName = "amrAudioTest";

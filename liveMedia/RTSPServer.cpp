@@ -231,17 +231,49 @@ void RTSPServer::RTSPClientSession
 
 void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
   struct sockaddr_in dummy; // 'from' address, meaningless in this case
-  int bytesRead = readSocket(envir(), fClientSocket,
-			     fBuffer, sizeof fBuffer, dummy);
+  int bytesLeft = sizeof fBuffer;
+  int totalBytes = 0;
+  Boolean endOfMsg = False;
+  unsigned char* ptr = fBuffer;
+  unsigned char* lastCRLF = ptr-3;
+  
+  while (!endOfMsg) {
+    if (bytesLeft <= 0) {
+      // command too big
+      delete this;
+      return;
+    }
+    
+    int bytesRead = readSocket(envir(), fClientSocket,
+			       ptr, bytesLeft, dummy);
+    if (bytesRead <= 0) {
+      // The client socket has apparently died - kill it:
+      delete this;
+      return;
+    }
 #ifdef DEBUG
-  fprintf(stderr, "RTSPClientSession[%p]::incomingRequestHandler1() read %d bytes:%s\n", this, bytesRead, fBuffer);
+    fprintf(stderr, "RTSPClientSession[%p]::incomingRequestHandler1() read %d bytes:%s\n", this, bytesRead, ptr);
 #endif
-  if (bytesRead <= 0) {
-    // The client socket has apparently died - kill it:
-    delete this;
-    return;
+
+    // Look for the end of the message: <CR><LF><CR><LF>
+    unsigned char *tmpPtr = ptr;
+    if (totalBytes > 0) --tmpPtr; // In case the last read ended with a <CR>
+    while (tmpPtr < &ptr[bytesRead-1]) {
+      if (*tmpPtr == '\r' && *(tmpPtr+1) == '\n') {
+	if (tmpPtr - lastCRLF == 2) { // This is it:
+	  endOfMsg = 1;
+	  break;
+	}
+	lastCRLF = tmpPtr;
+      }
+      ++tmpPtr;
+    }
+  
+    bytesLeft -= bytesRead;
+    totalBytes += bytesRead;
+    ptr += bytesRead;
   }
-  fBuffer[bytesRead] = '\0';
+  fBuffer[totalBytes] = '\0';
 
   // Parse the request string into command name and 'CSeq',
   // then handle the command:
@@ -249,7 +281,7 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
   char urlPreSuffix[PARAM_STRING_MAX];
   char urlSuffix[PARAM_STRING_MAX];
   char cseq[PARAM_STRING_MAX];
-  if (!parseRequestString((char*)fBuffer, bytesRead,
+  if (!parseRequestString((char*)fBuffer, totalBytes,
 			  cmdName, sizeof cmdName,
 			  urlPreSuffix, sizeof urlPreSuffix,
 			  urlSuffix, sizeof urlSuffix,
