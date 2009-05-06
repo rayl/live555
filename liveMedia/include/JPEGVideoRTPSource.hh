@@ -32,7 +32,8 @@ public:
   static JPEGVideoRTPSource*
   createNew(UsageEnvironment& env, Groupsock* RTPgs,
 	    unsigned char rtpPayloadFormat = 26,
-	    unsigned rtpPayloadFrequency = 90000);
+	    unsigned rtpPayloadFrequency = 90000,
+	    unsigned defaultWidth = 0, unsigned defaultHeight = 0);
 
 protected:
   virtual ~JPEGVideoRTPSource();
@@ -40,8 +41,12 @@ protected:
 private:
   JPEGVideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 		     unsigned char rtpPayloadFormat,
-		     unsigned rtpTimestampFrequency);
+		     unsigned rtpTimestampFrequency,
+		     unsigned defaultWidth, unsigned defaultHeight);
       // called only by createNew()
+
+  // Image dimensions from the SDP description, if any
+  unsigned fDefaultWidth, fDefaultHeight;
 
 private:
   // redefined virtual functions:

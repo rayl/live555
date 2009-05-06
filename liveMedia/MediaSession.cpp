@@ -745,7 +745,9 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	fReadSource = fRTPSource
 	  = JPEGVideoRTPSource::createNew(env(), fRTPSocket,
 					  fRTPPayloadFormat,
-					  fRTPTimestampFrequency);
+					  fRTPTimestampFrequency,
+					  videoWidth(),
+					  videoHeight());
       } else if (strcmp(fCodecName, "X-QT") == 0
 		 || strcmp(fCodecName, "X-QUICKTIME") == 0) {
 	// Generic QuickTime streams, as defined in

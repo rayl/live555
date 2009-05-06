@@ -349,7 +349,7 @@ void RTCPInstance::incomingReportHandler1() {
       // NOTE: Denial-of-service attacks are possible here.
       // Users of this software may wish to add their own,
       // application-specific mechanism for 'authenticating' the
-      // validity of this packet before relecting it.
+      // validity of this packet before reflecting it.
       fRTCPInterface.sendPacket(pkt, packetSize);
       fHaveJustSentPacket = True;
       fLastPacketSentSize = packetSize;

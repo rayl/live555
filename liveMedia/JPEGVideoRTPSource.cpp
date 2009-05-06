@@ -55,18 +55,21 @@ private: // redefined virtual functions
 JPEGVideoRTPSource*
 JPEGVideoRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 			      unsigned char rtpPayloadFormat,
-			      unsigned rtpTimestampFrequency) {
+			      unsigned rtpTimestampFrequency,
+			      unsigned defaultWidth, unsigned defaultHeight) {
   return new JPEGVideoRTPSource(env, RTPgs, rtpPayloadFormat,
-				rtpTimestampFrequency);
+				rtpTimestampFrequency, defaultWidth, defaultHeight);
 }
 
 JPEGVideoRTPSource::JPEGVideoRTPSource(UsageEnvironment& env,
 				       Groupsock* RTPgs,
 				       unsigned char rtpPayloadFormat,
-				       unsigned rtpTimestampFrequency)
+				       unsigned rtpTimestampFrequency,
+				       unsigned defaultWidth, unsigned defaultHeight)
   : MultiFramedRTPSource(env, RTPgs,
 			 rtpPayloadFormat, rtpTimestampFrequency,
-			 new JPEGBufferedPacketFactory) {
+			 new JPEGBufferedPacketFactory),
+    fDefaultWidth(defaultWidth), fDefaultHeight(defaultHeight) {
 }
 
 JPEGVideoRTPSource::~JPEGVideoRTPSource() {
@@ -340,8 +343,13 @@ Boolean JPEGVideoRTPSource
   unsigned type = Type & 1;
   unsigned Q = (unsigned)headerStart[5];
   unsigned width = (unsigned)headerStart[6] * 8;
-  if (width == 0) width = 256*8; // special case
   unsigned height = (unsigned)headerStart[7] * 8;
+  if ((width == 0 || height == 0) && fDefaultWidth != 0 && fDefaultHeight != 0) {
+    // Use the default width and height parameters instead:
+    width = fDefaultWidth;
+    height = fDefaultHeight;
+  }
+  if (width == 0) width = 256*8; // special case
   if (height == 0) height = 256*8; // special case
 
   if (Type > 63) {

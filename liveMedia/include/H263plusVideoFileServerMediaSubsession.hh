@@ -31,27 +31,18 @@ public:
   static H263plusVideoFileServerMediaSubsession*
   createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource);
 
-  void setDoneFlag() { fDoneFlag = ~0; }
-  void checkForAuxSDPLine1();
-
 private:
   H263plusVideoFileServerMediaSubsession(UsageEnvironment& env,
-				      char const* fileName, Boolean reuseFirstSource);
+					 char const* fileName, Boolean reuseFirstSource);
       // called only by createNew();
   virtual ~H263plusVideoFileServerMediaSubsession();
 
 private: // redefined virtual functions
-  virtual char const* getAuxSDPLine(RTPSink* rtpSink,
-				    FramedSource* inputSource);
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
 					      unsigned& estBitrate);
   virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
                                     unsigned char rtpPayloadTypeIfDynamic,
 				                    FramedSource* inputSource);
-
-private:
-  char fDoneFlag; // used when setting up "fSDPLines"
-  RTPSink* fDummyRTPSink; // ditto
 };
 
 #endif

@@ -1777,6 +1777,8 @@ addAtomEnd;
 addAtom(avcC);
 // Begin by Base-64 decoding the "sprop" parameter sets strings:
   char* psets = strDup(fCurrentIOState->fOurSubsession.fmtp_spropparametersets());
+  if (psets == NULL) return 0;
+
   size_t comma_pos = strcspn(psets, ",");
   psets[comma_pos] = '\0';
   char* sps_b64 = psets;
