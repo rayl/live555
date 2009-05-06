@@ -99,7 +99,7 @@ void RTCPMemberDatabase::reapOldMembers(unsigned threshold) {
 #ifdef DEBUG
         fprintf(stderr, "reap: removing SSRC 0x%x\n", oldSSRC);
 #endif
-      fOurRTCPInstance.removeSSRC(oldSSRC);
+      fOurRTCPInstance.removeSSRC(oldSSRC, True);
     }
   } while (foundOldMember);
 }
@@ -562,15 +562,17 @@ int RTCPInstance::checkNewSSRC() {
 }
 
 void RTCPInstance::removeLastReceivedSSRC() {
-  removeSSRC(fLastReceivedSSRC);
+  removeSSRC(fLastReceivedSSRC, False/*keep stats around*/);
 }
 
-void RTCPInstance::removeSSRC(u_int32_t ssrc) {
+void RTCPInstance::removeSSRC(u_int32_t ssrc, Boolean alsoRemoveStats) {
   fKnownMembers->remove(ssrc);
 
-  // Also, remove records of this SSRC from any reception or transmission stats
-  if (fSource != NULL) fSource->receptionStatsDB().removeRecord(ssrc);
-  if (fSink != NULL) fSink->transmissionStatsDB().removeRecord(ssrc);
+  if (alsoRemoveStats) {
+    // Also, remove records of this SSRC from any reception or transmission stats
+    if (fSource != NULL) fSource->receptionStatsDB().removeRecord(ssrc);
+    if (fSink != NULL) fSink->transmissionStatsDB().removeRecord(ssrc);
+  }
 }
 
 void RTCPInstance::onExpire(RTCPInstance* instance) {

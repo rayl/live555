@@ -167,7 +167,7 @@ public: // because this stuff is used by an external "C" function
   int receivedPacketSize() {return fLastReceivedSize;}
   int checkNewSSRC();
   void removeLastReceivedSSRC();
-  void removeSSRC(u_int32_t ssrc);
+  void removeSSRC(u_int32_t ssrc, Boolean alsoRemoveStats);
 };
 
 // RTCP packet types:
