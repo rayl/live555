@@ -126,6 +126,8 @@ void RTPInterface
   }
 }
 
+Boolean RTPOverTCP_OK = True; // HACK: For detecting TCP socket failure externally #####
+
 Boolean RTPInterface::handleRead(unsigned char* buffer,
 				 unsigned bufferMaxSize,
 				 unsigned& bytesRead,
@@ -152,6 +154,7 @@ Boolean RTPInterface::handleRead(unsigned char* buffer,
     if (curBytesRead <= 0) {
       bytesRead = 0;
       readSuccess = False;
+	  RTPOverTCP_OK = False; // HACK #####
     } else {
       readSuccess = True;
     }
@@ -210,6 +213,7 @@ void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
     return;
   } while (0);
 
+  RTPOverTCP_OK = False; // HACK #####
 #ifdef DEBUG_SENDING
   fprintf(stderr, "sendRTPOverTCP: failed!\n"); fflush(stderr);
 #endif
