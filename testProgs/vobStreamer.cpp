@@ -198,25 +198,25 @@ int main(int argc, char const** argv) {
 
 #ifdef IMPLEMENT_RTSP_SERVER
   if (rtspServer == NULL) {
-    PassiveServerMediaSession* serverMediaSession
-      = PassiveServerMediaSession::createNew(*env, *curInputFileName,
-	     "Session streamed by \"vobStreamer\"", True /*SSM*/);
-    if (audioSink != NULL) serverMediaSession->addSubsession(*audioSink);
-    if (videoSink != NULL) serverMediaSession->addSubsession(*videoSink);
-    rtspServer = RTSPServer::createNew(*env, *serverMediaSession,
-				       rtspServerPortNum);
-    if (rtspServer != NULL) {
-      *env << "Created RTSP server.\n";
-
-      // Display our "rtsp://" URL, for clients to connect to:
-      char* url = rtspServer->rtspURL();
-      *env << "Access this stream using the URL:\n\t" << url << "\n";
-      delete[] url;
-    } else {
+    rtspServer = RTSPServer::createNew(*env, rtspServerPortNum);
+    if (rtspServer == NULL) {
       *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
       *env << "To change the RTSP server's port number, use the \"-p <port number>\" option.\n";
       exit(1);
     }
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, NULL, *curInputFileName,
+	     "Session streamed by \"vobStreamer\"", True /*SSM*/);
+    if (audioSink != NULL) sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink));
+    if (videoSink != NULL) sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink));
+    rtspServer->addServerMediaSession(sms);
+
+    *env << "Created RTSP server.\n";
+
+    // Display our "rtsp://" URL, for clients to connect to:
+    char* url = rtspServer->rtspURL(sms);
+    *env << "Access this stream using the URL:\n\t" << url << "\n";
+    delete[] url;
   }
 #endif
 

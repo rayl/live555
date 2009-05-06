@@ -90,6 +90,13 @@ void RTPReceptionStatsDB::reset() {
 }
 
 RTPReceptionStatsDB::~RTPReceptionStatsDB() {
+  // First, remove and delete all stats records from the table:
+  RTPReceptionStats* stats;
+  while ((stats = (RTPReceptionStats*)fTable->RemoveNext()) != NULL) {
+    delete stats;
+  }
+
+  // Then, delete the table itself:
   delete fTable;
 }
 

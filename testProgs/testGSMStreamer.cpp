@@ -54,7 +54,6 @@ Boolean const isSSM = False;
 // (Note that this RTSP server works for multicast only)
 
 #ifdef IMPLEMENT_RTSP_SERVER
-PassiveServerMediaSession* serverMediaSession;
 RTSPServer* rtspServer;
 #endif
 
@@ -126,18 +125,20 @@ void play() {
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER
-  serverMediaSession
-    = PassiveServerMediaSession::createNew(*env, "GSM input",
-		"Session streamed by \"testGSMStreamer\"", isSSM);
-  rtspServer = RTSPServer::createNew(*env, *serverMediaSession, 7070);
+  rtspServer = RTSPServer::createNew(*env, 7070);
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "%s\n";
     exit(1);
-  } else {
-    char* url = rtspServer->rtspURL();
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
   }
+  ServerMediaSession* sms
+    = ServerMediaSession::createNew(*env, NULL, "GSM input",
+		"Session streamed by \"testGSMStreamer\"", isSSM);
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*sessionState.sink));
+  rtspServer->addServerMediaSession(sms);
+
+  char* url = rtspServer->rtspURL(sms);
+  *env << "Play this stream using the URL \"" << url << "\"\n";
+  delete[] url;
 #endif
 
   // Finally, start the streaming:
@@ -154,7 +155,6 @@ void afterPlaying(void* /*clientData*/) {
   // End this loop by closing the media:
 #ifdef IMPLEMENT_RTSP_SERVER
   Medium::close(rtspServer);
-  Medium::close(serverMediaSession);
 #endif
   Medium::close(sessionState.sink);
   delete sessionState.rtpGroupsock;
@@ -164,23 +164,4 @@ void afterPlaying(void* /*clientData*/) {
 
   // And start another loop:
   play();
-}
-
-
-////////// GSMAudioRTPSink implementation //////////
-
-GSMAudioRTPSink::GSMAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
-  : MultiFramedRTPSink(env, RTPgs, 3, 8000, "GSM") {
-}
-
-GSMAudioRTPSink::~GSMAudioRTPSink() {
-}
-
-GSMAudioRTPSink*
-GSMAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
-  return new GSMAudioRTPSink(env, RTPgs);
-}
-
-char const* GSMAudioRTPSink::sdpMediaType() const {
-  return "audio";
 }

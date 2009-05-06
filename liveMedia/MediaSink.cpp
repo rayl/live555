@@ -204,3 +204,9 @@ void OutPacketBuffer::adjustPacketStart(unsigned numBytes) {
   }
 }
 
+void OutPacketBuffer::resetPacketStart() {
+  if (fOverflowDataSize > 0) {
+    fOverflowDataOffset += fPacketStart;
+  }
+  fPacketStart = 0;
+}

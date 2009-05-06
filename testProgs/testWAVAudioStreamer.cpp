@@ -52,7 +52,6 @@ struct sessionState_t {
   RTCPInstance* rtcpInstance;
   Groupsock* rtpGroupsock;
   Groupsock* rtcpGroupsock;
-  PassiveServerMediaSession* serverMediaSession;
   RTSPServer* rtspServer;
 } sessionState;
 
@@ -173,20 +172,20 @@ void play() {
   // Note: This starts RTCP running automatically
 
   // Create and start a RTSP server to serve this stream:
-  sessionState.serverMediaSession
-    = PassiveServerMediaSession::createNew(*env, inputFileName,
-	   "Session streamed by \"testWAVAudiotreamer\"", True/*SSM*/);
-  sessionState.serverMediaSession->addSubsession(*sessionState.sink);
-  sessionState.rtspServer
-    = RTSPServer::createNew(*env, *sessionState.serverMediaSession, 7070);
+  sessionState.rtspServer = RTSPServer::createNew(*env, 7070);
   if (sessionState.rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
-  } else {
-    char* url = sessionState.rtspServer->rtspURL();
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
   }
+  ServerMediaSession* sms
+    = ServerMediaSession::createNew(*env, NULL, inputFileName,
+	   "Session streamed by \"testWAVAudiotreamer\"", True/*SSM*/);
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*sessionState.sink));
+  sessionState.rtspServer->addServerMediaSession(sms);
+
+  char* url = sessionState.rtspServer->rtspURL(sms);
+  *env << "Play this stream using the URL \"" << url << "\"\n";
+  delete[] url;
 
   // Finally, start the streaming:
   *env << "Beginning streaming...\n";
@@ -201,7 +200,6 @@ void afterPlaying(void* /*clientData*/) {
 
   // End by closing the media:
   Medium::close(sessionState.rtspServer);
-  Medium::close(sessionState.serverMediaSession);
   Medium::close(sessionState.sink);
   delete sessionState.rtpGroupsock;
   Medium::close(sessionState.source);

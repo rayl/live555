@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
 // A data structure that represents a session that consists of
 // potentially multiple (audio and/or video) sub-sessions
 // (This data structure is used for media *streamers* - i.e., servers.
@@ -22,20 +22,28 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "ServerMediaSession.hh"
-#include "GroupsockHelper.hh"
+#include <GroupsockHelper.hh>
 
 ////////// ServerMediaSession //////////
 
-Boolean ServerMediaSession::lookupByName(UsageEnvironment& env,
-				   char const* instanceName,
-				   ServerMediaSession*& resultSession) {
+ServerMediaSession* ServerMediaSession
+::createNew(UsageEnvironment& env,
+	    char const* streamName, char const* info,
+	    char const* description, Boolean isSSM) {
+  return new ServerMediaSession(env, streamName, info, description,
+				isSSM);
+}
+
+Boolean ServerMediaSession
+::lookupByName(UsageEnvironment& env, char const* mediumName,
+	       ServerMediaSession*& resultSession) {
   resultSession = NULL; // unless we succeed
 
   Medium* medium;
-  if (!Medium::lookupByName(env, instanceName, medium)) return False;
+  if (!Medium::lookupByName(env, mediumName, medium)) return False;
 
   if (!medium->isServerMediaSession()) {
-    env.setResultMsg(instanceName, " is not a 'ServerMediaSession' object");
+    env.setResultMsg(mediumName, " is not a 'ServerMediaSession' object");
     return False;
   }
 
@@ -49,24 +57,44 @@ static struct timezone Idunno;
 static int Idunno;
 #endif
 
-static char const* const libraryNameString = "LIVE.COM Streaming Media";
+static char const* const libNameStr = "LIVE.COM Streaming Media v";
+char const* const libVersionStr = LIVEMEDIA_LIBRARY_VERSION_STRING;
 
 ServerMediaSession::ServerMediaSession(UsageEnvironment& env,
-				       char const* description,
+				       char const* streamName,
 				       char const* info,
+				       char const* description,
 				       Boolean isSSM)
   : Medium(env), fIsSSM(isSSM), fSubsessionsHead(NULL),
     fSubsessionsTail(NULL), fSubsessionCounter(0) {
+  fStreamName = strDup(streamName == NULL ? "" : streamName);
+  fInfoSDPString = strDup(info == NULL ? libNameStr : info);
   fDescriptionSDPString
-    = strDup(description == NULL ? libraryNameString : description);
-  fInfoSDPString = strDup(info == NULL ? libraryNameString : info);
+    = strDup(description == NULL ? libNameStr : description);
 
   gettimeofday(&fCreationTime, &Idunno);
 }
 
 ServerMediaSession::~ServerMediaSession() {
   delete fSubsessionsHead;
-  delete[] fDescriptionSDPString; delete[] fInfoSDPString;
+  delete[] fStreamName;
+  delete[] fInfoSDPString;
+  delete[] fDescriptionSDPString;
+}
+
+Boolean
+ServerMediaSession::addSubsession(ServerMediaSubsession* subsession) {
+  if (subsession->fTrackNumber != 0) return False; // it's already used
+
+  if (fSubsessionsTail == NULL) {
+    fSubsessionsHead = subsession;
+  } else {
+    fSubsessionsTail->fNext = subsession;
+  }
+  fSubsessionsTail = subsession;
+
+  subsession->fTrackNumber = ++fSubsessionCounter;
+  return True;
 }
 
 Boolean ServerMediaSession::isServerMediaSession() const {
@@ -105,21 +133,23 @@ char* ServerMediaSession::generateSDPDescription() {
     "s=%s\r\n"
     "i=%s\r\n"
     "t=0 0\r\n"
-    "a=tool:%s\r\n"
+    "a=tool:%s%s\r\n"
     "a=type:broadcast\r\n"
     "%s";
   unsigned sdpLength = strlen(sdpPrefixFmt)
     + 20 + 6 + 20 + ourIPAddressStrSize
     + strlen(fDescriptionSDPString)
     + strlen(fInfoSDPString)
-    + strlen(libraryNameString)
+    + strlen(libNameStr) + strlen(libVersionStr)
     + sourceFilterLineSize;
 
   // Add in the lengths of each subsession's media-level SDP lines: 
   ServerMediaSubsession* subsession;
   for (subsession = fSubsessionsHead; subsession != NULL;
        subsession = subsession->fNext) {
-    sdpLength += strlen(subsession->fSDPLines);
+    char const* sdpLines = subsession->sdpLines();
+    if (sdpLines == NULL) return NULL; // the media's not available
+    sdpLength += strlen(sdpLines);
   }
 
   char* sdp = new char[sdpLength];
@@ -132,7 +162,7 @@ char* ServerMediaSession::generateSDPDescription() {
 	  ourIPAddressStr, // o= <address>
 	  fDescriptionSDPString, // s= <description>
 	  fInfoSDPString, // i= <info>
-	  libraryNameString, // a=tool:
+	  libNameStr, libVersionStr, // a=tool:
 	  sourceFilterLine); // a=source-filter: incl (if a SSM session)
   delete[] sourceFilterLine; delete[] ourIPAddressStr;
 
@@ -141,7 +171,7 @@ char* ServerMediaSession::generateSDPDescription() {
   for (subsession = fSubsessionsHead; subsession != NULL;
        subsession = subsession->fNext) {
     mediaSDP += strlen(mediaSDP);
-    sprintf(mediaSDP, "%s", subsession->fSDPLines);
+    sprintf(mediaSDP, "%s", subsession->sdpLines());
   }
 
   return sdp;
@@ -174,15 +204,33 @@ void ServerMediaSubsessionIterator::reset() {
 
 ////////// ServerMediaSubsession //////////
 
-ServerMediaSubsession
-::ServerMediaSubsession(GroupEId const& groupEId,
-			char const* trackId, char const* sdpLines)
-  : fNext(NULL), fGroupEId(groupEId),
-    fTrackId(strDup(trackId)), fSDPLines(strDup(sdpLines)) {
+ServerMediaSubsession::ServerMediaSubsession(UsageEnvironment& env)
+  : Medium(env),
+    fNext(NULL), fTrackNumber(0), fTrackId(NULL) {
 }
 
 ServerMediaSubsession::~ServerMediaSubsession() {
-  delete[] (char*)fSDPLines;
   delete[] (char*)fTrackId;
   delete fNext;
+}
+
+char const* ServerMediaSubsession::trackId() {
+  if (fTrackNumber == 0) return NULL; // not yet in a ServerMediaSession
+
+  if (fTrackId == NULL) {
+    char buf[100];
+    sprintf(buf, "track%d", fTrackNumber);
+    fTrackId = strDup(buf);
+  }
+  return fTrackId;
+}
+
+void ServerMediaSubsession::startStream(void* /*streamToken*/) {
+  // default implementation: do nothing
+}
+void ServerMediaSubsession::pauseStream(void* /*streamToken*/) {
+  // default implementation: do nothing
+}
+void ServerMediaSubsession::stopStream(void* /*streamToken*/) {
+  // default implementation: do nothing
 }

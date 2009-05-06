@@ -340,8 +340,7 @@ char* MediaSession::lookupPayloadFormat(unsigned char rtpPayloadType,
   case 34: {temp = "H263"; freq = 90000; nCh = 1; break;}
   };
 
-  if (temp != NULL) return strDup(temp);
-  else return NULL;
+  return strDup(temp);
 }
 
 unsigned MediaSession::guessRTPTimestampFrequency(char const* mediumName,

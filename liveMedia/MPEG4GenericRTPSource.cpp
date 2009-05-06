@@ -90,7 +90,7 @@ MPEG4GenericRTPSource
       sprintf(fMIMEType, "%s/MPEG4-GENERIC", mediumName);
     }
 
-    fMode = mode == NULL ? NULL : strDup(mode);
+    fMode = strDup(mode);
     // Check for a "mode" that we don't yet support: //#####
     if (mode == NULL || strcmp(mode, "aac-hbr") != 0) {
       envir() << "MPEG4GenericRTPSource Warning: Unknown or unsupported \"mode\": "

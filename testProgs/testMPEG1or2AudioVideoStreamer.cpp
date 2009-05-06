@@ -114,25 +114,25 @@ int main(int argc, char** argv) {
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER
-  PassiveServerMediaSession* serverMediaSession
-    = PassiveServerMediaSession::createNew(*env, inputFileName,
-		   "Session streamed by \"testMPEG1or2AudioVideoStreamer\"",
-					   isSSM);
-  serverMediaSession->addSubsession(*audioSink);
-  serverMediaSession->addSubsession(*videoSink);
-  RTSPServer* rtspServer
-    = RTSPServer::createNew(*env, *serverMediaSession);
+  RTSPServer* rtspServer = RTSPServer::createNew(*env);
   // Note that this (attempts to) start a server on the default RTSP server
   // port: 554.  To use a different port number, add it as an extra
   // (optional) parameter to the "RTSPServer::createNew()" call above.
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
-  } else {
-    char* url = rtspServer->rtspURL();
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
   }
+  ServerMediaSession* sms
+    = ServerMediaSession::createNew(*env, NULL, inputFileName,
+		   "Session streamed by \"testMPEG1or2AudioVideoStreamer\"",
+					   isSSM);
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink));
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink));
+  rtspServer->addServerMediaSession(sms);
+
+  char* url = rtspServer->rtspURL(sms);
+  *env << "Play this stream using the URL \"" << url << "\"\n";
+  delete[] url;
 #endif
 
   // Finally, start the streaming:

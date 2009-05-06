@@ -287,7 +287,8 @@ void MultiFramedRTPSink::sendPacketIfNecessary() {
     ++fSeqNo; // for next time
   }
 
-  if (fOutBuf->haveOverflowData()) {
+  if (fOutBuf->haveOverflowData()
+      && fOutBuf->totalBytesAvailable() > fOutBuf->totalBufferSize()/2) {
     // Efficiency hack: Reset the packet start pointer to just in front of
     // the overflow data (allowing for the RTP header and special header),
     // so that we probably don't have to "memmove()" the overflow data

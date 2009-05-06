@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
 // A RTSP server
 // C++ header
 
@@ -24,23 +24,29 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _SERVER_MEDIA_SESSION_HH
 #include "ServerMediaSession.hh"
 #endif
+#ifndef _NET_ADDRESS_HH
+#include <NetAddress.hh>
+#endif
 
 class RTSPServer: public Medium {
 public:
-  static RTSPServer* createNew(UsageEnvironment& env,
-			       ServerMediaSession& serverMediaSession,
-			       Port ourPort = 554);
+  static RTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554);
       // if ourPort.num() == 0, we'll choose the port number
 
   static Boolean lookupByName(UsageEnvironment& env,
-			      char const* sourceName,
+			      char const* instanceName,
 			      RTSPServer*& resultServer);
 
-  char* rtspURL() const; // dynamically allocated; caller should delete[]
+  void addServerMediaSession(ServerMediaSession* serverMediaSession);
+
+  char* rtspURL(ServerMediaSession const* serverMediaSession) const;
+      // returns a "rtsp://" URL that could be used to access the
+      // specified session (which must already have been added to
+      // us using "addServerMediaSession()".
+      // This string is dynamically allocated; caller should delete[]
 
 protected:
   RTSPServer(UsageEnvironment& env,
-	     ServerMediaSession& serverMediaSession,
 	     int ourSocket, Port ourPort);
       // called only by createNew();
   virtual ~RTSPServer();
@@ -55,23 +61,24 @@ private:
   void incomingConnectionHandler1();
 
   // The state of each individual session handled by a RTSP server:
-  class RTSPSession: public Medium {
+  class RTSPClientSession {
   public:
-    RTSPSession(UsageEnvironment& env, unsigned sessionId,
-		ServerMediaSession& ourServerMediaSession,
-		int clientSocket);
-    virtual ~RTSPSession();
+    RTSPClientSession(RTSPServer& ourServer, unsigned sessionId,
+		      int clientSocket, struct sockaddr_in clientAddr);
+    virtual ~RTSPClientSession();
   private:
+    UsageEnvironment& envir() { return fOurServer.envir(); }
     static void incomingRequestHandler(void*, int /*mask*/);
     void incomingRequestHandler1();
     void handleCmd_bad(char const* cseq);
     void handleCmd_notSupported(char const* cseq);
     void handleCmd_OPTIONS(char const* cseq);
-    void handleCmd_DESCRIBE(char const* cseq);
+    void handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix);
     void handleCmd_subsession(char const* cmdName,
-			      char const* urlSuffix, char const* cseq);
+			      char const* urlSuffix, char const* cseq,
+			      char const* fullRequestStr);
     void handleCmd_SETUP(ServerMediaSubsession* subsession,
-			 char const* cseq);
+			 char const* cseq, char const* fullRequestStr);
     void handleCmd_TEARDOWN(ServerMediaSubsession* subsession,
 			    char const* cseq);
     void handleCmd_PLAY(ServerMediaSubsession* subsession,
@@ -87,17 +94,25 @@ private:
 			       unsigned resultCSeqMaxSize); 
 
   private:
+    RTSPServer& fOurServer;
     unsigned fOurSessionId;
-    ServerMediaSession& fOurServerMediaSession;
+    ServerMediaSession* fOurServerMediaSession;
     int fClientSocket;
+    struct sockaddr_in fClientAddr;
     unsigned char fBuffer[10000];
     Boolean fSessionIsActive;
+    unsigned fNumStreamStates; 
+    struct streamState {
+      ServerMediaSubsession* subsession;
+      void* streamToken;
+    } * fStreamStates;
   };
 
 private:
+  friend class RTSPClientSession;
   int fServerSocket;
   Port fServerPort;
-  ServerMediaSession& fOurServerMediaSession;
+  HashTable* fServerMediaSessions;
   unsigned fSessionIdCounter;
 };
 

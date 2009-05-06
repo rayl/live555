@@ -24,7 +24,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 // Uncomment the following if the input file is a MPEG Program Stream
 // rather than a MPEG Video Elementary Stream
-//#define SOURCE_IS_PROGRAM_STREAM 1
+#define SOURCE_IS_PROGRAM_STREAM 1
 
 // To stream using "source-specific multicast" (SSM), uncomment the following:
 //#define USE_SSM 1
@@ -35,7 +35,7 @@ Boolean const isSSM = False;
 #endif
 
 // To set up an internal RTSP server, uncomment the following:
-//#define IMPLEMENT_RTSP_SERVER 1
+#define IMPLEMENT_RTSP_SERVER 1
 // (Note that this RTSP server works for multicast only)
 
 // To stream *only* MPEG "I" frames (e.g., to reduce network bandwidth),
@@ -99,24 +99,24 @@ int main(int argc, char** argv) {
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER
-  PassiveServerMediaSession* serverMediaSession
-    = PassiveServerMediaSession::createNew(*env, inputFileName,
-		   "Session streamed by \"testMPEG1or2VideoStreamer\"",
-					   isSSM);
-  serverMediaSession->addSubsession(*videoSink);
-  RTSPServer* rtspServer
-    = RTSPServer::createNew(*env, *serverMediaSession);
+  RTSPServer* rtspServer = RTSPServer::createNew(*env);
   // Note that this (attempts to) start a server on the default RTSP server
   // port: 554.  To use a different port number, add it as an extra
   // (optional) parameter to the "RTSPServer::createNew()" call above.
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
-  } else {
-    char* url = rtspServer->rtspURL();
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
   }
+  ServerMediaSession* sms
+    = ServerMediaSession::createNew(*env, NULL, inputFileName,
+		   "Session streamed by \"testMPEG1or2VideoStreamer\"",
+					   isSSM);
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink));
+  rtspServer->addServerMediaSession(sms);
+
+  char* url = rtspServer->rtspURL(sms);
+  *env << "Play this stream using the URL \"" << url << "\"\n";
+  delete[] url;
 #endif
 
   // Finally, start the streaming:

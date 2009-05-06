@@ -15,7 +15,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
-// RTP sink for MPEG video (RFC 2250)
+// RTP sink for MPEG-4 Elementary Stream video (RFC 3016)
 // Implementation
 
 #include "MPEG4ESVideoRTPSink.hh"

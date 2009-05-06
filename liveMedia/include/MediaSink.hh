@@ -76,6 +76,7 @@ public:
   unsigned totalBytesAvailable() const {
     return fLimit - (fPacketStart + fCurOffset);
   }
+  unsigned totalBufferSize() const { return fLimit; }
   unsigned char* packet() const {return &fBuf[fPacketStart];}
   unsigned curPacketSize() const {return fCurOffset;}
 
@@ -109,7 +110,7 @@ public:
   void useOverflowData();
 
   void adjustPacketStart(unsigned numBytes);
-  void resetPacketStart() { fPacketStart = 0; }
+  void resetPacketStart();
   void resetOffset() { fCurOffset = 0; }
   void resetOverflowData() { fOverflowDataOffset = fOverflowDataSize = 0; }
 

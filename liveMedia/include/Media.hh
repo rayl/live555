@@ -78,6 +78,7 @@ protected:
   }
 
 private:
+  friend class MediaLookupTable;
   UsageEnvironment& fEnviron;
   char fMediumName[mediumNameMaxLen];
   TaskToken fNextTask;

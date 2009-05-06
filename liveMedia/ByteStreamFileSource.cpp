@@ -53,7 +53,7 @@ ByteStreamFileSource::createNew(UsageEnvironment& env, char const* fileName,
       _setmode(_fileno(stdin), _O_BINARY); // convert to binary mode
 #endif
     } else { 
-      fid = fopen(fileName, "rb");
+     fid = fopen(fileName, "rb");
       if (fid == NULL) {
 	env.setResultMsg("unable to open file \"",fileName, "\"");
 	break;

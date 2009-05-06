@@ -23,6 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Header
 
 char* strDup(char const* str);
+// Note: strDup(NULL) returns NULL
 
 char* strDupSize(char const* str);
 // Like "strDup()", except that it *doesn't* copy the original.

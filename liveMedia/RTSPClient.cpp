@@ -443,7 +443,8 @@ void RTSPClient::constructSubsessionURL(MediaSubsession const& subsession,
   if (isAbsoluteURL(suffix)) {
     prefix = separator = "";
   } else {
-    separator = (suffix[0] == '/') ? "" : "/";
+    unsigned prefixLen = strlen(prefix);
+    separator = (prefix[prefixLen-1] == '/' || suffix[0] == '/') ? "" : "/";
   }
 }
 

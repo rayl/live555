@@ -58,8 +58,7 @@ RTPSink::RTPSink(UsageEnvironment& env,
     fRTPPayloadType(rtpPayloadType),
     fPacketCount(0), fOctetCount(0), fTotalOctetCount(0),
     fTimestampFrequency(rtpTimestampFrequency),
-    fRTPPayloadFormatName(rtpPayloadFormatName == NULL
-			  ? NULL : strDup(rtpPayloadFormatName)),
+    fRTPPayloadFormatName(strDup(rtpPayloadFormatName)),
     fNumChannels(numChannels) {
   gettimeofday(&fCreationTime, &Idunno);
   fTotalOctetCountStartTime = fCreationTime;

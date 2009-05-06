@@ -70,21 +70,21 @@ int main(int argc, char** argv) {
   // Note: This starts RTCP running automatically
 
   // Create and start a RTSP server to serve this stream.
-  PassiveServerMediaSession* serverMediaSession
-    = PassiveServerMediaSession::createNew(*env, inputFileName,
-		   "Session streamed by \"testAMRAudioStreamer\"",
-					   True /*SSM*/);
-  serverMediaSession->addSubsession(*audioSink);
-  RTSPServer* rtspServer
-    = RTSPServer::createNew(*env, *serverMediaSession, 7070);
+  RTSPServer* rtspServer = RTSPServer::createNew(*env, 7070);
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
-  } else {
-    char* url = rtspServer->rtspURL();
-    *env << "Play this stream using the URL \"" << url << "\"\n";
-    delete[] url;
   }
+  ServerMediaSession* sms
+    = ServerMediaSession::createNew(*env, NULL, inputFileName,
+		   "Session streamed by \"testAMRAudioStreamer\"",
+					   True /*SSM*/);
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink));
+  rtspServer->addServerMediaSession(sms);
+
+  char* url = rtspServer->rtspURL(sms);
+  *env << "Play this stream using the URL \"" << url << "\"\n";
+  delete[] url;
 
   // Start the streaming:
   *env << "Beginning streaming...\n";

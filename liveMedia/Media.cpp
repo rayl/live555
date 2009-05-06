@@ -137,7 +137,14 @@ MediaLookupTable::MediaLookupTable()
 }
 
 MediaLookupTable::~MediaLookupTable() {
-	delete fTable;
+  // First, remove and delete all media from the table:
+  Medium* medium;
+  while ((medium = (Medium*)fTable->RemoveNext()) != NULL) {
+    delete medium;
+  }
+
+  // Then, delete the table itself:
+  delete fTable;
 }
   
 Medium* MediaLookupTable::lookup(char const* name) const {

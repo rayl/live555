@@ -69,7 +69,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "SIPClient.hh"
 #include "QuickTimeFileSink.hh"
 #include "QuickTimeGenericRTPSource.hh"
-#include "PassiveServerMediaSession.hh"
+#include "PassiveServerMediaSubsession.hh"
+#include "MPEG4VideoFileServerMediaSubsession.hh"
+#include "AMRAudioFileServerMediaSubsession.hh"
 #include "AMRAudioFileSource.hh"
 #include "AMRAudioRTPSink.hh"
 
