@@ -102,9 +102,11 @@ public:
   Boolean rtpMarkerBit() const { return fRTPMarkerBit; }
 
 protected:
+  virtual void reset();
   virtual unsigned nextEnclosedFrameSize(unsigned char*& framePtr,
 					 unsigned dataSize);
 
+  unsigned fPacketSize;
   unsigned char* fBuf;
   unsigned fHead;
   unsigned fTail;
@@ -113,7 +115,6 @@ private:
   BufferedPacket* fNextPacket; // used to link together packets
 
   unsigned fUseCount;
-  unsigned fPacketSize;
   unsigned short fRTPSeqNo;
   unsigned fRTPTimestamp;
   struct timeval fPresentationTime; // corresponding to "fRTPTimestamp"

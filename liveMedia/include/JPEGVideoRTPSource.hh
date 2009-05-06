@@ -38,6 +38,8 @@ enum {
 	MARKER_COMMENT		= 0xfe,
 };
 
+#define MAX_JPEG_HEADER_SIZE 1024
+
 class JPEGVideoRTPSource: public MultiFramedRTPSource {
 public:
   static JPEGVideoRTPSource*
@@ -53,7 +55,7 @@ public:
   unsigned dri;
   unsigned char* qtables;
   unsigned qtlen;
-  unsigned char header[1024];
+  unsigned char header[MAX_JPEG_HEADER_SIZE];
   unsigned hdrlen;
   unsigned framesize;
 

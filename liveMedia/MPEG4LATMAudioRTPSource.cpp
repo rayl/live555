@@ -73,7 +73,7 @@ char const* MPEG4LATMAudioRTPSource::MIMEtype() const {
 }
 
 
-////////// LATMBufferedPacket and LATMBufferredPacketFactory implementation
+////////// LATMBufferedPacket and LATMBufferedPacketFactory implementation
 
 unsigned LATMBufferedPacket
 ::nextEnclosedFrameSize(unsigned char*& framePtr, unsigned dataSize) {

@@ -124,7 +124,7 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 	  fNeedDelivery = True;
 	  return;
 	}
-	if (specialHeaderSize > 0) nextPacket->skip(specialHeaderSize);
+	nextPacket->skip(specialHeaderSize);
       }
 
       // Deliver all or part of this packet's data to our caller:
@@ -254,13 +254,19 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
 #define MAX_PACKET_SIZE 10000
 
 BufferedPacket::BufferedPacket()
-  : fBuf(new unsigned char[MAX_PACKET_SIZE]), fHead(0), fTail(0),
-    fNextPacket(NULL), fUseCount(0), fPacketSize(MAX_PACKET_SIZE) {
+  : fPacketSize(MAX_PACKET_SIZE),
+    fBuf(new unsigned char[MAX_PACKET_SIZE]),
+    fNextPacket(NULL) {
 }
 
 BufferedPacket::~BufferedPacket() {
   delete fNextPacket;
   delete fBuf;
+}
+
+void BufferedPacket::reset() {
+  fHead = fTail = 0;
+  fUseCount = 0;
 }
 
 unsigned BufferedPacket
@@ -272,10 +278,16 @@ unsigned BufferedPacket
 }
 
 Boolean BufferedPacket::fillInData(RTPInterface& rtpInterface) {
-  fHead = 0;
-  fUseCount = 0;
+  reset();
+
+  unsigned numBytesRead;
   struct sockaddr_in fromAddress;
-  return rtpInterface.handleRead(fBuf, fPacketSize, fTail, fromAddress);
+  if (!rtpInterface.handleRead(&fBuf[fTail], fPacketSize-fTail, numBytesRead,
+			       fromAddress)) {
+    return False;
+  }
+  fTail += numBytesRead;
+  return True;
 }
 
 void BufferedPacket
@@ -295,7 +307,7 @@ void BufferedPacket::skip(unsigned numBytes) {
 }
 
 void BufferedPacket::removePadding(unsigned numBytes) {
-  if (numBytes > fTail) numBytes = fTail;
+  if (numBytes > fTail-fHead) numBytes = fTail-fHead;
   fTail -= numBytes;
 }
 
