@@ -428,7 +428,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fRTPTimestampFrequency(0), fControlPath(NULL),
     fCpresent(False), fConfig(NULL), fPlayEndTime(0.0),
     fMCT_SLAP_SessionId(0), fMCT_SLAP_Stagger(0),
-    fVideoWidth(0), fVideoHeight(0), fVideoFPS(0),
+    fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1),
     fRTPSocket(NULL), fRTCPSocket(NULL),
     fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL) {
 }
@@ -749,12 +749,17 @@ Boolean MediaSubsession::parseSDPLine_c(char const* sdpLine) {
 Boolean MediaSubsession::parseSDPAttribute_rtpmap(char const* sdpLine) {
   // Check for a "a=rtpmap:<fmt> <codec>/<freq>" line:
   // (Also check without the "/<freq>"; RealNetworks omits this)
+  // Also check for a trailing "/<numChannels>".
   Boolean parseSuccess = False;
 
   unsigned rtpmapPayloadFormat;
   char* codecName = strdup(sdpLine); // ensures we have enough space
   unsigned rtpTimestampFrequency = 0;
-  if (sscanf(sdpLine, "a=rtpmap: %u %[^/]/%u",
+  unsigned numChannels = 1;
+  if (sscanf(sdpLine, "a=rtpmap: %u %[^/]/%u/%u",
+	     &rtpmapPayloadFormat, codecName, &rtpTimestampFrequency,
+	     &numChannels) == 4
+      || sscanf(sdpLine, "a=rtpmap: %u %[^/]/%u",
 	     &rtpmapPayloadFormat, codecName, &rtpTimestampFrequency) == 3
       || sscanf(sdpLine, "a=rtpmap: %u %s",
 		&rtpmapPayloadFormat, codecName) == 2) {
@@ -768,6 +773,7 @@ Boolean MediaSubsession::parseSDPAttribute_rtpmap(char const* sdpLine) {
       }
       delete fCodecName; fCodecName = strdup(codecName);
       fRTPTimestampFrequency = rtpTimestampFrequency;
+      fNumChannels = numChannels;
     }
   }
   delete codecName;

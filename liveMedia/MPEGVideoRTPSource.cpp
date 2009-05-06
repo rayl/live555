@@ -46,11 +46,14 @@ Boolean MPEGVideoRTPSource
   // There's a 4-byte video-specific header
   if (packetSize < 4) return False;
 
-  //unsigned header = ntohl(*(unsigned*)headerStart);
+  u_int32_t header = ntohl(*(unsigned*)headerStart);
 
-  // Assume that clients are able to handle even fragmented slices,
-  // so don't bother checking for that here.
-  // (I.e., leave "fCurrentPacketCompletesFrame" at True permanently)
+  u_int32_t sBit = header&0x00002000; // sequence-header-present
+  u_int32_t bBit = header&0x00001000; // beginning-of-slice
+  u_int32_t eBit = header&0x00000800; // end-of-slice
+
+  fCurrentPacketBeginsFrame = (sBit|bBit) != 0;
+  fCurrentPacketCompletesFrame = (sBit|eBit) != 0;
 
   resultSpecialHeaderSize = 4;
   return True;

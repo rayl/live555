@@ -34,11 +34,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Definition of a type representing a low-level network address.
 // At present, this is 32-bits, for IPv4.  Later, generalize it,
 // to allow for IPv6.
-typedef unsigned netAddressBits;
+typedef u_int32_t netAddressBits;
 
 class NetAddress {
     public:
-	NetAddress(unsigned char const* data,
+	NetAddress(u_int8_t const* data,
 		   unsigned length = 4 /* default: 32 bits */);
 	NetAddress(unsigned length = 4); // sets address data to all-zeros
 	NetAddress(NetAddress const& orig);
@@ -46,15 +46,15 @@ class NetAddress {
 	virtual ~NetAddress();
 
 	unsigned length() const { return fLength; }
-	unsigned char const* data() const // always in network byte order
+	u_int8_t const* data() const // always in network byte order
 		{ return fData; }
 
     private:
-	void assign(unsigned char const* data, unsigned length);
+	void assign(u_int8_t const* data, unsigned length);
 	void clean();
 
 	unsigned fLength;
-	unsigned char* fData;
+	u_int8_t* fData;
 };
 
 class NetAddressList {
@@ -87,7 +87,7 @@ class NetAddressList {
 	NetAddress** fAddressArray;	
 };
 
-typedef unsigned short portNumBits;
+typedef u_int16_t portNumBits;
 
 class Port {
     public:

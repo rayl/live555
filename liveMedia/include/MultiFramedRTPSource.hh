@@ -49,6 +49,7 @@ protected:
       // The default implementation returns True, but this can be redefined
 
 protected:
+  Boolean fCurrentPacketBeginsFrame;
   Boolean fCurrentPacketCompletesFrame;
 
 private:
@@ -64,6 +65,9 @@ private:
 
   Boolean fAreDoingNetworkReads;
   Boolean fNeedDelivery;
+  Boolean fPacketLossInFragmentedFrame;
+  unsigned char* fSavedTo;
+  unsigned fSavedMaxSize;
 
   // A buffer to (optionally) hold incoming pkts that have been reorderered
   class ReorderingPacketBuffer* fReorderingBuffer;

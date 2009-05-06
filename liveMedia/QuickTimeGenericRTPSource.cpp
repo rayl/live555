@@ -228,7 +228,10 @@ Boolean QuickTimeGenericRTPSource
     headerStart += padding;
   }
 
+  fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame;
+          // whether the *previous* packet ended a frame
   fCurrentPacketCompletesFrame = rtpMarkerBit;
+
   resultSpecialHeaderSize = expectedHeaderSize;
 #ifdef DEBUG
   fprintf(stderr, "Result special header size: %d\n", resultSpecialHeaderSize);

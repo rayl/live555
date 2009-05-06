@@ -31,12 +31,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// NetAddress //////////
 
-NetAddress::NetAddress(unsigned char const* data, unsigned length) {
+NetAddress::NetAddress(u_int8_t const* data, unsigned length) {
 	assign(data, length);
 }
 
 NetAddress::NetAddress(unsigned length) {
-	fData = new unsigned char[length];
+	fData = new u_int8_t[length];
 	if (fData == NULL) return;
 
 	for (unsigned i = 0; i < length; ++i)
@@ -60,8 +60,8 @@ NetAddress::~NetAddress() {
 	clean();
 }
 
-void NetAddress::assign(unsigned char const* data, unsigned length) {
-	fData = new unsigned char[length];
+void NetAddress::assign(u_int8_t const* data, unsigned length) {
+	fData = new u_int8_t[length];
 	if (fData == NULL) return;
 
 	for (unsigned i = 0; i < length; ++i)
@@ -82,9 +82,9 @@ NetAddressList::NetAddressList(char const* hostname)
     struct hostent* host;
 
     // Check first whether "hostname" is an IP address string:
-    unsigned addr = our_inet_addr((char*)hostname);
+    netAddressBits addr = our_inet_addr((char*)hostname);
     if (addr != INADDR_NONE) { // yes it was an IP address string
-      //##### host = gethostbyaddr((char*)&addr, 4, AF_INET);
+      //##### host = gethostbyaddr((char*)&addr, sizeof (netAddressBits), AF_INET);
       host = NULL; // don't bother calling gethostbyaddr(); we only want 1 addr
       
       if (host == NULL) {
@@ -94,8 +94,8 @@ NetAddressList::NetAddressList(char const* hostname)
 	fAddressArray = new NetAddress*[fNumAddresses];
 	if (fAddressArray == NULL) return;
 	
-	fAddressArray[0] = new NetAddress((unsigned char*)&addr, 4);
-	    // would need to be fixed for IPv6
+	fAddressArray[0] = new NetAddress((u_int8_t*)&addr,
+					  sizeof (netAddressBits));
 	return;
       }
     } else { // Try resolving "hostname" as a real host name
@@ -107,11 +107,11 @@ NetAddressList::NetAddressList(char const* hostname)
       }
     }
 
-    unsigned char const** const hAddrPtr
-      = (unsigned char const**)host->h_addr_list;
+    u_int8_t const** const hAddrPtr
+      = (u_int8_t const**)host->h_addr_list;
     if (hAddrPtr != NULL) {
       // First, count the number of addresses:
-      unsigned char const** hAddrPtr1 = hAddrPtr;
+      u_int8_t const** hAddrPtr1 = hAddrPtr;
       while (*hAddrPtr1 != NULL) {
 	++fNumAddresses;
 	++hAddrPtr1;
@@ -197,7 +197,8 @@ AddressPortLookupTable::~AddressPortLookupTable() {
 	delete fTable;
 }
 
-void* AddressPortLookupTable::Add(unsigned address1, unsigned address2,
+void* AddressPortLookupTable::Add(netAddressBits address1,
+				  netAddressBits address2,
 				  Port port, void* value) {
 	int key[3];
 	key[0] = (int)address1;
@@ -206,7 +207,8 @@ void* AddressPortLookupTable::Add(unsigned address1, unsigned address2,
 	return fTable->Add((char*)key, value);
 }
 
-void* AddressPortLookupTable::Lookup(unsigned address1, unsigned address2,
+void* AddressPortLookupTable::Lookup(netAddressBits address1,
+				     netAddressBits address2,
 				     Port port) {
 	int key[3];
 	key[0] = (int)address1;
@@ -215,7 +217,8 @@ void* AddressPortLookupTable::Lookup(unsigned address1, unsigned address2,
 	return fTable->Lookup((char*)key);
 }
 
-Boolean AddressPortLookupTable::Remove(unsigned address1, unsigned address2,
+Boolean AddressPortLookupTable::Remove(netAddressBits address1,
+				       netAddressBits address2,
 				       Port port) {
 	int key[3];
 	key[0] = (int)address1;
@@ -239,10 +242,11 @@ void* AddressPortLookupTable::Iterator::next() {
 
 ////////// Misc. //////////
 
-Boolean IsMulticastAddress(unsigned address) {
-	// Note: We return False for addresses in the range 224.0.0.0
-	// through 224.0.0.255, because these are non-routable
-	unsigned addressInHostOrder = ntohl(address);
-	return addressInHostOrder >  0xE00000FF &&
-	       addressInHostOrder <= 0xEFFFFFFF;
+Boolean IsMulticastAddress(netAddressBits address) {
+  // Note: We return False for addresses in the range 224.0.0.0
+  // through 224.0.0.255, because these are non-routable
+  // Note: IPv4-specific #####
+  netAddressBits addressInHostOrder = ntohl(address);
+  return addressInHostOrder >  0xE00000FF &&
+         addressInHostOrder <= 0xEFFFFFFF;
 }

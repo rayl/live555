@@ -34,6 +34,82 @@ MP3ADURTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
   return new MP3ADURTPSink(env, RTPgs, RTPPayloadType);
 }
 
+static void badDataSize(unsigned numBytesInFrame) {
+  fprintf(stderr, "MP3ADURTPSink::doSpecialFrameHandling(): invalid size (%d) of non-fragmented input ADU!\n", numBytesInFrame);
+}
+
+void MP3ADURTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
+					   unsigned char* frameStart,
+					   unsigned numBytesInFrame,
+					   struct timeval frameTimestamp,
+					   unsigned numRemainingBytes) {
+  // If this is the first (or only) fragment of an ADU, then
+  // check the "ADU descriptor" (that should be at the front) for validity:
+  if (fragmentationOffset == 0) {
+    unsigned aduDescriptorSize;
+
+    if (numBytesInFrame < 1) { badDataSize(numBytesInFrame); return; }
+    if (frameStart[0]&0x40) {
+      // We have a 2-byte ADU descriptor
+      aduDescriptorSize = 2;
+      if (numBytesInFrame < 2) { badDataSize(numBytesInFrame); return; }
+      fCurADUSize = ((frameStart[0]&~0xC0)<<8) | frameStart[1];
+    } else {
+      // We have a 1-byte ADU descriptor
+      aduDescriptorSize = 1;
+      fCurADUSize = frameStart[0]&~0x80;
+    }
+
+    if (frameStart[0]&0x80) {
+      fprintf(stderr, "Unexpected \"C\" bit seen on non-fragment input ADU!\n");
+      return;
+    }
+
+    // Now, check whether the ADU size in the ADU descriptor is consistent
+    // with the total data size of (all fragments of) the input frame:
+    unsigned expectedADUSize =
+      fragmentationOffset + numBytesInFrame + numRemainingBytes
+      - aduDescriptorSize;
+    if (fCurADUSize != expectedADUSize) {
+      fprintf(stderr, "MP3ADURTPSink::doSpecialFrameHandling(): Warning: Input ADU size %d (=%d+%d+%d-%d) did not match the value (%d) in the ADU descriptor!\n",
+	      expectedADUSize,
+	      fragmentationOffset, numBytesInFrame, numRemainingBytes,
+	      aduDescriptorSize,
+	      fCurADUSize);
+      fCurADUSize = expectedADUSize;
+    }
+  } else {
+    // This is the second (or subsequent) fragment.
+    // Insert a new ADU descriptor:
+    unsigned char aduDescriptor[2];
+    aduDescriptor[0] = 0xC0|(fCurADUSize>>8);
+    aduDescriptor[1] = fCurADUSize&0xFF;
+    setSpecialHeaderBytes(aduDescriptor, 2);
+  }
+
+  // Important: Also call our base class's doSpecialFrameHandling(),
+  // to set the packet's timestamp:
+  MultiFramedRTPSink::doSpecialFrameHandling(fragmentationOffset,
+					     frameStart, numBytesInFrame,
+					     frameTimestamp,
+					     numRemainingBytes);
+}
+
+unsigned MP3ADURTPSink::specialHeaderSize() const {
+  // Normally there's no special header.
+  // (The "ADU descriptor" is already present in the data.)
+  unsigned specialHeaderSize = 0;
+  
+  // However, if we're about to output the second (or subsequent) fragment
+  // of a fragmented ADU, then we need to insert a new ADU descriptor at
+  // the front of the packet:
+  if (curFragmentationOffset() > 0) {
+    specialHeaderSize = 2;
+  }
+
+  return specialHeaderSize;
+}
+
 char const* MP3ADURTPSink::sdpMediaType() const {
   return "audio";
 }

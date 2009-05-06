@@ -118,6 +118,7 @@ public:
   unsigned short videoWidth() const { return fVideoWidth; }
   unsigned short videoHeight() const { return fVideoHeight; }
   unsigned videoFPS() const { return fVideoFPS; }
+  unsigned numChannels() const { return fNumChannels; }
 
   RTPSource* rtpSource() { return fRTPSource; }
   RTCPInstance* rtcpInstance() { return fRTCPInstance; }
@@ -201,6 +202,8 @@ private:
      // screen dimensions (set by an optional a=x-dimensions: <w>,<h> line)
   unsigned fVideoFPS;
      // frame rate (set by an optional a=x-framerate: <fps> line)
+  unsigned fNumChannels;
+     // optionally set by "a=rtpmap:" lines for audio sessions.  Default: 1
 
   // Fields set by initiate():
   Groupsock* fRTPSocket; Groupsock* fRTCPSocket; // works even for unicast

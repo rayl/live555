@@ -491,6 +491,14 @@ Boolean GetADUInfoFromMP3Frame(unsigned char const* framePtr,
 
   frameSize = 4 + fr.frameSize;
 
+  if (fr.layer != 3) {
+    // Special case for non-layer III frames
+    backpointer = 0;
+    sideInfoSize = 0;
+    aduSize = fr.frameSize;
+    return True;
+  }
+
   sideInfoSize = fr.sideInfoSize;
   if (totFrameSize < 4 + sideInfoSize) return False; // not enough data
 

@@ -41,7 +41,17 @@ private:
 
 private:
   // Redefined virtual functions:
+  virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
+                                      unsigned char* frameStart,
+                                      unsigned numBytesInFrame,
+                                      struct timeval frameTimestamp,
+                                      unsigned numRemainingBytes);
+  virtual unsigned specialHeaderSize() const;
+
   virtual char const* sdpMediaType() const;
+
+private:
+  unsigned fCurADUSize; // used when fragmenting over multiple RTP packets
 };
 
 #endif

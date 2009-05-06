@@ -32,7 +32,7 @@ public:
 
   BufferedPacket* getFreePacket();
   void storePacket(BufferedPacket* bPacket);
-  BufferedPacket* getNextCompletedPacket();
+  BufferedPacket* getNextCompletedPacket(Boolean& packetLossPreceded);
   void releaseUsedPacket(BufferedPacket* packet);
   void freePacket(BufferedPacket* packet) {
     if (packet != fSavedPacket) delete packet;
@@ -59,8 +59,10 @@ MultiFramedRTPSource
 		       unsigned rtpTimestampFrequency,
 		       BufferedPacketFactory* packetFactory)
   : RTPSource(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency),
+    fCurrentPacketBeginsFrame(True/*by default*/),
     fCurrentPacketCompletesFrame(True/*by default*/),
-    fAreDoingNetworkReads(False), fNeedDelivery(False) {
+    fAreDoingNetworkReads(False), fNeedDelivery(False),
+    fPacketLossInFragmentedFrame(False) {
   fReorderingBuffer = new ReorderingPacketBuffer(packetFactory);
 
   // Try to use a big receive buffer for RTP:
@@ -98,6 +100,8 @@ void MultiFramedRTPSource::doGetNextFrame() {
     fRTPInterface.startNetworkReading(handler);
   }
 
+  fSavedTo = fTo;
+  fSavedMaxSize = fMaxSize;
   fFrameSize = 0; // for now
   fNeedDelivery = True;
   doGetNextFrame1();
@@ -106,8 +110,9 @@ void MultiFramedRTPSource::doGetNextFrame() {
 void MultiFramedRTPSource::doGetNextFrame1() {
   // If we already have packet data available, then deliver it now.
   if (fNeedDelivery) {
+    Boolean packetLossPrecededThis;
     BufferedPacket* nextPacket
-      = fReorderingBuffer->getNextCompletedPacket();
+      = fReorderingBuffer->getNextCompletedPacket(packetLossPrecededThis);
     if (nextPacket != NULL) {
       fNeedDelivery = False;
 
@@ -119,7 +124,7 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 				  nextPacket->dataSize(),
 				  nextPacket->rtpMarkerBit(),
 				  specialHeaderSize)) {
-	  // Something's wrong with the header; treat the packet as unusable
+	  // Something's wrong with the header; reject the packet:
 	  fReorderingBuffer->releaseUsedPacket(nextPacket);
 	  fNeedDelivery = True;
 	  return;
@@ -127,7 +132,28 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 	nextPacket->skip(specialHeaderSize);
       }
 
-      // Deliver all or part of this packet's data to our caller:
+      // Check whether we're part of a multi-packet frame, and whether
+      // there was packet loss that would render this packet unusable:
+      if (fCurrentPacketBeginsFrame) {
+	if (packetLossPrecededThis || fPacketLossInFragmentedFrame) {
+	  // We didn't get all of the previous frame.
+	  // Forget any data that we used from it:
+	  fTo = fSavedTo; fMaxSize = fSavedMaxSize;
+	  fFrameSize = 0;
+	}
+	fPacketLossInFragmentedFrame = False;
+      } else if (packetLossPrecededThis) {
+	// We're in a multi-packet frame, with preceding packet loss
+	fPacketLossInFragmentedFrame = True;
+      }
+      if (fPacketLossInFragmentedFrame) {
+	// This packet is unusable; reject it:
+	  fReorderingBuffer->releaseUsedPacket(nextPacket);
+	  fNeedDelivery = True;
+	  return;
+      }
+
+      // The packet is usable. Deliver all or part of it to our caller:
       unsigned frameSize;
       nextPacket->use(fTo, fMaxSize, frameSize,
 		      fCurPacketRTPSeqNum, fCurPacketRTPTimestamp,
@@ -141,8 +167,8 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 
       if (frameSize >= fMaxSize || fCurrentPacketCompletesFrame) {
 	// We have all the data that the client wants.
-	// Call our own 'after getting' function.  Because we're preceded by
-	// a network read, we can call this directly, without risking
+	// Call our own 'after getting' function.  Because we're preceded
+	// by a network read, we can call this directly, without risking
 	// infinite recursion.
 	afterGetting(this);
       } else {
@@ -151,11 +177,6 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 	fTo += frameSize; fMaxSize -= frameSize;
 	fNeedDelivery = True;
 	doGetNextFrame1();
-	//##### Note: This still isn't quite right, because it doesn't
-	//##### deal with lost fragments properly. If a lost fragment is
-	//##### detected, then - depending on the subclass - we want to
-	//##### either discard all data already delivered, or deliver
-	//##### partial data to the client.
       }
     }
   }
@@ -412,13 +433,15 @@ void ReorderingPacketBuffer::releaseUsedPacket(BufferedPacket* packet) {
   freePacket(packet);
 }
 
-BufferedPacket* ReorderingPacketBuffer::getNextCompletedPacket() {
+BufferedPacket* ReorderingPacketBuffer
+::getNextCompletedPacket(Boolean& packetLossPreceded) {
   if (fHeadPacket == NULL) return NULL;
 
   // Check whether the next packet we want is already at the head
   // of the queue:
   // ASSERT: fHeadPacket->rtpSeqNo() >= fNextExpectedSeqNo
   if (fHeadPacket->rtpSeqNo() == fNextExpectedSeqNo) {
+    packetLossPreceded = False;
     return fHeadPacket;
   }
 
@@ -433,6 +456,7 @@ BufferedPacket* ReorderingPacketBuffer::getNextCompletedPacket() {
   if (uSecondsSinceReceived > fThresholdTime) {
     fNextExpectedSeqNo = fHeadPacket->rtpSeqNo();
         // we've given up on earlier packets now
+    packetLossPreceded = True;
     return fHeadPacket;
   }
 

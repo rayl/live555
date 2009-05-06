@@ -22,13 +22,21 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include <string.h>
 #if defined(__WIN32__) || defined(_WIN32)
+// Windows
 #if defined(_WINNT) || defined(__BORLANDC__)
 #define _MSWSOCK_
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #endif
 #include <windows.h>
+
+// Definitions of size-specific types:
+typedef unsigned u_int32_t;
+typedef unsigned short u_int16_t;
+typedef unsigned char u_int8_t;
+
 #else
+// Unix
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -44,6 +52,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <sys/select.h>
 #include <unix.h>
 #endif
+#endif
+
+#ifdef SOLARIS
+#define u_int32_t uint32_t
+#define u_int16_t uint16_t
+#define u_int8_t uint8_t
 #endif
 
 #endif

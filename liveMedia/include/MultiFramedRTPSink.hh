@@ -57,6 +57,7 @@ protected:
   // Functions that might be called by doSpecialFrameHandling():
   Boolean isFirstPacket() const { return fIsFirstPacket; }
   Boolean isFirstFrameInPacket() const { return fNumFramesUsedSoFar == 0; }
+  Boolean curFragmentationOffset() const { return fCurFragmentationOffset; }
   void setMarkerBit();
   void setTimestamp(struct timeval timestamp);
   void setSpecialHeaderWord(unsigned word, /* 32 bits, in host order */

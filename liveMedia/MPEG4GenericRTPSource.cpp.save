@@ -15,42 +15,48 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
-// MP4V-ES video RTP stream sources
+// MPEG4-GENERIC ("audio", "video", or "application") RTP stream sources
 // Implementation
 
-#include "MPEG4ESVideoRTPSource.hh"
+#include "MPEG4GenericRTPSource.hh"
 
-///////// MPEG4ESVideoRTPSource implementation ////////
+///////// MPEG4GenericRTPSource implementation ////////
 
 //##### NOTE: INCOMPLETE!!! #####
 
-MPEG4ESVideoRTPSource*
-MPEG4ESVideoRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
-				   unsigned char rtpPayloadFormat,
-				   unsigned rtpTimestampFrequency) {
-  return new MPEG4ESVideoRTPSource(env, RTPgs, rtpPayloadFormat,
-				   rtpTimestampFrequency);
+MPEG4GenericRTPSource*
+MPEG4GenericRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
+				 unsigned char rtpPayloadFormat,
+				 unsigned rtpTimestampFrequency,
+				 char const* mediumName) {
+  return new MPEG4GenericRTPSource(env, RTPgs, rtpPayloadFormat,
+				   rtpTimestampFrequency, mediumName);
 }
 
-MPEG4ESVideoRTPSource
-::MPEG4ESVideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
+MPEG4GenericRTPSource
+::MPEG4GenericRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 			unsigned char rtpPayloadFormat,
-			unsigned rtpTimestampFrequency)
+			unsigned rtpTimestampFrequency,
+			char const* mediumName)
   : MultiFramedRTPSource(env, RTPgs,
 			 rtpPayloadFormat, rtpTimestampFrequency) {
+    unsigned mimeTypeLength =
+      strlen(mediumName) + 14 /* strlen("/MPEG4-GENERIC") */ + 1;
+    fMIMEType = new char[mimeTypeLength];
+    if (fMIMEType != NULL) {
+      sprintf(fMIMEType, "%s/MPEG4-GENERIC", mediumName);
+    }
 }
 
-MPEG4ESVideoRTPSource::~MPEG4ESVideoRTPSource() {
+MPEG4GenericRTPSource::~MPEG4GenericRTPSource() {
+  delete fMIMEType;
 }
 
-Boolean MPEG4ESVideoRTPSource
+Boolean MPEG4GenericRTPSource
 ::processSpecialHeader(unsigned char* /*headerStart*/,
 		       unsigned /*packetSize*/,
 		       Boolean rtpMarkerBit,
 		       unsigned& resultSpecialHeaderSize) {
-  fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame;
-          // whether the *previous* packet ended a frame
-
   // The RTP "M" (marker) bit indicates the last fragment of a frame:
   fCurrentPacketCompletesFrame = rtpMarkerBit;
 
@@ -59,6 +65,6 @@ Boolean MPEG4ESVideoRTPSource
   return True;
 }
 
-char const* MPEG4ESVideoRTPSource::MIMEtype() const {
-  return "video/mp4v-es";
+char const* MPEG4GenericRTPSource::MIMEtype() const {
+  return fMIMEType;
 }

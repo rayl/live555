@@ -66,11 +66,14 @@ Boolean H263plusVideoRTPSource
     if (packetSize < expectedHeaderSize) return False;
   }
 
-  // Make a copy of the special header bytes, in case a reader
-  // can use them:
-  if (fCurrentPacketCompletesFrame) { // the *previous* packet ended a frame
+  fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame;
+          // whether the *previous* packet ended a frame
+  if (fCurrentPacketBeginsFrame) {
     fNumSpecialHeaders = fSpecialHeaderBytesLength = 0;
   }
+
+  // Make a copy of the special header bytes, in case a reader
+  // can use them:
   unsigned bytesAvailable
     = SPECIAL_HEADER_BUFFER_SIZE - fSpecialHeaderBytesLength - 1;
   if (expectedHeaderSize <= bytesAvailable) {

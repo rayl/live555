@@ -528,7 +528,7 @@ void startPlayingStreams() {
   float totalEndTime = endTime;
   if (endTime == 0) endTime = session->playEndTime(); // use SDP end time
   if (endTime > 0) {
-    float const maxDelayTime = (float)( ((unsigned)0xFFFFFFFF)/1000000.0 );
+    float const maxDelayTime = (float)( ((unsigned)0x7FFFFFFF)/1000000.0 );
     if (endTime > maxDelayTime) {
       fprintf(stderr, "Warning: specified end time %g exceeds maximum %g; will not do a delayed shutdown\n", endTime, maxDelayTime);
       endTime = 0.0;

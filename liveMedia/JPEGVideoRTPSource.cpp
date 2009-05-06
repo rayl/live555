@@ -276,6 +276,9 @@ Boolean JPEGVideoRTPSource
     memmove(headerStart, header, hdrlen); // prepends synthesized header
   }
 
+  fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame;
+          // whether the *previous* packet ended a frame
+
   // The RTP "M" (marker) bit indicates the last fragment of a frame:
   fCurrentPacketCompletesFrame = rtpMarkerBit;
 
