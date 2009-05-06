@@ -155,6 +155,7 @@ int main(int argc, char const** argv) {
   if (mediaToStream&VOB_AUDIO) {
     rtpGroupsockAudio
       = new Groupsock(*env, destinationAddress, rtpPortAudio, ttl);
+    rtpGroupsockAudio->multicastSendOnly(); // because we're a SSM source
 
     // Create an 'AC3 Audio RTP' sink from the RTP 'groupsock':
     audioSink
@@ -164,17 +165,20 @@ int main(int argc, char const** argv) {
     // Create (and start) a 'RTCP instance' for this RTP sink:
     rtcpGroupsockAudio
       = new Groupsock(*env, destinationAddress, rtcpPortAudio, ttl);
+    rtcpGroupsockAudio->multicastSendOnly(); // because we're a SSM source
     const unsigned totalSessionBandwidthAudio
       = 160; // in kbps; for RTCP b/w share
     RTCPInstance::createNew(*env, rtcpGroupsockAudio,
 			    totalSessionBandwidthAudio, CNAME,
-			    audioSink, NULL /* we're a server */);
+			    audioSink, NULL /* we're a server */,
+			    True /* we're a SSM source */);
     // Note: This starts RTCP running automatically
   }
 
   if (mediaToStream&VOB_VIDEO) {
     rtpGroupsockVideo
       = new Groupsock(*env, destinationAddress, rtpPortVideo, ttl);
+    rtpGroupsockVideo->multicastSendOnly(); // because we're a SSM source
     
     // Create a 'MPEG Video RTP' sink from the RTP 'groupsock':
     videoSink = MPEGVideoRTPSink::createNew(*env, rtpGroupsockVideo);
@@ -182,11 +186,13 @@ int main(int argc, char const** argv) {
     // Create (and start) a 'RTCP instance' for this RTP sink:
     rtcpGroupsockVideo
       = new Groupsock(*env, destinationAddress, rtcpPortVideo, ttl);
+    rtcpGroupsockVideo->multicastSendOnly(); // because we're a SSM source
     const unsigned totalSessionBandwidthVideo
       = 4500; // in kbps; for RTCP b/w share
     RTCPInstance::createNew(*env, rtcpGroupsockVideo,
 			    totalSessionBandwidthVideo, CNAME,
-			    videoSink, NULL /* we're a server */);
+			    videoSink, NULL /* we're a server */,
+			    True /* we're a SSM source */);
     // Note: This starts RTCP running automatically
   }
 
@@ -300,7 +306,7 @@ void play() {
 	sprintf(portStr, ":%d", rtspServerPortNum);
       }
       fprintf(stderr, "Access this stream using the URL:\n"
-	      "\trtsp://%s%s/stream.vob\n", our_inet_ntoa(ourIPAddress), portStr);
+	      "\trtsp://%s%s/\n", our_inet_ntoa(ourIPAddress), portStr);
     } else {
       fprintf(stderr, "Failed to create RTSP server: %s\n",
 	      env->getResultMsg());

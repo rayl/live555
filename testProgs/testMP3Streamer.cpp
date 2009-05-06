@@ -132,6 +132,10 @@ void play() {
     = new Groupsock(*env, destinationAddress, rtpPort, ttl);
   sessionState.rtcpGroupsock
     = new Groupsock(*env, destinationAddress, rtcpPort, ttl);
+#ifdef USE_SSM
+  sessionState.rtpGroupsock->multicastSendOnly();
+  sessionState.rtcpGroupsock->multicastSendOnly();
+#endif
   
   // Create a 'MP3 RTP' sink from the RTP 'groupsock':
 #ifdef STREAM_USING_ADUS
@@ -153,7 +157,8 @@ void play() {
   sessionState.rtcpInstance
     = RTCPInstance::createNew(*env, sessionState.rtcpGroupsock,
 			      totalSessionBandwidth, CNAME,
-			      sessionState.sink, NULL /* we're a server */);
+			      sessionState.sink, NULL /* we're a server */,
+			      isSSM);
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER

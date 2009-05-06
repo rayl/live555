@@ -82,6 +82,12 @@ int main(int argc, char** argv) {
   Groupsock rtcpGroupsockAudio(*env, destinationAddress, rtcpPortAudio, ttl);
   Groupsock rtpGroupsockVideo(*env, destinationAddress, rtpPortVideo, ttl);
   Groupsock rtcpGroupsockVideo(*env, destinationAddress, rtcpPortVideo, ttl);
+#ifdef USE_SSM
+  rtpGroupsockAudio.multicastSendOnly();
+  rtcpGroupsockAudio.multicastSendOnly();
+  rtpGroupsockVideo.multicastSendOnly();
+  rtcpGroupsockVideo.multicastSendOnly();
+#endif
 
   // Create a 'MPEG Audio RTP' sink from the RTP 'groupsock':
   audioSink = MPEGAudioRTPSink::createNew(*env, &rtpGroupsockAudio);
@@ -94,7 +100,7 @@ int main(int argc, char** argv) {
   CNAME[maxCNAMElen] = '\0'; // just in case
   RTCPInstance::createNew(*env, &rtcpGroupsockAudio,
 			  totalSessionBandwidthAudio, CNAME,
-			  audioSink, NULL /* we're a server */);
+			  audioSink, NULL /* we're a server */, isSSM);
   // Note: This starts RTCP running automatically
 
   // Create a 'MPEG Video RTP' sink from the RTP 'groupsock':
@@ -104,7 +110,7 @@ int main(int argc, char** argv) {
   const unsigned totalSessionBandwidthVideo = 4500; // in kbps; for RTCP b/w share
   RTCPInstance::createNew(*env, &rtcpGroupsockVideo,
 			  totalSessionBandwidthVideo, CNAME,
-			  videoSink, NULL /* we're a server */);
+			  videoSink, NULL /* we're a server */, isSSM);
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER

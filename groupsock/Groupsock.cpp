@@ -129,7 +129,7 @@ Groupsock::Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
     if (DebugLevel >= 3) {
       cerr << *this << ": SSM join failed: "
 	   << env.getResultMsg();
-      cerr << "- trying regular join instead" << endl;
+      cerr << " - trying regular join instead" << endl;
     }
     if (!socketJoinGroup(env, socketNum(), groupAddr.s_addr)) {
       if (DebugLevel >= 1) {
@@ -175,6 +175,11 @@ Groupsock::changeDestinationParameters(struct in_addr const& newDestAddr,
   if (newDestTTL != ~0) destTTL = (u_int8_t)newDestTTL;
 
   fOutgoingGroupEId = GroupEId(destAddr, destPortNum, destTTL);
+}
+
+void Groupsock::multicastSendOnly() {
+  socketLeaveGroup(env(), socketNum(),
+		   fOutgoingGroupEId.groupAddress().s_addr);
 }
 
 Boolean Groupsock::output(UsageEnvironment& env, u_int8_t ttlToSend,

@@ -57,6 +57,8 @@ Boolean MediaSession::lookupByName(UsageEnvironment& env,
 MediaSession::MediaSession(UsageEnvironment& env)
   : Medium(env), fSubsessionsHead(NULL), fSubsessionsTail(NULL),
     fConnectionEndpointName(NULL), fMaxPlayEndTime(0.0) {
+  fSourceFilterAddr.s_addr = 0;
+
   // Get our host name, and use this for the RTCP CNAME:
   const unsigned maxCNAMElen = 100;
   char CNAME[maxCNAMElen+1];
@@ -86,7 +88,6 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     //##### We should really check for: 
     // - "a=control:" attributes (to set the URL for aggregate control)
     // - the correct SDP version (v=0)
-    // - a "c=..." line specifying a session-level multicast address
     if (sdpLine[0] == 'm') break;
     sdpLine = nextSDPLine;
     if (sdpLine == NULL) break; // there are no m= lines at all 
@@ -94,6 +95,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     // Check for various special SDP lines that we understand:
     if (parseSDPLine_c(sdpLine)) continue;
     if (parseSDPAttribute_range(sdpLine)) continue;
+    if (parseSDPAttribute_source_filter(sdpLine)) continue;
   }
     
   while (sdpLine != NULL) {
@@ -154,6 +156,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
       if (subsession->parseSDPAttribute_control(sdpLine)) continue;
       if (subsession->parseSDPAttribute_range(sdpLine)) continue;
       if (subsession->parseSDPAttribute_fmtp(sdpLine)) continue;
+      if (subsession->parseSDPAttribute_source_filter(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_mct_slap(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_dimensions(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_framerate(sdpLine)) continue;
@@ -262,6 +265,39 @@ Boolean MediaSession::parseSDPAttribute_range(char const* sdpLine) {
   }
 
   return parseSuccess;
+}
+
+static Boolean parseSourceFilterAttribute(char const* sdpLine,
+					  struct in_addr& sourceAddr) {
+  // Check for a "a=source-filter:incl IN IP4 <something> <source>" line.
+  // Note: At present, we don't check that <something> really matches
+  // one of our multicast addresses.  We also don't support more than
+  // one <source> #####
+  Boolean result = False; // until we succeed 
+  char* sourceName = strDupSize(sdpLine); // ensures we have enough space
+  do {
+    if (sscanf(sdpLine, "a=source-filter: incl IN IP4 %*s %s",
+	       sourceName) != 1) break;
+
+    // Now, convert this name to an address, if we can:
+    NetAddressList addresses(sourceName);
+    if (addresses.numAddresses() == 0) break;
+
+    netAddressBits sourceAddrBits
+      = *(netAddressBits*)(addresses.firstAddress()->data());
+    if (sourceAddrBits == 0) break;
+
+    sourceAddr.s_addr = sourceAddrBits;
+    result = True;
+  } while (0);
+
+  delete sourceName;
+  return result;
+}
+
+Boolean MediaSession
+::parseSDPAttribute_source_filter(char const* sdpLine) {
+  return parseSourceFilterAttribute(sdpLine, fSourceFilterAddr);
 }
 
 char* MediaSession::lookupPayloadFormat(unsigned char rtpPayloadType,
@@ -430,6 +466,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fClientPortNum(0), fRTPPayloadFormat(0xFF),
     fSavedSDPLines(NULL), fMediumName(NULL), fCodecName(NULL),
     fRTPTimestampFrequency(0), fControlPath(NULL),
+    fSourceFilterAddr(parent.sourceFilterAddr()),
     fAuxiliarydatasizelength(0), fConstantduration(0), fConstantsize(0),
     fCtsdeltalength(0), fDe_interleavebuffersize(0), fDtsdeltalength(0),
     fIndexdeltalength(0), fIndexlength(0), fMaxdisplacement(0),
@@ -498,7 +535,12 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
         // This could get changed later, as a result of a RTSP "SETUP"
     while (1) {
       unsigned short rtpPortNum = fClientPortNum&~1;
-      fRTPSocket = new Groupsock(env(), tempAddr, rtpPortNum, 255);
+      if (isSSM()) {
+	fRTPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr,
+				   rtpPortNum);
+      } else {
+	fRTPSocket = new Groupsock(env(), tempAddr, rtpPortNum, 255);
+      }
       if (fRTPSocket == NULL) {
 	env().setResultMsg("Failed to create RTP socket");
 	break;
@@ -524,7 +566,16 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 
     // Set our RTCP port to be the RTP port +1
     unsigned short const rtcpPortNum = fClientPortNum + 1;
-    fRTCPSocket = new Groupsock(env(), tempAddr, rtcpPortNum, 255);
+    if (isSSM()) {
+      fRTCPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr,
+				  rtcpPortNum);
+      // Also, send RTCP packets back to the source via unicast:
+      if (fRTCPSocket != NULL) {
+	fRTCPSocket->changeDestinationParameters(fSourceFilterAddr,0,~0);
+      }
+    } else {
+      fRTCPSocket = new Groupsock(env(), tempAddr, rtcpPortNum, 255);
+    }
     if (fRTCPSocket == NULL) {
       char tmpBuf[100];
       sprintf(tmpBuf, "Failed to create RTCP socket (port %d)",
@@ -749,7 +800,8 @@ void MediaSubsession::setDestinations(unsigned defaultDestAddress) {
     Port destPort(serverPortNum);
     fRTPSocket->changeDestinationParameters(destAddr, destPort, destTTL);
   }
-  if (fRTCPSocket != NULL) {
+  if (fRTCPSocket != NULL && !isSSM()) {
+    // Note: For SSM sessions, the dest address for RTCP was already set.
     Port destPort(serverPortNum+1);
     fRTCPSocket->
       changeDestinationParameters(destAddr, destPort, destTTL);
@@ -905,6 +957,11 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
   } while (0);
 
   return False;
+}
+
+Boolean MediaSubsession
+::parseSDPAttribute_source_filter(char const* sdpLine) {
+  return parseSourceFilterAttribute(sdpLine, fSourceFilterAddr);
 }
 
 Boolean MediaSubsession::parseSDPAttribute_x_mct_slap(char const* sdpLine) {

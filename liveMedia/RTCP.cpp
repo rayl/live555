@@ -123,34 +123,37 @@ static unsigned const preferredPacketSize = 1000; // bytes
 RTCPInstance::RTCPInstance(UsageEnvironment& env, Groupsock* RTCPgs,
 			   unsigned totSessionBW,
 			   unsigned char const* cname,
-			   RTPSink const* sink, RTPSource const* source)
+			   RTPSink const* sink, RTPSource const* source,
+			   Boolean isSSMSource)
   : Medium(env), fRTCPInterface(this, RTCPgs), fTotSessionBW(totSessionBW),
-    fSink(sink), fSource(source),
+    fSink(sink), fSource(source), fIsSSMSource(isSSMSource),
     fCNAME(RTCP_SDES_CNAME, cname), fOutgoingReportCount(1),
     fAveRTCPSize(0), fIsInitial(1), fPrevNumMembers(0),
     fLastSentSize(0), fLastReceivedSize(0), fLastReceivedSSRC(0),
     fTypeOfEvent(EVENT_UNKNOWN), fTypeOfPacket(PACKET_UNKNOWN_TYPE),
-    fHaveJustSentPacket(False),
+    fHaveJustSentPacket(False), fLastPacketSentSize(0),
     fByeHandlerTask(NULL), fByeHandlerClientData(NULL) {
 #ifdef DEBUG_PRINT
-    fprintf(stderr, "RTCPInstance[%p]::RTCPInstance()\n", this);
+  fprintf(stderr, "RTCPInstance[%p]::RTCPInstance()\n", this);
 #endif
-      double timeNow = dTimeNow();
-      fPrevReportTime = fNextReportTime = timeNow;
+  if (isSSMSource) RTCPgs->multicastSendOnly(); // don't receive multicast
+    
+  double timeNow = dTimeNow();
+  fPrevReportTime = fNextReportTime = timeNow;
 
-      fKnownMembers = new RTCPMemberDatabase;
-      fInBuf = new unsigned char[maxPacketSize];
-      fOutBuf = new OutPacketBuffer(preferredPacketSize, maxPacketSize);
-      if (fKnownMembers == NULL || fOutBuf == NULL) return;
-
-      // Arrange to handle incoming reports from others:
-      TaskScheduler::BackgroundHandlerProc* handler
-	= (TaskScheduler::BackgroundHandlerProc*)&incomingReportHandler;
-      fRTCPInterface.startNetworkReading(handler);
-
-      // Send our first report.
-      fTypeOfEvent = EVENT_REPORT;
-      onExpire(this);
+  fKnownMembers = new RTCPMemberDatabase;
+  fInBuf = new unsigned char[maxPacketSize];
+  fOutBuf = new OutPacketBuffer(preferredPacketSize, maxPacketSize);
+  if (fKnownMembers == NULL || fOutBuf == NULL) return;
+  
+  // Arrange to handle incoming reports from others:
+  TaskScheduler::BackgroundHandlerProc* handler
+    = (TaskScheduler::BackgroundHandlerProc*)&incomingReportHandler;
+  fRTCPInterface.startNetworkReading(handler);
+  
+  // Send our first report.
+  fTypeOfEvent = EVENT_REPORT;
+  onExpire(this);
 }
 
 RTCPInstance::~RTCPInstance() {
@@ -174,8 +177,10 @@ RTCPInstance* RTCPInstance::createNew(UsageEnvironment& env, Groupsock* RTCPgs,
 				      unsigned totSessionBW,
 				      unsigned char const* cname,
 				      RTPSink const* sink,
-				      RTPSource const* source) {
-  return new RTCPInstance(env, RTCPgs, totSessionBW, cname, sink, source);
+				      RTPSource const* source,
+				      Boolean isSSMSource) {
+  return new RTCPInstance(env, RTCPgs, totSessionBW, cname, sink, source,
+			  isSSMSource);
 }
 
 Boolean RTCPInstance::lookupByName(UsageEnvironment& env,
@@ -246,17 +251,26 @@ void RTCPInstance::incomingReportHandler1() {
       break;
     }
 
-    // Ignore packets looped-back from ourself:
+    // Ignore the packet if it was looped-back from ourself:
     if (RTCPgs()->wasLoopedBackFromUs(envir(), fromAddress)) {
       // However, we still want to handle incoming RTCP packets from
       // *other processes* on the same machine.  To distinguish this
       // case from a true loop-back, check whether we've just sent a
-      // packet:
-      if (fHaveJustSentPacket) {
+      // packet of the same size.  (This check isn't perfect, but it seems
+      // to be the best we can do.)
+      if (fHaveJustSentPacket && fLastPacketSentSize == packetSize) {
 	// This is a true loop-back:
 	fHaveJustSentPacket = False;
 	break; // ignore this packet
       }
+    }
+
+    if (fIsSSMSource) {
+      // This packet was received via unicast.  'Reflect' it by resending
+      // it to the multicast group:
+      fRTCPInterface.sendPacket(pkt, packetSize);
+      fHaveJustSentPacket = True;
+      fLastPacketSentSize = packetSize;
     }
 
 #ifdef DEBUG_PRINT
@@ -472,6 +486,7 @@ void RTCPInstance::sendBuiltPacket() {
 
   fLastSentSize = IP_UDP_HDR_SIZE + reportSize;
   fHaveJustSentPacket = True;
+  fLastPacketSentSize = reportSize;
 }
 
 int RTCPInstance::checkNewSSRC() {

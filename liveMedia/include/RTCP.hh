@@ -47,7 +47,8 @@ public:
 				 unsigned totSessionBW, /* in kbps */
 				 unsigned char const* cname,
 				 RTPSink const* sink,
-				 RTPSource const* source);
+				 RTPSource const* source,
+				 Boolean isSSMSource = False);
 
   static Boolean lookupByName(UsageEnvironment& env, char const* instanceName,
                               RTCPInstance*& resultInstance);
@@ -67,7 +68,8 @@ public:
 protected:
   RTCPInstance(UsageEnvironment& env, Groupsock* RTPgs, unsigned totSessionBW,
 	       unsigned char const* cname,
-	       RTPSink const* sink, RTPSource const* source);
+	       RTPSink const* sink, RTPSource const* source,
+	       Boolean isSSMSource);
       // called only by createNew()
   virtual ~RTCPInstance();
 
@@ -102,6 +104,7 @@ private:
   unsigned fTotSessionBW;
   RTPSink const* fSink;
   RTPSource const* fSource;
+  Boolean fIsSSMSource;
 
   SDESItem fCNAME;
   RTCPMemberDatabase* fKnownMembers;
@@ -119,6 +122,7 @@ private:
   int fTypeOfEvent;
   int fTypeOfPacket;
   Boolean fHaveJustSentPacket;
+  unsigned fLastPacketSentSize;
 
   TaskFunc* fByeHandlerTask;
   void* fByeHandlerClientData;

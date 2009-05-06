@@ -45,6 +45,9 @@ public:
   float& playEndTime() { return fMaxPlayEndTime; }
   char* connectionEndpointName() const { return fConnectionEndpointName; }
   char const* CNAME() const { return fCNAME; }
+  struct in_addr const& sourceFilterAddr() const {
+    return fSourceFilterAddr;
+  }
 
   Boolean initiateByMediaType(char const* mimeType,
 			      MediaSubsession*& resultSubsession,
@@ -67,6 +70,7 @@ private:
   Boolean parseSDPLine(char const* input, char const*& nextLine);
   Boolean parseSDPLine_c(char const* sdpLine);
   Boolean parseSDPAttribute_range(char const* sdpLine);
+  Boolean parseSDPAttribute_source_filter(char const* sdpLine);
 
   static char* lookupPayloadFormat(unsigned char rtpPayloadType,
 				   unsigned& rtpTimestampFrequency);
@@ -84,6 +88,7 @@ private:
   // Fields set from a SDP description:
   char* fConnectionEndpointName;
   float fMaxPlayEndTime;
+  struct in_addr fSourceFilterAddr; // used for SSM
 };
 
 
@@ -111,6 +116,7 @@ public:
   char const* mediumName() const { return fMediumName; }
   char const* codecName() const { return fCodecName; }
   char const* controlPath() const { return fControlPath; }
+  Boolean isSSM() const { return fSourceFilterAddr.s_addr != 0; }
 
   int mctSLAPSessionId() const { return fMCT_SLAP_SessionId; }
   unsigned mctSLAPStagger() const { return fMCT_SLAP_Stagger; }
@@ -196,6 +202,7 @@ private:
   Boolean parseSDPAttribute_control(char const* sdpLine);
   Boolean parseSDPAttribute_range(char const* sdpLine);
   Boolean parseSDPAttribute_fmtp(char const* sdpLine);
+  Boolean parseSDPAttribute_source_filter(char const* sdpLine);
   Boolean parseSDPAttribute_x_mct_slap(char const* sdpLine);
   Boolean parseSDPAttribute_x_dimensions(char const* sdpLine);
   Boolean parseSDPAttribute_x_framerate(char const* sdpLine);
@@ -215,6 +222,7 @@ private:
   char* fCodecName;
   unsigned fRTPTimestampFrequency;
   char* fControlPath;
+  struct in_addr fSourceFilterAddr; // used for SSM
 
   // MPEG-4-specific parameters:
   unsigned fAuxiliarydatasizelength, fConstantduration, fConstantsize;
