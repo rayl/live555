@@ -217,12 +217,6 @@ void RTPReceptionStats::initSeqNum(unsigned short initialSeqNum) {
     fHaveSeenInitialSequenceNumber = True;
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 #ifndef MILLION
 #define MILLION 1000000
 #endif
@@ -261,7 +255,7 @@ void RTPReceptionStats
 
   // Record the inter-packet delay
   struct timeval timeNow;
-  gettimeofday(&timeNow, &Idunno);
+  gettimeofday(&timeNow, NULL);
   if (fLastPacketReceptionTime.tv_sec != 0
       || fLastPacketReceptionTime.tv_usec != 0) {
     unsigned gap
@@ -356,7 +350,7 @@ void RTPReceptionStats::noteIncomingSR(unsigned ntpTimestampMSW,
   fLastReceivedSR_NTPmsw = ntpTimestampMSW;
   fLastReceivedSR_NTPlsw = ntpTimestampLSW;
 
-  gettimeofday(&fLastReceivedSR_time, &Idunno);
+  gettimeofday(&fLastReceivedSR_time, NULL);
 
   // Use this SR to update time synchronization information:
   fSyncTimestamp = rtpTimestamp;

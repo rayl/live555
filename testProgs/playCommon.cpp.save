@@ -83,12 +83,9 @@ char* proxyServerName = NULL;
 unsigned short proxyServerPortNum = 0;
 unsigned char desiredAudioRTPPayloadFormat = 0;
 char* mimeSubtype = NULL;
-unsigned short movieWidth = 240; // default
-Boolean movieWidthOptionSet = False;
-unsigned short movieHeight = 180; // default
-Boolean movieHeightOptionSet = False;
-unsigned movieFPS = 15; // default
-Boolean movieFPSOptionSet = False;
+unsigned short movieWidth = 240;
+unsigned short movieHeight = 180;
+unsigned movieFPS = 15;
 char* fileNamePrefix = "";
 unsigned fileSinkBufferSize = 20000;
 unsigned socketInputBufferSize = 0;
@@ -99,6 +96,11 @@ char* destRTSPURL = NULL;
 unsigned qosMeasurementIntervalMS = 0; // 0 means: Don't output QOS data
 unsigned statusCode = 0;
 
+#ifdef BSD
+static struct timezone Idunno;
+#else
+static int Idunno;
+#endif
 struct timeval startTime;
 
 void usage() {
@@ -120,7 +122,7 @@ int main(int argc, char** argv) {
 
   progName = argv[0];
 
-  gettimeofday(&startTime, NULL);
+  gettimeofday(&startTime, &Idunno);
 
 #ifdef USE_SIGNALS
   // Allow ourselves to be shut down gracefully by a SIGHUP or a SIGUSR1:
@@ -317,29 +319,26 @@ int main(int argc, char** argv) {
       break;
     }
 
-    case 'w': { // specify a width (pixels) for an output QuickTime or AVI movie
+    case 'w': { // specify a width (pixels) for an output QuickTime movie
       if (sscanf(argv[2], "%hu", &movieWidth) != 1) {
 	usage();
       }
-      movieWidthOptionSet = True;
       ++argv; --argc;
       break;
     }
 
-    case 'h': { // specify a height (pixels) for an output QuickTime or AVI movie
+    case 'h': { // specify a height (pixels) for an output QuickTime movie
       if (sscanf(argv[2], "%hu", &movieHeight) != 1) {
 	usage();
       }
-      movieHeightOptionSet = True;
       ++argv; --argc;
       break;
     }
 
-    case 'f': { // specify a frame rate (per second) for an output QT or AVI movie
+    case 'f': { // specify a frame rate (per second) for an output QT movie
       if (sscanf(argv[2], "%u", &movieFPS) != 1) {
 	usage();
       }
-      movieFPSOptionSet = True;
       ++argv; --argc;
       break;
     }
@@ -412,30 +411,13 @@ int main(int argc, char** argv) {
     ++argv; --argc;
   }
   if (argc != 2) usage();
-  if (outputQuickTimeFile && outputAVIFile) {
-    *env << "The -i and -q (or -4) flags cannot both be used!\n";
-    usage();
-  }
-  Boolean outputCompositeFile = outputQuickTimeFile || outputAVIFile;
-  if (!createReceivers && outputCompositeFile) {
+  if (!createReceivers && (outputQuickTimeFile || outputAVIFile)) {
     *env << "The -r and -q (or -4 or -i) flags cannot both be used!\n";
     usage();
   }
-  if (destRTSPURL != NULL && (!createReceivers || outputCompositeFile)) {
+  if (destRTSPURL != NULL && (!createReceivers || outputQuickTimeFile || outputAVIFile)) {
     *env << "The -R flag cannot be used with -r, -q, or -i!\n";
     usage();
-  }
-  if (outputCompositeFile && !movieWidthOptionSet) {
-    *env << "Warning: The -q, -4 or -i option was used, but not -w.  Assuming a video width of "
-	 << movieWidth << " pixels\n";
-  }
-  if (outputCompositeFile && !movieHeightOptionSet) {
-    *env << "Warning: The -q, -4 or -i option was used, but not -h.  Assuming a video height of "
-	 << movieHeight << " pixels\n";
-  }
-  if (outputCompositeFile && !movieFPSOptionSet) {
-    *env << "Warning: The -q, -4 or -i option was used, but not -f.  Assuming a video frame rate of "
-	 << movieFPS << " frames-per-second\n";
   }
   if (audioOnly && videoOnly) {
     *env << "The -a and -v flags cannot both be used!\n";
@@ -642,7 +624,7 @@ int main(int argc, char** argv) {
       unsigned headerSize;
       unsigned char* headerData = RealGenerateRMFFHeader(session, headerSize);
       struct timeval timeNow;
-      gettimeofday(&timeNow, NULL);
+      gettimeofday(&timeNow, &Idunno);
       fileSink->addData(headerData, headerSize, timeNow);
       delete[] headerData;
 
@@ -727,7 +709,7 @@ int main(int argc, char** argv) {
 	    unsigned char* configData
 	      = parseGeneralConfigStr(subsession->fmtp_config(), configLen);
 	    struct timeval timeNow;
-	    gettimeofday(&timeNow, NULL);
+	    gettimeofday(&timeNow, &Idunno);
 	    fileSink->addData(configData, configLen, timeNow);
 	    delete[] configData;
 	  }
@@ -880,7 +862,7 @@ void subsessionAfterPlaying(void* clientData) {
 
 void subsessionByeHandler(void* clientData) {
   struct timeval timeNow;
-  gettimeofday(&timeNow, NULL);
+  gettimeofday(&timeNow, &Idunno);
   unsigned secsDiff = timeNow.tv_sec - startTime.tv_sec;
 
   MediaSubsession* subsession = (MediaSubsession*)clientData;
@@ -961,7 +943,7 @@ static unsigned nextQOSMeasurementUSecs;
 static void scheduleNextQOSMeasurement() {
   nextQOSMeasurementUSecs += qosMeasurementIntervalMS*1000;
   struct timeval timeNow;
-  gettimeofday(&timeNow, NULL);
+  gettimeofday(&timeNow, &Idunno);
   unsigned timeNowUSecs = timeNow.tv_sec*1000000 + timeNow.tv_usec;
   unsigned usecsToDelay = nextQOSMeasurementUSecs < timeNowUSecs ? 0
     : nextQOSMeasurementUSecs - timeNowUSecs;
@@ -972,7 +954,7 @@ static void scheduleNextQOSMeasurement() {
 
 static void periodicQOSMeasurement(void* /*clientData*/) {
   struct timeval timeNow;
-  gettimeofday(&timeNow, NULL);
+  gettimeofday(&timeNow, &Idunno);
 
   for (qosMeasurementRecord* qosRecord = qosRecordHead;
        qosRecord != NULL; qosRecord = qosRecord->fNext) {
@@ -1043,7 +1025,7 @@ void qosMeasurementRecord
 void beginQOSMeasurement() {
   // Set up a measurement record for each active subsession:
   struct timeval startTime;
-  gettimeofday(&startTime, NULL);
+  gettimeofday(&startTime, &Idunno);
   nextQOSMeasurementUSecs = startTime.tv_sec*1000000 + startTime.tv_usec;
   qosMeasurementRecord* qosRecordTail = NULL;
   MediaSubsessionIterator iter(*session);
@@ -1240,7 +1222,7 @@ void checkForPacketArrival(void* /*clientData*/) {
   }
   if (notifyTheUser) {
     struct timeval timeNow;
-    gettimeofday(&timeNow, NULL);
+    gettimeofday(&timeNow, &Idunno);
 	char timestampStr[100];
 	sprintf(timestampStr, "%ld%03ld", timeNow.tv_sec, timeNow.tv_usec/1000);
     *env << (syncStreams ? "Synchronized d" : "D")

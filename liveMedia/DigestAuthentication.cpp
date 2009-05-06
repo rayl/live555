@@ -59,12 +59,6 @@ void Authenticator::setRealmAndNonce(char const* realm, char const* nonce) {
   assignRealmAndNonce(realm, nonce);
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 void Authenticator::setRealmAndRandomNonce(char const* realm) {
   resetRealmAndNonce();
 
@@ -73,7 +67,7 @@ void Authenticator::setRealmAndRandomNonce(char const* realm) {
     struct timeval timestamp;
     unsigned counter;
   } seedData;
-  gettimeofday(&seedData.timestamp, &Idunno);
+  gettimeofday(&seedData.timestamp, NULL);
   static unsigned counter = 0;
   seedData.counter = ++counter;
 

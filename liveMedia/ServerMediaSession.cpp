@@ -52,12 +52,6 @@ Boolean ServerMediaSession
   return True;
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 static char const* const libNameStr = "LIVE.COM Streaming Media v";
 char const* const libVersionStr = LIVEMEDIA_LIBRARY_VERSION_STRING;
 
@@ -75,7 +69,7 @@ ServerMediaSession::ServerMediaSession(UsageEnvironment& env,
     = strDup(description == NULL ? libNameStr : description);
   fMiscSDPLines = strDup(miscSDPLines == NULL ? "" : miscSDPLines);
 
-  gettimeofday(&fCreationTime, &Idunno);
+  gettimeofday(&fCreationTime, NULL);
 }
 
 ServerMediaSession::~ServerMediaSession() {

@@ -83,18 +83,12 @@ private:
 
 ////////// AC3AudioStreamFramer implementation //////////
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 AC3AudioStreamFramer::AC3AudioStreamFramer(UsageEnvironment& env,
 					   FramedSource* inputSource,
 					   unsigned char streamCode)
   : FramedFilter(env, inputSource), fOurStreamCode(streamCode) {
   // Use the current wallclock time as the initial 'presentation time':
-  gettimeofday(&fNextFramePresentationTime, &Idunno);
+  gettimeofday(&fNextFramePresentationTime, NULL);
 
   fParser = new AC3AudioStreamParser(this, inputSource);
 }

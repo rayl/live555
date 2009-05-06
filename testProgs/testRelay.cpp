@@ -21,9 +21,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <liveMedia.hh>
 #include "BasicUsageEnvironment.hh"
 #include "GroupsockHelper.hh"
-#if 0
-#include "Groupsock.hh"
-#endif
 
 UsageEnvironment* env;
 

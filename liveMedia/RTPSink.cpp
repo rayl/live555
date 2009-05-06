@@ -43,12 +43,6 @@ Boolean RTPSink::isRTPSink() const {
   return True;
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 RTPSink::RTPSink(UsageEnvironment& env,
 		 Groupsock* rtpGS, unsigned char rtpPayloadType,
 		 unsigned rtpTimestampFrequency,
@@ -61,7 +55,7 @@ RTPSink::RTPSink(UsageEnvironment& env,
     fNumChannels(numChannels) {
   fRTPPayloadFormatName
     = strDup(rtpPayloadFormatName == NULL ? "???" : rtpPayloadFormatName);
-  gettimeofday(&fCreationTime, &Idunno);
+  gettimeofday(&fCreationTime, NULL);
   fTotalOctetCountStartTime = fCreationTime;
 
   fSeqNo = (unsigned short)our_random();
@@ -109,7 +103,7 @@ u_int32_t RTPSink::timevalToTimestamp(struct timeval tv) const {
 void RTPSink::getTotalBitrate(unsigned& outNumBytes,
 			      double& outElapsedTime) {
   struct timeval timeNow;
-  gettimeofday(&timeNow, &Idunno);
+  gettimeofday(&timeNow, NULL);
 
   outNumBytes = fTotalOctetCount;
   outElapsedTime = (double)(timeNow.tv_sec-fTotalOctetCountStartTime.tv_sec)
@@ -246,7 +240,7 @@ void RTPTransmissionStats::noteIncomingRR(unsigned lossStats,
     fOldLastPacketNumReceived = fLastPacketNumReceived;
     fOldTotNumPacketsLost = fTotNumPacketsLost;
   }
-  gettimeofday(&fTimeReceived, &Idunno);
+  gettimeofday(&fTimeReceived, NULL);
 
   fPacketLossRatio = lossStats>>24;
   fTotNumPacketsLost = lossStats&0xFFFFFF;

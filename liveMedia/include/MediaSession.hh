@@ -123,6 +123,7 @@ public:
   MediaSession const& parentSession() const { return fParent; }
 
   unsigned short clientPortNum() const { return fClientPortNum; }
+  unsigned char rtpPayloadFormat() const { return fRTPPayloadFormat; }
   char const* savedSDPLines() const { return fSavedSDPLines; }
   char const* mediumName() const { return fMediumName; }
   char const* codecName() const { return fCodecName; }

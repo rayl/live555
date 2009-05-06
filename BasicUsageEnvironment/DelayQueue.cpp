@@ -209,12 +209,7 @@ void DelayQueue::synchronize() {
 EventTime TimeNow() {
   struct timeval tvNow;
 
-#ifdef BSD
-  struct timezone Idunno;
-#else
-  int Idunno;
-#endif
-  gettimeofday(&tvNow, &Idunno);
+  gettimeofday(&tvNow, NULL);
 
   return EventTime(tvNow.tv_sec, tvNow.tv_usec);
 }

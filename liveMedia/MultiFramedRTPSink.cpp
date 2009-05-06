@@ -177,19 +177,13 @@ void MultiFramedRTPSink
 			   presentationTime, durationInMicroseconds);
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 void MultiFramedRTPSink
 ::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
 		     struct timeval presentationTime,
 		     unsigned durationInMicroseconds) {
   if (fIsFirstPacket) {
     // Record the fact that we're starting to play now:
-    gettimeofday(&fNextSendTime, &Idunno);
+    gettimeofday(&fNextSendTime, NULL);
   }
 
   if (numTruncatedBytes > 0) {
@@ -340,7 +334,7 @@ void MultiFramedRTPSink::sendPacketIfNecessary() {
     // is due to start playing, then make sure that we wait this long before
     // sending the next packet.
     struct timeval timeNow;
-    gettimeofday(&timeNow, &Idunno);
+    gettimeofday(&timeNow, NULL);
     int uSecondsToGo;
     if (fNextSendTime.tv_sec < timeNow.tv_sec) {
       uSecondsToGo = 0; // prevents integer underflow if too far behind

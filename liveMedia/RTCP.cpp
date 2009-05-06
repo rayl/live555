@@ -24,12 +24,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// RTCPMemberDatabase //////////
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 class RTCPMemberDatabase {
 public:
   RTCPMemberDatabase()
@@ -113,7 +107,7 @@ void RTCPMemberDatabase::reapOldMembers(unsigned threshold) {
 
 static double dTimeNow() {
     struct timeval timeNow;
-    gettimeofday(&timeNow, &Idunno);
+    gettimeofday(&timeNow, NULL);
     return (double) (timeNow.tv_sec + timeNow.tv_usec/1000000.0);
 }
 
@@ -567,7 +561,7 @@ void RTCPInstance::addSR() {
 
   // Insert the NTP and RTP timestamps for the 'wallclock time':
   struct timeval timeNow;
-  gettimeofday(&timeNow, &Idunno);
+  gettimeofday(&timeNow, NULL);
   fOutBuf->enqueueWord(timeNow.tv_sec + 0x83AA7E80);
       // NTP timestamp most-significant word (1970 epoch -> 1900 epoch)
   double fractionalPart = (timeNow.tv_usec/15625.0)*0x04000000; // 2^32/10^6
@@ -674,7 +668,7 @@ RTCPInstance::enqueueReportBlock(RTPReceptionStats* stats) {
   // Figure out how long has elapsed since the last SR rcvd from this src:
   struct timeval const& LSRtime = stats->lastReceivedSR_time(); // "last SR"
   struct timeval timeNow, timeSinceLSR;
-  gettimeofday(&timeNow, &Idunno);
+  gettimeofday(&timeNow, NULL);
   if (timeNow.tv_usec < LSRtime.tv_usec) {
     timeNow.tv_usec += 1000000;
     timeNow.tv_sec -= 1;

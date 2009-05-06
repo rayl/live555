@@ -657,12 +657,7 @@ netAddressBits ourSourceAddressForMulticast(UsageEnvironment& env) {
 	// Use our newly-discovered IP address, and the current time,
 	// to initialize the random number generator's seed:
 	struct timeval timeNow;
-#ifdef BSD
-	struct timezone Idunno;
-#else
-	int Idunno;
-#endif
-	gettimeofday(&timeNow, &Idunno);
+	gettimeofday(&timeNow, NULL);
 	unsigned seed = ourAddress^timeNow.tv_sec^timeNow.tv_usec;
 	our_srandom(seed);
 
@@ -683,12 +678,7 @@ netAddressBits chooseRandomIPv4SSMAddress(UsageEnvironment& env) {
 
 char const* timestampString() {
 	struct timeval tvNow;
-#ifdef BSD
-	struct timezone Idunno;
-#else
-	int Idunno;
-#endif
-	gettimeofday(&tvNow, &Idunno);
+	gettimeofday(&tvNow, NULL);
 
 	static char timeString[9]; // holds hh:mm:ss plus trailing '\0'
 	char const* ctimeResult = ctime((time_t*)&tvNow.tv_sec);

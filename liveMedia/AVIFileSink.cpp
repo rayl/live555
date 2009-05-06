@@ -27,29 +27,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ////////// AVISubsessionIOState ///////////
 // A structure used to represent the I/O state of each input 'subsession':
 
-#if 0
-class ChunkDescriptor {
-public:
-  ChunkDescriptor(unsigned offsetInFile, unsigned size,
-		  unsigned frameSize, unsigned frameDuration,
-		  struct timeval presentationTime);
-  virtual ~ChunkDescriptor();
-
-  ChunkDescriptor* extendChunk(unsigned newOffsetInFile, unsigned newSize,
-			       unsigned newFrameSize,
-			       unsigned newFrameDuration,
-			       struct timeval newPresentationTime);
-      // this may end up allocating a new chunk instead
-public:
-  ChunkDescriptor* fNextChunk;
-  unsigned fOffsetInFile;
-  unsigned fNumFrames;
-  unsigned fFrameSize;
-  unsigned fFrameDuration;
-  struct timeval fPresentationTime; // of the start of the data
-};
-#endif
-
 class SubsessionBuffer {
 public:
   SubsessionBuffer(unsigned bufferSize)
@@ -99,41 +76,25 @@ public:
 
   unsigned short fLastPacketRTPSeqNum;
   Boolean fOurSourceIsActive;
-  Boolean fIsVideo, fIsAudio;
+  struct timeval fPrevPresentationTime;
+  unsigned fMaxBytesPerSecond;
+  Boolean fIsVideo, fIsAudio, fIsByteSwappedAudio;
   unsigned fAVISubsessionTag;
   unsigned fAVICodecHandlerType;
+  unsigned fAVISamplingFrequency; // for audio
+  u_int16_t fWAVCodecTag; // for audio
   unsigned fAVIScale;
   unsigned fAVIRate;
   unsigned fAVISize;
   unsigned fNumFrames;
   unsigned fSTRHFrameCountPosition;
 
-#if 0
-  ChunkDescriptor *fHeadChunk, *fTailChunk;
-  unsigned fNumChunks;
-
-#endif
 private:
   void useFrame(SubsessionBuffer& buffer);
-
-private:
-  // A structure used for temporarily storing frame state:
-  struct {
-    unsigned frameSize;
-    struct timeval presentationTime;
-    unsigned destFileOffset;
-    unsigned packetSizes[256];
-  } fPrevFrameState;
 };
 
 
 ////////// AVIFileSink implementation //////////
-
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
 
 AVIFileSink::AVIFileSink(UsageEnvironment& env,
 			 MediaSession& inputSession,
@@ -303,7 +264,7 @@ void AVIFileSink::onRTCPBye(void* clientData) {
   AVISubsessionIOState* ioState = (AVISubsessionIOState*)clientData;
 
   struct timeval timeNow;
-  gettimeofday(&timeNow, &Idunno);
+  gettimeofday(&timeNow, NULL);
   unsigned secsDiff
     = timeNow.tv_sec - ioState->fOurSink.fStartTime.tv_sec;
 
@@ -323,6 +284,7 @@ void AVIFileSink::completeOutputFile() {
 
   // Update various AVI 'size' fields to take account of the codec data that
   // we've now written to the file:
+  unsigned maxBytesPerSecond = 0;
   unsigned numVideoFrames = 0;
   unsigned numAudioFrames = 0;
 
@@ -334,6 +296,8 @@ void AVIFileSink::completeOutputFile() {
       = (AVISubsessionIOState*)(subsession->miscPtr); 
     if (ioState == NULL) continue;
 
+    maxBytesPerSecond += ioState->fMaxBytesPerSecond;
+
     setWord(ioState->fSTRHFrameCountPosition, ioState->fNumFrames);
     if (ioState->fIsVideo) numVideoFrames = ioState->fNumFrames;
     else if (ioState->fIsAudio) numAudioFrames = ioState->fNumFrames;
@@ -343,6 +307,7 @@ void AVIFileSink::completeOutputFile() {
   fRIFFSizeValue += fNumBytesWritten;
   setWord(fRIFFSizePosition, fRIFFSizeValue);
 
+  setWord(fAVIHMaxBytesPerSecondPosition, maxBytesPerSecond);
   setWord(fAVIHFrameCountPosition,
 	  numVideoFrames > 0 ? numVideoFrames : numAudioFrames);
 
@@ -359,11 +324,7 @@ void AVIFileSink::completeOutputFile() {
 AVISubsessionIOState::AVISubsessionIOState(AVIFileSink& sink,
 				     MediaSubsession& subsession)
   : fOurSink(sink), fOurSubsession(subsession),
-    fNumFrames(0)
-#if 0
-    , fHeadChunk(NULL), fTailChunk(NULL), fNumChunks(0)
-#endif
-{
+    fMaxBytesPerSecond(0), fNumFrames(0) {
   fBuffer = new SubsessionBuffer(fOurSink.fBufferSize);
   fPrevBuffer = sink.fPacketLossCompensate
     ? new SubsessionBuffer(fOurSink.fBufferSize) : NULL;
@@ -371,15 +332,12 @@ AVISubsessionIOState::AVISubsessionIOState(AVIFileSink& sink,
   FramedSource* subsessionSource = subsession.readSource();
   fOurSourceIsActive = subsessionSource != NULL;
 
-  fPrevFrameState.presentationTime.tv_sec = 0;
-  fPrevFrameState.presentationTime.tv_usec = 0;
+  fPrevPresentationTime.tv_sec = 0;
+  fPrevPresentationTime.tv_usec = 0;
 }
 
 AVISubsessionIOState::~AVISubsessionIOState() {
   delete fBuffer; delete fPrevBuffer;
-#if 0
-  delete fHeadChunk;
-#endif
 }
 
 void AVISubsessionIOState::setAVIstate(unsigned subsessionIndex) {
@@ -393,6 +351,13 @@ void AVISubsessionIOState::setAVIstate(unsigned subsessionIndex) {
       fAVICodecHandlerType = fourChar('m','j','p','g');
     } else if (strcmp(fOurSubsession.codecName(), "MP4V-ES") == 0) {
       fAVICodecHandlerType = fourChar('D','I','V','X');
+    } else if (strcmp(fOurSubsession.codecName(), "MPV") == 0) {
+      fAVICodecHandlerType = fourChar('m','p','g','1'); // what about MPEG-2?
+    } else if (strcmp(fOurSubsession.codecName(), "H263-1998") == 0 ||
+	       strcmp(fOurSubsession.codecName(), "H263-2000") == 0) {
+      fAVICodecHandlerType = fourChar('H','2','6','3');
+    } else if (strcmp(fOurSubsession.codecName(), "H264") == 0) {
+      fAVICodecHandlerType = fourChar('H','2','6','4');
     } else {
       fAVICodecHandlerType = fourChar('?','?','?','?');
     }
@@ -400,29 +365,44 @@ void AVISubsessionIOState::setAVIstate(unsigned subsessionIndex) {
     fAVIRate = fOurSink.fMovieFPS; // ??? #####
     fAVISize = fOurSink.fMovieWidth*fOurSink.fMovieHeight*3; // ??? #####
   } else if (fIsAudio) {
+    fIsByteSwappedAudio = False; // by default
     fAVISubsessionTag
       = fourChar('0'+subsessionIndex/10,'0'+subsessionIndex%10,'w','b');
     fAVICodecHandlerType = 1; // ??? ####
     unsigned numChannels = fOurSubsession.numChannels();
-    unsigned rtpTimestampFrequency = fOurSubsession.rtpTimestampFrequency();
+    fAVISamplingFrequency = fOurSubsession.rtpTimestampFrequency(); // default
     if (strcmp(fOurSubsession.codecName(), "L16") == 0) {
-      fAVIScale = fAVISize = 2*numChannels; // 2 bytes per sample
-      fAVIRate = fAVISize*rtpTimestampFrequency;
-    } else if (strcmp(fOurSubsession.codecName(), "L8") == 0 ||
-	       strcmp(fOurSubsession.codecName(), "PCMA") == 0 ||
-	       strcmp(fOurSubsession.codecName(), "PCMU") == 0) {
-      fAVIScale = fAVISize = numChannels; // 1 byte per sample
-      fAVIRate = fAVISize*rtpTimestampFrequency;
-    } else {
+      fIsByteSwappedAudio = True; // need to byte-swap data before writing it
+      fWAVCodecTag = 0x0001;
+      fAVIScale = fAVISize = 2*numChannels; // 2 bytes/sample
+      fAVIRate = fAVISize*fAVISamplingFrequency;
+    } else if (strcmp(fOurSubsession.codecName(), "L8") == 0) {
+      fWAVCodecTag = 0x0001;
+      fAVIScale = fAVISize = numChannels; // 1 byte/sample
+      fAVIRate = fAVISize*fAVISamplingFrequency;
+    } else if (strcmp(fOurSubsession.codecName(), "PCMA") == 0) {
+      fWAVCodecTag = 0x0006;
+      fAVIScale = fAVISize = numChannels; // 1 byte/sample
+      fAVIRate = fAVISize*fAVISamplingFrequency;
+    } else if (strcmp(fOurSubsession.codecName(), "PCMU") == 0) {
+      fWAVCodecTag = 0x0007;
+      fAVIScale = fAVISize = numChannels; // 1 byte/sample
+      fAVIRate = fAVISize*fAVISamplingFrequency;
+    } else if (strcmp(fOurSubsession.codecName(), "MPA") == 0) {
+      fWAVCodecTag = 0x0050;
       fAVIScale = fAVISize = 1;
-      fAVIRate = 0; // ??? ####
+      fAVIRate = 0; // ??? #####
+    } else {
+      fWAVCodecTag = 0x0001; // ??? #####
+      fAVIScale = fAVISize = 1;
+      fAVIRate = 0; // ??? #####
     }
   } else { // unknown medium
     fAVISubsessionTag
       = fourChar('0'+subsessionIndex/10,'0'+subsessionIndex%10,'?','?');
     fAVICodecHandlerType = 0;
     fAVIScale = fAVISize = 1;
-    fAVIRate = 0; // ??? ####
+    fAVIRate = 0; // ??? #####
   }
 }
 
@@ -460,14 +440,32 @@ void AVISubsessionIOState::afterGettingFrame(unsigned packetDataSize,
   fOurSink.continuePlaying();
 }
 
-struct timeval lastPresentationTime; //#####@@@@@
 void AVISubsessionIOState::useFrame(SubsessionBuffer& buffer) {
   unsigned char* const frameSource = buffer.dataStart();
   unsigned const frameSize = buffer.bytesInUse();
-#if 0
-  static unsigned maxBytesPerSecond = 0;//#####@@@@@
   struct timeval const& presentationTime = buffer.presentationTime();
-#endif
+  if (fPrevPresentationTime.tv_usec != 0||fPrevPresentationTime.tv_sec != 0) {
+    int uSecondsDiff
+      = (presentationTime.tv_sec - fPrevPresentationTime.tv_sec)*1000000
+      + (presentationTime.tv_usec - fPrevPresentationTime.tv_usec);
+    if (uSecondsDiff > 0) {
+      unsigned bytesPerSecond = (unsigned)((frameSize*1000000.0)/uSecondsDiff);
+      if (bytesPerSecond > fMaxBytesPerSecond) {
+	fMaxBytesPerSecond = bytesPerSecond;
+      }
+    }
+  }
+  fPrevPresentationTime = presentationTime;
+
+  if (fIsByteSwappedAudio) {
+    // We need to swap the 16-bit audio samples from big-endian
+    // to little-endian order, before writing them to a file:
+    for (unsigned i = 0; i < frameSize; i += 2) {
+      unsigned char tmp = frameSource[i];
+      frameSource[i] = frameSource[i+1];
+      frameSource[i+1] = tmp;
+    }
+  }
 
   // Write the data into the file:
   fOurSink.fNumBytesWritten += fOurSink.addWord(fAVISubsessionTag); 
@@ -602,7 +600,8 @@ addFileHeaderEnd;
 addFileHeader1(avih);
     unsigned usecPerFrame = fMovieFPS == 0 ? 0 : 1000000/fMovieFPS;
     size += addWord(usecPerFrame); // dwMicroSecPerFrame
-    size += addWord(fMovieFPS*10000); // dwMaxBytesPerSec (estimate!) #####
+    fAVIHMaxBytesPerSecondPosition = ftell(fOutFid);
+    size += addWord(0); // dwMaxBytesPerSec (fill in later)
     size += addWord(0); // dwPaddingGranularity
     size += addWord(AVIF_TRUSTCKTYPE|AVIF_HASINDEX|AVIF_ISINTERLEAVED); // dwFlags
     fAVIHFrameCountPosition = ftell(fOutFid);
@@ -662,7 +661,26 @@ addFileHeader1(strf);
       // Later, add extra data here (if any) #####
     } else if (fCurrentIOState->fIsAudio) {
       // Add a WAVFORMATEX header:
-      size += addZeroWords(10); // TEMP #####
+      size += addHalfWord(fCurrentIOState->fWAVCodecTag);
+      unsigned numChannels = fCurrentIOState->fOurSubsession.numChannels();
+      size += addHalfWord(numChannels);
+      size += addWord(fCurrentIOState->fAVISamplingFrequency);
+      size += addWord(fCurrentIOState->fAVIRate); // bytes per second
+      size += addHalfWord(fCurrentIOState->fAVISize); // block alignment
+      unsigned bitsPerSample = (fCurrentIOState->fAVISize*8)/numChannels;
+      size += addHalfWord(bitsPerSample);
+      if (strcmp(fCurrentIOState->fOurSubsession.codecName(), "MPA") == 0) {
+	// Assume MPEG layer II audio (not MP3): #####
+	size += addHalfWord(22); // wav_extra_size
+	size += addHalfWord(2); // fwHeadLayer
+	size += addWord(8*fCurrentIOState->fAVIRate); // dwHeadBitrate #####
+	size += addHalfWord(numChannels == 2 ? 1: 8); // fwHeadMode
+	size += addHalfWord(0); // fwHeadModeExt
+	size += addHalfWord(1); // wHeadEmphasis
+	size += addHalfWord(16); // fwHeadFlags
+	size += addWord(0); // dwPTSLow
+	size += addWord(0); // dwPTSHigh
+      }
     }
 addFileHeaderEnd;
 

@@ -341,12 +341,7 @@ PacketWarehouse::PacketWarehouse(unsigned seqNumStagger)
   }
 
   // Initially, set "fLastArrivalTime" to the current time:
-#ifdef BSD
-  struct timezone Idunno;
-#else
-  int Idunno;
-#endif
-  gettimeofday(&fLastArrivalTime, &Idunno);
+  gettimeofday(&fLastArrivalTime, NULL);
 }
 
 PacketWarehouse::~PacketWarehouse() {
@@ -417,13 +412,8 @@ void PacketWarehouse::addNewFrame(unsigned priority,
   desc.frameSize = frameSize;
   desc.priority = priority;
 
-#ifdef BSD
-  struct timezone Idunno;
-#else
-  int Idunno;
-#endif
   struct timeval timeNow;
-  gettimeofday(&timeNow, &Idunno);
+  gettimeofday(&timeNow, NULL);
 
   if (rtpSeqNo == (fLastRTPSeqNo+1)%65536) {
     // We've received consecutive packets, so update the estimate of

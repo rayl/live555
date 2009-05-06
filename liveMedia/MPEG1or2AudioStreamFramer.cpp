@@ -50,12 +50,6 @@ private:
 
 ////////// MPEG1or2AudioStreamFramer implementation //////////
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 MPEG1or2AudioStreamFramer
 ::MPEG1or2AudioStreamFramer(UsageEnvironment& env, FramedSource* inputSource,
 			    Boolean syncWithInputSource)
@@ -63,7 +57,7 @@ MPEG1or2AudioStreamFramer
     fSyncWithInputSource(syncWithInputSource) {
   // Use the current wallclock time as the initial 'presentation time':
   struct timeval timeNow;
-  gettimeofday(&timeNow, &Idunno);
+  gettimeofday(&timeNow, NULL);
   resetPresentationTime(timeNow);
 
   fParser = new MPEG1or2AudioStreamParser(this, inputSource);

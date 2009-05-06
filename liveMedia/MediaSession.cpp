@@ -1042,6 +1042,22 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
 	delete[] fConfig; fConfig = strDup(valueStr);
       } else if (sscanf(line, " mode = %[^; \t\r\n]", valueStr) == 1) {
 	delete[] fMode; fMode = strDup(valueStr);
+      } else {
+	// Some of the above parameters are Boolean.  Check whether the parameter
+	// names appear alone, without a "= 1" at the end:
+	if (sscanf(line, " %[^; \t\r\n]", valueStr) == 1) {
+	  if (strcmp(valueStr, "octet-align") == 0) {
+	    fOctetalign = 1;
+	  } else if (strcmp(valueStr, "cpresent") == 0) {
+            fCpresent = True;
+	  } else if (strcmp(valueStr, "crc") == 0) {
+	    fCRC = 1;
+	  } else if (strcmp(valueStr, "robust-sorting") == 0) {
+	    fRobustsorting = 1;
+	  } else if (strcmp(valueStr, "randomaccessindication") == 0) {
+	    fRandomaccessindication = True;
+	  }
+	}
       }
       delete[] valueStr;
 

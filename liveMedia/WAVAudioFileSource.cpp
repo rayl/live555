@@ -189,12 +189,6 @@ WAVAudioFileSource::~WAVAudioFileSource() {
   CloseInputFile(fFid);
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 void WAVAudioFileSource::doGetNextFrame() {
   if (feof(fFid) || ferror(fFid)) {
     handleClosure(this);
@@ -229,7 +223,7 @@ void WAVAudioFileSource::doGetNextFrame() {
   // Set the 'presentation time' and 'duration' of this frame:
   if (fPresentationTime.tv_sec == 0 && fPresentationTime.tv_usec == 0) {
     // This is the first frame, so use the current time:
-    gettimeofday(&fPresentationTime, &Idunno);
+    gettimeofday(&fPresentationTime, NULL);
   } else {
     // Increment by the play time of the previous data:
     unsigned uSeconds	= fPresentationTime.tv_usec + fLastPlayTime;

@@ -187,12 +187,6 @@ void MultiFramedRTPSource
   fReorderingBuffer->setThresholdTime(uSeconds);
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 #define ADVANCE(n) do { bPacket->skip(n); } while (0)
 
 void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
@@ -265,7 +259,7 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
   
     // Fill in the rest of the packet descriptor, and store it:
     struct timeval timeNow;
-    gettimeofday(&timeNow, &Idunno);
+    gettimeofday(&timeNow, NULL);
     bPacket->assignMiscParams(rtpSeqNo, rtpTimestamp, presentationTime,
 			      hasBeenSyncedUsingRTCP, rtpMarkerBit,
 			      timeNow);
@@ -483,7 +477,7 @@ BufferedPacket* ReorderingPacketBuffer
   // our time threshold has been exceeded, then forget it, and return
   // the head packet instead:
   struct timeval timeNow;
-  gettimeofday(&timeNow, &Idunno);
+  gettimeofday(&timeNow, NULL);
   unsigned uSecondsSinceReceived
     = (timeNow.tv_sec - fHeadPacket->timeReceived().tv_sec)*1000000
     + (timeNow.tv_usec - fHeadPacket->timeReceived().tv_usec);

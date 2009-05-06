@@ -102,6 +102,7 @@ private:
   unsigned short fMovieWidth, fMovieHeight;
   unsigned fMovieFPS;
   unsigned fRIFFSizePosition, fRIFFSizeValue;
+  unsigned fAVIHMaxBytesPerSecondPosition;
   unsigned fAVIHFrameCountPosition;
   unsigned fMoviSizePosition, fMoviSizeValue;
   class AVISubsessionIOState* fCurrentIOState;

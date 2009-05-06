@@ -54,12 +54,6 @@ ByteStreamFileSource::~ByteStreamFileSource() {
   CloseInputFile(fFid);
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 void ByteStreamFileSource::doGetNextFrame() {
   if (feof(fFid) || ferror(fFid)) {
     handleClosure(this);
@@ -77,7 +71,7 @@ void ByteStreamFileSource::doGetNextFrame() {
   if (fPlayTimePerFrame > 0 && fPreferredFrameSize > 0) {
     if (fPresentationTime.tv_sec == 0 && fPresentationTime.tv_usec == 0) {
       // This is the first frame, so use the current time:
-      gettimeofday(&fPresentationTime, &Idunno);
+      gettimeofday(&fPresentationTime, NULL);
     } else {
       // Increment by the play time of the previous data:
       unsigned uSeconds	= fPresentationTime.tv_usec + fLastPlayTime;
@@ -91,7 +85,7 @@ void ByteStreamFileSource::doGetNextFrame() {
   } else {
     // We don't know a specific play time duration for this data,
     // so just record the current time as being the 'presentation time':
-    gettimeofday(&fPresentationTime, &Idunno);
+    gettimeofday(&fPresentationTime, NULL);
   }
 
   // Switch to another task, and inform the reader that he has data:

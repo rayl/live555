@@ -37,15 +37,9 @@ BasicUDPSink::~BasicUDPSink() {
   delete[] fOutputBuffer;
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 Boolean BasicUDPSink::continuePlaying() {
   // Record the fact that we're starting to play now:
-  gettimeofday(&fNextSendTime, &Idunno);
+  gettimeofday(&fNextSendTime, NULL);
 
   // Arrange to get and send the first payload.
   // (This will also schedule any future sends.)
@@ -85,7 +79,7 @@ void BasicUDPSink::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedB
   fNextSendTime.tv_usec %= 1000000;
   
   struct timeval timeNow;
-  gettimeofday(&timeNow, &Idunno);
+  gettimeofday(&timeNow, NULL);
   int uSecondsToGo;
   if (fNextSendTime.tv_sec < timeNow.tv_sec) {
     uSecondsToGo = 0; // prevents integer underflow if too far behind

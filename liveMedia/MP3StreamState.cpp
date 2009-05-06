@@ -43,12 +43,6 @@ MP3StreamState::~MP3StreamState() {
   }
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 void MP3StreamState::assignStream(FILE* fid, unsigned fileSize) {
   fFid = fid;
 
@@ -63,7 +57,7 @@ void MP3StreamState::assignStream(FILE* fid, unsigned fileSize) {
   fIsVBR = fHasXingTOC = False; // ditto
 
   // Set the first frame's 'presentation time' to the current wall time:
-  gettimeofday(&fNextFramePresentationTime, &Idunno);
+  gettimeofday(&fNextFramePresentationTime, NULL);
 }
 
 struct timeval MP3StreamState::currentFramePlayTime() const {

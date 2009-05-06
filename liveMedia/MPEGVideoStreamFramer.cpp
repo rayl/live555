@@ -38,12 +38,6 @@ int TimeCode::operator==(TimeCode const& arg2) {
 
 ////////// MPEGVideoStreamFramer implementation //////////
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 MPEGVideoStreamFramer::MPEGVideoStreamFramer(UsageEnvironment& env,
 					     FramedSource* inputSource)
   : FramedFilter(env, inputSource),
@@ -52,7 +46,7 @@ MPEGVideoStreamFramer::MPEGVideoStreamFramer(UsageEnvironment& env,
     fPicturesAdjustment(0), fPictureTimeBase(0.0), fTcSecsBase(0),
     fHaveSeenFirstTimeCode(False) {
   // Use the current wallclock time as the base 'presentation time':
-  gettimeofday(&fPresentationTimeBase, &Idunno);
+  gettimeofday(&fPresentationTimeBase, NULL);
 }
 
 MPEGVideoStreamFramer::~MPEGVideoStreamFramer() {

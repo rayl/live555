@@ -202,12 +202,6 @@ private:
 
 ////////// QuickTimeFileSink implementation //////////
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
 				     MediaSession& inputSession,
 				     FILE* outFid,
@@ -288,7 +282,7 @@ QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
   // Use the current time as the file's creation and modification
   // time.  Use Apple's time format: seconds since January 1, 1904
 
-  gettimeofday(&fStartTime, &Idunno);
+  gettimeofday(&fStartTime, NULL);
   fAppleCreationTime = fStartTime.tv_sec - 0x83dac000;
 
   // Begin by writing a "mdat" atom at the start of the file.
@@ -432,7 +426,7 @@ void QuickTimeFileSink::onRTCPBye(void* clientData) {
   SubsessionIOState* ioState = (SubsessionIOState*)clientData;
 
   struct timeval timeNow;
-  gettimeofday(&timeNow, &Idunno);
+  gettimeofday(&timeNow, NULL);
   unsigned secsDiff
     = timeNow.tv_sec - ioState->fOurSink.fStartTime.tv_sec;
 

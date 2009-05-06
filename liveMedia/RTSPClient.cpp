@@ -1457,12 +1457,6 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
   return False;
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 Boolean RTSPClient::openConnectionFromURL(char const* url) {
   do {
     // Set this as our base URL:
@@ -1982,7 +1976,7 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix) {
       struct timeval timestamp;
       unsigned counter;
     } seedData;
-    gettimeofday(&seedData.timestamp, &Idunno);
+    gettimeofday(&seedData.timestamp, NULL);
     static unsigned counter = 0;
     seedData.counter = ++counter;
     char sessionCookie[33];

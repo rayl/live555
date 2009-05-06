@@ -95,12 +95,6 @@ AMRAudioFileSource::~AMRAudioFileSource() {
   CloseInputFile(fFid);
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 // The mapping from the "FT" field to frame size.
 // Values of 65535 are invalid.
 #define FT_INVALID 65535
@@ -162,7 +156,7 @@ void AMRAudioFileSource::doGetNextFrame() {
   // Set the 'presentation time':
   if (fPresentationTime.tv_sec == 0 && fPresentationTime.tv_usec == 0) {
     // This is the first frame, so use the current time:
-    gettimeofday(&fPresentationTime, &Idunno);
+    gettimeofday(&fPresentationTime, NULL);
   } else {
     // Increment by the play time of the previous frame (20 ms)
     unsigned uSeconds	= fPresentationTime.tv_usec + 20000;
