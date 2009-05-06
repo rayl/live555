@@ -39,7 +39,7 @@ MP3AudioFileServerMediaSubsession
 				    Boolean useADUs,
 				    Interleaving* interleaving)
   : FileServerMediaSubsession(env, fileName, reuseFirstSource),
-    fUseADUs(useADUs), fInterleaving(interleaving) {
+    fUseADUs(useADUs), fInterleaving(interleaving), fFileDuration(0.0) {
 }
 
 MP3AudioFileServerMediaSubsession
@@ -53,8 +53,10 @@ FramedSource* MP3AudioFileServerMediaSubsession
 
   FramedSource* streamSource;
   do {
-    streamSource = MP3FileSource::createNew(envir(), fFileName);
+    MP3FileSource* mp3Source;
+    streamSource = mp3Source = MP3FileSource::createNew(envir(), fFileName);
     if (streamSource == NULL) break;
+    fFileDuration = mp3Source->filePlayTime();
 
     if (fUseADUs) {
       // Add a filter that converts the source MP3s to ADUs:
@@ -83,4 +85,8 @@ RTPSink* MP3AudioFileServerMediaSubsession
   } else {
     return MPEG1or2AudioRTPSink::createNew(envir(), rtpGroupsock);
   }
+}
+
+float MP3AudioFileServerMediaSubsession::duration() const {
+  return fFileDuration;
 }

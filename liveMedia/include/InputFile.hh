@@ -28,4 +28,7 @@ FILE* OpenInputFile(UsageEnvironment& env, char const* fileName);
 
 void CloseInputFile(FILE* fid);
 
+unsigned GetFileSize(char const* fileName, FILE* fid);
+    // 0 means zero-length, unbounded, or unknown
+
 #endif

@@ -34,6 +34,7 @@ protected: // we're a virtual base class
 
 protected:
   char const* fFileName;
+  unsigned fFileSize; // if known
 };
 
 #endif

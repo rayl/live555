@@ -31,6 +31,8 @@ class MP3FileSource: public FramedFileSource {
 public:
   static MP3FileSource* createNew(UsageEnvironment& env, char const* fileName);
 
+  float filePlayTime() const;
+
 protected:
   MP3FileSource(UsageEnvironment& env, FILE* fid);
 	// called only by createNew()

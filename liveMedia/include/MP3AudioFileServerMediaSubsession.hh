@@ -52,10 +52,12 @@ private: // redefined virtual functions
   virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
                                     unsigned char rtpPayloadTypeIfDynamic,
 				    FramedSource* inputSource);
+  virtual float duration() const;
 
 private:
   Boolean fUseADUs;
   Interleaving* fInterleaving;
+  float fFileDuration;
 };
 
 #endif

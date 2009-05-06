@@ -52,9 +52,10 @@ FramedSource* MPEG2TransportFileServerMediaSubsession
   // Create the video source:
   unsigned const inputDataChunkSize
     = TRANSPORT_PACKETS_PER_NETWORK_PACKET*TRANSPORT_PACKET_SIZE;
-  FramedSource* fileSource
+  ByteStreamFileSource* fileSource
     = ByteStreamFileSource::createNew(envir(), fFileName, inputDataChunkSize);
   if (fileSource == NULL) return NULL;
+  fFileSize = fileSource->fileSize();
 
   // Create a framer for the Video Elementary Stream:
   return MPEG2TransportStreamFramer::createNew(envir(), fileSource);

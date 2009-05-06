@@ -103,16 +103,7 @@ void MultiFramedRTPSink::setSpecialHeaderBytes(unsigned char const* bytes,
   fOutBuf->insert(bytes, numBytes, fSpecialHeaderPosition + bytePosition);
 }
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 Boolean MultiFramedRTPSink::continuePlaying() {
-  // Record the fact that we're starting to play now:
-  gettimeofday(&fNextSendTime, &Idunno);
-
   // Send the first packet.
   // (This will also schedule any future sends.)
   buildAndSendPacket(True);
@@ -186,10 +177,21 @@ void MultiFramedRTPSink
 			   presentationTime, durationInMicroseconds);
 }
 
+#ifdef BSD
+static struct timezone Idunno;
+#else
+static int Idunno;
+#endif
+
 void MultiFramedRTPSink
 ::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
 		     struct timeval presentationTime,
 		     unsigned durationInMicroseconds) {
+  if (fIsFirstPacket) {
+    // Record the fact that we're starting to play now:
+    gettimeofday(&fNextSendTime, &Idunno);
+  }
+
   if (numTruncatedBytes > 0) {
     unsigned const bufferSize = fOutBuf->totalBytesAvailable();
     unsigned newNumPacketsLimit

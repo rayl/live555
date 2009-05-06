@@ -55,7 +55,10 @@ public:
 
   Boolean addSubsession(ServerMediaSubsession* subsession);
 
-  float duration() const { return fDuration; }
+  float duration() const;
+    // a result == 0 means an unbounded session (the default)
+    // a result < 0 means: subsession durations differ; the result is -(the largest)
+    // a result > 0 means: this is the duration of a bounded session
 
   unsigned referenceCount() const { return fReferenceCount; }
   void incrementReferenceCount() { ++fReferenceCount; }
@@ -85,10 +88,6 @@ private:
   char* fDescriptionSDPString;
   char* fMiscSDPLines;
   struct timeval fCreationTime;
-  float fDuration;
-    // fDuration == 0 means an unbounded session (the default)
-    // fDuration < 0 means: use subsession durations instead (because they differ)
-    // fDuration > 0 means: this is the duration of a bounded session
   unsigned fReferenceCount;
   Boolean fDeleteWhenUnreferenced;
 };

@@ -40,10 +40,18 @@ WAVAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
       // The WAV file header was apparently invalid.
       delete newSource; newSource = NULL;
     }
+
+    newSource->fFileSize = GetFileSize(fileName, fid);
+
     return newSource;
   } while (0);
 
   return NULL;
+}
+
+unsigned WAVAudioFileSource::numPCMBytes() const {
+  if (fFileSize < fWAVHeaderSize) return 0;
+  return fFileSize - fWAVHeaderSize;
 }
 
 #define nextc fgetc(fid)
@@ -73,7 +81,7 @@ static Boolean skipBytes(FILE* fid, int num) {
 
 WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
   : AudioInputDevice(env, 0, 0, 0, 0)/* set the real parameters later */,
-    fFid(fid), fLastPlayTime(0) {
+    fFid(fid), fLastPlayTime(0), fWAVHeaderSize(0), fFileSize(0) {
   // Check the WAV file header for validity.
   // Note: The following web pages contain info about the WAV format:
   // http://www.technology.niagarac.on.ca/courses/comp630/WavFileFormat.html
@@ -139,6 +147,7 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
     if (!skipBytes(fid, 4)) break;
 
     // The header is good; the remaining data are the sample bytes.
+    fWAVHeaderSize = ftell(fid);
     success = True;
   } while (0);
   

@@ -54,6 +54,8 @@ public:
   void writeGetCmd(char const* hostName, unsigned short portNum,
 		   char const* fileName);
 
+  float filePlayTime() const; // in seconds
+
   void checkForXingHeader(); // hack for Xing VBR files
 
 private:
@@ -61,7 +63,6 @@ private:
   MP3FrameParams const& fr() const {return fCurrentFrame;}
 
   struct timeval currentFramePlayTime() const;
-  unsigned filePlayTime() const; // in seconds
 
   Boolean findNextFrame();
   unsigned readFromStream(unsigned char* buf, unsigned numChars);

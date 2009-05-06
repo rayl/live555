@@ -34,6 +34,9 @@ public:
   // "preferredFrameSize" == 0 means 'no preference'
   // "playTimePerFrame" is in microseconds
 
+  unsigned fileSize() const { return fFileSize; }
+      // 0 means zero-length, unbounded, or unknown
+
 protected:
   ByteStreamFileSource(UsageEnvironment& env,
 		       FILE* fid, unsigned preferredFrameSize,
@@ -50,6 +53,7 @@ private:
   unsigned fPreferredFrameSize;
   unsigned fPlayTimePerFrame;
   unsigned fLastPlayTime;
+  unsigned fFileSize;
 };
 
 #endif

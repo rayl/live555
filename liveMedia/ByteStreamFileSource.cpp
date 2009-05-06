@@ -36,15 +36,18 @@ ByteStreamFileSource::createNew(UsageEnvironment& env, char const* fileName,
   FILE* fid = OpenInputFile(env, fileName);
   if (fid == NULL) return NULL;
 
-  return new ByteStreamFileSource(env, fid, preferredFrameSize,
-				  playTimePerFrame);
+  ByteStreamFileSource* newSource
+    = new ByteStreamFileSource(env, fid, preferredFrameSize, playTimePerFrame);
+  newSource->fFileSize = GetFileSize(fileName, fid);
+
+  return newSource;
 }
 
 ByteStreamFileSource::ByteStreamFileSource(UsageEnvironment& env, FILE* fid,
 					   unsigned preferredFrameSize,
 					   unsigned playTimePerFrame)
   : FramedFileSource(env, fid), fPreferredFrameSize(preferredFrameSize),
-    fPlayTimePerFrame(playTimePerFrame), fLastPlayTime(0) {
+    fPlayTimePerFrame(playTimePerFrame), fLastPlayTime(0), fFileSize(0) {
 }
 
 ByteStreamFileSource::~ByteStreamFileSource() {

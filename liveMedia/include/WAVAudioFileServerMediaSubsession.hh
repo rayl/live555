@@ -46,6 +46,7 @@ private: // redefined virtual functions
   virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
                                     unsigned char rtpPayloadTypeIfDynamic,
 				    FramedSource* inputSource);
+  virtual float duration() const;
 
 private:
   Boolean fConvertToULaw;
@@ -55,6 +56,7 @@ private:
   unsigned char fBitsPerSample;
   unsigned fSamplingFrequency;
   unsigned fNumChannels;
+  float fFileDuration;
 };
 
 #endif

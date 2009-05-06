@@ -55,6 +55,7 @@ FramedSource* MPEG1or2VideoFileServerMediaSubsession
   ByteStreamFileSource* fileSource
     = ByteStreamFileSource::createNew(envir(), fFileName);
   if (fileSource == NULL) return NULL;
+  fFileSize = fileSource->fileSize();
 
   return MPEG1or2VideoStreamFramer
     ::createNew(envir(), fileSource, fIFramesOnly, fVSHPeriod);

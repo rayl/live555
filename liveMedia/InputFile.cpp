@@ -22,6 +22,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <io.h>
 #include <fcntl.h>
 #endif
+#ifndef _WIN32_WCE
+#include <sys/stat.h>
+#endif
 #include <string.h>
 
 #include "InputFile.hh"
@@ -48,4 +51,23 @@ FILE* OpenInputFile(UsageEnvironment& env, char const* fileName) {
 void CloseInputFile(FILE* fid) {
   // Don't close 'stdin', in case we want to use it again later.
   if (fid != NULL && fid != stdin) fclose(fid);
+}
+
+unsigned GetFileSize(char const* fileName, FILE* fid) {
+  unsigned fileSize = 0; // by default
+
+  if (fid != stdin) {
+#if defined(_WIN32_WCE)
+    fseek(fid, 0, SEEK_END);
+    fileSize = ftell(fid);
+    fseek(fid, 0, SEEK_SET);
+#else
+    struct stat sb;
+    if (stat(fileName, &sb) == 0) {
+      fileSize = sb.st_size;
+    }
+#endif
+  }
+
+  return fileSize;
 }

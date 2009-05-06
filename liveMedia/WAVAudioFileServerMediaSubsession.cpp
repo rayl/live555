@@ -62,6 +62,9 @@ FramedSource* WAVAudioFileServerMediaSubsession
     unsigned bitsPerSecond
       = fSamplingFrequency*fBitsPerSample*fNumChannels;
 
+    fFileDuration = (float)((8.0*pcmSource->numPCMBytes())
+      /(fSamplingFrequency*fNumChannels*fBitsPerSample));
+
     // Add in any filter necessary to transform the data prior to streaming:
     if (fBitsPerSample == 16) {
       // Note that samples in the WAV audio file are in little-endian order.
@@ -126,4 +129,8 @@ RTPSink* WAVAudioFileServerMediaSubsession
 
   // An error occurred:
   return NULL;
+}
+
+float WAVAudioFileServerMediaSubsession::duration() const {
+  return fFileDuration;
 }

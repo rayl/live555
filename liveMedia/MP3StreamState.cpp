@@ -80,7 +80,7 @@ struct timeval MP3StreamState::currentFramePlayTime() const {
   return result;
 }
 
-unsigned MP3StreamState::filePlayTime() const {
+float MP3StreamState::filePlayTime() const {
   unsigned numFramesInFile = fNumFramesInFile;
   if (numFramesInFile == 0) {
     // Estimate the number of frames from the file size, and the
@@ -89,8 +89,7 @@ unsigned MP3StreamState::filePlayTime() const {
   }
 
   struct timeval const pt = currentFramePlayTime();
-  float fpt = numFramesInFile*(pt.tv_sec + pt.tv_usec/(float)MILLION);
-  return (unsigned)(fpt + 0.5); // rounds to nearest integer
+  return numFramesInFile*(pt.tv_sec + pt.tv_usec/(float)MILLION);
 }
 
 unsigned MP3StreamState::findNextHeader(struct timeval& presentationTime) {
@@ -145,15 +144,16 @@ Boolean MP3StreamState::readFrame(unsigned char* outBuf, unsigned outBufSize,
 void MP3StreamState::getAttributes(char* buffer, unsigned bufferSize) const {
   char const* formatStr
     = "bandwidth %d MPEGnumber %d MPEGlayer %d samplingFrequency %d isStereo %d playTime %d isVBR %d";
+  unsigned fpt = (unsigned)(filePlayTime() + 0.5); // rounds to nearest integer
 #if defined(IRIX) || defined(ALPHA) || defined(_QNX4) || defined(IMN_PIM) || defined(CRIS)
   /* snprintf() isn't defined, so just use sprintf() - ugh! */
   sprintf(buffer, formatStr,
 	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().layer, fr().samplingFreq, fr().isStereo,
-	  filePlayTime(), fIsVBR);
+	  fpt, fIsVBR);
 #else
   snprintf(buffer, bufferSize, formatStr,
 	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().layer, fr().samplingFreq, fr().isStereo,
-	  filePlayTime(), fIsVBR);
+	  fpt, fIsVBR);
 #endif
 }
 

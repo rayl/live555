@@ -92,9 +92,10 @@ FramedSource* MPEG4VideoFileServerMediaSubsession
   estBitrate = 500; // kbps, estimate
 
   // Create the video source:
-  FramedSource* fileSource
+  ByteStreamFileSource* fileSource
     = ByteStreamFileSource::createNew(envir(), fFileName);
   if (fileSource == NULL) return NULL;
+  fFileSize = fileSource->fileSize();
 
   // Create a framer for the Video Elementary Stream:
   return MPEG4VideoStreamFramer::createNew(envir(), fileSource);
