@@ -497,6 +497,4 @@ void StreamState::reclaim() {
 
   delete fRTPgs; fRTPgs = NULL;
   delete fRTCPgs; fRTCPgs = NULL;
-
-  fReferenceCount = 0;
 }

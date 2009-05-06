@@ -22,6 +22,10 @@ cd ../testProgs
 del /Q testProgs.mak
 del /Q Makefile
 type Makefile.head ..\win32config Makefile.tail > testProgs.mak
+cd ../mediaServer
+del /Q mediaServer.mak
+del /Q Makefile
+type Makefile.head ..\win32config Makefile.tail > mediaServer.mak
 
 
 ENDLOCAL
