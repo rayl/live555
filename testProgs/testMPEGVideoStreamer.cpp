@@ -28,6 +28,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 // To stream using "source-specific multicast" (SSM), uncomment the following:
 //#define USE_SSM 1
+#ifdef USE_SSM
+Boolean const isSSM = True;
+#else
+Boolean const isSSM = False;
+#endif
 
 // To set up an internal RTSP server, uncomment the following:
 //#define IMPLEMENT_RTSP_SERVER 1
@@ -90,8 +95,10 @@ int main(int argc, char** argv) {
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER
-  PassiveServerMediaSession* serverMediaSession = PassiveServerMediaSession
-    ::createNew(*env, "Session streamed by \"testMPEGVideoStreamer\"");
+  PassiveServerMediaSession* serverMediaSession
+    = PassiveServerMediaSession::createNew(*env, inputFileName,
+		   "Session streamed by \"testMPEGVideoStreamer\"",
+					   isSSM);
   serverMediaSession->addSubsession(*videoSink);
   RTSPServer* rtspServer
     = RTSPServer::createNew(*env, *serverMediaSession);

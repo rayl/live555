@@ -75,6 +75,9 @@ netAddressBits ourSourceAddressForMulticast(UsageEnvironment& env); // in networ
 extern netAddressBits SendingInterfaceAddr;
 extern netAddressBits ReceivingInterfaceAddr;
 
+// Allocates a randomly-chosen IPv4 SSM (multicast) address:
+netAddressBits chooseRandomIPv4SSMAddress(UsageEnvironment& env);
+
 // Returns a simple "hh:mm:ss" string, for use in debugging output (e.g.)
 char const* timestampString();
 

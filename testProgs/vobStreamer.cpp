@@ -133,11 +133,8 @@ int main(int argc, char const** argv) {
   env = BasicUsageEnvironment::createNew(*scheduler);
 
   // Create 'groupsocks' for RTP and RTCP:
-  char* destinationAddressStr = "239.255.42.42";
-  // Note: This is a multicast address.  If you wish to stream using
-  // unicast instead, then replace this string with the unicast address
-  // of the (single) destination.  (You may also need to make a similar
-  // change to the receiver program.)
+  struct in_addr destinationAddress;
+  destinationAddress.s_addr = chooseRandomIPv4SSMAddress(*env);
 
   const unsigned short rtpPortNumAudio = 4444;
   const unsigned short rtcpPortNumAudio = rtpPortNumAudio+1;
@@ -145,8 +142,6 @@ int main(int argc, char const** argv) {
   const unsigned short rtcpPortNumVideo = rtpPortNumVideo+1;
   const unsigned char ttl = 7; // low, in case routers don't admin scope
 
-  struct in_addr destinationAddress;
-  destinationAddress.s_addr = our_inet_addr(destinationAddressStr);
   const Port rtpPortAudio(rtpPortNumAudio);
   const Port rtcpPortAudio(rtcpPortNumAudio);
   const Port rtpPortVideo(rtpPortNumVideo);
@@ -286,8 +281,8 @@ void play() {
 #ifdef IMPLEMENT_RTSP_SERVER
   if (rtspServer == NULL) {
     PassiveServerMediaSession* serverMediaSession
-      = PassiveServerMediaSession::createNew(*env,
-	     "Session streamed by \"testMPEGAudioVideoStreamer\"");
+      = PassiveServerMediaSession::createNew(*env, *curInputFileName,
+	     "Session streamed by \"vobStreamer\"", True /*SSM*/);
     if (audioSink != NULL) serverMediaSession->addSubsession(*audioSink);
     if (videoSink != NULL) serverMediaSession->addSubsession(*videoSink);
     rtspServer = RTSPServer::createNew(*env, *serverMediaSession,
@@ -305,7 +300,7 @@ void play() {
 	sprintf(portStr, ":%d", rtspServerPortNum);
       }
       fprintf(stderr, "Access this stream using the URL:\n"
-	      "\trtsp://%s%s/\n", our_inet_ntoa(ourIPAddress), portStr);
+	      "\trtsp://%s%s/stream.vob\n", our_inet_ntoa(ourIPAddress), portStr);
     } else {
       fprintf(stderr, "Failed to create RTSP server: %s\n",
 	      env->getResultMsg());

@@ -31,7 +31,7 @@ class PassiveServerMediaSession: public ServerMediaSession {
 public:
   static PassiveServerMediaSession*
   createNew(UsageEnvironment& env, char const* description = NULL,
-	    char const* info = NULL);
+	    char const* info = NULL, Boolean isSSM = False);
 
   void addSubsession(RTPSink& rtpSink);
   void addSubsessionByComponents(struct in_addr const& ipAddress,
@@ -46,7 +46,7 @@ public:
 
 private:
   PassiveServerMediaSession(UsageEnvironment& env, char const* info,
-		     char const* description);
+		     char const* description, Boolean isSSM);
       // called only by createNew();
   virtual ~PassiveServerMediaSession();
 };

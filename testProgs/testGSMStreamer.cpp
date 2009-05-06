@@ -41,8 +41,22 @@ int main(int argc, char** argv) {
   return 0; // only to prevent compiler warning
 }
 
+// To stream using "source-specific multicast" (SSM), uncomment the following:
+//#define USE_SSM 1
+#ifdef USE_SSM
+Boolean const isSSM = True;
+#else
+Boolean const isSSM = False;
+#endif
+
+// To set up an internal RTSP server, uncomment the following:
+//#define IMPLEMENT_RTSP_SERVER 1
+// (Note that this RTSP server works for multicast only)
+
+#ifdef IMPLEMENT_RTSP_SERVER
 PassiveServerMediaSession* serverMediaSession;
 RTSPServer* rtspServer;
+#endif
 
 void afterPlaying(void* clientData); // forward
 
@@ -106,14 +120,17 @@ void play() {
 			      sessionState.sink, NULL /* we're a server */);
   // Note: This starts RTCP running automatically
 
-  serverMediaSession = PassiveServerMediaSession
-    ::createNew(*env, "Session streamed by \"testGSMStreamer\"");
+#ifdef IMPLEMENT_RTSP_SERVER
+  serverMediaSession
+    = PassiveServerMediaSession::createNew(*env, "GSM input",
+		"Session streamed by \"testGSMStreamer\"", isSSM);
   rtspServer = RTSPServer::createNew(*env, *serverMediaSession, 7070);
   if (rtspServer == NULL) {
     fprintf(stderr, "Failed to create RTSP server: %s\n",
 	    env->getResultMsg());
     exit(1);
   }
+#endif
 
   // Finally, start the streaming:
   fprintf(stderr, "Beginning streaming...\n");
@@ -127,7 +144,10 @@ void afterPlaying(void* /*clientData*/) {
   fprintf(stderr, "...done streaming\n");
 
   // End this loop by closing the media:
+#ifdef IMPLEMENT_RTSP_SERVER
   Medium::close(rtspServer);
+  Medium::close(serverMediaSession);
+#endif
   Medium::close(sessionState.sink);
   delete sessionState.rtpGroupsock;
   Medium::close(sessionState.source);

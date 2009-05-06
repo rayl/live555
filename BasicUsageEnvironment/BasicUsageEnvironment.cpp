@@ -258,7 +258,7 @@ void BasicTaskScheduler::SingleStep() {
 #endif
       {
 	// Unexpected error - treat this as fatal:
-	perror("BasicTaskScheduler::doEventLoop(): select() fails");
+	perror("BasicTaskScheduler::SingleStep(): select() fails");
 	exit(0);
       }
   }

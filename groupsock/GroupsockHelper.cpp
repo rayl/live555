@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "mTunnel" multicast access service
-// Copyright (c) 1996-2001 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
 // Helper routines to implement 'group sockets'
 // Implementation
 
@@ -566,6 +566,18 @@ netAddressBits ourSourceAddressForMulticast(UsageEnvironment& env) {
 	our_srandom(seed);
 
 	return ourAddress;
+}
+
+netAddressBits chooseRandomIPv4SSMAddress(UsageEnvironment& env) {
+  // First, a hack to ensure that our random number generator is seeded:
+  (void) ourSourceAddressForMulticast(env);
+
+  // Choose a random address in the range [232.0.1.0, 232.255.255.255)
+  // i.e., [0xE8000100, 0xE8FFFFFF)
+  netAddressBits const first = 0xE8000100, lastPlus1 = 0xE8FFFFFF;
+  netAddressBits const range = lastPlus1 - first;
+
+  return htonl(first + ((netAddressBits)our_random())%range);
 }
 
 char const* timestampString() {

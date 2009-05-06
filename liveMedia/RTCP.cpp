@@ -354,7 +354,7 @@ void RTCPInstance::incomingReportHandler1() {
 	// Later handle SDES, APP, and compound RTCP packets #####
         default:
 #ifdef DEBUG_PRINT
-	  fprintf(stderr, "UNKNOWN TYPE(0x%x)\n", pt);
+	  fprintf(stderr, "UNSUPPORTED TYPE(0x%x)\n", pt);
 #endif
 	  subPacketOK = True;
 	  break;

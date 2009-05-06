@@ -41,10 +41,12 @@ public:
 
 protected: // Abstract base class
   ServerMediaSession(UsageEnvironment& env, char const* info,
-		     char const* description);
+		     char const* description, Boolean isSSM);
   virtual ~ServerMediaSession();
 
 protected:
+  Boolean fIsSSM;
+
   // Linkage fields:
   friend class ServerMediaSubsessionIterator;
   ServerMediaSubsession* fSubsessionsHead;

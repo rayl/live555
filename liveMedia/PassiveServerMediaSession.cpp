@@ -31,16 +31,19 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 PassiveServerMediaSession*
 PassiveServerMediaSession::createNew(UsageEnvironment& env,
-			      char const* description, char const* info) {
-  return new PassiveServerMediaSession(env, description, info);
+				     char const* description,
+				     char const* info,
+				     Boolean isSSM) {
+  return new PassiveServerMediaSession(env, description, info, isSSM);
 }
 
 static char const* const libraryNameString = "LIVE.COM Streaming Media";
 
-PassiveServerMediaSession::PassiveServerMediaSession(UsageEnvironment& env,
-						    char const* description,
-						    char const* info)
-  : ServerMediaSession(env, description, info) {
+PassiveServerMediaSession
+::PassiveServerMediaSession(UsageEnvironment& env,
+			    char const* description, char const* info,
+			    Boolean isSSM)
+  : ServerMediaSession(env, description, info, isSSM) {
 }
 
 PassiveServerMediaSession::~PassiveServerMediaSession() {
@@ -67,54 +70,55 @@ void PassiveServerMediaSession
   // Construct a set of SDP lines that describe this subsession:
 
   // For dynamic payload types, we need a "a=rtpmap:" line also:
-  char rtpmapBuffer[100];
+  char* rtpmapLine;
+  unsigned rtpmapLineSize;
   if (rtpPayloadType >= 96) {
-    char const* rtpmapFormat = "a=rtpmap:%d %s/%d\r\n";
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf().  Warning!
-    sprintf(rtpmapBuffer, rtpmapFormat,
+    char const* const rtpmapFmt = "a=rtpmap:%d %s/%d\r\n";
+    unsigned rtpmapFmtSize = strlen(rtpmapFmt)
+      + 3 /* max char len */ + strlen(rtpPayloadFormatName) + 20 /* max int len */;
+    rtpmapLine = new char[rtpmapFmtSize];
+    sprintf(rtpmapLine, rtpmapFmt,
 	    rtpPayloadType, rtpPayloadFormatName, rtpTimestampFrequency);
-#else
-    snprintf(rtpmapBuffer, sizeof rtpmapBuffer, rtpmapFormat,
-	     rtpPayloadType, rtpPayloadFormatName, rtpTimestampFrequency);
-#endif    
+    rtpmapLineSize = strlen(rtpmapLine);
   } else {
     // There's no "a=rtpmap:" line:
-    rtpmapBuffer[0] = '\0';
+    // Static payload type => no "a=rtpmap:" line
+    rtpmapLine = strDup("");
+    rtpmapLineSize = 0;
   }
 
   // Set up our 'track id':
   char trackIdBuffer[100];
   sprintf(trackIdBuffer, "track%d", ++fSubsessionCounter);
 
-  char sdpBuffer[1000];
-  char const* sdpFormat
-    = "m=%s %d RTP/AVP %d\r\n%sa=control:%s\r\nc=IN IP4 %s/%d\r\n"; 
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf().  Warning!
-  sprintf(sdpBuffer, sdpFormat, 
+  char* const ipAddressStr = strDup(our_inet_ntoa(ipAddress));
+
+  char const* const sdpFmt =
+    "m=%s %d RTP/AVP %d\r\n"
+    "%s"
+    "a=control:%s\r\n"
+    "c=IN IP4 %s/%d\r\n"; 
+  unsigned sdpFmtSize = strlen(sdpFmt)
+    + strlen(mediaType) + 5 /* max short len */ + 3 /* max char len */
+    + rtpmapLineSize
+    + strlen(trackIdBuffer)
+    + strlen(ipAddressStr) + 3 /* max char len */;
+  char* sdpLine = new char[sdpFmtSize];
+  sprintf(sdpLine, sdpFmt, 
 	  mediaType, // m= <media>
 	  portNum, // m= <port>
 	  rtpPayloadType, // m= <fmt list>
-	  rtpmapBuffer, // a=rtpmap:... (if present)
+	  rtpmapLine, // a=rtpmap:... (if present)
 	  trackIdBuffer, // a=control:<track-id>
-	  our_inet_ntoa(ipAddress), // c= <connection address>
+	  ipAddressStr, // c= <connection address>
 	  ttl); // c= TTL
-#else
-  snprintf(sdpBuffer, sizeof sdpBuffer, sdpFormat, 
-	   mediaType, // m= <media>
-	   portNum, // m= <port>
-	   rtpPayloadType, // m= <fmt list>
-	   rtpmapBuffer, // a=rtpmap:... (if present)
-	   trackIdBuffer, // a=control:<track-id>
-	   our_inet_ntoa(ipAddress), // c= <connection address>
-	   ttl); // c= TTL
-#endif    
+  delete[] ipAddressStr; delete[] rtpmapLine;
 
   // Finally, create a new subsession description:
   GroupEId const groupEId(ipAddress, portNum, ttl);
   ServerMediaSubsession* subsession
-    = new ServerMediaSubsession(groupEId, trackIdBuffer, sdpBuffer);
+    = new ServerMediaSubsession(groupEId, trackIdBuffer, sdpLine);
+  delete[] sdpLine;
   if (subsession == NULL) return;
 
   if (fSubsessionsHead == NULL) {

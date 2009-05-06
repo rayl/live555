@@ -57,9 +57,10 @@ static char const* const libraryNameString = "LIVE.COM Streaming Media";
 
 ServerMediaSession::ServerMediaSession(UsageEnvironment& env,
 				       char const* description,
-				       char const* info)
-  : Medium(env), fSubsessionsHead(NULL), fSubsessionsTail(NULL),
-    fSubsessionCounter(0) {
+				       char const* info,
+				       Boolean isSSM)
+  : Medium(env), fIsSSM(isSSM), fSubsessionsHead(NULL),
+    fSubsessionsTail(NULL), fSubsessionCounter(0) {
   fDescriptionSDPString
     = strDup(description == NULL ? libraryNameString : description);
   fInfoSDPString = strDup(info == NULL ? libraryNameString : info);
@@ -77,18 +78,48 @@ Boolean ServerMediaSession::isServerMediaSession() const {
 }
 
 char* ServerMediaSession::generateSDPDescription() {
-  char const* sdpPrefixFormat = "v=0\r\no=- %d%06d %d IN IP4 %s\r\ns=%s\r\ni=%s\r\nt=0 0\r\na=tool:%s\r\na=type:broadcast\r\n";
-
   struct in_addr ourIPAddress;
   ourIPAddress.s_addr = ourSourceAddressForMulticast(envir());
-  char ourIPAddressStr[100];
-  strncpy(ourIPAddressStr, our_inet_ntoa(ourIPAddress),
-          sizeof ourIPAddressStr - 1);
+  char* const ourIPAddressStr
+    = strDup(our_inet_ntoa(ourIPAddress));
+  unsigned ourIPAddressStrSize = strlen(ourIPAddressStr);
 
-  // Compute how much space to allocate for the result SDP description:
-  unsigned sdpLength = strlen(sdpPrefixFormat) + strlen(ourIPAddressStr)
-    + strlen(fDescriptionSDPString) + strlen(fInfoSDPString)
-    + strlen(libraryNameString) + 20 /*slop*/;
+  // For a SSM sessions, we need a "a=source-filter: incl ..." line also:
+  char* sourceFilterLine;
+  unsigned sourceFilterLineSize;
+  if (fIsSSM) {
+    char const* const sourceFilterFmt =
+      "a=source-filter: incl IN IP4 * %s\r\n"
+      "a=rtcp:unicast reflection\r\n";
+    unsigned sourceFilterFmtSize = strlen(sourceFilterFmt)
+      + ourIPAddressStrSize;
+
+    sourceFilterLine = new char[sourceFilterFmtSize];
+    sprintf(sourceFilterLine, sourceFilterFmt,
+            ourIPAddressStr);
+    sourceFilterLineSize = strlen(sourceFilterLine);
+  } else {
+    sourceFilterLine = strDup("");
+    sourceFilterLineSize = 0;
+  }
+
+  char const* const sdpPrefixFmt =
+    "v=0\r\n"
+    "o=- %d%06d %d IN IP4 %s\r\n"
+    "s=%s\r\n"
+    "i=%s\r\n"
+    "t=0 0\r\n"
+    "a=tool:%s\r\n"
+    "a=type:broadcast\r\n"
+    "%s";
+  unsigned sdpLength = strlen(sdpPrefixFmt)
+    + 20 + 6 + 20 + ourIPAddressStrSize
+    + strlen(fDescriptionSDPString)
+    + strlen(fInfoSDPString)
+    + strlen(libraryNameString)
+    + sourceFilterLineSize;
+
+  // Add in the lengths of each subsession's media-level SDP lines: 
   ServerMediaSubsession* subsession;
   for (subsession = fSubsessionsHead; subsession != NULL;
        subsession = subsession->fNext) {
@@ -99,13 +130,15 @@ char* ServerMediaSession::generateSDPDescription() {
   if (sdp == NULL) return sdp;
 
   // Generate the SDP prefix (session-level lines):
-  sprintf(sdp, sdpPrefixFormat,
+  sprintf(sdp, sdpPrefixFmt,
 	  fCreationTime.tv_sec, fCreationTime.tv_usec, // o= <session id>
 	  1, // o= <version> // (needs to change if params are modified)
 	  ourIPAddressStr, // o= <address>
 	  fDescriptionSDPString, // s= <description>
 	  fInfoSDPString, // i= <info>
-	  libraryNameString); // a=tool:
+	  libraryNameString, // a=tool:
+	  sourceFilterLine); // a=source-filter: incl (if a SSM session)
+  delete[] sourceFilterLine; delete[] ourIPAddressStr;
 
   // Then, add the (media-level) lines for each subsession:
   char* mediaSDP = sdp;

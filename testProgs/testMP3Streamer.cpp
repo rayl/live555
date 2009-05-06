@@ -46,6 +46,11 @@ int main(int argc, char** argv) {
 
 // To stream using "source-specific multicast" (SSM), uncomment the following:
 //#define USE_SSM 1
+#ifdef USE_SSM
+Boolean const isSSM = True;
+#else
+Boolean const isSSM = False;
+#endif
 
 // To set up an internal RTSP server, uncomment the following:
 //#define IMPLEMENT_RTSP_SERVER 1
@@ -152,8 +157,9 @@ void play() {
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER
-  serverMediaSession = PassiveServerMediaSession
-    ::createNew(*env, "Session streamed by \"testMP3Streamer\"");
+  serverMediaSession
+    = PassiveServerMediaSession::createNew(*env, inputFileName,
+		"Session streamed by \"testMP3Streamer\"", isSSM);
   serverMediaSession->addSubsession(*sessionState.sink);
   rtspServer = RTSPServer::createNew(*env, *serverMediaSession);
   // Note that this (attempts to) start a server on the default RTSP server
