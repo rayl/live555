@@ -135,9 +135,6 @@ Boolean parseRTSPRequestString(char const* reqStr,
 }
 
 Boolean parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd) {
-  // Initialize the result parameters to default values:
-  rangeStart = rangeEnd = 0.0;
-
   // First, find "Range:"
   while (1) {
     if (*buf == '\0') return False; // not found
@@ -155,6 +152,7 @@ Boolean parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd) {
     rangeEnd = end;
   } else if (sscanf(fields, "npt = %f -", &start) == 1) {
     rangeStart = start;
+    rangeEnd = 0.0;
   } else {
     return False; // The header is malformed
   }

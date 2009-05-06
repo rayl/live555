@@ -63,7 +63,8 @@ MediaSession::MediaSession(UsageEnvironment& env)
   : Medium(env),
     fSubsessionsHead(NULL), fSubsessionsTail(NULL),
     fConnectionEndpointName(NULL), fMaxPlayStartTime(0.0f), fMaxPlayEndTime(0.0f),
-    fScale(1.0f), fMediaSessionType(NULL), fSessionName(NULL), fSessionDescription(NULL) {
+    fScale(1.0f), fMediaSessionType(NULL), fSessionName(NULL), fSessionDescription(NULL),
+    fControlPath(NULL) {
 #ifdef SUPPORT_REAL_RTSP
   RealInitSDPAttributes(this);
 #endif
@@ -89,6 +90,7 @@ MediaSession::~MediaSession() {
   delete[] fMediaSessionType;
   delete[] fSessionName;
   delete[] fSessionDescription;
+  delete[] fControlPath;
 #ifdef SUPPORT_REAL_RTSP
   RealReclaimSDPAttributes(this);
 #endif
@@ -117,6 +119,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     if (parseSDPLine_s(sdpLine)) continue;
     if (parseSDPLine_i(sdpLine)) continue;
     if (parseSDPLine_c(sdpLine)) continue;
+    if (parseSDPAttribute_control(sdpLine)) continue;
     if (parseSDPAttribute_range(sdpLine)) continue;
     if (parseSDPAttribute_type(sdpLine)) continue;
     if (parseSDPAttribute_source_filter(sdpLine)) continue;
@@ -353,6 +356,20 @@ static Boolean parseRangeAttribute(char const* sdpLine, float& startTime, float&
   return sscanf(sdpLine, "a=range: npt = %g - %g", &startTime, &endTime) == 2;
 }
 
+Boolean MediaSession::parseSDPAttribute_control(char const* sdpLine) {
+  // Check for a "a=control:<control-path>" line:
+  Boolean parseSuccess = False;
+
+  char* controlPath = strDupSize(sdpLine); // ensures we have enough space
+  if (sscanf(sdpLine, "a=control: %s", controlPath) == 1) {
+    parseSuccess = True;
+    delete[] fControlPath; fControlPath = strDup(controlPath);
+  }
+  delete[] controlPath;
+
+  return parseSuccess;
+}
+
 Boolean MediaSession::parseSDPAttribute_range(char const* sdpLine) {
   // Check for a "a=range:npt=<startTime>-<endTime>" line:
   // (Later handle other kinds of "a=range" attributes also???#####)
@@ -532,11 +549,12 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fCpresent(False), fRandomaccessindication(False),
     fConfig(NULL), fMode(NULL), fSpropParameterSets(NULL),
     fPlayStartTime(0.0), fPlayEndTime(0.0),
-    fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f),
+    fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f), fNPT_PTS_Offset(0.0f),
     fRTPSocket(NULL), fRTCPSocket(NULL),
     fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL) {
+  rtpInfo.seqNum = 0; rtpInfo.timestamp = 0; rtpInfo.infoIsNew = False;
 #ifdef SUPPORT_REAL_RTSP
-    RealInitSDPAttributes(this);
+  RealInitSDPAttributes(this);
 #endif
 }
 
@@ -909,6 +927,41 @@ void MediaSubsession::setDestinations(unsigned defaultDestAddress) {
     Port destPort(serverPortNum+1);
     fRTCPSocket->
       changeDestinationParameters(destAddr, destPort, destTTL);
+  }
+}
+
+float MediaSubsession::getNormalPlayTime(struct timeval const& presentationTime) {
+  // First, check whether our "RTPSource" object has already been synchronized using RTCP.
+  // If it hasn't, then - as a special case - we need to use the RTP timestamp to compute the NPT.
+  if (rtpSource() == NULL || rtpSource()->timestampFrequency() == 0) return 0.0; // no RTP source, or bad freq!
+
+  if (!rtpSource()->hasBeenSynchronizedUsingRTCP()) {
+    if (!rtpInfo.infoIsNew) return 0.0; // the "rtpInfo" structure has not been filled in
+    u_int32_t timestampOffset = rtpSource()->curPacketRTPTimestamp() - rtpInfo.timestamp;
+    float nptOffset = (timestampOffset/(float)(rtpSource()->timestampFrequency()))*scale();
+    float npt = playStartTime() + nptOffset;
+
+    return npt;
+  } else {
+    // Common case: We have been synchronized using RTCP.  This means that the "presentationTime" parameter
+    // will be accurate, and so we should use this to compute the NPT.
+    double ptsDouble = (double)(presentationTime.tv_sec + presentationTime.tv_usec/1000000.0);
+
+    if (rtpInfo.infoIsNew) {
+      // This is the first time we've been called with a synchronized presentation time since the "rtpInfo"
+      // structure was last filled in.  Use this "presentationTime" to compute "fNPT_PTS_Offset":
+      u_int32_t timestampOffset = rtpSource()->curPacketRTPTimestamp() - rtpInfo.timestamp;
+      float nptOffset = (timestampOffset/(float)(rtpSource()->timestampFrequency()))*scale();
+      float npt = playStartTime() + nptOffset;
+      fNPT_PTS_Offset = npt - ptsDouble*scale();
+      rtpInfo.infoIsNew = False; // for next time
+
+      return npt;
+    } else {
+      // Use the precomputed "fNPT_PTS_Offset" to compute the NPT from the PTS:
+      if (fNPT_PTS_Offset == 0.0) return 0.0; // error: The "rtpInfo" structure was apparently never filled in
+      return (float)(ptsDouble*scale() + fNPT_PTS_Offset);
+    }
   }
 }
 

@@ -48,6 +48,7 @@ public:
   char* mediaSessionType() const { return fMediaSessionType; }
   char* sessionName() const { return fSessionName; }
   char* sessionDescription() const { return fSessionDescription; }
+  char const* controlPath() const { return fControlPath; }
 
   Boolean initiateByMediaType(char const* mimeType,
 			      MediaSubsession*& resultSubsession,
@@ -79,6 +80,7 @@ protected:
   Boolean parseSDPLine_i(char const* sdpLine);
   Boolean parseSDPLine_c(char const* sdpLine);
   Boolean parseSDPAttribute_type(char const* sdpLine);
+  Boolean parseSDPAttribute_control(char const* sdpLine);
   Boolean parseSDPAttribute_range(char const* sdpLine);
   Boolean parseSDPAttribute_source_filter(char const* sdpLine);
 
@@ -105,6 +107,7 @@ protected:
   char* fMediaSessionType; // holds a=type value
   char* fSessionName; // holds s=<session name> value
   char* fSessionDescription; // holds i=<session description> value
+  char* fControlPath; // holds optional a=control: string
 };
 
 
@@ -213,10 +216,18 @@ public:
 
   // Parameters set from a RTSP "RTP-Info:" header:
   struct {
-    unsigned trackId;
     u_int16_t seqNum;
     u_int32_t timestamp;
+    Boolean infoIsNew; // not part of the RTSP header; instead, set whenever this struct is filled in
   } rtpInfo;
+
+  float getNormalPlayTime(struct timeval const& presentationTime);
+  // Computes the stream's "Normal Play Time" (NPT) from the given "presentationTime".
+  // (For the definition of "Normal Play Time", see RFC 2326, section 3.6.)
+  // This function is useful only if the "rtpInfo" structure was previously filled in
+  // (e.g., by a "RTP-Info:" header in a RTSP response).
+  // Also, for this function to work properly, the RTP stream's presentation times must (eventually) be
+  // synchronized via RTCP.
 
 #ifdef SUPPORT_REAL_RTSP
   // Attributes specific to RealNetworks streams:
@@ -261,7 +272,7 @@ protected:
   char* fCodecName;
   char* fProtocolName;
   unsigned fRTPTimestampFrequency;
-  char* fControlPath;
+  char* fControlPath; // holds optional a=control: string
   struct in_addr fSourceFilterAddr; // used for SSM
 
   // Parameters set by "a=fmtp:" SDP lines:
@@ -283,6 +294,7 @@ protected:
   unsigned fNumChannels;
      // optionally set by "a=rtpmap:" lines for audio sessions.  Default: 1
   float fScale; // set from a RTSP "Scale:" header
+  double fNPT_PTS_Offset; // set by "getNormalPlayTime()"; add this to a PTS to get NPT
 
   // Fields set by initiate():
   Groupsock* fRTPSocket; Groupsock* fRTCPSocket; // works even for unicast

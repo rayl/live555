@@ -602,22 +602,29 @@ static Boolean isAbsoluteURL(char const* url) {
   return False;
 }
 
+char const* RTSPClient::sessionURL(MediaSession const& session) const {
+  char const* url = session.controlPath();
+  if (url == NULL || strcmp(url, "*") == 0) url = fBaseURL;
+
+  return url;
+}
+
 void RTSPClient::constructSubsessionURL(MediaSubsession const& subsession,
 					char const*& prefix,
 					char const*& separator,
 					char const*& suffix) {
   // Figure out what the URL describing "subsession" will look like.
   // The URL is returned in three parts: prefix; separator; suffix
-  //##### NOTE: This code doesn't really do the right thing if "fBaseURL"
+  //##### NOTE: This code doesn't really do the right thing if "sessionURL()"
   // doesn't end with a "/", and "subsession.controlPath()" is relative.
-  // The right thing would have been to truncate "fBaseURL" back to the
+  // The right thing would have been to truncate "sessionURL()" back to the
   // rightmost "/", and then add "subsession.controlPath()".
   // In practice, though, each "DESCRIBE" response typically contains
-  // a "Content-Base:" header that consists of "fBaseURL" followed by
+  // a "Content-Base:" header that consists of "sessionURL()" followed by
   // a "/", in which case this code ends up giving the correct result.
   // However, we should really fix this code to do the right thing, and
   // also check for and use the "Content-Base:" header appropriately. #####
-  prefix = fBaseURL;
+  prefix = sessionURL(subsession.parentSession());
   if (prefix == NULL) prefix = "";
 
   suffix = subsession.controlPath();
@@ -1055,8 +1062,9 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
       "%s"
       "\r\n";
 
+    char const* sessURL = sessionURL(session);
     unsigned cmdSize = strlen(cmdFmt)
-      + strlen(fBaseURL)
+      + strlen(sessURL)
       + 20 /* max int len */
       + strlen(fLastSessionId)
       + strlen(scaleStr)
@@ -1065,7 +1073,7 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
       + fUserAgentHeaderStrSize;
     cmd = new char[cmdSize];
     sprintf(cmd, cmdFmt,
-	    fBaseURL,
+	    sessURL,
 	    ++fCSeq,
 	    fLastSessionId,
 	    scaleStr,
@@ -1093,6 +1101,21 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
 
       if (parseScaleHeader(lineStart, session.scale())) continue;
       if (parseRangeHeader(lineStart, session.playStartTime(), session.playEndTime())) continue;
+
+      u_int16_t seqNum; u_int32_t timestamp;
+      if (parseRTPInfoHeader(lineStart, seqNum, timestamp)) {
+	// This is data for our first subsession.  Fill it in, and do the same for our other subsessions:
+	MediaSubsessionIterator iter(session);
+	MediaSubsession* subsession;
+	while ((subsession = iter.next()) != NULL) {
+	  subsession->rtpInfo.seqNum = seqNum;
+	  subsession->rtpInfo.timestamp = timestamp;
+	  subsession->rtpInfo.infoIsNew = True;
+
+	  if (!parseRTPInfoHeader(lineStart, seqNum, timestamp)) break;
+	}
+	continue;
+      }
     }
 
     if (fTCPStreamIdCount == 0) { // we're not receiving RTP-over-TCP
@@ -1186,14 +1209,16 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
 
       nextLineStart = getLine(lineStart);
 
-      if (parseRTPInfoHeader(lineStart,
-			     subsession.rtpInfo.trackId,
-			     subsession.rtpInfo.seqNum,
-			     subsession.rtpInfo.timestamp)) {
-	continue;
-      }
       if (parseScaleHeader(lineStart, subsession.scale())) continue;
       if (parseRangeHeader(lineStart, subsession._playStartTime(), subsession._playEndTime())) continue;
+
+      u_int16_t seqNum; u_int32_t timestamp;
+      if (parseRTPInfoHeader(lineStart, seqNum, timestamp)) {
+	subsession.rtpInfo.seqNum = seqNum;
+	subsession.rtpInfo.timestamp = timestamp;
+	subsession.rtpInfo.infoIsNew = True;
+	continue;
+      }
     }
 
     delete[] cmd;
@@ -1219,6 +1244,7 @@ Boolean RTSPClient::pauseMediaSession(MediaSession& session) {
     char* authenticatorStr
       = createAuthenticatorString(&fCurrentAuthenticator, "PAUSE", fBaseURL);
 
+    char const* sessURL = sessionURL(session);
     char* const cmdFmt =
       "PAUSE %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
@@ -1228,14 +1254,14 @@ Boolean RTSPClient::pauseMediaSession(MediaSession& session) {
       "\r\n";
 
     unsigned cmdSize = strlen(cmdFmt)
-      + strlen(fBaseURL)
+      + strlen(sessURL)
       + 20 /* max int len */
       + strlen(fLastSessionId)
       + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize;
     cmd = new char[cmdSize];
     sprintf(cmd, cmdFmt,
-	    fBaseURL,
+	    sessURL,
 	    ++fCSeq,
 	    fLastSessionId,
 	    authenticatorStr,
@@ -1626,6 +1652,7 @@ Boolean RTSPClient::teardownMediaSession(MediaSession& session) {
       = createAuthenticatorString(&fCurrentAuthenticator,
 				  "TEARDOWN", fBaseURL);
 
+    char const* sessURL = sessionURL(session);
     char* const cmdFmt =
       "TEARDOWN %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
@@ -1635,14 +1662,14 @@ Boolean RTSPClient::teardownMediaSession(MediaSession& session) {
       "\r\n";
 
     unsigned cmdSize = strlen(cmdFmt)
-      + strlen(fBaseURL)
+      + strlen(sessURL)
       + 20 /* max int len */
       + strlen(fLastSessionId)
       + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize;
     cmd = new char[cmdSize];
     sprintf(cmd, cmdFmt,
-	    fBaseURL,
+	    sessURL,
 	    ++fCSeq,
 	    fLastSessionId,
 	    authenticatorStr,
@@ -2222,25 +2249,29 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
   return False;
 }
 
-Boolean RTSPClient::parseRTPInfoHeader(char const* line,
-				       unsigned& trackId,
-				       u_int16_t& seqNum,
-				       u_int32_t& timestamp) {
-  if (_strncasecmp(line, "RTP-Info: ", 10) != 0) return False;
-  line += 10;
-  char const* fields = line;
-  char* field = strDupSize(fields);
+Boolean RTSPClient::parseRTPInfoHeader(char*& line, u_int16_t& seqNum, u_int32_t& timestamp) {
+  // At this point in the parsing, "line" should begin with either "RTP-Info: " (for the start of the header),
+  // or ",", indicating the RTP-Info parameter list for the 2nd-through-nth subsessions: 
+  if (_strncasecmp(line, "RTP-Info: ", 10) == 0) {
+    line += 10;
+  } else if (line[0] == ',') {
+    ++line;
+  } else {
+    return False;
+  }
+
+  // "line" now consists of a ';'-separated list of parameters, ending with ',' or '\0'.
+  char* field = strDupSize(line);
   
-  while (sscanf(fields, "%[^;]", field) == 1) {
-    if (sscanf(field, "url=trackID=%u", &trackId) == 1 ||
-	sscanf(field, "url=trackid=%u", &trackId) == 1 ||
-	sscanf(field, "seq=%hu", &seqNum) == 1 ||
+  while (sscanf(line, "%[^;,]", field) == 1) {
+    if (sscanf(field, "seq=%hu", &seqNum) == 1 ||
 	sscanf(field, "rtptime=%u", &timestamp) == 1) {
     }
     
-    fields += strlen(field);
-    if (fields[0] == '\0') break;
-    ++fields; // skip over the ';'
+    line += strlen(field);
+    if (line[0] == '\0' || line[0] == ',') break;
+    // ASSERT: line[0] == ';'
+    ++line; // skip over the ';'
   }
 
   delete[] field;

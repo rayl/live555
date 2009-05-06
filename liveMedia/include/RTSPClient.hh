@@ -183,12 +183,12 @@ private:
 				 portNumBits& serverPortNum,
 				 unsigned char& rtpChannelId,
 				 unsigned char& rtcpChannelId);
-  Boolean parseRTPInfoHeader(char const* line, unsigned& trackId,
-			     u_int16_t& seqNum, u_int32_t& timestamp);
+  Boolean parseRTPInfoHeader(char*& line, u_int16_t& seqNum, u_int32_t& timestamp);
   Boolean parseScaleHeader(char const* line, float& scale);
   Boolean parseGetParameterHeader(char const* line, 
                                   const char* param,
                                   char*& value);
+  char const* sessionURL(MediaSession const& session) const;
   void constructSubsessionURL(MediaSubsession const& subsession,
 			      char const*& prefix,
 			      char const*& separator,

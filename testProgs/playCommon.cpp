@@ -677,11 +677,10 @@ int main(int argc, char** argv) {
       while ((subsession = iter.next()) != NULL) {
 	if (subsession->readSource() == NULL) continue; // was not initiated
 
-	  fileSink->startPlaying(*(subsession->readSource()),
-					 subsessionAfterPlaying,
-					 subsession);
-	  madeProgress = True;
-	  break; // play from one subsession only
+	fileSink->startPlaying(*(subsession->readSource()),
+			       subsessionAfterPlaying, subsession);
+	madeProgress = True;
+	break; // play from one subsession only
       }
       if (!madeProgress) shutdown();
 #endif
