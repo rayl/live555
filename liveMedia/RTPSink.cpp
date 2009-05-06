@@ -21,7 +21,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTPSink.hh"
 #include "GroupsockHelper.hh"
 
-//#define DEBUG_RR 1 //#####@@@@@
 ////////// RTPSink //////////
 
 Boolean RTPSink::lookupByName(UsageEnvironment& env, char const* sinkName,
@@ -241,7 +240,13 @@ unsigned RTPTransmissionStats::roundTripDelay() const {
   unsigned lastReceivedTimeNTP
     = (unsigned)((lastReceivedTimeNTP_high<<16) + fractionalPart + 0.5);
 
-  return lastReceivedTimeNTP - fLastSRTime - fDiffSR_RRTime; 
+  int rawResult = lastReceivedTimeNTP - fLastSRTime - fDiffSR_RRTime;
+  if (rawResult < 0) {
+    // This can happen if there's clock skew between the sender and receiver,
+    // and if the round-trip time was very small.
+    rawResult = 0;
+  }
+  return (unsigned)rawResult;
 }
 
 unsigned RTPTransmissionStats::packetsReceivedSinceLastRR() const {
