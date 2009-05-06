@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
 // A RTSP server
 // C++ header
 
@@ -68,8 +68,8 @@ public:
       // Note: The caller is responsible for reclaiming "authDatabase"
       // If "reclamationTestSeconds" > 0, then the "RTSPClientSession" state for
       //     each client will get reclaimed (and the corresponding RTP stream(s)
-      //     torn down) if no RTSP commands from the client are received in at least 
-      //     "reclamationTestSeconds" seconds.
+      //     torn down) if no RTSP commands - or RTCP "RR" packets - from the
+      //     client are received in at least "reclamationTestSeconds" seconds.
 
   static Boolean lookupByName(UsageEnvironment& env, char const* name,
 			      RTSPServer*& resultServer);
@@ -145,7 +145,8 @@ private:
 			       unsigned resultURLSuffixMaxSize, 
 			       char* resultCSeq,
 			       unsigned resultCSeqMaxSize); 
-    void noteClientLiveness();
+    void noteLiveness();
+    static void noteClientLiveness(RTSPClientSession* clientSession);
     static void livenessTimeoutTask(RTSPClientSession* clientSession);
 
   private:

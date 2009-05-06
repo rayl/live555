@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
 // RTCP
 // C++ header
 
@@ -57,7 +57,7 @@ public:
 
   void setByeHandler(TaskFunc* handlerTask, void* clientData,
 		     Boolean handleActiveParticipantsOnly = True);
-      // assigns a handler routine to be called if a "BYE" arrives.
+      // Assigns a handler routine to be called if a "BYE" arrives.
       // The handler is called once only; for subsequent "BYE"s,
       // "setByeHandler()" would need to be called again.
       // If "handleActiveParticipantsOnly" is True, then the handler is called
@@ -67,6 +67,12 @@ public:
       // called if some other multicast receiver happens to exit.
       // If "handleActiveParticipantsOnly" is False, then the handler is called
       // for any incoming RTCP "BYE". 
+  void setSRHandler(TaskFunc* handlerTask, void* clientData);
+  void setRRHandler(TaskFunc* handlerTask, void* clientData);
+      // Assigns a handler routine to be called if a "SR" or "RR"
+      // (respectively) arrives.  Unlike "setByeHandler()", the handler will
+      // be called once for each incoming "SR" or "RR".  (To turn off handling,
+      // call the function again with "handlerTask" (and "clientData") as NULL.
 
   Groupsock* RTCPgs() const { return fRTCPInterface.gs(); }
 
@@ -145,6 +151,10 @@ private:
   TaskFunc* fByeHandlerTask;
   void* fByeHandlerClientData;
   Boolean fByeHandleActiveParticipantsOnly;
+  TaskFunc* fSRHandlerTask;
+  void* fSRHandlerClientData;
+  TaskFunc* fRRHandlerTask;
+  void* fRRHandlerClientData;
 
 public: // because this stuff is used by an external "C" function
   void schedule(double nextTime);

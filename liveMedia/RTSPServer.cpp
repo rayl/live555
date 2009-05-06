@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
 // A RTSP server
 // Implementation
 
@@ -248,7 +248,7 @@ RTSPServer::RTSPClientSession
   // Arrange to handle incoming requests:
   envir().taskScheduler().turnOnBackgroundReadHandling(fClientSocket,
      (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
-  noteClientLiveness();
+  noteLiveness();
 }
 
 RTSPServer::RTSPClientSession::~RTSPClientSession() {
@@ -289,7 +289,7 @@ void RTSPServer::RTSPClientSession
 }
 
 void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
-  noteClientLiveness();
+  noteLiveness();
 
   struct sockaddr_in dummy; // 'from' address, meaningless in this case
   int bytesLeft = sizeof fBuffer;
@@ -972,6 +972,8 @@ void RTSPServer::RTSPClientSession
       unsigned rtpTimestamp = 0;
       fStreamStates[i].subsession->startStream(fOurSessionId,
 					       fStreamStates[i].streamToken,
+					       (TaskFunc*)noteClientLiveness,
+					       this,
 					       rtpSeqNum, rtpTimestamp);
       const char *urlSuffix = fStreamStates[i].subsession->trackId();
       char* prevRTPInfo = rtpInfo;
@@ -1272,20 +1274,28 @@ RTSPServer::RTSPClientSession
   return True;
 }
 
-void RTSPServer::RTSPClientSession
-::livenessTimeoutTask(RTSPClientSession* clientSession) {
-  // If this gets called, the client session is assumed to have timed out,
-  // so delete it:
-  delete clientSession;
-}
-
-void RTSPServer::RTSPClientSession::noteClientLiveness() {
+void RTSPServer::RTSPClientSession::noteLiveness() {
   if (fOurServer.fReclamationTestSeconds > 0) {
     envir().taskScheduler()
       .rescheduleDelayedTask(fLivenessCheckTask,
 			     fOurServer.fReclamationTestSeconds*1000000,
 			     (TaskFunc*)livenessTimeoutTask, this);
   }
+}
+
+void RTSPServer::RTSPClientSession
+::noteClientLiveness(RTSPClientSession* clientSession) {
+  clientSession->noteLiveness();
+}
+
+void RTSPServer::RTSPClientSession
+::livenessTimeoutTask(RTSPClientSession* clientSession) {
+  // If this gets called, the client session is assumed to have timed out,
+  // so delete it:
+#ifdef DEBUG
+  fprintf(stderr, "RTSP client session from %s has timed out (due to inactivity)\n", our_inet_ntoa(clientSession->fClientAddr.sin_addr));
+#endif
+  delete clientSession;
 }
 
 

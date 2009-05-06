@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
 // RTCP
 // Implementation
 
@@ -129,7 +129,9 @@ RTCPInstance::RTCPInstance(UsageEnvironment& env, Groupsock* RTCPgs,
     fLastSentSize(0), fLastReceivedSize(0), fLastReceivedSSRC(0),
     fTypeOfEvent(EVENT_UNKNOWN), fTypeOfPacket(PACKET_UNKNOWN_TYPE),
     fHaveJustSentPacket(False), fLastPacketSentSize(0),
-    fByeHandlerTask(NULL), fByeHandlerClientData(NULL) {
+    fByeHandlerTask(NULL), fByeHandlerClientData(NULL),
+    fSRHandlerTask(NULL), fSRHandlerClientData(NULL),
+    fRRHandlerTask(NULL), fRRHandlerClientData(NULL) {
 #ifdef DEBUG
   fprintf(stderr, "RTCPInstance[%p]::RTCPInstance()\n", this);
 #endif
@@ -217,6 +219,16 @@ void RTCPInstance::setByeHandler(TaskFunc* handlerTask, void* clientData,
   fByeHandlerTask = handlerTask;
   fByeHandlerClientData = clientData;
   fByeHandleActiveParticipantsOnly = handleActiveParticipantsOnly;
+}
+
+void RTCPInstance::setSRHandler(TaskFunc* handlerTask, void* clientData) {
+  fSRHandlerTask = handlerTask;
+  fSRHandlerClientData = clientData;
+}
+
+void RTCPInstance::setRRHandler(TaskFunc* handlerTask, void* clientData) {
+  fRRHandlerTask = handlerTask;
+  fRRHandlerClientData = clientData;
 }
 
 void RTCPInstance::setStreamSocket(int sockNum,
@@ -350,6 +362,10 @@ void RTCPInstance::incomingReportHandler1() {
 					  NTPmsw, NTPlsw, rtpTimestamp);
 	  }
 	  ADVANCE(8); // skip over packet count, octet count
+
+	  // If a 'SR handler' was set, call it now:
+	  if (fSRHandlerTask != NULL) (*fSRHandlerTask)(fSRHandlerClientData);
+
 	  // The rest of the SR is handled like a RR (so, no "break;" here)
 	}
         case RTCP_PT_RR: {
@@ -383,6 +399,11 @@ void RTCPInstance::incomingReportHandler1() {
           } else {
             ADVANCE(reportBlocksSize);
           }
+
+	  if (pt == RTCP_PT_RR) { // i.e., we didn't fall through from 'SR'
+	    // If a 'RR handler' was set, call it now:
+	    if (fRRHandlerTask != NULL) (*fRRHandlerTask)(fRRHandlerClientData);
+	  }
 
 	  subPacketOK = True;
 	  typeOfPacket = PACKET_RTCP_REPORT;

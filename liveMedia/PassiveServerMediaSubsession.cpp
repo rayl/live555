@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
 // A 'ServerMediaSubsession' object that represents an existing
 // 'RTPSink', rather than one that creates new 'RTPSink's on demand.
 // Implementation
@@ -122,8 +122,13 @@ void PassiveServerMediaSubsession
 
 void PassiveServerMediaSubsession::startStream(unsigned /*clientSessionId*/,
 					       void* /*streamToken*/,
-                                                unsigned short& rtpSeqNum,
-                                                unsigned& rtpTimestamp) {
+					       TaskFunc* rtcpRRHandler,
+					       void* rtcpRRHandlerClientData,
+					       unsigned short& rtpSeqNum,
+					       unsigned& rtpTimestamp) {
+  if (fRTCPInstance != NULL) {
+    fRTCPInstance->setRRHandler(rtcpRRHandler, rtcpRRHandlerClientData);
+  }
   rtpSeqNum = fRTPSink.currentSeqNo();
   rtpTimestamp = fRTPSink.currentTimestamp();
 }
