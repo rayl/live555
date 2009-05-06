@@ -63,7 +63,6 @@ ByteStreamFileSource::createNew(UsageEnvironment& env, FILE* fid,
 // The following is intended to support seeking in files > 2^32 bytes in size.
 #if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
 #include <io.h>
-#define int64_t __int64
 #endif
 
 static int fseek64(FILE *fid, int64_t offset, int whence) {
@@ -76,12 +75,12 @@ static int fseek64(FILE *fid, int64_t offset, int whence) {
 #endif
 }
 
-void ByteStreamFileSource::seekToByteAbsolute(unsigned byteNumber) {
+void ByteStreamFileSource::seekToByteAbsolute(u_int64_t byteNumber) {
   fseek64(fFid, (int64_t)byteNumber, SEEK_SET);
 }
 
-void ByteStreamFileSource::seekToByteRelative(int offset) {
-  fseek64(fFid, (int64_t)offset, SEEK_CUR);
+void ByteStreamFileSource::seekToByteRelative(int64_t offset) {
+  fseek64(fFid, offset, SEEK_CUR);
 }
 
 ByteStreamFileSource::ByteStreamFileSource(UsageEnvironment& env, FILE* fid,

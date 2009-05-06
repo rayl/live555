@@ -42,6 +42,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 /* Definitions of size-specific types: */
+typedef __int64 int64_t;
+typedef unsigned __int64 u_int64_t;
 typedef unsigned u_int32_t;
 typedef unsigned short u_int16_t;
 typedef unsigned char u_int8_t;

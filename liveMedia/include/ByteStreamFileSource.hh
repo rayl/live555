@@ -45,8 +45,8 @@ public:
   unsigned fileSize() const { return fFileSize; }
       // 0 means zero-length, unbounded, or unknown
 
-  void seekToByteAbsolute(unsigned byteNumber);
-  void seekToByteRelative(int offset);
+  void seekToByteAbsolute(u_int64_t byteNumber);
+  void seekToByteRelative(int64_t offset);
 
 protected:
   ByteStreamFileSource(UsageEnvironment& env,
