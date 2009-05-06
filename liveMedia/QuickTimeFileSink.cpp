@@ -606,7 +606,8 @@ Boolean SubsessionIOState::setQTstate() {
       if (strcmp(fOurSubsession.codecName(), "X-QT") == 0 ||
 	  strcmp(fOurSubsession.codecName(), "X-QUICKTIME") == 0) {
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_genericMedia;
-      } else if (strcmp(fOurSubsession.codecName(), "H263-1998") == 0) {
+      } else if (strcmp(fOurSubsession.codecName(), "H263-1998") == 0 ||
+		 strcmp(fOurSubsession.codecName(), "H263-2000") == 0) {
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_h263;
 	fQTTimeScale = 600;
 	fQTTimeUnitsPerSample = fQTTimeScale/fOurSink.fMovieFPS;

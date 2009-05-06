@@ -664,7 +664,8 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	= H261VideoRTPSource::createNew(env(), fRTPSocket,
 					fRTPPayloadFormat,
 					fRTPTimestampFrequency);
-    } else if (strcmp(fCodecName, "H263-1998") == 0) { // H.263+
+    } else if (strcmp(fCodecName, "H263-1998") == 0 ||
+	       strcmp(fCodecName, "H263-2000") == 0) { // H.263+
       fReadSource = fRTPSource
 	= H263plusVideoRTPSource::createNew(env(), fRTPSocket,
 					    fRTPPayloadFormat,
