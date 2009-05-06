@@ -40,7 +40,7 @@ RTSPServer::createNew(UsageEnvironment& env, Port ourPort,
   int ourSocket = -1;
 
   do {
-    int ourSocket = setUpOurSocket(env, ourPort);
+    ourSocket = setUpOurSocket(env, ourPort);
     if (ourSocket == -1) break;
 
     return new RTSPServer(env, ourSocket, ourPort, authDatabase,

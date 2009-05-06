@@ -63,7 +63,7 @@ class RTSPServer: public Medium {
 public:
   static RTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554,
 			       UserAuthenticationDatabase* authDatabase = NULL,
-			       unsigned reclamationTestSeconds = 45);
+			       unsigned reclamationTestSeconds = 65);
       // If ourPort.num() == 0, we'll choose the port number
       // Note: The caller is responsible for reclaiming "authDatabase"
       // If "reclamationTestSeconds" > 0, then the "RTSPClientSession" state for

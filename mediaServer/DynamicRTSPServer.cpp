@@ -24,14 +24,15 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 DynamicRTSPServer*
 DynamicRTSPServer::createNew(UsageEnvironment& env, Port ourPort,
-			     UserAuthenticationDatabase* authDatabase) {
+			     UserAuthenticationDatabase* authDatabase,
+			     unsigned reclamationTestSeconds) {
   int ourSocket = -1;
 
   do {
     int ourSocket = setUpOurSocket(env, ourPort);
     if (ourSocket == -1) break;
 
-    return new DynamicRTSPServer(env, ourSocket, ourPort, authDatabase);
+    return new DynamicRTSPServer(env, ourSocket, ourPort, authDatabase, reclamationTestSeconds);
   } while (0);
 
   if (ourSocket != -1) ::closeSocket(ourSocket);
@@ -40,8 +41,8 @@ DynamicRTSPServer::createNew(UsageEnvironment& env, Port ourPort,
 
 DynamicRTSPServer::DynamicRTSPServer(UsageEnvironment& env, int ourSocket,
 				     Port ourPort,
-				     UserAuthenticationDatabase* authDatabase)
-  : RTSPServer(env, ourSocket, ourPort, authDatabase, 45/*reclamationTestSeconds*/) {
+				     UserAuthenticationDatabase* authDatabase, unsigned reclamationTestSeconds)
+  : RTSPServer(env, ourSocket, ourPort, authDatabase, reclamationTestSeconds) {
 }
 
 DynamicRTSPServer::~DynamicRTSPServer() {

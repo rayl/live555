@@ -44,7 +44,7 @@ RTSPOverHTTPServer::createNew(UsageEnvironment& env, Port ourHTTPPort,
   int ourSocket = -1;
 
   do {
-    int ourSocket = setUpOurSocket(env, ourHTTPPort);
+    ourSocket = setUpOurSocket(env, ourHTTPPort);
     if (ourSocket == -1) break;
 
     return new RTSPOverHTTPServer(env, ourSocket, rtspServerPort, rtspServerHostName);
