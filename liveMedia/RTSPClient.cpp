@@ -64,7 +64,7 @@ RTSPClient::RTSPClient(UsageEnvironment& env,
     fCSeq(0), fBaseURL(NULL), fCurrentAuthenticator(NULL),
     fTCPStreamIdCount(0), fLastSessionId(NULL)
 #ifdef SUPPORT_REAL_RTSP
-  , fRealChallengeStr(NULL)
+  , fRealChallengeStr(NULL), fRealETagStr(NULL)
 #endif
 {
   // Set the "User-Agent:" header to use in each request:
@@ -109,6 +109,7 @@ void RTSPClient::reset() {
 
 #ifdef SUPPORT_REAL_RTSP
   delete[] fRealChallengeStr; fRealChallengeStr = NULL;
+  delete[] fRealETagStr; fRealETagStr = NULL;
 #endif
   delete[] fLastSessionId; fLastSessionId = NULL;
 }
@@ -154,11 +155,11 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
       "DESCRIBE %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Accept: application/sdp\r\n"
+      "%s"
+     "%s"
 #ifdef SUPPORT_REAL_RTSP
       REAL_DESCRIBE_HEADERS
 #endif
-      "%s"
-     "%s"
       "\r\n";
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(url)
@@ -191,6 +192,9 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
     // we can handle.
     Boolean wantRedirection = False;
     char* redirectionURL = NULL;
+#ifdef SUPPORT_REAL_RTSP
+    delete[] fRealETagStr; fRealETagStr = new char[readBufSize];
+#endif
     char* firstLine = readBuf;
     char* nextLineStart = getLine(firstLine);
     unsigned responseCode;
@@ -249,6 +253,9 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 			       lineStart, "\"");
 	  break;
 	}
+#ifdef SUPPORT_REAL_RTSP
+      } else if (sscanf(lineStart, "ETag: %s", fRealETagStr) == 1) {
+#endif
       } else if (wantRedirection) { 
 	if (sscanf(lineStart, "Location: %s", redirectionURL) == 1) {
 	  // Try again with this URL
@@ -386,18 +393,20 @@ char* RTSPClient::sendOptionsCmd(char const* url) {
 
     // Send the OPTIONS command:
     char* const cmdFmt =
-      "OPTIONS * RTSP/1.0\r\n"
+      "OPTIONS %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
+      "%s"
 #ifdef SUPPORT_REAL_RTSP
       REAL_OPTIONS_HEADERS
 #endif
-      "%s"
       "\r\n";
     unsigned cmdSize = strlen(cmdFmt)
+      + strlen(url)
       + 20 /* max int len */
       + fUserAgentHeaderStrSize;
     cmd = new char[cmdSize];
     sprintf(cmd, cmdFmt,
+	    url,
 	    ++fCSeq,
 	    fUserAgentHeaderStr);
 
@@ -675,13 +684,17 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       char checksum[34];
       RealCalculateChallengeResponse(fRealChallengeStr, challenge2, checksum);
 
+      char const* etag = fRealETagStr == NULL ? "" : fRealETagStr;
+
       char const* transportFmt =
 	"Transport: x-pn-tng/tcp;mode=play,rtp/avp/unicast;mode=play\r\n"
-	"RealChallenge2: %s, sd=%s\r\n";
+	"RealChallenge2: %s, sd=%s\r\n"
+	"If-Match: %s\r\n";
       unsigned transportSize = strlen(transportFmt)
-	+ sizeof challenge2 + sizeof checksum;
+	+ sizeof challenge2 + sizeof checksum
+	+ strlen(etag);
       transportStr = new char[transportSize];
-      sprintf(transportStr, transportFmt, challenge2, checksum);
+      sprintf(transportStr, transportFmt, challenge2, checksum, etag);
 
       // Also, tell the RDT source to use the RTSP TCP socket:
       RealRDTSource* rdtSource = (RealRDTSource*)(subsession.readSource());

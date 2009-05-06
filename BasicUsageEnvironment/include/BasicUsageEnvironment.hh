@@ -62,7 +62,7 @@ private:
 				    void* clientData);
   virtual void turnOffBackgroundReadHandling(int socketNum);
   
-private:
+protected:
   // To implement background reads:
   int fMaxNumSockets;
   fd_set fReadSet;

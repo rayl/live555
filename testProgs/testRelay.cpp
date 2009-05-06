@@ -13,17 +13,19 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
-// Copyright (c) 1996-2001, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2004, Live Networks, Inc.  All rights reserved
 // A test program that receives a UDP multicast stream
 // and retransmits it to another (multicast or unicast) address & port 
 // main program
 
-#include "Groupsock.hh"
-#include "GroupsockHelper.hh"
+#include <liveMedia.hh>
 #include "BasicUsageEnvironment.hh"
+#include "GroupsockHelper.hh"
+#if 0
+#include "Groupsock.hh"
+#endif
 
 UsageEnvironment* env;
-void readHandler(void*, int); // forward
 
 // To receive a "source-specific multicast" (SSM) stream, uncomment this:
 //#define USE_SSM 1
@@ -34,17 +36,17 @@ int main(int argc, char** argv) {
   env = BasicUsageEnvironment::createNew(*scheduler);
 
   // Create a 'groupsock' for the input multicast group,port:
-  char* sessionAddressStr
+  char* inputAddressStr
 #ifdef USE_SSM
     = "232.255.42.42";
 #else
     = "239.255.42.42";
 #endif
-  struct in_addr sessionAddress;
-  sessionAddress.s_addr = our_inet_addr(sessionAddressStr);
+  struct in_addr inputAddress;
+  inputAddress.s_addr = our_inet_addr(inputAddressStr);
 
-  const Port port(8888);
-  const unsigned char ttl = 0; // we're only reading from this mcast group
+  Port const inputPort(8888);
+  unsigned char const inputTTL = 0; // we're only reading from this mcast group
   
 #ifdef USE_SSM
   char* sourceAddressStr = "aaa.bbb.ccc.ddd";
@@ -52,43 +54,34 @@ int main(int argc, char** argv) {
   struct in_addr sourceFilterAddress;
   sourceFilterAddress.s_addr = our_inet_addr(sourceAddressStr);
 
-  Groupsock inputGroupsock(*env, sessionAddress, sourceFilterAddress, port);
+  Groupsock inputGroupsock(*env, inputAddress, sourceFilterAddress, inputPort);
 #else
-  Groupsock inputGroupsock(*env, sessionAddress, port, ttl);
+  Groupsock inputGroupsock(*env, inputAddress, inputPort, inputTTL);
 #endif
   
-  // Start reading and processing incoming packets:
-  env->taskScheduler()
-    .turnOnBackgroundReadHandling(inputGroupsock.socketNum(),
-				  readHandler, &inputGroupsock);
+  // Then create a liveMedia 'source' object, encapsulating this groupsock:
+  FramedSource* source = BasicUDPSource::createNew(*env, &inputGroupsock);
+
+
+  // Create a 'groupsock' for the destination address and port:
+  char* outputAddressStr = "239.255.43.43"; // this could also be unicast
+  struct in_addr outputAddress;
+  outputAddress.s_addr = our_inet_addr(outputAddressStr);
+  
+  Port const outputPort(4444);
+  unsigned char const outputTTL = 255;
+  
+  Groupsock outputGroupsock(*env, outputAddress, outputPort, outputTTL);
+
+  // Then create a liveMedia 'sink' object, encapsulating this groupsock:
+  unsigned const maxPacketSize = 65536; // allow for large UDP packets
+  MediaSink* sink = BasicUDPSink::createNew(*env, &outputGroupsock, maxPacketSize);
+
+
+  // Now, start playing, feeding the sink object from the source:
+  sink->startPlaying(*source, NULL, NULL);
 
   env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning
-}
-
-
-static unsigned const maxPacketSize = 65536;
-static unsigned char pkt[maxPacketSize+1];
-
-void readHandler(void* clientData, int /*mask*/) {
-  static OutputSocket* outputSocket = NULL;
-  static unsigned outputAddress = 0;
-  if (outputSocket == NULL) {
-    // Create a socket for output:
-    outputSocket = new OutputSocket(*env);
-
-    char* outputAddressStr = "239.255.43.43"; // this could also be unicast
-    outputAddress = our_inet_addr(outputAddressStr);
-  }
-
-  // Read the packet from the input socket:
-  Groupsock* inputGroupsock = (Groupsock*)clientData;
-  unsigned packetSize;
-  struct sockaddr_in fromAddress; // not used
-  if (!inputGroupsock->handleRead(pkt, maxPacketSize,
-				  packetSize, fromAddress)) return;
-
-  // And write it out to the output socket (with port 4444, TTL 255):
-  outputSocket->write(outputAddress, 4444, 255, pkt, packetSize);
 }

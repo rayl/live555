@@ -174,6 +174,7 @@ private:
   char* fLastSessionId;
 #ifdef SUPPORT_REAL_RTSP
   char* fRealChallengeStr;
+  char* fRealETagStr;
 #endif
   unsigned fDescribeStatusCode;
   // 0: OK; 1: connection failed; 2: stream unavailable

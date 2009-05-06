@@ -1,0 +1,706 @@
+
+[packet from 66.80.62.34 (217 bytes)]
+application/sdp
+[packet from 66.80.62.34 (217 bytes)]
+application/sdp
+[packet from 66.80.62.34 (215 bytes)]
+application/sdp
+[packet from 66.80.62.34 (215 bytes)]
+application/sdp
+[packet from 66.80.62.34 (317 bytes)]
+v=0
+o=- 07223049200 7 IN IP4 131.247.105.12
+s=MAC0007df0031c4 Program 2
+i=VBrick Streaming Video
+c=IN IP4 239.247.105.14/63
+b=AS:6000000
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m1s
+a=mux:m2t
+a=keywds:
+a=author:My Author
+a=copyright:My Copyright, 2002
+a=streamID:slot2Destination1
+m=video 4443 udp 33
+
+[packet from 66.80.62.34 (317 bytes)]
+v=0
+o=- 07223049200 7 IN IP4 131.247.105.12
+s=MAC0007df0031c4 Program 2
+i=VBrick Streaming Video
+c=IN IP4 239.247.105.14/63
+b=AS:6000000
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m1s
+a=mux:m2t
+a=keywds:
+a=author:My Author
+a=copyright:My Copyright, 2002
+a=streamID:slot2Destination1
+m=video 4443 udp 33
+
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (305 bytes)]
+v=0
+o=- 07223048124 2 IN IP4 128.205.10.177
+s=WNY-HPNVI MC-V 5Mbps MPEG-2
+i=WNY-HPNVI Test Sesion 02
+c=IN IP4 239.239.239.231/63
+b=AS:5000
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m2t
+a=keywds:
+a=author:whitlock@buffalo.edu
+a=copyright:N/A
+a=streamID:slot1Destination1
+m=video 3060 udp 33
+
+[packet from 66.80.62.34 (220 bytes)]
+application/sdp
+[packet from 66.80.62.34 (191 bytes)]
+application/sdp
+[packet from 66.80.62.34 (246 bytes)]
+v=0
+o=- 0050c200cc53 1 IN IP4 128.59.244.235
+s=FREE:  iab-vbrick-1
+i=VBrick streaming video
+c=IN IP4 128.59.244.235/63
+b=AS:1774304
+t=0 0
+a=packetsize:4416
+a=packetformatuni:RAW
+a=mux:m1s
+a=keywds:
+m=video 4444 udp 32
+m=audio 4444 udp 14
+
+[packet from 66.80.62.34 (246 bytes)]
+v=0
+o=- 0050c200cc53 1 IN IP4 128.59.244.235
+s=FREE:  iab-vbrick-1
+i=VBrick streaming video
+c=IN IP4 128.59.244.235/63
+b=AS:1774304
+t=0 0
+a=packetsize:4416
+a=packetformatuni:RAW
+a=mux:m1s
+a=keywds:
+m=video 4444 udp 32
+m=audio 4444 udp 14
+
+[packet from 66.80.62.34 (295 bytes)]
+v=0
+o=- 0722301736 4 IN IP4 131.247.105.11
+s=My Video Stream
+i=VBrick Streaming Video
+c=IN IP4 239.247.105.11/63
+b=AS:6000000
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m1s
+a=mux:m2t
+a=keywds:
+a=author:
+a=copyright:2000, My Company
+a=streamID:slot1Destination1
+m=video 4444 udp 33
+
+[packet from 66.80.62.34 (1231 bytes)]
+v=0
+o=- 63203 0 IN IP4 128.223.214.198
+s=UO Broadcast - NASA Videos - Life in the Universe
+i=Life in the Universe, parts 1-13.                         Broadcast with Cisco System's IP/TV                         using MPEG1 codec (6 hours; repeats)                         More information about IP/TV and the                         client needed to view this program is                         available from http://videolab.uoregon.edu/download.html
+u=http://videolab.uoregon.edu/
+e=Hans Kuhn <multicast@lists.uoregon.edu>
+p=Hans Kuhn <541/346-1758>
+b=AS:1000
+t=0 0
+a=type:broadcast
+a=tool:IP/TV Content Manager 3.2.24
+a=x-iptv-file:1 name y:\litu1234567890123.mpg
+m=video 49870 RTP/AVP 32 31 96
+c=IN IP4 224.2.211.67/127
+a=framerate:30
+a=rtpmap:96 WBIH/90000
+a=x-iptv-svr:video blaster2.uoregon.edu file 1 loop
+m=audio 17794 RTP/AVP 14 96 0 3 5 97 98 99 100 101 102 10 11 103 104 105 106
+c=IN IP4 224.2.255.237/127
+a=rtpmap:96 X-WAVE/8000
+a=rtpmap:97 L8/8000/2
+a=rtpmap:98 L8/8000
+a=rtpmap:99 L8/22050/2
+a=rtpmap:100 L8/22050
+a=rtpmap:101 L8/11025/2
+a=rtpmap:102 L8/11025
+a=rtpmap:103 L16/22050/2
+a=rtpmap:104 L16/22050
+a=rtpmap:105 L16/11025/2
+a=rtpmap:106 L16/11025
+a=x-iptv-svr:audio blaster2.uoregon.edu file 1 loop
+
+[packet from 66.80.62.34 (217 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (215 bytes)]
+application/sdp
+[packet from 66.80.62.34 (283 bytes)]
+v=0
+o=- 07223017243 2 IN IP4 128.103.191.18
+s=JFK VBrick
+i=VBrick Streaming Video
+c=IN IP4 224.234.191.18/63
+b=AS:4000
+t=0 0
+a=packetsize:1432
+a=packetformat:RAW
+a=mux:m2t
+a=keywds:
+a=author:JFK
+a=copyright:My Copyright, 2003
+a=streamID:slot1Destination1
+m=video 4444 udp 33
+
+[packet from 66.80.62.34 (1024 bytes)]
+o=MGW2000 624 -577483103 IN IP4 163.117.69.82
+s=Channel-1
+u=http://www.optibase.com
+e=support@optibase.com
+c=IN IP4 224.2.153.29/7
+t=0 0
+m=video 1234 UDP
+c=IN IP4 224.2.153.29
+a=status:live
+a=PacketType:1
+a=mcsid:911
+153.29
+a=status:live
+a=PacketType:1
+a=mcsid:967
+
+19
+
+[packet from 66.80.62.34 (1024 bytes)]
+o=MGW2000 624 -577483103 IN IP4 163.117.69.82
+s=Channel-1
+u=http://www.optibase.com
+e=support@optibase.com
+c=IN IP4 224.2.153.29/7
+t=0 0
+m=video 1234 UDP
+c=IN IP4 224.2.153.29
+a=status:live
+a=PacketType:1
+a=mcsid:911
+153.29
+a=status:live
+a=PacketType:1
+a=mcsid:967
+
+19
+
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (220 bytes)]
+application/sdp
+[packet from 66.80.62.34 (277 bytes)]
+v=0
+o=- 0722301192 1 IN IP4 128.253.30.199
+s=Bill Gates
+i=VBrick Streaming Video
+c=IN IP4 239.239.239.21/63
+b=AS:5684
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m2t
+a=keywds:
+a=author:CIT
+a=copyright:Cornell, 2004
+a=streamID:slot1Destination1
+m=video 4444 udp 33
+
+[packet from 66.80.62.34 (191 bytes)]
+application/sdp
+[packet from 66.80.62.34 (636 bytes)]
+v=0
+o=- 07223011271 1 IN IP4 132.239.126.114
+s=UCTV 4 By VBrick
+i=/00005/uctv
+c=IN IP4 233.28.209.114/128
+b=AS:212
+t=0 0
+a=keywds:
+a=author:MPEG-4 by VBrick
+a=copyright:2003, UCTV
+a=streamID:slot1Destination2
+m=video 4454/1 RTP/AVP 96
+b=AS:180
+a=rtpmap:96 MP4V-ES/90000
+a=control:trackID=11
+a=cliprect:0,0,192,256
+a=fmtp:96 profile-level-id=3;config=000001B003000001B509000001000000012000844007A84020C0A31F
+m=audio 4654/1 RTP/AVP 97
+b=AS:32
+a=rtpmap:97 mpeg4-generic/24000/1
+a=control:trackID=12
+a=fmtp:97 streamtype=5; profile-level-id=15; mode=AAC-hbr; config=1308; SizeLength=13; IndexLength=3; IndexDeltaLength=3; Profile=1
+
+[packet from 66.80.62.34 (217 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (215 bytes)]
+application/sdp
+[packet from 66.80.62.34 (193 bytes)]
+application/sdp
+[packet from 66.80.62.34 (193 bytes)]
+application/sdp
+[packet from 66.80.62.34 (220 bytes)]
+application/sdp
+[packet from 66.80.62.34 (279 bytes)]
+v=0
+o=- 0050c200c3db 1 IN IP4 129.132.183.162
+s=ETHZ SF Info
+i=VBrick streaming video
+c=IN IP4 239.239.239.1/127
+b=AS:1707032
+t=0 0
+a=packetsize:4416
+a=packetformat:RAW
+a=mux:m1s
+a=keywds:
+a=author:T.Rechsteiner
+a=copyright:SF DRS
+m=video 4444 udp 32
+m=audio 4444 udp 14
+
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (316 bytes)]
+v=0
+o=- 07223048126 133508 IN IP4 128.205.10.177
+s=WNY-HPNVI - US Policy - 3Mbps MPEG-2
+i=Pump test 1
+c=IN IP4 239.239.239.232/63
+b=AS:4499
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m2t
+a=keywds:
+a=author:whitlock@buffalo.edu
+a=copyright:Frank Dorrel
+a=streamID:HDPumpDestination1
+m=video 3060 udp 33
+
+[packet from 66.80.62.34 (295 bytes)]
+v=0
+o=- 0007df003064 25 IN IP4 128.114.3.66
+s=Monterey Bay - DockCam
+i=VBrick Streaming Video
+c=IN IP4 233.22.107.2/127
+b=AS:5500000
+t=0 0
+a=packetsize:1316
+a=packetformat:RAW
+a=mux:m1s
+a=mux:m2t
+a=keywds:
+a=author:dwright@ife.org
+a=copyright:Sea Research Foundation
+m=video 4002 udp 33
+
+[packet from 66.80.62.34 (278 bytes)]
+v=0
+o=- 0722304193 1 IN IP4 128.253.30.200
+s=Bill Gates Lecture
+i=Cornell University 
+c=IN IP4 239.239.239.22/63
+b=AS:5684
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m2t
+a=keywds:
+a=author:
+a=copyright:Cornell 2004
+a=streamID:slot1Destination1
+m=video 4444 udp 33
+
+[packet from 66.80.62.34 (305 bytes)]
+v=0
+o=- 0050c200c448 1 IN IP4 129.116.65.3
+s=UTAustin VBrick1
+i=VBrick streaming video
+c=IN IP4 239.116.65.3/63
+b=AS:1252944
+t=0 0
+a=packetsize:4416
+a=packetformat:RAW
+a=mux:m1s
+a=keywds:ut austin noc
+a=author:UT Austin NOC Tests
+a=copyright:UT Austin 2003
+m=video 4444 udp 32
+m=audio 4444 udp 14
+
+[packet from 66.80.62.34 (217 bytes)]
+application/sdp
+[packet from 66.80.62.34 (215 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (191 bytes)]
+application/sdp
+[packet from 66.80.62.34 (220 bytes)]
+application/sdp
+[packet from 66.80.62.34 (882 bytes)]
+v=0
+o=- 64641 6 IN IP4 128.223.157.10
+s=UO - Internal channel 1 (MPEG-1)
+i=UO - Internal channel 1 (MPEG-1)
+e=Hans Kuhn <multicast@lists.uoregon.edu>
+p=Hans Kuhn <541/346-1758>
+b=AS:1000
+t=0 0
+a=type:broadcast
+a=tool:IP/TV Content Manager 3.4.14
+a=live:capture:1
+a=x-iptv-capture:mp1s
+m=video 60836 RTP/AVP 32 31 96 97
+c=IN IP4 224.2.144.51/15
+a=quality:8
+a=framerate:30
+a=rtpmap:96 WBIH/90000
+a=rtpmap:97 MP4V-ES/90000
+a=x-iptv-svr:video 128.223.157.17 live
+a=fmtp:32 type=mpeg1
+m=audio 19408 RTP/AVP 14 0 96 3 5 97 98 99 100 101 102 10 11 103 104 105 106
+c=IN IP4 224.2.250.29/15
+a=rtpmap:96 X-WAVE/8000
+a=rtpmap:97 L8/8000/2
+a=rtpmap:98 L8/8000
+a=rtpmap:99 L8/22050/2
+a=rtpmap:100 L8/22050
+a=rtpmap:101 L8/11025/2
+a=rtpmap:102 L8/11025
+a=rtpmap:103 L16/22050/2
+a=rtpmap:104 L16/22050
+a=rtpmap:105 L16/11025/2
+a=rtpmap:106 L16/11025
+a=x-iptv-svr:audio 128.223.157.17 live
+
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (312 bytes)]
+v=0
+o=- 0050c200cad5 54 IN IP4 131.252.176.50
+s=Portland State University, International
+i=VBrick Streaming Video
+c=IN IP4 225.225.255.0/3
+b=AS:5689900
+t=0 0
+a=packetsize:4416
+a=packetformat:RAW
+a=mux:m1s
+a=keywds:
+a=author:Distributed Education
+a=copyright:Portland State University
+m=video 4444 udp 33
+
+[packet from 66.80.62.34 (217 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (215 bytes)]
+application/sdp
+[packet from 66.80.62.34 (317 bytes)]
+v=0
+o=- 07223049199 9 IN IP4 131.247.105.12
+s=MAC0007df0031c4 Program 1
+i=VBrick Streaming Video
+c=IN IP4 239.247.105.12/63
+b=AS:6000000
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m1s
+a=mux:m2t
+a=keywds:
+a=author:My Author
+a=copyright:My Copyright, 2002
+a=streamID:slot1Destination1
+m=video 4444 udp 33
+
+[packet from 66.80.62.34 (220 bytes)]
+application/sdp
+[packet from 66.80.62.34 (191 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (461 bytes)]
+v=0
+o=Administrator 3187559694 3287721570 IN IP4 193.166.0.38
+s=FUNET-TV 1 (H.261)
+i=FUNET-TV I-Studio
+u=http://www.funet.fi/
+e=tv@tv.funet.fi (Administrator)
+p=+358 9 4572037
+c=IN IP4 233.6.205.98/63
+t=3187721570 3298326370
+r=604800 604800 0
+a=recvonly
+a=tool:CDT mAnnouncer 1.1.2
+a=cat:MBone/Others
+a=type:broadcast
+m=audio 9800 RTP/AVP 0
+c=IN IP4 233.6.205.98/63
+m=video 9900 RTP/AVP 31
+c=IN IP4 233.6.205.99/63
+a=framerate:25
+a=quality:5
+a=grayed:0
+
+[packet from 66.80.62.34 (461 bytes)]
+v=0
+o=Administrator 3187559694 3287721570 IN IP4 193.166.0.38
+s=FUNET-TV 1 (H.261)
+i=FUNET-TV I-Studio
+u=http://www.funet.fi/
+e=tv@tv.funet.fi (Administrator)
+p=+358 9 4572037
+c=IN IP4 233.6.205.98/63
+t=3187721570 3298326370
+r=604800 604800 0
+a=recvonly
+a=tool:CDT mAnnouncer 1.1.2
+a=cat:MBone/Others
+a=type:broadcast
+m=audio 9800 RTP/AVP 0
+c=IN IP4 233.6.205.98/63
+m=video 9900 RTP/AVP 31
+c=IN IP4 233.6.205.99/63
+a=framerate:25
+a=quality:5
+a=grayed:0
+
+[packet from 66.80.62.34 (461 bytes)]
+v=0
+o=Administrator 3187559694 3287721570 IN IP4 193.166.0.38
+s=FUNET-TV 1 (H.261)
+i=FUNET-TV I-Studio
+u=http://www.funet.fi/
+e=tv@tv.funet.fi (Administrator)
+p=+358 9 4572037
+c=IN IP4 233.6.205.98/63
+t=3187721570 3298326370
+r=604800 604800 0
+a=recvonly
+a=tool:CDT mAnnouncer 1.1.2
+a=cat:MBone/Others
+a=type:broadcast
+m=audio 9800 RTP/AVP 0
+c=IN IP4 233.6.205.98/63
+m=video 9900 RTP/AVP 31
+c=IN IP4 233.6.205.99/63
+a=framerate:25
+a=quality:5
+a=grayed:0
+
+[packet from 66.80.62.34 (461 bytes)]
+v=0
+o=Administrator 3187559694 3287721570 IN IP4 193.166.0.38
+s=FUNET-TV 1 (H.261)
+i=FUNET-TV I-Studio
+u=http://www.funet.fi/
+e=tv@tv.funet.fi (Administrator)
+p=+358 9 4572037
+c=IN IP4 233.6.205.98/63
+t=3187721570 3298326370
+r=604800 604800 0
+a=recvonly
+a=tool:CDT mAnnouncer 1.1.2
+a=cat:MBone/Others
+a=type:broadcast
+m=audio 9800 RTP/AVP 0
+c=IN IP4 233.6.205.98/63
+m=video 9900 RTP/AVP 31
+c=IN IP4 233.6.205.99/63
+a=framerate:25
+a=quality:5
+a=grayed:0
+
+[packet from 66.80.62.34 (217 bytes)]
+application/sdp
+[packet from 66.80.62.34 (215 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (220 bytes)]
+application/sdp
+[packet from 66.80.62.34 (653 bytes)]
+v=0
+o=- 072230114218 1 IN IP4 192.87.116.121
+s=MAC0007df0072d6 Program 2
+i=VBrick Streaming Video
+c=IN IP4 233.4.79.35/63
+b=AS:182
+t=0 0
+a=keywds:
+a=author:My Author
+a=copyright:My Copyright, 2003
+a=streamID:slot2Destination1
+m=video 4446/1 RTP/AVP 96
+b=AS:150
+a=rtpmap:96 MP4V-ES/90000
+a=control:trackID=21
+a=cliprect:0,0,240,320
+a=fmtp:96 profile-level-id=3;config=000001B003000001B509000001000000012000844006685020F0A31F
+m=audio 4646/1 RTP/AVP 97
+b=AS:32
+a=rtpmap:97 mpeg4-generic/16000/2
+a=control:trackID=22
+a=fmtp:97 streamtype=5; profile-level-id=15; mode=AAC-hbr; config=1410; SizeLength=13; IndexLength=3; IndexDeltaLength=3; Profile=1
+
+[packet from 66.80.62.34 (658 bytes)]
+v=0
+o=- 072230114217 1 IN IP4 192.87.116.121
+s=MAC0007df0072d6 Program 1
+i=VBrick Streaming Video
+c=IN IP4 233.4.79.34/63
+b=AS:1328
+t=0 0
+a=keywds:
+a=author:My Author
+a=copyright:My Copyright, 2003
+a=streamID:slot1Destination1
+m=video 4444/1 RTP/AVP 96
+b=AS:1200
+a=rtpmap:96 MP4V-ES/90000
+a=control:trackID=11
+a=cliprect:0,0,288,352
+a=fmtp:96 profile-level-id=247;config=000001B0f7000001B50900000100000001200088400668582120A31F
+m=audio 4644/1 RTP/AVP 97
+b=AS:128
+a=rtpmap:97 mpeg4-generic/48000/2
+a=control:trackID=12
+a=fmtp:97 streamtype=5; profile-level-id=15; mode=AAC-hbr; config=1190; SizeLength=13; IndexLength=3; IndexDeltaLength=3; Profile=1
+
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (332 bytes)]
+v=0
+o=- 07223017176 5 IN IP4 128.205.10.184
+s=UB vbrick test stream
+i=VBrick Streaming Video
+c=IN IP4 229.128.205.10/63
+b=AS:5001339
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m1s
+a=mux:m2t
+a=keywds:
+a=author:UB CIT/OSS Network Engineering
+a=copyright:Copyright, 2003
+a=streamID:HDPumpDestination1
+m=video 4446 udp 33
+
+[packet from 66.80.62.34 (332 bytes)]
+v=0
+o=- 07223017176 5 IN IP4 128.205.10.184
+s=UB vbrick test stream
+i=VBrick Streaming Video
+c=IN IP4 229.128.205.10/63
+b=AS:5001339
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m1s
+a=mux:m2t
+a=keywds:
+a=author:UB CIT/OSS Network Engineering
+a=copyright:Copyright, 2003
+a=streamID:HDPumpDestination1
+m=video 4446 udp 33
+
+[packet from 66.80.62.34 (217 bytes)]
+application/sdp
+[packet from 66.80.62.34 (201 bytes)]
+application/sdp
+[packet from 66.80.62.34 (215 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (1054 bytes)]
+v=0
+o=- 9717 2 IN IP4 128.223.83.33
+s=UO Media Services
+i=The University of Oregon's Media Services provides satellite programming for scheduled special events. This content is supplemented with foreign language news from the Yamada center's Ichannel satellite feed. (http://www.i-channel.com/whatson/)
+u=http://libweb.uoregon.edu/med_svc/
+e=Hans Kuhn <multicast@lists.uoregon.edu>
+p=Hans Kuhn <541/346-1758>
+b=AS:512
+t=0 0
+a=type:broadcast
+a=tool:IP/TV Content Manager 3.2.24
+a=live:capture:1
+m=video 56440 RTP/AVP 31 96 32
+c=IN IP4 224.2.192.255/15
+a=quality:9
+a=framerate:15
+a=rtpmap:96 WBIH/90000
+a=x-iptv-svr:video imc-iptv.uoregon.edu live
+m=audio 31958 RTP/AVP 0 14 96 3 5 97 98 99 100 101 102 10 11 103 104 105 106
+c=IN IP4 224.2.241.85/15
+a=rtpmap:96 X-WAVE/8000
+a=rtpmap:97 L8/8000/2
+a=rtpmap:98 L8/8000
+a=rtpmap:99 L8/22050/2
+a=rtpmap:100 L8/22050
+a=rtpmap:101 L8/11025/2
+a=rtpmap:102 L8/11025
+a=rtpmap:103 L16/22050/2
+a=rtpmap:104 L16/22050
+a=rtpmap:105 L16/11025/2
+a=rtpmap:106 L16/11025
+a=x-iptv-svr:audio imc-iptv.uoregon.edu live
+
+[packet from 66.80.62.34 (220 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (220 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (217 bytes)]
+application/sdp
+[packet from 66.80.62.34 (217 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (170 bytes)]
+application/sdp
+[packet from 66.80.62.34 (317 bytes)]
+v=0
+o=- 07223049200 7 IN IP4 131.247.105.12
+s=MAC0007df0031c4 Program 2
+i=VBrick Streaming Video
+c=IN IP4 239.247.105.14/63
+b=AS:6000000
+t=0 0
+a=packetsize:4136
+a=packetformat:RAW
+a=mux:m1s
+a=mux:m2t
