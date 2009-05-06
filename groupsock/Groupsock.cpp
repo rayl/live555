@@ -183,10 +183,16 @@ Groupsock::changeDestinationParameters(struct in_addr const& newDestAddr,
   if (fDests == NULL) return;
 
   struct in_addr destAddr = fDests->fGroupEId.groupAddress();
-  if (newDestAddr.s_addr != 0 && newDestAddr.s_addr != destAddr.s_addr) {
-    socketLeaveGroup(env(), socketNum(), destAddr.s_addr);
+  if (newDestAddr.s_addr != 0) {
+    if (newDestAddr.s_addr != destAddr.s_addr
+	&& IsMulticastAddress(newDestAddr.s_addr)) {
+      // If the new destination is a multicast address, then we assume that
+      // we want to join it also.  (If this is not in fact the case, then
+      // call "multicastSendOnly()" afterwards.)
+      socketLeaveGroup(env(), socketNum(), destAddr.s_addr);
+      socketJoinGroup(env(), socketNum(), newDestAddr.s_addr);
+    }
     destAddr.s_addr = newDestAddr.s_addr;
-    socketJoinGroup(env(), socketNum(), destAddr.s_addr);
   }
 
   portNumBits destPortNum = fDests->fGroupEId.portNum();

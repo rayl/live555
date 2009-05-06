@@ -729,7 +729,7 @@ static void parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd
   if (sscanf(fields, "npt = %f - %f", &start, &end) == 2) {
     rangeStart = start;
     rangeEnd = end;
-  } else if (sscanf(fields, "npt = %f -", &start) != 1) {
+  } else if (sscanf(fields, "npt = %f -", &start) == 1) {
     rangeStart = start;
   }
 }
@@ -757,7 +757,7 @@ void RTSPServer::RTSPClientSession
   if (rangeEnd < 0.0 || rangeEnd > duration) rangeEnd = duration;
   if (rangeStart < 0.0) {
     rangeStart = 0.0;
-  } else if (rangeStart > rangeEnd) {
+  } else if (rangeEnd > 0.0 && rangeStart > rangeEnd) {
     rangeStart = rangeEnd;
   }
 
