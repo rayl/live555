@@ -92,6 +92,8 @@ private:
   unsigned fSubstreamSDPSizes;
   SubstreamDescriptor* fHeadSubstream;
   SubstreamDescriptor* fTailSubstream;
+  MediaSession* fSession;
+  unsigned fLastTrackId;
 };
 
 #endif

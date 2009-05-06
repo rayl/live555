@@ -77,33 +77,6 @@ void FramedSource::getNextFrame(unsigned char* to, unsigned maxSize,
 
   doGetNextFrame();
 }
-// ##### The following is for backwards-compatibility; remove it eventually:
-#ifdef BACKWARDS_COMPATIBLE_WITH_OLD_AFTER_GETTING_FUNC
-static void bwCompatHackAfterGetting(void* clientData, unsigned frameSize,
-				     unsigned /*numTruncatedBytes*/,
-				     struct timeval presentationTime,
-				     unsigned /*durationInMicroseconds*/) {
-  FramedSource* source = (FramedSource*)clientData;
-  FramedSource::bwCompatAfterGettingFunc* clientAfterGettingFunc
-    = source->fSavedBWCompatAfterGettingFunc;
-  void* afterGettingClientData = source->fSavedBWCompatAfterGettingClientData;
-  if (clientAfterGettingFunc != NULL) {
-    (*clientAfterGettingFunc)(afterGettingClientData, frameSize, presentationTime);
-  }
-}
-void FramedSource::getNextFrame(unsigned char* to, unsigned maxSize,
-				bwCompatAfterGettingFunc* afterGettingFunc,
-				void* afterGettingClientData,
-				onCloseFunc* onCloseFunc,
-				void* onCloseClientData) {
-  fSavedBWCompatAfterGettingFunc = afterGettingFunc;
-  fSavedBWCompatAfterGettingClientData = afterGettingClientData;
-  // Call the regular (new) "getNextFrame()":
-  getNextFrame(to, maxSize, bwCompatHackAfterGetting, this,
-	       onCloseFunc, onCloseClientData);
-}
-#endif
-// ##### End of code for backwards-compatibility.
 
 void FramedSource::afterGetting(FramedSource* source) {
   source->fIsCurrentlyAwaitingData = False;

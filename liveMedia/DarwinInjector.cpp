@@ -18,7 +18,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // An object that redirects one or more RTP/RTCP streams - forming a single
 // multimedia session - into a 'Darwin Streaming Server' (for subsequent
 // reflection to potentially arbitrarily many remote RTSP clients).
-// Implementation.
+// Implementation
 
 #include "DarwinInjector.hh"
 #include <GroupsockHelper.hh>
@@ -27,7 +27,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class SubstreamDescriptor {
 public:
-  SubstreamDescriptor(RTPSink* rtpSink, RTCPInstance* rtcpInstance);
+  SubstreamDescriptor(RTPSink* rtpSink, RTCPInstance* rtcpInstance, unsigned trackId);
   ~SubstreamDescriptor();
 
   SubstreamDescriptor*& next() { return fNext; }
@@ -72,10 +72,15 @@ DarwinInjector::DarwinInjector(UsageEnvironment& env,
   : Medium(env),
     fApplicationName(strDup(applicationName)), fVerbosityLevel(verbosityLevel),
     fRTSPClient(NULL), fSubstreamSDPSizes(0),
-    fHeadSubstream(NULL), fTailSubstream(NULL) {
+    fHeadSubstream(NULL), fTailSubstream(NULL), fSession(NULL), fLastTrackId(0) {
 } 
 
 DarwinInjector::~DarwinInjector() {
+  if (fSession != NULL) { // close down and delete the session
+    fRTSPClient->teardownMediaSession(*fSession);
+    Medium::close(fSession);
+  }
+
   delete fHeadSubstream;
   delete[] (char*)fApplicationName;
   Medium::close(fRTSPClient);
@@ -84,7 +89,7 @@ DarwinInjector::~DarwinInjector() {
 void DarwinInjector::addStream(RTPSink* rtpSink, RTCPInstance* rtcpInstance) {
   if (rtpSink == NULL) return; // "rtpSink" should be non-NULL
 
-  SubstreamDescriptor* newDescriptor = new SubstreamDescriptor(rtpSink, rtcpInstance);
+  SubstreamDescriptor* newDescriptor = new SubstreamDescriptor(rtpSink, rtcpInstance, ++fLastTrackId);
   if (fHeadSubstream == NULL) {
     fHeadSubstream = fTailSubstream = newDescriptor;
   } else {
@@ -107,7 +112,6 @@ Boolean DarwinInjector
 		 char const* sessionCopyright) {
   char* sdp = NULL;
   char* url = NULL;
-  MediaSession* session = NULL;
   Boolean success = False; // until we learn otherwise
 
   do {
@@ -190,11 +194,11 @@ Boolean DarwinInjector
 
     // Tell the remote server to start receiving the stream from us.
     // (To do this, we first create a "MediaSession" object from the SDP description.)
-    session = MediaSession::createNew(envir(), sdp);
-    if (session == NULL) break;
+    fSession = MediaSession::createNew(envir(), sdp);
+    if (fSession == NULL) break;
 
     ss = fHeadSubstream;
-    MediaSubsessionIterator iter(*session);
+    MediaSubsessionIterator iter(*fSession);
     MediaSubsession* subsession;
     ss = fHeadSubstream;
     unsigned streamChannelId = 0;
@@ -219,7 +223,7 @@ Boolean DarwinInjector
     if (subsession != NULL) break; // an error occurred above
 
     // Tell the RTSP server to start:
-    if (!fRTSPClient->playMediaSession(*session)) break;
+    if (!fRTSPClient->playMediaSession(*fSession)) break;
 
     // Finally, make sure that the output TCP buffer is a reasonable size:
     increaseSendBufferTo(envir(), fRTSPClient->socketNum(), 100*1024);
@@ -229,7 +233,6 @@ Boolean DarwinInjector
 
   delete[] sdp;
   delete[] url; 
-  Medium::close(session);
   return success;
 }
 
@@ -240,10 +243,8 @@ Boolean DarwinInjector::isDarwinInjector() const {
 
 ////////// SubstreamDescriptor implementation //////////
 
-static unsigned lastTrackId = 0;
-
 SubstreamDescriptor::SubstreamDescriptor(RTPSink* rtpSink,
-					 RTCPInstance* rtcpInstance)
+					 RTCPInstance* rtcpInstance, unsigned trackId)
   : fNext(NULL), fRTPSink(rtpSink), fRTCPInstance(rtcpInstance) {
   // Create the SDP description for this substream
   char const* mediaType = fRTPSink->sdpMediaType();
@@ -294,9 +295,10 @@ SubstreamDescriptor::SubstreamDescriptor(RTPSink* rtpSink,
           rtpPayloadType, // m= <fmt list>
           rtpmapLine, // a=rtpmap:... (if present)
           auxSDPLine, // optional extra SDP line
-          ++lastTrackId); // a=control:<track-id>
+          trackId); // a=control:<track-id>
   fSDPLines = strDup(sdpLines);
   delete[] sdpLines;
+  delete[] rtpmapLine;
 }
 
 SubstreamDescriptor::~SubstreamDescriptor() {

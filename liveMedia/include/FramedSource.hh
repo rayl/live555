@@ -43,19 +43,6 @@ public:
 		    void* afterGettingClientData,
 		    onCloseFunc* onCloseFunc,
 		    void* onCloseClientData);
-  // ##### The following is for backwards-compatibility; remove it eventually:
-#ifdef BACKWARDS_COMPATIBLE_WITH_OLD_AFTER_GETTING_FUNC
-  typedef void (bwCompatAfterGettingFunc)(void* clientData, unsigned frameSize,
-					  struct timeval presentationTime);
-  void getNextFrame(unsigned char* to, unsigned maxSize,
-		    bwCompatAfterGettingFunc* afterGettingFunc,
-		    void* afterGettingClientData,
-		    onCloseFunc* onCloseFunc,
-		    void* onCloseClientData);
-  bwCompatAfterGettingFunc* fSavedBWCompatAfterGettingFunc;
-  void* fSavedBWCompatAfterGettingClientData;
-#endif
-  // ##### End of code for backwards-compatibility.
  
   static void handleClosure(void* clientData);
       // This should be called (on ourself) if the source is discovered
