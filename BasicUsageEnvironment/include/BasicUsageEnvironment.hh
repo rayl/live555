@@ -96,7 +96,7 @@ private:
 				    void* clientData);
   void turnOffBackgroundReadHandling(int socketNum);
   
-  void blockMyself(char* watchVariable);
+  void doEventLoop(char* watchVariable);
 
 private:
   // To implement delayed operations:

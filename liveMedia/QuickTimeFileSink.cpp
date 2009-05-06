@@ -26,6 +26,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <io.h>
 #include <fcntl.h>
 #endif
+#include <ctype.h>
 
 #define fourChar(x,y,z,w) ( ((x)<<24)|((y)<<16)|((z)<<8)|(w) )
 
@@ -75,6 +76,17 @@ private:
   unsigned fBytesInUse;
 };
 
+// A 64-bit counter, used below:
+
+class Count64 {
+public:
+  Count64() { hi = lo = 0; }
+
+  void operator+=(unsigned arg);
+
+  unsigned hi, lo; // each 32 bits
+};
+
 class SubsessionIOState {
 public:
   SubsessionIOState(QuickTimeFileSink& sink, MediaSubsession& subsession);
@@ -108,7 +120,8 @@ public:
   Boolean fOurSourceIsActive;
   Boolean fUseRTPMarkerBitForFrameEnd;
 
-  struct timeval fSyncTime; // used in synchronizing with other streams
+  Boolean fHaveBeenSynced; // used in synchronizing with other streams
+  struct timeval fSyncTime;
 
   Boolean fQTEnableTrack;
   unsigned fQTcomponentSubtype;
@@ -131,6 +144,20 @@ public:
   ChunkDescriptor *fHeadChunk, *fTailChunk;
   unsigned fNumChunks;
 
+  // Counters to be used in the hint track's 'udta'/'hinf' atom;
+  struct hinf {
+    Count64 trpy;
+    Count64 nump;
+    Count64 tpyl;
+    // Is 'maxr' needed? Computing this would be a PITA. #####
+    Count64 dmed;
+    Count64 dimm;
+    // 'drep' is always 0
+    // 'tmin' and 'tmax' are always 0
+    unsigned pmax;
+    unsigned dmax;
+  } fHINF;
+
 private:
   void useFrame(SubsessionBuffer& buffer);
   void useFrameForHinting(unsigned frameSize,
@@ -144,17 +171,20 @@ private:
       // returns the number of samples in this data
 
 private:
-  // A structure used for storing frame state for hinting:
+  // A structure used for temporarily storing frame state:
   struct {
     unsigned frameSize;
     struct timeval presentationTime;
+    unsigned destFileOffset; // used for non-hint tracks only
+
+    // The remaining fields are used for hint tracks only:
     unsigned startSampleNumber;
     unsigned rtpHeader;
     unsigned char numSpecialHeaders; // used when our RTP source is H.263+
     unsigned specialHeaderBytesLength; // ditto
     unsigned char specialHeaderBytes[SPECIAL_HEADER_BUFFER_SIZE]; // ditto
     unsigned packetSizes[256];
-  } fPrevFrameHintState;
+  } fPrevFrameState;
 };
 
 
@@ -483,7 +513,8 @@ SubsessionIOState::SubsessionIOState(QuickTimeFileSink& sink,
   : fHintTrackForUs(NULL), fTrackHintedByUs(NULL),
     fOurSink(sink), fOurSubsession(subsession),
     fLastPacketRTPSeqNum(0), fUseRTPMarkerBitForFrameEnd(False),
-    fQTTotNumSamples(0), fHeadChunk(NULL), fTailChunk(NULL), fNumChunks(0) {
+    fHaveBeenSynced(False), fQTTotNumSamples(0),
+    fHeadChunk(NULL), fTailChunk(NULL), fNumChunks(0) {
   fTrackID = ++fCurrentTrackNumber;
 
   fBuffer = new SubsessionBuffer;
@@ -492,10 +523,8 @@ SubsessionIOState::SubsessionIOState(QuickTimeFileSink& sink,
   FramedSource* subsessionSource = subsession.readSource();
   fOurSourceIsActive = subsessionSource != NULL;
 
-  fSyncTime.tv_sec = fSyncTime.tv_usec = 0;
-
-  fPrevFrameHintState.presentationTime.tv_sec = 0;
-  fPrevFrameHintState.presentationTime.tv_usec = 0;
+  fPrevFrameState.presentationTime.tv_sec = 0;
+  fPrevFrameState.presentationTime.tv_usec = 0;
 }
 
 SubsessionIOState::~SubsessionIOState() {
@@ -610,7 +639,9 @@ void SubsessionIOState::setFinalQTstate() {
   }
   duration = fQTDuration/(double)fQTTimeScale;
 
-  if (fOurSink.fSyncStreams && !isHintTrack()) {
+  if (fOurSink.fSyncStreams
+      && fQTcomponentSubtype != fourChar('v','i','d','e')
+      && !isHintTrack()) {
     // In this case, compute fQTDuration differently: using the
     // presentation timestamps in the chunks (because we will be
     // using an edit list to keep the stream synchronized).
@@ -734,21 +765,59 @@ void SubsessionIOState::useFrame(SubsessionBuffer& buffer) {
   unsigned char* const frameSource = buffer.dataStart();
   unsigned const frameSize = buffer.bytesInUse();
   struct timeval const& presentationTime = buffer.presentationTime();
-  unsigned const frameDuration = fQTTimeUnitsPerSample*fQTSamplesPerFrame;
   unsigned const destFileOffset = ftell(fOurSink.fOutFid);
+  unsigned sampleNumberOfFrameStart = fQTTotNumSamples + 1;
 
-  unsigned numSamples = useFrame1(frameSize, presentationTime,
+  // If we're not syncing streams, or this subsession is not video, then
+  // just give this frame a fixed duration:
+  if (!fOurSink.fSyncStreams
+      || fQTcomponentSubtype != fourChar('v','i','d','e')) {
+    unsigned const frameDuration = fQTTimeUnitsPerSample*fQTSamplesPerFrame;
+
+    fQTTotNumSamples += useFrame1(frameSize, presentationTime,
 				  frameDuration, destFileOffset);
+  } else {
+    // For synced video streams, we use the difference between successive
+    // frames' presentation times as the 'frame duration'.  So, record
+    // information about the *previous* frame:
+    struct timeval const& ppt = fPrevFrameState.presentationTime; //abbrev
+    if (ppt.tv_sec != 0 || ppt.tv_usec != 0) {
+      // There has been a previous frame.
+      double duration = (presentationTime.tv_sec - ppt.tv_sec)
+	+ (presentationTime.tv_usec - ppt.tv_usec)/1000000.0;
+      if (duration < 0.0) duration = 0.0;
+      unsigned frameDuration
+	= (unsigned)((2*duration*fQTTimeScale+1)/2); // round
+
+      unsigned numSamples
+	= useFrame1(fPrevFrameState.frameSize, ppt,
+		    frameDuration, fPrevFrameState.destFileOffset);
+      fQTTotNumSamples += numSamples;
+      sampleNumberOfFrameStart = fQTTotNumSamples + 1;
+    }
+
+    // Remember the current frame for next time:
+    fPrevFrameState.frameSize = frameSize;
+    fPrevFrameState.presentationTime = presentationTime;
+    fPrevFrameState.destFileOffset = destFileOffset;
+  }
 
   // Write the data into the file:
   fwrite(frameSource, frameSize, 1, fOurSink.fOutFid);
 
   // If we have a hint track, then write to it also:
   if (hasHintTrack()) {
-    fHintTrackForUs->useFrameForHinting(frameSize, presentationTime,
-					fQTTotNumSamples+1);
+    // Because presentation times are used for RTP packet timestamps,
+    // we don't starting writing to the hint track until we've been synced:
+    if (!fHaveBeenSynced) {
+      fHaveBeenSynced
+	= fOurSubsession.rtpSource()->hasBeenSynchronizedUsingRTCP();
+    }
+    if (fHaveBeenSynced) {
+      fHintTrackForUs->useFrameForHinting(frameSize, presentationTime,
+					  sampleNumberOfFrameStart);
+    }
   }
-  fQTTotNumSamples += numSamples;
 }
 
 void SubsessionIOState::useFrameForHinting(unsigned frameSize,
@@ -767,23 +836,26 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
   // (We use the current frame's presentation time to compute the previous
   // hint sample's duration.)
   RTPSource* const rs = fOurSubsession.rtpSource(); // abbrev 
-  struct timeval const& ppt = fPrevFrameHintState.presentationTime; //abbrev
+  struct timeval const& ppt = fPrevFrameState.presentationTime; //abbrev
   if (ppt.tv_sec != 0 || ppt.tv_usec != 0) {
     double duration = (presentationTime.tv_sec - ppt.tv_sec)
       + (presentationTime.tv_usec - ppt.tv_usec)/1000000.0;
     if (duration < 0.0) duration = 0.0;
+    unsigned msDuration = (unsigned)(duration*1000); // milliseconds
+    if (msDuration > fHINF.dmax) fHINF.dmax = msDuration;
     unsigned hintSampleDuration
       = (unsigned)((2*duration*fQTTimeScale+1)/2); // round
+
     unsigned const hintSampleDestFileOffset = ftell(fOurSink.fOutFid);
 
     unsigned short numPTEntries = 1; // normal case
     unsigned char* immediateDataPtr = NULL;
     unsigned immediateDataBytesRemaining = 0;
     if (hack263) { // special case
-      numPTEntries = fPrevFrameHintState.numSpecialHeaders;
-      immediateDataPtr = fPrevFrameHintState.specialHeaderBytes;
+      numPTEntries = fPrevFrameState.numSpecialHeaders;
+      immediateDataPtr = fPrevFrameState.specialHeaderBytes;
       immediateDataBytesRemaining
-	= fPrevFrameHintState.specialHeaderBytesLength;
+	= fPrevFrameState.specialHeaderBytesLength;
     }
     unsigned hintSampleSize
       = fOurSink.addHalfWord(numPTEntries);// Entry count
@@ -793,9 +865,9 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
     for (unsigned i = 0; i < numPTEntries; ++i) {
       // Output a Packet Table entry (representing a single RTP packet):
       unsigned short numDTEntries = 1;
-      unsigned rtpHeader = fPrevFrameHintState.rtpHeader;
-      unsigned dataFrameSize = fPrevFrameHintState.frameSize;
-      unsigned sampleNumber = fPrevFrameHintState.startSampleNumber;
+      unsigned rtpHeader = fPrevFrameState.rtpHeader;
+      unsigned dataFrameSize = fPrevFrameState.frameSize;
+      unsigned sampleNumber = fPrevFrameState.startSampleNumber;
 
       unsigned char immediateDataLen = 0;
       if (hack263) {
@@ -809,7 +881,7 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
 	  }
 	}
 	dataFrameSize
-	  = fPrevFrameHintState.packetSizes[i] - immediateDataLen;
+	  = fPrevFrameState.packetSizes[i] - immediateDataLen;
 
 	Boolean PbitSet
 	  = immediateDataLen >= 1 && (immediateDataPtr[0]&0x4) != 0;
@@ -830,6 +902,7 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
           // RTP header info + RTP sequence number (modified by packet #)
       hintSampleSize += fOurSink.addHalfWord(0x0000); // Flags
       hintSampleSize += fOurSink.addHalfWord(numDTEntries); // Entry count
+      unsigned totalPacketSize = 0;
 
       // Output the Data Table:
       if (hack263) {
@@ -837,6 +910,7 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
 	hintSampleSize += fOurSink.addByte(1); // Source
 	unsigned char len = immediateDataLen > 14 ? 14 : immediateDataLen;
 	hintSampleSize += fOurSink.addByte(len); // Length
+	totalPacketSize += len; fHINF.dimm += len;
 	unsigned char j;
 	for (j = 0; j < len; ++j) {
 	  hintSampleSize += fOurSink.addByte(immediateDataPtr[j]); // Data
@@ -852,6 +926,7 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
       hintSampleSize += fOurSink.addByte(2); // Source
       hintSampleSize += fOurSink.addByte(0); // Track ref index
       hintSampleSize += fOurSink.addHalfWord(dataFrameSize); // Length
+      totalPacketSize += dataFrameSize; fHINF.dmed += dataFrameSize;
       hintSampleSize += fOurSink.addWord(sampleNumber); // Sample number
       hintSampleSize += fOurSink.addWord(offsetWithinSample); // Offset
       // Get "bytes|samples per compression block" from the hinted track:
@@ -863,6 +938,13 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
       hintSampleSize += fOurSink.addHalfWord(samplesPerCompressionBlock);
 
       offsetWithinSample += dataFrameSize;// for the next iteration (if any)
+
+      // Tally statistics for this packet:
+      fHINF.nump += 1;
+      fHINF.tpyl += totalPacketSize;
+      totalPacketSize += 12; // add in the size of the RTP header
+      fHINF.trpy += totalPacketSize;
+      if (totalPacketSize > fHINF.pmax) fHINF.pmax = totalPacketSize;
     }
 
     // Make note of this completed hint sample frame:
@@ -871,25 +953,25 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
   }
   
   // Remember this frame for next time:
-  fPrevFrameHintState.frameSize = frameSize;
-  fPrevFrameHintState.presentationTime = presentationTime;
-  fPrevFrameHintState.startSampleNumber = startSampleNumber;
-  fPrevFrameHintState.rtpHeader
+  fPrevFrameState.frameSize = frameSize;
+  fPrevFrameState.presentationTime = presentationTime;
+  fPrevFrameState.startSampleNumber = startSampleNumber;
+  fPrevFrameState.rtpHeader
     = rs->curPacketMarkerBit()<<23
     | (rs->rtpPayloadFormat()&0x7F)<<16
     | rs->curPacketRTPSeqNum();
   if (hack263) {
       H263plusVideoRTPSource* rs_263 = (H263plusVideoRTPSource*)rs;
-      fPrevFrameHintState.numSpecialHeaders = rs_263->fNumSpecialHeaders;
-      fPrevFrameHintState.specialHeaderBytesLength
+      fPrevFrameState.numSpecialHeaders = rs_263->fNumSpecialHeaders;
+      fPrevFrameState.specialHeaderBytesLength
 	= rs_263->fSpecialHeaderBytesLength;
       unsigned i;
       for (i = 0; i < rs_263->fSpecialHeaderBytesLength; ++i) {
-	fPrevFrameHintState.specialHeaderBytes[i]
+	fPrevFrameState.specialHeaderBytes[i]
 	  = rs_263->fSpecialHeaderBytes[i];
       }
       for (i = 0; i < rs_263->fNumSpecialHeaders; ++i) {
-	fPrevFrameHintState.packetSizes[i] = rs_263->fPacketSizes[i];
+	fPrevFrameState.packetSizes[i] = rs_263->fPacketSizes[i];
       }
   }
 }
@@ -939,10 +1021,11 @@ Boolean SubsessionIOState::syncOK(struct timeval presentationTime) {
   if (s.fNumSyncedSubsessions < s.fNumSubsessions) {
     // Not all subsessions have yet been synced.  Check whether ours was
     // one of the unsynced ones, and, if so, whether it is now synced:
-    if (fSyncTime.tv_sec == 0 && fSyncTime.tv_usec == 0) {
+    if (!fHaveBeenSynced) {
       // We weren't synchronized before
       if (fOurSubsession.rtpSource()->hasBeenSynchronizedUsingRTCP()) {
 	// But now we are
+	fHaveBeenSynced = True;
 	fSyncTime = presentationTime;
 	++s.fNumSyncedSubsessions;
 
@@ -964,6 +1047,14 @@ void SubsessionIOState::setHintTrack(SubsessionIOState* hintedTrack,
 				     SubsessionIOState* hintTrack) {
   if (hintedTrack != NULL) hintedTrack->fHintTrackForUs = hintTrack;
   if (hintTrack != NULL) hintTrack->fTrackHintedByUs = hintedTrack;
+}
+
+void Count64::operator+=(unsigned arg) {
+  unsigned newLo = lo + arg;
+  if (newLo < lo) { // lo has overflowed
+    ++hi;
+  }
+  lo = newLo;
 }
 
 ChunkDescriptor::ChunkDescriptor(unsigned offsetInFile, unsigned size,
@@ -1157,13 +1248,11 @@ addAtomEnd;
 addAtom(trak);
   size += addAtom_tkhd();
 
-  // If we're synchronizing the media streams,
+  // If we're synchronizing the media streams (or are a hint track),
   // add an edit list that helps do this:
-  // (We don't add an edit list for a hint track, because the RTP
-  //  timestamps will take care of synchronization when the track
-  //  is streamed.)
-  if (fSyncStreams && fCurrentIOState->fHeadChunk != NULL) {
-      size += addAtom_edts();
+  if (fCurrentIOState->fHeadChunk != NULL
+      && (fSyncStreams || fCurrentIOState->isHintTrack())) {
+    size += addAtom_edts();
   }
 
   // If we're generating a hint track, add a 'tref' atom:
@@ -1705,11 +1794,11 @@ unsigned QuickTimeFileSink::addAtom_sdp() {
   // We need to change any "a=control:trackID=" values to be this
   // track's actual track id:
   char* newSDPLines = new char[strlen(sdpLines)+100/*overkill*/];
-  char const* searchStr = "a=control:trackID=";
+  char const* searchStr = "a=control:trackid=";
   Boolean foundSearchString = False;
   char const *p1, *p2, *p3;
   for (p1 = sdpLines; *p1 != '\0'; ++p1) {
-    for (p2 = p1,p3 = searchStr; *p2 == *p3; ++p2,++p3) {}
+    for (p2 = p1,p3 = searchStr; tolower(*p2) == *p3; ++p2,++p3) {}
     if (*p3 == '\0') {
       // We found the end of the search string, at p2.
       int beforeTrackNumPosn = p2-sdpLines;
@@ -1746,8 +1835,79 @@ unsigned QuickTimeFileSink::addAtom_sdp() {
 addAtomEnd;
 
 addAtom(hinf);
+  size += addAtom_totl();
+  size += addAtom_npck();
+  size += addAtom_tpay();
+  size += addAtom_trpy();
+  size += addAtom_nump();
+  size += addAtom_tpyl();
+  // Is 'maxr' required? #####
+  size += addAtom_dmed();
+  size += addAtom_dimm();
+  size += addAtom_drep();
+  size += addAtom_tmin();
+  size += addAtom_tmax();
+  size += addAtom_pmax();
+  size += addAtom_dmax();
   size += addAtom_payt(); 
-  // Are any other sub-atoms of 'hinf' required? #####
+addAtomEnd;
+
+addAtom(totl);
+ size += addWord(fCurrentIOState->fHINF.trpy.lo);
+addAtomEnd;
+
+addAtom(npck);
+ size += addWord(fCurrentIOState->fHINF.nump.lo);
+addAtomEnd;
+
+addAtom(tpay);
+ size += addWord(fCurrentIOState->fHINF.tpyl.lo);
+addAtomEnd;
+
+addAtom(trpy);
+ size += addWord(fCurrentIOState->fHINF.trpy.hi);
+ size += addWord(fCurrentIOState->fHINF.trpy.lo);
+addAtomEnd;
+
+addAtom(nump);
+ size += addWord(fCurrentIOState->fHINF.nump.hi);
+ size += addWord(fCurrentIOState->fHINF.nump.lo);
+addAtomEnd;
+
+addAtom(tpyl);
+ size += addWord(fCurrentIOState->fHINF.tpyl.hi);
+ size += addWord(fCurrentIOState->fHINF.tpyl.lo);
+addAtomEnd;
+
+addAtom(dmed);
+ size += addWord(fCurrentIOState->fHINF.dmed.hi);
+ size += addWord(fCurrentIOState->fHINF.dmed.lo);
+addAtomEnd;
+
+addAtom(dimm);
+ size += addWord(fCurrentIOState->fHINF.dimm.hi);
+ size += addWord(fCurrentIOState->fHINF.dimm.lo);
+addAtomEnd;
+
+addAtom(drep);
+ size += addWord(0);
+ size += addWord(0);
+addAtomEnd;
+
+addAtom(tmin);
+ size += addWord(0);
+addAtomEnd;
+
+addAtom(tmax);
+ size += addWord(0);
+addAtomEnd;
+
+addAtom(pmax);
+ size += addWord(fCurrentIOState->fHINF.pmax);
+addAtomEnd;
+
+addAtom(dmax);
+ size += addWord(fCurrentIOState->fHINF.dmax);
 addAtomEnd;
 
 addAtom(payt);

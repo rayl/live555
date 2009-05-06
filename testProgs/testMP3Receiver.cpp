@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
   fprintf(stderr, "Beginning receiving multicast stream...\n");
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);
 
-  env->taskScheduler().blockMyself(); // does not return
+  env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning
 }

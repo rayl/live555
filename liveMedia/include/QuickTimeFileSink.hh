@@ -138,6 +138,19 @@ private:
               _atom(hnti);
                   _atom(sdp);
               _atom(hinf);
+                  _atom(totl);
+                  _atom(npck);
+                  _atom(tpay);
+                  _atom(trpy);
+                  _atom(nump);
+                  _atom(tpyl);
+                  _atom(dmed);
+                  _atom(dimm);
+                  _atom(drep);
+                  _atom(tmin);
+                  _atom(tmax);
+                  _atom(pmax);
+                  _atom(dmax);
                   _atom(payt);
   unsigned addAtom_dummy();
 

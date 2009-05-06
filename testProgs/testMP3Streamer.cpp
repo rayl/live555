@@ -177,7 +177,7 @@ void play() {
   fprintf(stderr, "Beginning streaming...\n");
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);
 
-  env->taskScheduler().blockMyself();
+  env->taskScheduler().doEventLoop();
 }
 
 

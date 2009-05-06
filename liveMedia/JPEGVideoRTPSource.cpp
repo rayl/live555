@@ -51,17 +51,19 @@ JPEGVideoRTPSource::JPEGVideoRTPSource(UsageEnvironment& env,
 				       unsigned rtpTimestampFrequency)
   : MultiFramedRTPSource(env, RTPgs,
 			 rtpPayloadFormat, rtpTimestampFrequency),
+  detected(false),
+  type(0),
   width(0),
   height(0),
   quality(0),
+  dri(0),
   qtables(NULL),
   qtlen(0),
-  dri(0),
   hdrlen(0),
-  detected(False),
   framesize(0)
 {
-	fCurrentPacketCompletesFrame = False;
+  memset(header, 0, sizeof(header));
+  fCurrentPacketCompletesFrame = False;
 }
 
 JPEGVideoRTPSource::~JPEGVideoRTPSource() {
@@ -87,7 +89,7 @@ int MjpegHeader(unsigned char *buf, unsigned type, unsigned w, unsigned h, unsig
 	*ptr++ = 'V';
 	*ptr++ = 'I';
 	*ptr++ = '1';
-	*ptr++ = (BYTE)(type);
+	*ptr++ = 0x00; // field number : 0=Not field-interleaved, 1=First field, 2=Second field
 	*ptr++ = 0x00;
 
 	*ptr++ = 0x00;
@@ -191,6 +193,8 @@ Boolean JPEGVideoRTPSource
 
   width = Width;
   height = Height;
+
+  type = Type & 1;
 
   if (Type > 63)
   {

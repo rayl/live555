@@ -1,5 +1,5 @@
 // Comment out the following to stop this program expiring:
-#define EXPIRATION 1038729600 /* 12/1/2002 */
+#define EXPIRATION 1041408000 /* 1/1/2003 */
 
 /**********
 This library is free software; you can redistribute it and/or modify it under
@@ -437,7 +437,7 @@ int main(int argc, char** argv) {
   // to start the data flow:
   startPlayingRTSPStreams();
 
-  env->taskScheduler().blockMyself(); // does not return
+  env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning
 }

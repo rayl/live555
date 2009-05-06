@@ -93,7 +93,7 @@ public:
 				void* clientData) = 0;
   virtual void turnOffBackgroundReadHandling(int socketNum) = 0;
 
-  virtual void blockMyself(char* watchVariable = NULL) = 0;
+  virtual void doEventLoop(char* watchVariable = NULL) = 0;
 	// Stops the current thread of control from proceeding,
 	// but allows delayed tasks (and/or background I/O handling)
 	// to proceed.

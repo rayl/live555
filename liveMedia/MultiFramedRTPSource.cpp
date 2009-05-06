@@ -212,8 +212,7 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
 	= (unsigned)(bPacket->data())[bPacket->dataSize()-1];
       if (bPacket->dataSize() < numPaddingBytes) break;
       bPacket->removePadding(numPaddingBytes);
-    }
-    
+    }    
     // Check the Payload Type.
     if ((unsigned char)((rtpHdr&0x007F0000)>>16)
 	!= source->rtpPayloadFormat()) {

@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
   sessionState.audioSink->startPlaying(*sessionState.audioSource,
 				       afterPlaying, sessionState.audioSink);
 
-  env->taskScheduler().blockMyself(); // does not return
+  env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning
 }

@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     .turnOnBackgroundReadHandling(inputGroupsock.socketNum(),
 				  readHandler, &inputGroupsock);
 
-  env->taskScheduler().blockMyself(); // does not return
+  env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning
 }

@@ -265,7 +265,7 @@ void BasicTaskScheduler::SingleStep() {
 #endif
       {
 	// Unexpected error - treat this as fatal:
-	perror("BasicTaskScheduler::blockMyself(): select() fails");
+	perror("BasicTaskScheduler::doEventLoop(): select() fails");
 	exit(0);
       }
   }
@@ -285,7 +285,7 @@ void BasicTaskScheduler::SingleStep() {
   }
 }
 
-void BasicTaskScheduler::blockMyself(char* watchVariable) {
+void BasicTaskScheduler::doEventLoop(char* watchVariable) {
   // Repeatedly loop, calling select() on readable sockets:
   while (1) {
     if (watchVariable != NULL && *watchVariable != 0) break;
