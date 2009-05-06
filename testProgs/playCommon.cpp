@@ -20,6 +20,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "playCommon.hh"
 #include "BasicUsageEnvironment.hh"
 #include "GroupsockHelper.hh"
+#ifdef SUPPORT_REAL_RTSP
+#include "../RealRTSP/include/RealRMFF.hh"
+#endif
 
 #if defined(__WIN32__) || defined(_WIN32)
 #define snprintf _snprintf
@@ -601,6 +604,21 @@ int main(int argc, char** argv) {
 	    struct timeval timeNow;
 	    gettimeofday(&timeNow, &Idunno);
 	    fileSink->addData(configData, configLen, timeNow);
+	    delete[] configData;
+#ifdef SUPPORT_REAL_RTSP
+	  } else if (strcmp(subsession->codecName(), "X-PN-REALAUDIO") == 0 ||
+		     strcmp(subsession->codecName(), "X-PN-REALVIDEO") == 0) {
+	    // For RealNetworks' special streams, the output file needs to begin
+	    // with a special header, in order for it to be usable.
+	    // Write this header first:
+	    unsigned headerSize;
+	    unsigned char* headerData
+	      = RealGenerateRMFFHeader(session, subsession, headerSize);
+	    struct timeval timeNow;
+	    gettimeofday(&timeNow, &Idunno);
+	    fileSink->addData(headerData, headerSize, timeNow);
+	    delete[] headerData;
+#endif
 	  }
 
 	  subsession->sink->startPlaying(*(subsession->readSource()),

@@ -234,7 +234,7 @@ unsigned char* parseGeneralConfigStr(char const* configStr,
   } while (0);
 
   configSize = 0;
-  delete[] config; config = NULL;
+  delete[] config;
   return NULL;
 }
 

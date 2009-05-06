@@ -22,6 +22,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "liveMedia.hh"
 #ifdef SUPPORT_REAL_RTSP
 #include "../RealRTSP/include/RealRDTSource.hh"
+#include "../RealRTSP/include/RealSDP.hh"
 #endif
 #include "GroupsockHelper.hh"
 #include <ctype.h>
@@ -59,8 +60,12 @@ Boolean MediaSession::lookupByName(UsageEnvironment& env,
 }
 
 MediaSession::MediaSession(UsageEnvironment& env)
-  : Medium(env), fSubsessionsHead(NULL), fSubsessionsTail(NULL),
+  : Medium(env),
+    fSubsessionsHead(NULL), fSubsessionsTail(NULL),
     fConnectionEndpointName(NULL), fMaxPlayEndTime(0.0) {
+#ifdef SUPPORT_REAL_RTSP
+  RealInitSDPAttributes(this);
+#endif
   fSourceFilterAddr.s_addr = 0;
 
   // Get our host name, and use this for the RTCP CNAME:
@@ -80,6 +85,9 @@ MediaSession::~MediaSession() {
   delete fSubsessionsHead;
   delete[] fCNAME;
   delete[] fConnectionEndpointName;
+#ifdef SUPPORT_REAL_RTSP
+  RealReclaimSDPAttributes(this);
+#endif
 }
 
 Boolean MediaSession::isMediaSession() const {
@@ -105,6 +113,9 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     if (parseSDPLine_c(sdpLine)) continue;
     if (parseSDPAttribute_range(sdpLine)) continue;
     if (parseSDPAttribute_source_filter(sdpLine)) continue;
+#ifdef SUPPORT_REAL_RTSP
+    if (RealParseSDPAttributes(this, sdpLine)) continue;
+#endif
   }
     
   while (sdpLine != NULL) {
@@ -169,6 +180,9 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
       if (subsession->parseSDPAttribute_x_mct_slap(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_dimensions(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_framerate(sdpLine)) continue;
+#ifdef SUPPORT_REAL_RTSP
+      if (RealParseSDPAttributes(subsession, sdpLine)) continue;
+#endif
 
       // (Later, check for malformed lines, and other valid SDP lines#####)
     }
@@ -489,6 +503,9 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1),
     fRTPSocket(NULL), fRTCPSocket(NULL),
     fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL) {
+#ifdef SUPPORT_REAL_RTSP
+    RealInitSDPAttributes(this);
+#endif
 }
 
 MediaSubsession::~MediaSubsession() {
@@ -499,6 +516,9 @@ MediaSubsession::~MediaSubsession() {
   delete[] fControlPath; delete[] fConfig; delete[] fMode;
 
   delete fNext;
+#ifdef SUPPORT_REAL_RTSP
+  RealReclaimSDPAttributes(this);
+#endif
 }
 
 float MediaSubsession::playEndTime() const {

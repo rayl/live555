@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTPSink.hh"
 #include "GroupsockHelper.hh"
 
+//#define DEBUG_RR 1 //#####@@@@@
 ////////// RTPSink //////////
 
 Boolean RTPSink::lookupByName(UsageEnvironment& env, char const* sinkName,

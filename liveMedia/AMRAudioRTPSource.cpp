@@ -688,8 +688,8 @@ static void unpackBandwidthEfficientData(BufferedPacket* packet,
 					 Boolean isWideband) {
 #ifdef DEBUG
   fprintf(stderr, "Unpacking 'bandwidth-efficient' payload (%d bytes):\n", packet->dataSize());
-  for (unsigned i = 0; i < packet->dataSize(); ++i) {
-    fprintf(stderr, "%02x:", (packet->data())[i]);
+  for (unsigned j = 0; j < packet->dataSize(); ++j) {
+    fprintf(stderr, "%02x:", (packet->data())[j]);
   }
   fprintf(stderr, "\n");
 #endif

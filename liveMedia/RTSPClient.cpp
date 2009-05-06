@@ -855,7 +855,8 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 Boolean RTSPClient::playMediaSession(MediaSession& session) {
 #ifdef SUPPORT_REAL_RTSP
   // Set the "Subscribe" parameter before proceeding:
-  setMediaSessionParameter(session, "Subscribe", "stream=0;rule=0,stream=0;rule=1");
+  setMediaSessionParameter(session, "Subscribe", "stream=0;rule=8,stream=0;rule=9");
+  //#####@@@@@  stream=0;rule=0,stream=0;rule=1
 #endif
   char* cmd = NULL;
   do {

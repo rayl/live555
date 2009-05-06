@@ -82,10 +82,12 @@ public:
 MPEG1or2Demux
 ::MPEG1or2Demux(UsageEnvironment& env,
 		FramedSource* inputSource, Boolean reclaimWhenLastESDies)
-  : Medium(env), fInputSource(inputSource),
+  : Medium(env),
+    fInputSource(inputSource),
     fNextAudioStreamNumber(0), fNextVideoStreamNumber(0),
     fReclaimWhenLastESDies(reclaimWhenLastESDies), fNumOutstandingESs(0),
     fNumPendingReads(0), fHaveUndeliveredData(False) {
+  lastSeenSCR.highBit = 0; lastSeenSCR.remainingBits = 0; lastSeenSCR.extension = 0;
   fParser = new MPEGProgramStreamParser(this, inputSource);
   for (unsigned i = 0; i < 256; ++i) {
     fOutput[i].savedDataHead = fOutput[i].savedDataTail = NULL;
@@ -133,6 +135,13 @@ MPEG1or2DemuxedElementaryStream* MPEG1or2Demux::newVideoStream() {
   unsigned char newVideoStreamTag = 0xE0 | (fNextVideoStreamNumber++&~0xF0);
       // MPEG video stream tags are 1110 xxxx (binary)
   return newElementaryStream(newVideoStreamTag);
+}
+
+// Appropriate one of the reserved stream id tags to mean: return raw PES packets:
+#define RAW_PES 0xFC
+
+MPEG1or2DemuxedElementaryStream* MPEG1or2Demux::newRawPESStream() {
+  return newElementaryStream(RAW_PES);
 }
 
 void MPEG1or2Demux::registerReadInterest(u_int8_t streamIdTag,
@@ -394,43 +403,41 @@ void MPEGProgramStreamParser::parsePackHeader() {
   // The size of the pack header differs depending on whether it's
   // MPEG-1 or MPEG-2.  The next byte tells us this: 
   unsigned char nextByte = get1Byte();
+  struct MPEG1or2Demux::SCR& scr = fUsingSource->lastSeenSCR; // alias
   if ((nextByte&0xF0) == 0x20) { // MPEG-1
     fMPEGversion = 1;
-#ifdef DEBUG_TIMESTAMPS
-    unsigned char scrb_highBit =  (nextByte&0x08)>>3;
-    unsigned scrb_remainingBits = (nextByte&0x06)<<29;
+    scr.highBit =  (nextByte&0x08)>>3;
+    scr.remainingBits = (nextByte&0x06)<<29;
     unsigned next4Bytes = get4Bytes();
-    scrb_remainingBits |= (next4Bytes&0xFFFE0000)>>2;
-    scrb_remainingBits |= (next4Bytes&0x0000FFFE)>>1;
+    scr.remainingBits |= (next4Bytes&0xFFFE0000)>>2;
+    scr.remainingBits |= (next4Bytes&0x0000FFFE)>>1;
+    scr.extension = 0;
     skipBits(24);
 
+#if defined(DEBUG_TIMESTAMPS) || defined(DEBUG_SCR_TIMESTAMPS)
     fprintf(stderr, "pack hdr system_clock_reference_base: 0x%x",
-	    scrb_highBit);
-    fprintf(stderr, "%08x\n", scrb_remainingBits);
-#else
-    skipBits(56);
+	    scr.highBit);
+    fprintf(stderr, "%08x\n", scr.remainingBits);
 #endif
   } else if ((nextByte&0xC0) == 0x40) { // MPEG-2
     fMPEGversion = 2;
-#ifdef DEBUG_TIMESTAMPS
-    unsigned char scrb_highBit =  (nextByte&0x20)>>5;
-    unsigned scrb_remainingBits = (nextByte&0x18)<<27;
-    scrb_remainingBits |= (nextByte&0x03)<<28;
+    scr.highBit =  (nextByte&0x20)>>5;
+    scr.remainingBits = (nextByte&0x18)<<27;
+    scr.remainingBits |= (nextByte&0x03)<<28;
     unsigned next4Bytes = get4Bytes();
-    scrb_remainingBits |= (next4Bytes&0xFFF80000)>>4;
-    scrb_remainingBits |= (next4Bytes&0x0003FFF8)>>3;
-    unsigned short scre = (next4Bytes&0x00000003)<<7;
+    scr.remainingBits |= (next4Bytes&0xFFF80000)>>4;
+    scr.remainingBits |= (next4Bytes&0x0003FFF8)>>3;
+    scr.extension = (next4Bytes&0x00000003)<<7;
     next4Bytes = get4Bytes();
-    scre               |= (next4Bytes&0xFE000000)>>25;
+    scr.extension |= (next4Bytes&0xFE000000)>>25;
     skipBits(5);
 
+#if defined(DEBUG_TIMESTAMPS) || defined(DEBUG_SCR_TIMESTAMPS)
     fprintf(stderr, "pack hdr system_clock_reference_base: 0x%x",
-	    scrb_highBit);
-    fprintf(stderr, "%08x\n", scrb_remainingBits);
+	    scr.highBit);
+    fprintf(stderr, "%08x\n", scr.remainingBits);
     fprintf(stderr, "pack hdr system_clock_reference_extension: 0x%03x\n",
-	    scre);
-#else
-    skipBits(69);
+	    scr.extension);
 #endif
     unsigned char pack_stuffing_length = getBits(3);
     skipBytes(pack_stuffing_length);
@@ -480,6 +487,8 @@ void MPEGProgramStreamParser::parseSystemHeader() {
 // A test for stream ids that are exempt from normal PES packet header parsing
 Boolean MPEGProgramStreamParser
 ::isSpecialStreamId(unsigned char stream_id) const {
+  if (stream_id == RAW_PES) return True; // hack
+
   if (fMPEGversion == 1) {
     return stream_id == private_stream_2;
   } else { // assume MPEG-2
@@ -546,6 +555,10 @@ unsigned char MPEGProgramStreamParser::parsePESPacket() {
 
   // Parse over the rest of the header, until we get to the packet data itself.
   // This varies depending upon the MPEG version:
+  if (fUsingSource->fOutput[RAW_PES].isPotentiallyReadable) {
+    // Hack: We've been asked to return raw PES packets, for every stream:
+    stream_id = RAW_PES;
+  } 
   unsigned savedParserOffset = curOffset();
 #ifdef DEBUG_TIMESTAMPS
   unsigned char pts_highBit = 0;
@@ -652,6 +665,11 @@ unsigned char MPEGProgramStreamParser::parsePESPacket() {
   unsigned char acquiredStreamIdTag = 0;
   unsigned currentParserOffset = curOffset();
   unsigned bytesSkipped = currentParserOffset - savedParserOffset;
+  if (stream_id == RAW_PES) {
+    restoreSavedParserState(); // so we deliver from the beginning of the PES packet
+    PES_packet_length += 6; // to include the whole of the PES packet
+    bytesSkipped = 0;
+  }
   if (PES_packet_length < bytesSkipped) {
     fUsingSource->envir() << "StreamParser::parsePESPacket(): saw inconsistent PES_packet_length "
 			  << PES_packet_length << " < "

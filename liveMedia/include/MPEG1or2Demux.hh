@@ -41,6 +41,9 @@ public:
   MPEG1or2DemuxedElementaryStream* newAudioStream();
   MPEG1or2DemuxedElementaryStream* newVideoStream();
 
+  // A hack for getting raw, undemuxed PES packets from the Program Stream:
+  MPEG1or2DemuxedElementaryStream* newRawPESStream();
+
   void getNextFrame(u_int8_t streamIdTag,
 		    unsigned char* to, unsigned maxSize,
 		    FramedSource::afterGettingFunc* afterGettingFunc,
@@ -59,6 +62,12 @@ public:
       // to be closed (i.e., no longer readable)
 
   FramedSource* inputSource() const { return fInputSource; }
+
+  struct SCR {
+    u_int8_t highBit;
+    u_int32_t remainingBits;
+    u_int16_t extension;
+  } lastSeenSCR;
 
 private:
   MPEG1or2Demux(UsageEnvironment& env,

@@ -28,7 +28,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #elif defined(__WIN32__) || defined(_WIN32)
 /* Windows */
-#if defined(_WINNT) || defined(__BORLANDC__)
+#if defined(_WINNT) || defined(__BORLANDC__) || defined(__MINGW32__)
 #define _MSWSOCK_
 #include <winsock2.h>
 #include <ws2tcpip.h>

@@ -58,6 +58,15 @@ public:
       // perhaps multiple subsessions if MCT SLAP sessions are being used)
       // Returns the resulting subsession, or 'multi source' (not both)
 
+#ifdef SUPPORT_REAL_RTSP
+  // Attributes specific to RealNetworks streams:
+  unsigned fRealFlags;
+  unsigned char* fRealTitle; unsigned fRealTitleSize;
+  unsigned char* fRealAuthor; unsigned fRealAuthorSize;
+  unsigned char* fRealCopyright; unsigned fRealCopyrightSize;
+  unsigned char* fRealAbstract; unsigned fRealAbstractSize;
+#endif
+
 private: // redefined virtual functions
   virtual Boolean isMediaSession() const;
 
@@ -196,6 +205,16 @@ public:
     u_int16_t seqNum;
     u_int32_t timestamp;
   } rtpInfo;
+
+#ifdef SUPPORT_REAL_RTSP
+  // Attributes specific to RealNetworks streams:
+  unsigned fRealMaxBitRate, fRealAvgBitRate, fRealMaxPacketSize, fRealAvgPacketSize, fRealPreroll;
+  char* fRealStreamName; char* fRealMIMEType;
+  unsigned char* fRealOpaqueData; unsigned fRealOpaqueDataSize;
+  // A pointer into "fRealOpaqueData":
+  unsigned char* fRealTypeSpecificData; unsigned fRealTypeSpecificDataSize;
+  unsigned fRealRuleNumber;
+#endif
 
 private:
   friend class MediaSession;

@@ -16,6 +16,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // "liveMedia"
 // Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A WAV audio file source
+// NOTE: Samples are returned in little-endian order (the same order in which
+// they were stored in the file).
 // C++ header
 
 #ifndef _WAV_AUDIO_FILE_SOURCE_HH

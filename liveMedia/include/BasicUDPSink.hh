@@ -15,53 +15,48 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
-// A MPEG 1 or 2 Elementary Stream, demultiplexed from a Program Stream
+// A simple UDP sink (i.e., without RTP or other headers added); one frame per packet
 // C++ header
 
-#ifndef _MPEG_1OR2_DEMUXED_ELEMENTARY_STREAM_HH
-#define _MPEG_1OR2_DEMUXED_ELEMENTARY_STREAM_HH
+#ifndef _SIMPLE_UDP_SINK_HH
+#define _SIMPLE_UDP_SINK_HH
 
-#ifndef _MPEG_1OR2_DEMUX_HH
-#include "MPEG1or2Demux.hh"
+#ifndef _MEDIA_SINK_HH
+#include "MediaSink.hh"
+#endif
+#ifndef _GROUPSOCK_HH
+#include <Groupsock.hh>
 #endif
 
-class MPEG1or2DemuxedElementaryStream: public FramedSource {
+class BasicUDPSink: public MediaSink {
 public:
-  struct SCR {
-    u_int8_t highBit;
-    u_int32_t remainingBits;
-    u_int16_t extension;
-  } lastSeenSCR;
+  static BasicUDPSink* createNew(UsageEnvironment& env, Groupsock* gs,
+				  unsigned maxPayloadSize = 1450);
+protected:
+  BasicUDPSink(UsageEnvironment& env, Groupsock* gs, unsigned maxPayloadSize);
+      // called only by createNew()
+  virtual ~BasicUDPSink();
 
-private: // We are created only by a MPEG1or2Demux (a friend)
-  MPEG1or2DemuxedElementaryStream(UsageEnvironment& env,
-			      u_int8_t streamIdTag,
-			      MPEG1or2Demux& sourceDemux);
-  virtual ~MPEG1or2DemuxedElementaryStream();
+private: // redefined virtual functions:
+  virtual Boolean continuePlaying();
 
 private:
-  // redefined virtual functions:
-  virtual void doGetNextFrame();
-  virtual void doStopGettingFrames();
-  virtual char const* MIMEtype() const; 
-  virtual unsigned maxFrameSize() const;
+  void continuePlaying1();
 
-private:
-  static void afterGettingFrame(void* clientData,
-				unsigned frameSize, unsigned numTruncatedBytes,
+  static void afterGettingFrame(void* clientData, unsigned frameSize,
+				unsigned numTruncatedBytes,
 				struct timeval presentationTime,
 				unsigned durationInMicroseconds);
-
   void afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
-			  struct timeval presentationTime,
 			  unsigned durationInMicroseconds);
 
-private:
-  u_int8_t fOurStreamIdTag;
-  MPEG1or2Demux& fOurSourceDemux;
-  char const* fMIMEtype;
+  static void sendNext(void* firstArg);
 
-  friend class MPEG1or2Demux;
+private:
+  Groupsock* fGS;
+  unsigned fMaxPayloadSize;
+  unsigned char* fOutputBuffer;
+  struct timeval fNextSendTime;
 };
 
 #endif

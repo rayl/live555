@@ -23,7 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 //##### Eventually fix the following #include; we shouldn't know about tunnels
 #include "TunnelEncaps.hh"
 
-#if defined(__WIN32__) || defined(_WIN32)
+#if (defined(__WIN32__) || defined(_WIN32)) && !defined(__MINGW32__)
 #include <strstrea.h>
 #else
 #if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 3 && __GNUC_MINOR__ > 0)
