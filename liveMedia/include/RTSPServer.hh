@@ -79,12 +79,14 @@ public:
   void removeServerMediaSession(ServerMediaSession* serverMediaSession);
   void removeServerMediaSession(char const* streamName);
 
-  char* rtspURL(ServerMediaSession const* serverMediaSession) const;
+  char* rtspURL(ServerMediaSession const* serverMediaSession, int clientSocket = -1) const;
       // returns a "rtsp://" URL that could be used to access the
       // specified session (which must already have been added to
       // us using "addServerMediaSession()".
       // This string is dynamically allocated; caller should delete[]
-  char* rtspURLPrefix() const;
+      // (If "clientSocket" is non-negative, then it is used (by calling "getsockname()") to determine
+      //  the IP address to be used in the URL.)
+  char* rtspURLPrefix(int clientSocket = -1) const;
       // like "rtspURL()", except that it returns just the common prefix used by
       // each session's "rtsp://" URL.
       // This string is dynamically allocated; caller should delete[]

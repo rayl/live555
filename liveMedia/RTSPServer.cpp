@@ -99,28 +99,34 @@ void RTSPServer::removeServerMediaSession(char const* streamName) {
   removeServerMediaSession(lookupServerMediaSession(streamName));
 }
 
-char* RTSPServer::rtspURLPrefix() const {
-  struct in_addr ourAddress;
-  ourAddress.s_addr = ReceivingInterfaceAddr != 0
-    ? ReceivingInterfaceAddr
-    : ourSourceAddressForMulticast(envir()); // hack
+char* RTSPServer::rtspURLPrefix(int clientSocket) const {
+  struct sockaddr_in ourAddress;
+  if (clientSocket < 0) {
+    // Use our default IP address in the URL:
+    ourAddress.sin_addr.s_addr = ReceivingInterfaceAddr != 0
+      ? ReceivingInterfaceAddr
+      : ourSourceAddressForMulticast(envir()); // hack
+  } else {
+    SOCKLEN_T namelen = sizeof ourAddress;
+    getsockname(clientSocket, (struct sockaddr*)&ourAddress, &namelen);
+  }
 
   char urlBuffer[100]; // more than big enough for "rtsp://<ip-address>:<port>/"
 
   portNumBits portNumHostOrder = ntohs(fServerPort.num());
   if (portNumHostOrder == 554 /* the default port number */) {
-    sprintf(urlBuffer, "rtsp://%s/", our_inet_ntoa(ourAddress));
+    sprintf(urlBuffer, "rtsp://%s/", our_inet_ntoa(ourAddress.sin_addr));
   } else {
     sprintf(urlBuffer, "rtsp://%s:%hu/",
-	    our_inet_ntoa(ourAddress), portNumHostOrder);
+	    our_inet_ntoa(ourAddress.sin_addr), portNumHostOrder);
   }
 
   return strDup(urlBuffer);
 }
 
 char* RTSPServer
-::rtspURL(ServerMediaSession const* serverMediaSession) const {
-  char* urlPrefix = rtspURLPrefix();
+::rtspURL(ServerMediaSession const* serverMediaSession, int clientSocket) const {
+  char* urlPrefix = rtspURLPrefix(clientSocket);
   char const* sessionName = serverMediaSession->streamName();
 
   char* resultURL = new char[strlen(urlPrefix) + strlen(sessionName) + 1];
@@ -498,7 +504,7 @@ void RTSPServer::RTSPClientSession
     // Also, generate our RTSP URL, for the "Content-Base:" header
     // (which is necessary to ensure that the correct URL gets used in
     // subsequent "SETUP" requests).
-    rtspURL = fOurServer.rtspURL(session);
+    rtspURL = fOurServer.rtspURL(session, fClientSocket);
 
     snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
 	     "RTSP/1.0 200 OK\r\nCSeq: %s\r\n"
@@ -752,8 +758,9 @@ void RTSPServer::RTSPClientSession
 				  fStreamStates[streamNum].streamToken);
   struct in_addr destinationAddr; destinationAddr.s_addr = destinationAddress;
   char* destAddrStr = strDup(our_inet_ntoa(destinationAddr));
-  struct in_addr sourceAddr; sourceAddr.s_addr = ourSourceAddressForMulticast(envir());
-  char* sourceAddrStr = strDup(our_inet_ntoa(sourceAddr));
+  struct sockaddr_in sourceAddr; SOCKLEN_T namelen = sizeof sourceAddr;
+  getsockname(fClientSocket, (struct sockaddr*)&sourceAddr, &namelen);
+  char* sourceAddrStr = strDup(our_inet_ntoa(sourceAddr.sin_addr));
   if (fIsMulticast) {
     switch (streamingMode) {
     case RTP_UDP:
@@ -916,7 +923,7 @@ static Boolean parseScaleHeader(char const* buf, float& scale) {
 void RTSPServer::RTSPClientSession
   ::handleCmd_PLAY(ServerMediaSubsession* subsession, char const* cseq,
 		   char const* fullRequestStr) {
-  char* rtspURL = fOurServer.rtspURL(fOurServerMediaSession);
+  char* rtspURL = fOurServer.rtspURL(fOurServerMediaSession, fClientSocket);
   unsigned rtspURLSize = strlen(rtspURL);
 
   //// Parse the client's "Scale:" header, if any: 
