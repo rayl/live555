@@ -233,6 +233,8 @@ void RTSPServer::incomingConnectionHandler1() {
     return;
   }
   makeSocketNonBlocking(clientSocket);
+  increaseSendBufferTo(envir(), clientSocket, 50*1024);
+
 #if defined(DEBUG) || defined(DEBUG_CONNECTIONS)
   fprintf(stderr, "accept()ed connection from %s\n", our_inet_ntoa(clientAddr.sin_addr));
 #endif

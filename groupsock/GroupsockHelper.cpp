@@ -98,7 +98,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
 #endif
   
   // Note: Windoze requires binding, even if the port number is 0
-  netAddressBits addr = INADDR_ANY;;
+  netAddressBits addr = INADDR_ANY;
 #if defined(__WIN32__) || defined(_WIN32)
 #else
   if (port.num() != 0 || ReceivingInterfaceAddr != INADDR_ANY) {

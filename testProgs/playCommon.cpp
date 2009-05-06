@@ -63,9 +63,11 @@ AVIFileSink* aviOut = NULL;
 Boolean audioOnly = False;
 Boolean videoOnly = False;
 char const* singleMedium = NULL;
-int verbosityLevel = 0;
-double endTime = 0;
-double endTimeSlop = -1.0; // extra seconds to play at the end
+int verbosityLevel = 1; // by default, print verbose output
+double duration = 0;
+double durationSlop = -1.0; // extra seconds to play at the end
+double initialSeekTime = 0.0f;
+double scale = 1.0f;
 unsigned interPacketGapMaxTime = 0;
 unsigned totNumPacketsReceived = ~0; // used if checking inter-packet gaps
 Boolean playContinuously = False;
@@ -101,11 +103,12 @@ struct timeval startTime;
 
 void usage() {
   *env << "Usage: " << progName
-       << " [-p <startPortNum>] [-r|-q|-4|-i] [-a|-v] [-V] [-e <endTime>] [-E <max-inter-packet-gap-time> [-c] [-s <offset>] [-n] [-O]"
+       << " [-p <startPortNum>] [-r|-q|-4|-i] [-a|-v] [-V] [-d <duration>] [-D <max-inter-packet-gap-time> [-c] [-S <offset>] [-n] [-O]"
 	   << (controlConnectionUsesTCP ? " [-t|-T <http-port>]" : "")
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
-       << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "")
+       << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-M <mime-subtype-name>]" : "")
+       << " [-s <initial-seek-time>] [-z <scale>]"
        << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] [-B <input-socket-buffer-size>] [-I <input-interface-ip-address>] [-m] <url> (or " << progName << " -o [-V] <url>)\n";
   //##### Add "-R <dest-rtsp-url>" #####
   shutdown();
@@ -193,29 +196,29 @@ int main(int argc, char** argv) {
       break;
     }
 
-    case 'V': { // verbose output
-      verbosityLevel = 1;
+    case 'V': { // disable verbose output
+      verbosityLevel = 0;
       break;
     }
 
-    case 'e': { // specify end time, or how much to delay after end time
+    case 'd': { // specify duration, or how much to delay after end time
       float arg;
       if (sscanf(argv[2], "%g", &arg) != 1) {
 	usage();
       }
       if (argv[2][0] == '-') { // not "arg<0", in case argv[2] was "-0"
-	// a 'negative' argument was specified; use this for "endTimeSlop":
-	endTime = 0; // use whatever's in the SDP
-	endTimeSlop = -arg;
+	// a 'negative' argument was specified; use this for "durationSlop":
+	duration = 0; // use whatever's in the SDP
+	durationSlop = -arg;
       } else {
-	endTime = arg;
-	endTimeSlop = 0;
+	duration = arg;
+	durationSlop = 0;
       }
       ++argv; --argc;
       break;
     }
 
-    case 'E': { // specify maximum number of seconds to wait for packets:
+    case 'D': { // specify maximum number of seconds to wait for packets:
       if (sscanf(argv[2], "%u", &interPacketGapMaxTime) != 1) {
 	usage();
       }
@@ -228,12 +231,12 @@ int main(int argc, char** argv) {
       break;
     }
 
-    case 's': { // specify an offset to use with "SimpleRTPSource"s
+    case 'S': { // specify an offset to use with "SimpleRTPSource"s
       if (sscanf(argv[2], "%d", &simpleRTPoffsetArg) != 1) {
 	usage();
       }
       if (simpleRTPoffsetArg < 0) {
-	*env << "offset argument to \"-s\" must be >= 0\n";
+	*env << "offset argument to \"-S\" must be >= 0\n";
 	usage();
       }
       ++argv; --argc;
@@ -319,7 +322,7 @@ int main(int argc, char** argv) {
       break;
     }
 
-    case 'D': { // specify a MIME subtype for a dynamic RTP payload type
+    case 'M': { // specify a MIME subtype for a dynamic RTP payload type
       mimeSubtype = argv[2];
       if (desiredAudioRTPPayloadFormat==0) desiredAudioRTPPayloadFormat =96;
       ++argv; --argc;
@@ -406,6 +409,26 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 's': { // specify initial seek time (trick play)
+      float arg;
+      if (sscanf(argv[2], "%g", &arg) != 1 || arg < 0) {
+	usage();
+      }
+      initialSeekTime = arg;
+      ++argv; --argc;
+      break;
+    }
+
+    case 'z': { // scale (trick play)
+      float arg;
+      if (sscanf(argv[2], "%g", &arg) != 1 || arg == 0.0f) {
+	usage();
+      }
+      scale = arg;
+      ++argv; --argc;
+      break;
+    }
+
     default: {
       usage();
       break;
@@ -455,11 +478,11 @@ int main(int argc, char** argv) {
   if (!createReceivers && notifyOnPacketArrival) {
     *env << "Warning: Because we're not receiving stream data, the -n flag has no effect\n";
   }
-  if (endTimeSlop < 0) {
+  if (durationSlop < 0) {
     // This parameter wasn't set, so use a default value.
     // If we're measuring QOS stats, then don't add any slop, to avoid
     // having 'empty' measurement intervals at the end.
-    endTimeSlop = qosMeasurementIntervalMS > 0 ? 0.0 : 5.0;
+    durationSlop = qosMeasurementIntervalMS > 0 ? 0.0 : 5.0;
   }
 
   char* url = argv[1];
@@ -778,6 +801,12 @@ void setupStreams() {
 }
 
 void startPlayingStreams() {
+  if (duration == 0) {
+    if (scale > 0) duration = session->playEndTime() - initialSeekTime; // use SDP end time
+    else if (scale < 0) duration = initialSeekTime;
+  }
+  if (duration < 0) duration = 0.0;
+
   if (!clientStartPlayingSession(ourClient, session)) {
     *env << "Failed to start playing session: " << env->getResultMsg() << "\n";
     shutdown();
@@ -793,21 +822,20 @@ void startPlayingStreams() {
   // Figure out how long to delay (if at all) before shutting down, or
   // repeating the playing
   Boolean timerIsBeingUsed = False;
-  double totalEndTime = endTime;
-  if (endTime == 0) endTime = session->playEndTime(); // use SDP end time
-  if (endTime > 0) {
+  double secondsToDelay = duration;
+  if (duration > 0) {
     double const maxDelayTime
       = (double)( ((unsigned)0x7FFFFFFF)/1000000.0 );
-    if (endTime > maxDelayTime) {
-      *env << "Warning: specified end time " << endTime
+    if (duration > maxDelayTime) {
+      *env << "Warning: specified end time " << duration
 		<< " exceeds maximum " << maxDelayTime
 		<< "; will not do a delayed shutdown\n";
-      endTime = 0.0;
     } else {
       timerIsBeingUsed = True;
-      totalEndTime = endTime + endTimeSlop;
+      double absScale = scale > 0 ? scale : -scale; // ASSERT: scale != 0
+      secondsToDelay = duration/absScale + durationSlop;
 
-      int uSecsToDelay = (int)(totalEndTime*1000000.0);
+      int uSecsToDelay = (int)(secondsToDelay*1000000.0);
       sessionTimerTask = env->taskScheduler().scheduleDelayedTask(
          uSecsToDelay, (TaskFunc*)sessionTimerHandler, (void*)NULL);
     }
@@ -817,7 +845,7 @@ void startPlayingStreams() {
     = createReceivers? "Receiving streamed data":"Data is being streamed";
   if (timerIsBeingUsed) {
     *env << actionString
-		<< " (for up to " << totalEndTime
+		<< " (for up to " << secondsToDelay
 		<< " seconds)...\n";
   } else {
 #ifdef USE_SIGNALS

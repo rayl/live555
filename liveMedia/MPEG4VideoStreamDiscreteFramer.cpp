@@ -83,7 +83,7 @@ void MPEG4VideoStreamDiscreteFramer
 	  break; // The configuration information ends here
 	}
       }
-      fNumConfigBytes = i-3;
+      fNumConfigBytes = i < frameSize ? i-3 : frameSize;
       delete[] fConfigBytes; fConfigBytes = new unsigned char[fNumConfigBytes];
       for (unsigned j = 0; j < fNumConfigBytes; ++j) fConfigBytes[j] = fTo[j];
 

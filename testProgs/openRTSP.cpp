@@ -60,9 +60,18 @@ Boolean clientSetupSubsession(Medium* client, MediaSubsession* subsession,
 
 Boolean clientStartPlayingSession(Medium* client,
 				  MediaSession* session) {
+  extern double initialSeekTime, duration, scale;
+  double endTime = initialSeekTime;
+  if (scale > 0) {
+    endTime = initialSeekTime + duration;
+  } else if (scale < 0) {
+    endTime = initialSeekTime - duration;
+    if (endTime < 0) endTime = 0.0f;
+  }
+
   if (client == NULL || session == NULL) return False;
   RTSPClient* rtspClient = (RTSPClient*)client;
-  return rtspClient->playMediaSession(*session);
+  return rtspClient->playMediaSession(*session, (float)initialSeekTime, (float)endTime, (float)scale);
 }
 
 Boolean clientTearDownSession(Medium* client,

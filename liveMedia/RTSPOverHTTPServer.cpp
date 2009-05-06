@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "RTSPOverHTTPServer.hh"
+#include "RTSPCommon.hh"
 #include <GroupsockHelper.hh>
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
@@ -123,6 +124,7 @@ void RTSPOverHTTPServer::incomingConnectionHandler1() {
     return;
   }
   makeSocketNonBlocking(clientSocket);
+  increaseSendBufferTo(envir(), clientSocket, 50*1024);
 #if defined(DEBUG) || defined(DEBUG_CONNECTIONS)
   fprintf(stderr, "accept()ed connection from %s\n", our_inet_ntoa(clientAddr.sin_addr));
 #endif
@@ -216,7 +218,7 @@ void RTSPOverHTTPServer::HTTPClientConnection::incomingRequestHandler1() {
     handleCmd_bad();
   } else {
 #ifdef DEBUG
-    fprintf(stderr, "parseHTTPRTSPRequestString() returned cmdName \"%s\", sessionCookie \"%s\", acceptStr \"%s\", contentTypeStr \"%s\"\n", cmdName, acceptStr, contentTypeStr);
+    fprintf(stderr, "parseHTTPRTSPRequestString() returned cmdName \"%s\", sessionCookie \"%s\", acceptStr \"%s\", contentTypeStr \"%s\"\n", cmdName, sessionCookie, acceptStr, contentTypeStr);
 #endif
 #if 0
     if (strcmp(cmdName, "OPTIONS") == 0) {

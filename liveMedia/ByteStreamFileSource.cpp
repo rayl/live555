@@ -136,6 +136,10 @@ void ByteStreamFileSource::doReadFromFile() {
     fMaxSize = fPreferredFrameSize;
   }
   fFrameSize = fread(fTo, 1, fMaxSize, fFid);
+  if (fFrameSize == 0) {
+    handleClosure(this);
+    return;
+  }
 
   // Set the 'presentation time':
   if (fPlayTimePerFrame > 0 && fPreferredFrameSize > 0) {

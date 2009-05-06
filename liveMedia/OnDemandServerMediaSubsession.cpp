@@ -210,6 +210,7 @@ void OnDemandServerMediaSubsession
 	serverRTCPPort = serverPortNum+1;
 	rtcpGroupsock = new Groupsock(envir(), dummyAddr, serverRTCPPort, 255);
 	if (rtcpGroupsock->socketNum() < 0) {
+	  delete rtpGroupsock;
 	  delete rtcpGroupsock;
 	  continue; // try again
 	}
