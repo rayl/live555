@@ -22,7 +22,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "BasicUsageEnvironment.hh"
 
 UsageEnvironment* env;
-char const* inputFileName = "test.m4v";
+char const* inputFileName = "test.m4e";
 char const* remoteStreamName = "test.sdp"; // the stream name, as served by the DSS
 MPEG4VideoStreamFramer* videoSource;
 RTPSink* videoSink;

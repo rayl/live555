@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
   // A MPEG-4 video elementary stream:
   {
     char const* streamName = "mpeg4ESVideoTest";
-    char const* inputFileName = "test.m4v";
+    char const* inputFileName = "test.m4e";
     ServerMediaSession* sms
       = ServerMediaSession::createNew(*env, streamName, streamName,
 				      descriptionString);

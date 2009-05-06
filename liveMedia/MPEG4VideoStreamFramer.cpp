@@ -634,6 +634,13 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
   default: {
     if (isVideoObjectStartCode(next4Bytes)) {
       setParseState(PARSING_VIDEO_OBJECT_LAYER);
+    } else if (isVideoObjectLayerStartCode(next4Bytes)){
+      // copy all bytes that we see, up until we reach a VOP_START_CODE:
+      u_int32_t next4Bytes = get4Bytes();
+      while (next4Bytes != VOP_START_CODE) {
+	saveToNextCode(next4Bytes);
+      }
+      setParseState(PARSING_VIDEO_OBJECT_PLANE);
     } else {
       usingSource()->envir() << "MPEG4VideoStreamParser::parseVideoObjectPlane(): Saw unexpected code "
 			     << (void*)next4Bytes << "\n";
