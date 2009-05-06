@@ -1091,7 +1091,8 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
 
       nextLineStart = getLine(lineStart);
 
-      if (parseScaleHeader(lineStart, session.scale())) break;
+      if (parseScaleHeader(lineStart, session.scale())) continue;
+      if (parseRangeHeader(lineStart, session.playStartTime(), session.playEndTime())) continue;
     }
 
     if (fTCPStreamIdCount == 0) { // we're not receiving RTP-over-TCP
@@ -1192,6 +1193,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
 	continue;
       }
       if (parseScaleHeader(lineStart, subsession.scale())) continue;
+      if (parseRangeHeader(lineStart, subsession._playStartTime(), subsession._playEndTime())) continue;
     }
 
     delete[] cmd;
@@ -2049,7 +2051,7 @@ unsigned RTSPClient::getResponse1(char*& responseBuffer,
   while (1) {
     unsigned char firstByte;
     struct timeval timeout;
-    timeout.tv_sec = 5; timeout.tv_usec = 0;
+    timeout.tv_sec = 30; timeout.tv_usec = 0;
     if (readSocket(envir(), fInputSocketNum, &firstByte, 1, fromAddress, &timeout)
 	!= 1) break;
     if (firstByte != '$') {

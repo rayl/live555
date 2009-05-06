@@ -43,4 +43,7 @@ Boolean parseRTSPRequestString(char const *reqStr, unsigned reqStrSize,
 			       unsigned resultURLSuffixMaxSize, 
 			       char* resultCSeq,
 			       unsigned resultCSeqMaxSize); 
+
+Boolean parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd);
+
 #endif

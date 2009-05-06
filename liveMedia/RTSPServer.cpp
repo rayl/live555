@@ -594,33 +594,6 @@ static void parseTransportHeader(char const* buf,
   delete[] field;
 }
 
-static Boolean parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd) {
-  // Initialize the result parameters to default values:
-  rangeStart = rangeEnd = 0.0;
-
-  // First, find "Range:"
-  while (1) {
-    if (*buf == '\0') return False; // not found
-    if (_strncasecmp(buf, "Range: ", 7) == 0) break;
-    ++buf;
-  }
-
-  // Then, run through each of the fields, looking for ones we handle:
-  char const* fields = buf + 7;
-  while (*fields == ' ') ++fields;
-  float start, end;
-  if (sscanf(fields, "npt = %f - %f", &start, &end) == 2) {
-    rangeStart = start;
-    rangeEnd = end;
-  } else if (sscanf(fields, "npt = %f -", &start) == 1) {
-    rangeStart = start;
-  } else {
-    return False; // The header is malformed
-  }
-
-  return True;
-}
-
 static Boolean parsePlayNowHeader(char const* buf) {
   // Find "x-playNow:" header, if present
   while (1) {

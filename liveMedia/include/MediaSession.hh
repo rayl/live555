@@ -39,6 +39,7 @@ public:
 			      MediaSession*& resultSession);
 
   Boolean hasSubsessions() const { return fSubsessionsHead != NULL; }
+  float& playStartTime() { return fMaxPlayStartTime; }
   float& playEndTime() { return fMaxPlayEndTime; }
   char* connectionEndpointName() const { return fConnectionEndpointName; }
   char const* CNAME() const { return fCNAME; }
@@ -97,6 +98,7 @@ protected:
 
   // Fields set from a SDP description:
   char* fConnectionEndpointName;
+  float fMaxPlayStartTime;
   float fMaxPlayEndTime;
   struct in_addr fSourceFilterAddr; // used for SSM
   float fScale; // set from a RTSP "Scale:" header
@@ -147,7 +149,11 @@ public:
     // This is the source that client sinks read from.  It is usually
     // (but not necessarily) the same as "rtpSource()"
 
+  float playStartTime() const;
   float playEndTime() const;
+  // Used only to set the local fields:
+  float& _playStartTime() { return fPlayStartTime; }
+  float& _playEndTime() { return fPlayEndTime; }
 
   Boolean initiate(int useSpecialRTPoffset = -1);
       // Creates a "RTPSource" for this subsession. (Has no effect if it's
@@ -268,6 +274,7 @@ protected:
   Boolean fCpresent, fRandomaccessindication;
   char *fConfig, *fMode, *fSpropParameterSets;
 
+  float fPlayStartTime;
   float fPlayEndTime;
   unsigned short fVideoWidth, fVideoHeight;
      // screen dimensions (set by an optional a=x-dimensions: <w>,<h> line)

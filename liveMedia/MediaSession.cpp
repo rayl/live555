@@ -62,7 +62,7 @@ Boolean MediaSession::lookupByName(UsageEnvironment& env,
 MediaSession::MediaSession(UsageEnvironment& env)
   : Medium(env),
     fSubsessionsHead(NULL), fSubsessionsTail(NULL),
-    fConnectionEndpointName(NULL), fMaxPlayEndTime(0.0f),
+    fConnectionEndpointName(NULL), fMaxPlayStartTime(0.0f), fMaxPlayEndTime(0.0f),
     fScale(1.0f), fMediaSessionType(NULL), fSessionName(NULL), fSessionDescription(NULL) {
 #ifdef SUPPORT_REAL_RTSP
   RealInitSDPAttributes(this);
@@ -349,8 +349,8 @@ Boolean MediaSession::parseSDPAttribute_type(char const* sdpLine) {
   return parseSuccess;
 }
 
-static Boolean parseRangeAttribute(char const* sdpLine, float& endTime) {
-  return sscanf(sdpLine, "a=range: npt = %*g - %g", &endTime) == 1;
+static Boolean parseRangeAttribute(char const* sdpLine, float& startTime, float& endTime) {
+  return sscanf(sdpLine, "a=range: npt = %g - %g", &startTime, &endTime) == 2;
 }
 
 Boolean MediaSession::parseSDPAttribute_range(char const* sdpLine) {
@@ -358,9 +358,13 @@ Boolean MediaSession::parseSDPAttribute_range(char const* sdpLine) {
   // (Later handle other kinds of "a=range" attributes also???#####)
   Boolean parseSuccess = False;
 
+  float playStartTime;
   float playEndTime;
-  if (parseRangeAttribute(sdpLine, playEndTime)) {
+  if (parseRangeAttribute(sdpLine, playStartTime, playEndTime)) {
     parseSuccess = True;
+    if (playStartTime > fMaxPlayStartTime) {
+      fMaxPlayStartTime = playStartTime;
+    }
     if (playEndTime > fMaxPlayEndTime) {
       fMaxPlayEndTime = playEndTime;
     }
@@ -527,7 +531,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fSizelength(0), fStreamstateindication(0), fStreamtype(0),
     fCpresent(False), fRandomaccessindication(False),
     fConfig(NULL), fMode(NULL), fSpropParameterSets(NULL),
-    fPlayEndTime(0.0),
+    fPlayStartTime(0.0), fPlayEndTime(0.0),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f),
     fRTPSocket(NULL), fRTCPSocket(NULL),
     fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL) {
@@ -547,6 +551,12 @@ MediaSubsession::~MediaSubsession() {
 #ifdef SUPPORT_REAL_RTSP
   RealReclaimSDPAttributes(this);
 #endif
+}
+
+float MediaSubsession::playStartTime() const {
+  if (fPlayStartTime > 0) return fPlayStartTime;
+
+  return fParent.playStartTime();
 }
 
 float MediaSubsession::playEndTime() const {
@@ -971,9 +981,16 @@ Boolean MediaSubsession::parseSDPAttribute_range(char const* sdpLine) {
   // (Later handle other kinds of "a=range" attributes also???#####)
   Boolean parseSuccess = False;
 
+  float playStartTime;
   float playEndTime;
-  if (parseRangeAttribute(sdpLine, playEndTime)) {
+  if (parseRangeAttribute(sdpLine, playStartTime, playEndTime)) {
     parseSuccess = True;
+    if (playStartTime > fPlayStartTime) {
+      fPlayStartTime = playStartTime;
+      if (playStartTime > fParent.playStartTime()) {
+	fParent.playStartTime() = playStartTime;
+      }
+    }
     if (playEndTime > fPlayEndTime) {
       fPlayEndTime = playEndTime;
       if (playEndTime > fParent.playEndTime()) {

@@ -1,10 +1,10 @@
 // Version information for the "UsageEnvironment" library
-// Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
 
 #ifndef _USAGEENVIRONMENT_VERSION_HH
 #define _USAGEENVIRONMENT_VERSION_HH
 
-#define USAGEENVIRONMENT_LIBRARY_VERSION_STRING	"2007.12.27"
-#define USAGEENVIRONMENT_LIBRARY_VERSION_INT		1198713600
+#define USAGEENVIRONMENT_LIBRARY_VERSION_STRING	"2008.01.04"
+#define USAGEENVIRONMENT_LIBRARY_VERSION_INT		1199404800
 
 #endif
