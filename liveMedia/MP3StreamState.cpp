@@ -27,8 +27,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #define MILLION 1000000
 
-MP3StreamState::MP3StreamState()
-  : fFid(NULL) {
+MP3StreamState::MP3StreamState(UsageEnvironment& env)
+  : fEnv(env), fFid(NULL) {
 }
 
 MP3StreamState::~MP3StreamState() {
@@ -338,6 +338,36 @@ Boolean MP3StreamState::findNextFrame() {
   return True;
 }
 
+static Boolean socketIsReadable(int socket) {
+  const unsigned numFds = socket+1;
+  fd_set rd_set;
+  FD_ZERO(&rd_set);
+  FD_SET((unsigned)socket, &rd_set);
+  struct timeval timeout;
+  timeout.tv_sec = timeout.tv_usec = 0;
+
+  int result = select(numFds, &rd_set, NULL, NULL, &timeout);
+  return result > 0;
+}
+
+static char watchVariable;
+
+static void checkFunc(void* /*clientData*/) {
+  watchVariable = ~0;
+}
+
+static void waitUntilSocketIsReadable(UsageEnvironment& env, int socket) {
+  while (!socketIsReadable(socket)) {
+    // Delay a short period of time before checking again.
+    unsigned usecsToDelay = 1000; // 1 ms
+    env.taskScheduler().scheduleDelayedTask(usecsToDelay,
+					    (TaskFunc*)checkFunc, (void*)NULL);
+    watchVariable = 0;
+    env.taskScheduler().doEventLoop(&watchVariable);
+        // This allows other tasks to run while we're waiting:
+  }
+}
+
 unsigned MP3StreamState::readFromStream(unsigned char* buf,
 					unsigned numChars) {
   // Hack for doing socket I/O instead of file I/O (e.g., on Windows)
@@ -346,6 +376,7 @@ unsigned MP3StreamState::readFromStream(unsigned char* buf,
     int sock = (int)fid_long;
     unsigned totBytesRead = 0;
     do {
+      waitUntilSocketIsReadable(fEnv, sock);
       int bytesRead
 	= recv(sock, &((char*)buf)[totBytesRead], numChars-totBytesRead, 0);
       if (bytesRead < 0) return 0;
@@ -355,6 +386,7 @@ unsigned MP3StreamState::readFromStream(unsigned char* buf,
 
     return totBytesRead;
   } else {
+    waitUntilSocketIsReadable(fEnv, fileno(fFid));
     return fread(buf, 1, numChars, fFid);
   }
 }

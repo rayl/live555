@@ -32,6 +32,8 @@ public:
 	    unsigned char rtpPayloadFormat = 31,
 	    unsigned rtpTimestampFrequency = 90000);
 
+  u_int32_t lastSpecialHeader() const {return fLastSpecialHeader;}
+
 protected:
   virtual ~H261VideoRTPSource();
 
@@ -46,6 +48,9 @@ private:
   virtual Boolean processSpecialHeader(BufferedPacket* packet,
                                        unsigned& resultSpecialHeaderSize);
   virtual char const* MIMEtype() const; 
+
+private:
+  u_int32_t fLastSpecialHeader;
 };
 
 #endif

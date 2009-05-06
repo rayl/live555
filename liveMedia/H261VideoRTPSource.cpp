@@ -33,7 +33,8 @@ H261VideoRTPSource
 			 unsigned char rtpPayloadFormat,
 			 unsigned rtpTimestampFrequency)
   : MultiFramedRTPSource(env, RTPgs,
-			 rtpPayloadFormat, rtpTimestampFrequency) {
+			 rtpPayloadFormat, rtpTimestampFrequency),
+  fLastSpecialHeader(0) {
 }
 
 H261VideoRTPSource::~H261VideoRTPSource() {
@@ -45,11 +46,17 @@ Boolean H261VideoRTPSource
   // There's a 4-byte video-specific header
   if (packet->dataSize() < 4) return False;
 
+  unsigned char* headerStart = packet->data();
+  fLastSpecialHeader
+    = (headerStart[0]<<24)|(headerStart[1]<<16)|(headerStart[2]<<8)|headerStart[3];
+
+#ifdef DELIVER_COMPLETE_FRAMES
   fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame;
   // whether the *previous* packet ended a frame
 
   // The RTP "M" (marker) bit indicates the last fragment of a frame:
   fCurrentPacketCompletesFrame = packet->rtpMarkerBit();
+#endif
 
   resultSpecialHeaderSize = 4;
   return True;

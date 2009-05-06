@@ -31,7 +31,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 MP3FileSource::MP3FileSource(UsageEnvironment& env, FILE* fid)
   : FramedFileSource(env, fid),
-    fStreamState(new MP3StreamState) {
+    fStreamState(new MP3StreamState(env)) {
 }
 
 MP3FileSource::~MP3FileSource() {

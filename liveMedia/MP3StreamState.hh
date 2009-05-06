@@ -21,6 +21,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _MP3_STREAM_STATE_HH
 #define _MP3_STREAM_STATE_HH
 
+#ifndef _USAGE_ENVIRONMENT_HH
+#include "UsageEnvironment.hh"
+#endif
 #ifndef _BOOLEAN_HH
 #include "Boolean.hh"
 #endif
@@ -35,7 +38,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class MP3StreamState {
 public:
-  MP3StreamState();
+  MP3StreamState(UsageEnvironment& env);
   virtual ~MP3StreamState();
 
   void assignStream(FILE* fid, unsigned fileSize);
@@ -64,6 +67,7 @@ private:
   unsigned readFromStream(unsigned char* buf, unsigned numChars);
 
 private:
+  UsageEnvironment& fEnv;
   FILE* fFid;
   Boolean fFidIsReallyASocket;
   unsigned fFileSize;
