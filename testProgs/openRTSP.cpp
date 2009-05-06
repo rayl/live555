@@ -26,9 +26,10 @@ Medium* createClient(UsageEnvironment& env,
 			       tunnelOverHTTPPortNum);
 }
 
-char* getOptionsResponse(Medium* client, char const* url) {
+char* getOptionsResponse(Medium* client, char const* url,
+			 char* username, char* password) {
   RTSPClient* rtspClient = (RTSPClient*)client;
-  return rtspClient->sendOptionsCmd(url);
+  return rtspClient->sendOptionsCmd(url, username, password);
 }
 
 char* getSDPDescriptionFromURL(Medium* client, char const* url,

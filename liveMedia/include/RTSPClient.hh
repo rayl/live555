@@ -70,7 +70,9 @@ public:
       // without using "password", then (if we get an Unauthorized
       // response) with an authentication response computed from "password"
 
-  char* sendOptionsCmd(char const* url);
+  char* sendOptionsCmd(char const* url,
+		       char* username = NULL, char* password = NULL,
+		       Authenticator* authenticator = NULL);
       // Issues a RTSP "OPTIONS" command
       // Returns a string containing the list of options, or NULL
 

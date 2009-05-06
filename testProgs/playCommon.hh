@@ -22,7 +22,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 extern Medium* createClient(UsageEnvironment& env, int verbosityLevel,
 			    char const* applicationName);
 
-extern char* getOptionsResponse(Medium* client, char const* url);
+extern char* getOptionsResponse(Medium* client, char const* url,
+				char* username, char* password);
 
 extern char* getSDPDescriptionFromURL(Medium* client, char const* url,
 				      char const* username,

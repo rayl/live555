@@ -506,16 +506,53 @@ char* RTSPClient
   return describeResult;
 }
 
-char* RTSPClient::sendOptionsCmd(char const* url) {
+char* RTSPClient::sendOptionsCmd(char const* url,
+				 char* username, char* password,
+				 Authenticator* authenticator) {
   char* result = NULL;
   char* cmd = NULL;
+  Boolean haveAllocatedAuthenticator = False;
   do {
-    if (!openConnectionFromURL(url, NULL)) break;
+    if (authenticator == NULL) {
+      // First, check whether "url" contains a username:password to be used
+      // (and no username,password pair was supplied separately):
+      if (username == NULL && password == NULL
+	  && parseRTSPURLUsernamePassword(url, username, password)) {
+	Authenticator authenticator;
+	authenticator.setUsernameAndPassword(username, password);
+	result = sendOptionsCmd(url, username, password, &authenticator);
+	delete[] username; delete[] password; // they were dynamically allocated
+	break;
+      } else if (username != NULL && password != NULL) {
+	// Use the separately supplied username and password:
+	authenticator = new Authenticator;
+	haveAllocatedAuthenticator = True;
+	authenticator->setUsernameAndPassword(username, password);
+
+	result = sendOptionsCmd(url, username, password, authenticator);
+	if (result != NULL) break; // We are already authorized
+
+	// The "realm" field should have been filled in:
+	if (authenticator->realm() == NULL) {
+	  // We haven't been given enough information to try again, so fail:
+	  break;
+	}
+	// Try again:
+      }
+    }
+
+    if (!openConnectionFromURL(url, authenticator)) break;
 
     // Send the OPTIONS command:
+
+    // First, construct an authenticator string:
+    char* authenticatorStr
+      = createAuthenticatorString(authenticator, "OPTIONS", url);
+
     char* const cmdFmt =
       "OPTIONS %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
+      "%s"
       "%s"
 #ifdef SUPPORT_REAL_RTSP
       REAL_OPTIONS_HEADERS
@@ -524,19 +561,28 @@ char* RTSPClient::sendOptionsCmd(char const* url) {
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(url)
       + 20 /* max int len */
+      + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize;
     cmd = new char[cmdSize];
     sprintf(cmd, cmdFmt,
 	    url,
 	    ++fCSeq,
+	    authenticatorStr,
 	    fUserAgentHeaderStr);
+    delete[] authenticatorStr;
 
     if (!sendRequest(cmd, "OPTIONS")) break;
 
     // Get the response from the server:
     unsigned bytesRead; unsigned responseCode;
     char* firstLine; char* nextLineStart;
-    if (!getResponse("OPTIONS", bytesRead, responseCode, firstLine, nextLineStart)) break;
+    if (!getResponse("OPTIONS", bytesRead, responseCode, firstLine, nextLineStart,
+		     False /*don't check for response code 200*/)) break;
+    if (responseCode != 200) {
+      checkForAuthenticationFailure(responseCode, nextLineStart, authenticator);
+      envir().setResultMsg("cannot handle OPTIONS response: ", firstLine);
+      break;
+    }
 
     // Look for a "Public:" header (which will contain our result str):
     char* lineStart;
@@ -557,6 +603,7 @@ char* RTSPClient::sendOptionsCmd(char const* url) {
   } while (0);
 
   delete[] cmd;
+  if (haveAllocatedAuthenticator) delete authenticator;
   return result;
 }
 

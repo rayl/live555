@@ -39,7 +39,8 @@ Medium* createClient(UsageEnvironment& env,
 			      verbosityLevel, applicationName);
 }
 
-char* getOptionsResponse(Medium* client, char const* url) {
+char* getOptionsResponse(Medium* client, char const* url,
+			 char* username, char* password) {
   SIPClient* sipClient = (SIPClient*)client;
   sipClient->envir().setResultMsg("NOT SUPPORTED IN CLIENT");//#####
   return NULL;//#####

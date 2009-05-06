@@ -474,7 +474,8 @@ int main(int argc, char** argv) {
 
   if (sendOptionsRequest) {
     // Begin by sending an "OPTIONS" command:
-    char* optionsResponse = getOptionsResponse(ourClient, url);
+    char* optionsResponse
+      = getOptionsResponse(ourClient, url, username, password);
     if (sendOptionsRequestOnly) {
       if (optionsResponse == NULL) {
 	*env << clientProtocolName << " \"OPTIONS\" request failed: "
