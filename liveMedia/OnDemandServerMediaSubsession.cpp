@@ -64,7 +64,11 @@ char const* OnDemandServerMediaSubsession::sdpLines() {
 class StreamState {
 public:
   StreamState(Groupsock* rtpGroupsock, RTPSink* rtpSink,
-	      Groupsock* rtcpGroupsock, unsigned totalBW, char* CNAME,
+	      Groupsock* rtcpGroupsock,
+	      int tcpSocketNum, // -1 means: use UDP
+	      unsigned char rtpChannelId,
+	      unsigned char rtcpChannelId,
+	      unsigned totalBW, char* CNAME,
 	      FramedSource* mediaSource);
   virtual ~StreamState();
 
@@ -77,6 +81,8 @@ private:
   RTPSink* fRTPSink;
 
   Groupsock* fRTCPGroupsock;
+  int fTCPSocketNum;
+  unsigned char fRTPChannelId, fRTCPChannelId;
   unsigned fTotalBW;
   char* fCNAME;
   RTCPInstance* fRTCPInstance;
@@ -89,9 +95,12 @@ void OnDemandServerMediaSubsession
 		      netAddressBits clientAddress,
 		      Port const& clientRTPPort,
 		      Port const& clientRTCPPort,
-		      Boolean& isMulticast,
+		      int tcpSocketNum,
+		      unsigned char rtpChannelId,
+		      unsigned char rtcpChannelId,
 		      netAddressBits& destinationAddress,
 		      u_int8_t& destinationTTL,
+		      Boolean& isMulticast,
 		      Port& serverRTPPort,
 		      Port& serverRTCPPort,
 		      void*& streamToken) {
@@ -124,9 +133,9 @@ void OnDemandServerMediaSubsession
   }
   delete rtpGroupsock_old;
 
-  struct in_addr clientAddr; clientAddr.s_addr = clientAddress;
-  rtpGroupsock->changeDestinationParameters(clientAddr, clientRTPPort, ~0);
-  destinationTTL = rtpGroupsock->ttl();
+  struct in_addr destinationAddr; destinationAddr.s_addr = destinationAddress;
+  if (destinationTTL == 255) destinationTTL = rtpGroupsock->ttl();
+  rtpGroupsock->changeDestinationParameters(destinationAddr, clientRTPPort, destinationTTL);
 
   unsigned char rtpPayloadType = 96 + trackNumber()-1; // if dynamic
   RTPSink* rtpSink
@@ -136,12 +145,13 @@ void OnDemandServerMediaSubsession
   Groupsock* rtcpGroupsock
     = new Groupsock(envir(), dummyAddr, serverRTPPortNum+1, 255);
   serverRTCPPort = rtcpGroupsock->port();
-  rtcpGroupsock->changeDestinationParameters(clientAddr, clientRTCPPort, ~0);
+  rtcpGroupsock->changeDestinationParameters(destinationAddr, clientRTCPPort, ~0);
 
   // Set up the state of the stream.  The stream will get started later:
   streamToken
-    = new StreamState(rtpGroupsock, rtpSink,
-		      rtcpGroupsock, streamBitrate, fCNAME, mediaSource);
+    = new StreamState(rtpGroupsock, rtpSink, rtcpGroupsock,
+		      tcpSocketNum, rtpChannelId, rtcpChannelId,
+		      streamBitrate, fCNAME, mediaSource);
 }
 
 void OnDemandServerMediaSubsession::startStream(void* streamToken) {
@@ -239,20 +249,16 @@ static void afterPlayingStreamState(void* clientData) {
 
 StreamState::StreamState(Groupsock* rtpGroupsock, RTPSink* rtpSink,
 			 Groupsock* rtcpGroupsock,
+			 int tcpSocketNum,
+			 unsigned char rtpChannelId,
+			 unsigned char rtcpChannelId,
 			 unsigned totalBW, char* CNAME,
 			 FramedSource* mediaSource)
   : fRTPGroupsock(rtpGroupsock), fRTPSink(rtpSink),
-    fRTCPGroupsock(rtcpGroupsock), fTotalBW(totalBW), fCNAME(CNAME),
-    fRTCPInstance(NULL) /* created later */,
+    fRTCPGroupsock(rtcpGroupsock), fTCPSocketNum(tcpSocketNum),
+    fRTPChannelId(rtpChannelId), fRTCPChannelId(rtcpChannelId),
+    fTotalBW(totalBW), fCNAME(CNAME), fRTCPInstance(NULL) /* created later */,
     fMediaSource(mediaSource) {
-  if (fRTCPGroupsock != NULL) {
-    // Create (and start) a 'RTCP instance' for this RTP sink:
-    fRTCPInstance
-      = RTCPInstance::createNew(fRTPSink->envir(), fRTCPGroupsock,
-				fTotalBW, (unsigned char*)fCNAME,
-				fRTPSink, NULL /* we're a server */);
-    // Note: This starts RTCP running automatically
-  }
 }  
 
 StreamState::~StreamState() {
@@ -262,6 +268,20 @@ StreamState::~StreamState() {
 void StreamState::startPlaying() {
   if (fRTPSink != NULL && fMediaSource != NULL) {
     fRTPSink->startPlaying(*fMediaSource, afterPlayingStreamState, this);
+
+    if (fRTCPGroupsock != NULL && fRTCPInstance == NULL) {
+      // Create (and start) a 'RTCP instance' for this RTP sink:
+      fRTCPInstance
+	= RTCPInstance::createNew(fRTPSink->envir(), fRTCPGroupsock,
+				  fTotalBW, (unsigned char*)fCNAME,
+				  fRTPSink, NULL /* we're a server */);
+      // Note: This starts RTCP running automatically
+    }
+    if (fTCPSocketNum >= 0) {
+      // Change RTP and RTCP to use the TCP socket instead of UDP:
+      fRTPSink->setStreamSocket(fTCPSocketNum, fRTPChannelId);
+      if (fRTCPInstance != NULL) fRTCPInstance->setStreamSocket(fTCPSocketNum, fRTCPChannelId);
+    }
   }
 }
 

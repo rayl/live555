@@ -62,10 +62,11 @@ int main(int argc, char** argv) {
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
   CNAME[maxCNAMElen] = '\0'; // just in case
-  RTCPInstance::createNew(*env, &rtcpGroupsock,
-			  totalSessionBandwidth, CNAME,
-			  audioSink, NULL /* we're a server */,
-			  True /* we're a SSM source */);
+  RTCPInstance* rtcp
+    = RTCPInstance::createNew(*env, &rtcpGroupsock,
+			      totalSessionBandwidth, CNAME,
+			      audioSink, NULL /* we're a server */,
+			      True /* we're a SSM source */);
   // Note: This starts RTCP running automatically
 
   // Create and start a RTSP server to serve this stream.
@@ -78,7 +79,7 @@ int main(int argc, char** argv) {
     = ServerMediaSession::createNew(*env, "testStream", inputFileName,
 		   "Session streamed by \"testAMRAudioStreamer\"",
 					   True /*SSM*/);
-  sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink));
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink, rtcp));
   rtspServer->addServerMediaSession(sms);
 
   char* url = rtspServer->rtspURL(sms);

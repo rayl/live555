@@ -98,9 +98,12 @@ int main(int argc, char** argv) {
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
   CNAME[maxCNAMElen] = '\0'; // just in case
-  RTCPInstance::createNew(*env, &rtcpGroupsockAudio,
-			  totalSessionBandwidthAudio, CNAME,
-			  audioSink, NULL /* we're a server */, isSSM);
+#ifdef IMPLEMENT_RTSP_SERVER
+  RTCPInstance* audioRTCP =
+#endif
+    RTCPInstance::createNew(*env, &rtcpGroupsockAudio,
+			    totalSessionBandwidthAudio, CNAME,
+			    audioSink, NULL /* we're a server */, isSSM);
   // Note: This starts RTCP running automatically
 
   // Create a 'MPEG Video RTP' sink from the RTP 'groupsock':
@@ -108,9 +111,12 @@ int main(int argc, char** argv) {
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
   const unsigned totalSessionBandwidthVideo = 4500; // in kbps; for RTCP b/w share
-  RTCPInstance::createNew(*env, &rtcpGroupsockVideo,
-			  totalSessionBandwidthVideo, CNAME,
-			  videoSink, NULL /* we're a server */, isSSM);
+#ifdef IMPLEMENT_RTSP_SERVER
+  RTCPInstance* videoRTCP =
+#endif
+    RTCPInstance::createNew(*env, &rtcpGroupsockVideo,
+			      totalSessionBandwidthVideo, CNAME,
+			      videoSink, NULL /* we're a server */, isSSM);
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER
@@ -126,8 +132,8 @@ int main(int argc, char** argv) {
     = ServerMediaSession::createNew(*env, "testStream", inputFileName,
 		   "Session streamed by \"testMPEG1or2AudioVideoStreamer\"",
 					   isSSM);
-  sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink));
-  sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink));
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink, audioRTCP));
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink, videoRTCP));
   rtspServer->addServerMediaSession(sms);
 
   char* url = rtspServer->rtspURL(sms);

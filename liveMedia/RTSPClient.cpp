@@ -1611,11 +1611,9 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
       foundChannelIds = True;
     }
 
-    // (Later, do more extensive checking on the "Transport: " hdr #####)
-
     fields += strlen(field);
-    if (fields[0] == '\0') break;
     while (fields[0] == ';') ++fields; // skip over all leading ';' chars
+    if (fields[0] == '\0') break;
   }
   delete[] field;
 

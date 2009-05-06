@@ -29,13 +29,17 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _RTP_SINK_HH
 #include "RTPSink.hh"
 #endif
+#ifndef _RTCP_HH
+#include "RTCP.hh"
+#endif
 
 class PassiveServerMediaSubsession: public ServerMediaSubsession {
 public:
-  static PassiveServerMediaSubsession* createNew(RTPSink& rtpSink);
+  static PassiveServerMediaSubsession* createNew(RTPSink& rtpSink,
+						 RTCPInstance* rtcpInstance = NULL);
 
 private:
-  PassiveServerMediaSubsession(RTPSink& rtpSink);
+  PassiveServerMediaSubsession(RTPSink& rtpSink, RTCPInstance* rtcpInstance);
       // called only by createNew();
   virtual ~PassiveServerMediaSubsession();
 
@@ -45,15 +49,19 @@ private: // redefined virtual functions
 				   netAddressBits clientAddress,
                                    Port const& clientRTPPort,
                                    Port const& clientRTCPPort,
-                                   Boolean& isMulticast,
+				   int tcpSocketNum,
+                                   unsigned char rtpChannelId,
+                                   unsigned char rtcpChannelId,
                                    netAddressBits& destinationAddress,
 				   u_int8_t& destinationTTL,
+                                   Boolean& isMulticast,
                                    Port& serverRTPPort,
                                    Port& serverRTCPPort,
                                    void*& streamToken);
 
 private:
   RTPSink& fRTPSink;
+  RTCPInstance* fRTCPInstance;
   char* fSDPLines;
 };
 

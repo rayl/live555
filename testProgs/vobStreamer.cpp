@@ -42,7 +42,9 @@ MPEG1or2Demux* mpegDemux;
 AC3AudioStreamFramer* audioSource = NULL;
 FramedSource* videoSource = NULL;
 RTPSink* audioSink = NULL;
+RTCPInstance* audioRTCP = NULL;
 RTPSink* videoSink = NULL;
+RTCPInstance* videoRTCP = NULL;
 RTSPServer* rtspServer = NULL;
 unsigned short const defaultRTSPServerPortNum = 554;
 unsigned short rtspServerPortNum = defaultRTSPServerPortNum;
@@ -160,10 +162,10 @@ int main(int argc, char const** argv) {
     rtcpGroupsockAudio->multicastSendOnly(); // because we're a SSM source
     const unsigned totalSessionBandwidthAudio
       = 160; // in kbps; for RTCP b/w share
-    RTCPInstance::createNew(*env, rtcpGroupsockAudio,
-			    totalSessionBandwidthAudio, CNAME,
-			    audioSink, NULL /* we're a server */,
-			    True /* we're a SSM source */);
+    audioRTCP = RTCPInstance::createNew(*env, rtcpGroupsockAudio,
+					totalSessionBandwidthAudio, CNAME,
+					audioSink, NULL /* we're a server */,
+					True /* we're a SSM source */);
     // Note: This starts RTCP running automatically
   }
 
@@ -181,10 +183,10 @@ int main(int argc, char const** argv) {
     rtcpGroupsockVideo->multicastSendOnly(); // because we're a SSM source
     const unsigned totalSessionBandwidthVideo
       = 4500; // in kbps; for RTCP b/w share
-    RTCPInstance::createNew(*env, rtcpGroupsockVideo,
-			    totalSessionBandwidthVideo, CNAME,
-			    videoSink, NULL /* we're a server */,
-			    True /* we're a SSM source */);
+    videoRTCP = RTCPInstance::createNew(*env, rtcpGroupsockVideo,
+					totalSessionBandwidthVideo, CNAME,
+					videoSink, NULL /* we're a server */,
+					True /* we're a SSM source */);
     // Note: This starts RTCP running automatically
   }
 
@@ -198,8 +200,8 @@ int main(int argc, char const** argv) {
     ServerMediaSession* sms
       = ServerMediaSession::createNew(*env, "vobStream", *curInputFileName,
 	     "Session streamed by \"vobStreamer\"", True /*SSM*/);
-    if (audioSink != NULL) sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink));
-    if (videoSink != NULL) sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink));
+    if (audioSink != NULL) sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink, audioRTCP));
+    if (videoSink != NULL) sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink, videoRTCP));
     rtspServer->addServerMediaSession(sms);
 
     *env << "Created RTSP server.\n";

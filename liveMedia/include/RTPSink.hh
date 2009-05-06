@@ -41,9 +41,9 @@ public:
   unsigned octetCount() const {return fOctetCount;}
 
   // used by RTSP servers:
-  Groupsock const& groupsockBeingUsed() const {
-    return *(fRTPInterface.gs());
-  }
+  Groupsock const& groupsockBeingUsed() const { return *(fRTPInterface.gs()); }
+  Groupsock& groupsockBeingUsed() { return *(fRTPInterface.gs()); }
+
   unsigned char rtpPayloadType() const { return fRTPPayloadType; }
   unsigned rtpTimestampFrequency() const { return fTimestampFrequency; }
   void setRTPTimestampFrequency(unsigned freq) {

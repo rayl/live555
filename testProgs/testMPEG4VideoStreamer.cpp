@@ -62,10 +62,11 @@ int main(int argc, char** argv) {
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
   CNAME[maxCNAMElen] = '\0'; // just in case
-  RTCPInstance::createNew(*env, &rtcpGroupsock,
-			  totalSessionBandwidth, CNAME,
-			  videoSink, NULL /* we're a server */,
-			  True /* we're a SSM source */);
+  RTCPInstance* rtcp
+  = RTCPInstance::createNew(*env, &rtcpGroupsock,
+			    totalSessionBandwidth, CNAME,
+			    videoSink, NULL /* we're a server */,
+			    True /* we're a SSM source */);
   // Note: This starts RTCP running automatically
 
   RTSPServer* rtspServer = RTSPServer::createNew(*env, 7070);
@@ -77,7 +78,7 @@ int main(int argc, char** argv) {
     = ServerMediaSession::createNew(*env, "testStream", inputFileName,
 		   "Session streamed by \"testMPEG4VideoStreamer\"",
 					   True /*SSM*/);
-  sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink));
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink, rtcp));
   rtspServer->addServerMediaSession(sms);
 
   char* url = rtspServer->rtspURL(sms);

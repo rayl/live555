@@ -183,7 +183,7 @@ void play() {
   ServerMediaSession* sms
     = ServerMediaSession::createNew(*env, "testStream", inputFileName,
 	   "Session streamed by \"testWAVAudiotreamer\"", True/*SSM*/);
-  sms->addSubsession(PassiveServerMediaSubsession::createNew(*sessionState.sink));
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*sessionState.sink, sessionState.rtcpInstance));
   sessionState.rtspServer->addServerMediaSession(sms);
 
   char* url = sessionState.rtspServer->rtspURL(sms);

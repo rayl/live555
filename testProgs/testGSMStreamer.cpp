@@ -133,7 +133,7 @@ void play() {
   ServerMediaSession* sms
     = ServerMediaSession::createNew(*env, "testStream", "GSM input",
 		"Session streamed by \"testGSMStreamer\"", isSSM);
-  sms->addSubsession(PassiveServerMediaSubsession::createNew(*sessionState.sink));
+  sms->addSubsession(PassiveServerMediaSubsession::createNew(*sessionState.sink, sessionState.rtcpInstance));
   rtspServer->addServerMediaSession(sms);
 
   char* url = rtspServer->rtspURL(sms);

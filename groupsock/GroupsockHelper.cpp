@@ -326,7 +326,7 @@ Boolean writeSocket(UsageEnvironment& env,
 
 unsigned increaseBufferTo(UsageEnvironment& env, int bufOptName,
 			  int socket, unsigned requestedSize) {
-	// First, get the current buffer size.  If it's already at leas
+	// First, get the current buffer size.  If it's already at least
 	// as big as what we're requesting, do nothing.
 	unsigned curSize;
 	SOCKLEN_T sizeSize = sizeof curSize;

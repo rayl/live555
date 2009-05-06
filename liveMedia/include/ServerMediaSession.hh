@@ -105,12 +105,14 @@ public:
 				   netAddressBits clientAddress, // in
 				   Port const& clientRTPPort, // in
 				   Port const& clientRTCPPort, // in
-				   Boolean& isMulticast, // out
+				   int tcpSocketNum, // in (-1 means use UDP, not TCP)
+				   unsigned char rtpChannelId, // in (used if TCP)
+				   unsigned char rtcpChannelId, // in (used if TCP)
 				   netAddressBits& destinationAddress, // in out
-				   u_int8_t& destinationTTL,
-				       // in out; used only for multicast
+				   u_int8_t& destinationTTL, // in out
+				   Boolean& isMulticast, // out
 				   Port& serverRTPPort, // out
-				   Port& serverRTCPPort, // out; used only for unicast
+				   Port& serverRTCPPort, // out
 				   void*& streamToken // out
 				   ) = 0;
   virtual void startStream(void* streamToken);

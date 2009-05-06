@@ -40,9 +40,12 @@ private: // redefined virtual functions
 				   netAddressBits clientAddress,
                                    Port const& clientRTPPort,
                                    Port const& clientRTCPPort,
-                                   Boolean& isMulticast,
+				   int tcpSocketNum,
+                                   unsigned char rtpChannelId,
+                                   unsigned char rtcpChannelId,
                                    netAddressBits& destinationAddress,
 				   u_int8_t& destinationTTL,
+                                   Boolean& isMulticast,
                                    Port& serverRTPPort,
                                    Port& serverRTCPPort,
                                    void*& streamToken);

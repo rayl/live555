@@ -74,6 +74,7 @@ private:
     void handleCmd_bad(char const* cseq);
     void handleCmd_notSupported(char const* cseq);
     void handleCmd_notFound(char const* cseq);
+    void handleCmd_unsupportedTransport(char const* cseq);
     void handleCmd_OPTIONS(char const* cseq);
     void handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix);
     void handleCmd_SETUP(char const* cseq,

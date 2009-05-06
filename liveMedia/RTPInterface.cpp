@@ -189,7 +189,7 @@ void RTPInterface::stopNetworkReading() {
 
 void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
                     int socketNum, unsigned char streamChannelId) {
-#ifdef DEBUG_SENDING
+#ifdef DEBUG
   fprintf(stderr, "sendRTPOverTCP: %d bytes over channel %d (socket %d)\n",
 	  packetSize, streamChannelId, socketNum); fflush(stderr);
 #endif
@@ -207,7 +207,7 @@ void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
     if (send(socketNum, netPacketSize, 2, 0) < 0) break;
 
     if (send(socketNum, (char*)packet, packetSize, 0) < 0) break;
-#ifdef DEBUG_SENDING
+#ifdef DEBUG
     fprintf(stderr, "sendRTPOverTCP: completed\n"); fflush(stderr);
 #endif
 
@@ -215,7 +215,7 @@ void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
   } while (0);
 
   RTPOverTCP_OK = False; // HACK #####
-#ifdef DEBUG_SENDING
+#ifdef DEBUG
   fprintf(stderr, "sendRTPOverTCP: failed!\n"); fflush(stderr);
 #endif
 }
@@ -276,11 +276,11 @@ void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor,
     unsigned char c;
     struct sockaddr_in fromAddress;
     do {
-		if (readSocket(env, socketNum, &c, 1, fromAddress) != 1) { // error reading TCP socket
-			env.taskScheduler().turnOffBackgroundReadHandling(socketNum); // stops further calls to us
-			return;
-		}
-	} while (c != '$');
+      if (readSocket(env, socketNum, &c, 1, fromAddress) != 1) { // error reading TCP socket
+	env.taskScheduler().turnOffBackgroundReadHandling(socketNum); // stops further calls to us
+	return;
+      }
+    } while (c != '$');
 
     // The next byte is the stream channel id:
     unsigned char streamChannelId;
@@ -295,6 +295,9 @@ void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor,
     if (readSocket(env, socketNum, (unsigned char*)&size, 2,
 		   fromAddress) != 2) break;
     rtpInterface->fNextTCPReadSize = ntohs(size);
+#ifdef DEBUG
+    fprintf(stderr, "SocketDescriptor::tcpReadHandler() reading %d bytes on channel %d\n", rtpInterface->fNextTCPReadSize, streamChannelId);
+#endif
 
     // Now that we have the data set up, call this subchannel's
     // read handler:

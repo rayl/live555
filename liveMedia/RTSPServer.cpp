@@ -21,6 +21,14 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPServer.hh"
 #include <GroupsockHelper.hh>
 
+#if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
+#define _strncasecmp _strnicmp
+#else
+#include <signal.h>
+#define USE_SIGNALS 1
+#define _strncasecmp strncasecmp
+#endif
+
 ////////// RTSPServer //////////
 
 RTSPServer*
@@ -130,6 +138,12 @@ RTSPServer::RTSPServer(UsageEnvironment& env,
     fServerSocket(ourSocket), fServerPort(ourPort),
     fServerMediaSessions(HashTable::create(STRING_HASH_KEYS)), 
     fSessionIdCounter(0) {
+#ifdef USE_SIGNALS
+  // Ignore the SIGPIPE signal, so that clients on the same host that are killed
+  // don't also kill us:
+  signal(SIGPIPE, SIG_IGN);
+#endif
+
   // Arrange to handle connections from others:
   env.taskScheduler().turnOnBackgroundReadHandling(fServerSocket,
         (TaskScheduler::BackgroundHandlerProc*)&incomingConnectionHandler,
@@ -340,6 +354,11 @@ void RTSPServer::RTSPClientSession::handleCmd_notFound(char const* cseq) {
   fSessionIsActive = False; // triggers deletion of ourself after responding
 }
 
+void RTSPServer::RTSPClientSession::handleCmd_unsupportedTransport(char const* cseq) {
+  sprintf((char*)fBuffer, "RTSP/1.0 461 Unsupported Transport\r\nCSeq: %s\r\n\r\n", cseq);
+  fSessionIsActive = False; // triggers deletion of ourself after responding
+}
+
 void RTSPServer::RTSPClientSession::handleCmd_OPTIONS(char const* cseq) {
   sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nPublic: %s\r\n\r\n",
 	  cseq, allowedCommandNames);
@@ -401,21 +420,56 @@ void RTSPServer::RTSPClientSession
 }
 
 static void parseTransportHeader(char const* buf,
-				 unsigned short& clientRTPPortNum,
-				 unsigned short& clientRTCPPortNum) {
-  // Note: This is a quick-and-dirty implementation.  Should improve #####
-  while (*buf != '\0') {
-    if (*buf == 'c') {
-      // Check for "client_port="
-      unsigned short p1, p2;
-      if (sscanf(buf, "client_port=%hu-%hu", &p1, &p2) == 2) {
-	clientRTPPortNum = p1;
-	clientRTCPPortNum = p2;
-	return;
-      }
-    }
+				 Boolean& tcpStreamingRequested,
+				 char*& destinationAddressStr,
+				 u_int8_t& destinationTTL,
+				 portNumBits& clientRTPPortNum, // if UDP
+				 portNumBits& clientRTCPPortNum, // if UDP
+				 unsigned char& rtpChannelId, // if TCP
+				 unsigned char& rtcpChannelId // if TCP
+				 ) {
+  // Initialize the return parameters to default values:
+  tcpStreamingRequested = False;
+  destinationAddressStr = NULL;
+  destinationTTL = 255;
+  clientRTPPortNum = 0;
+  clientRTCPPortNum = 1; 
+  rtpChannelId = rtcpChannelId = 0xFF;
+
+  portNumBits p1, p2;
+  unsigned ttl, rtpCid, rtcpCid;
+
+  // First, find "Transport:"
+  while (1) {
+    if (*buf == '\0') return; // not found
+    if (_strncasecmp(buf, "Transport: ", 11) == 0) break;
     ++buf;
   }
+
+  // Then, run through each of the fields, looking for ones we handle:
+  char const* fields = buf + 11;
+  char* field = strDupSize(fields);
+  while (sscanf(fields, "%[^;]", field) == 1) {
+    if (strcmp(field, "RTP/AVP/TCP") == 0) {
+      tcpStreamingRequested = True;
+    } else if (_strncasecmp(field, "destination=", 12) == 0) {
+      delete[] destinationAddressStr;
+      destinationAddressStr = strDup(field+12);
+    } else if (sscanf(field, "ttl%u", &ttl) == 1) {
+      destinationTTL = (u_int8_t)ttl;
+    } else if (sscanf(field, "client_port=%hu-%hu", &p1, &p2) == 2) {
+	clientRTPPortNum = p1;
+	clientRTCPPortNum = p2;
+    } else if (sscanf(field, "interleaved=%u-%u", &rtpCid, &rtcpCid) == 2) {
+      rtpChannelId = (unsigned char)rtpCid;
+      rtcpChannelId = (unsigned char)rtcpCid;
+    }
+
+    fields += strlen(field);
+    while (fields[0] == ';') ++fields; // skip over all leading ';' chars
+    if (fields[0] == '\0') break;
+  }
+  delete[] field;
 }
 
 void RTSPServer::RTSPClientSession
@@ -472,25 +526,50 @@ void RTSPServer::RTSPClientSession
   // ASSERT: subsession != NULL
 
   // Look for a "Transport:" header in the request string,
-  // to extract client RTP and RTCP ports, if present:
-  unsigned short clientRTPPortNum = 0; // default
-  unsigned short clientRTCPPortNum = 1; // default
-  parseTransportHeader(fullRequestStr, clientRTPPortNum, clientRTCPPortNum);
+  // to extract client parameters:
+  Boolean tcpStreamingRequested;
+  char* clientsDestinationAddressStr;
+  u_int8_t clientsDestinationTTL;
+  portNumBits clientRTPPortNum, clientRTCPPortNum;
+  unsigned char rtpChannelId, rtcpChannelId;
+  parseTransportHeader(fullRequestStr, tcpStreamingRequested,
+		       clientsDestinationAddressStr, clientsDestinationTTL,
+		       clientRTPPortNum, clientRTCPPortNum,
+		       rtpChannelId, rtcpChannelId);
   Port clientRTPPort(clientRTPPortNum);
   Port clientRTCPPort(clientRTCPPortNum);
 
-  Boolean isMulticast;
+  // Then, get server parameters from the 'subsession':
+  int tcpSocketNum = tcpStreamingRequested ? fClientSocket : -1;
   netAddressBits destinationAddress = 0;
   u_int8_t destinationTTL = 255;
+#ifdef RTSP_ALLOW_CLIENT_DESTINATION_SETTING
+  if (clientsDestinationAddressStr != NULL) {
+    // Use the client-provided "destination" address.
+    // Note: This potentially allows the server to be used in denial-of-service
+    // attacks, so don't enable this code unless you're sure that clients are
+    // trusted.
+    destinationAddress = our_inet_addr(clientsDestinationAddressStr);
+  }
+  // Also use the client-provided TTL.
+  destinationTTL = clientsDestinationTTL;
+#endif
+  Boolean isMulticast;
   Port serverRTPPort(0);
   Port serverRTCPPort(0);
   subsession->getStreamParameters(fOurSessionId, fClientAddr.sin_addr.s_addr,
 				  clientRTPPort, clientRTCPPort,
-				  isMulticast, destinationAddress, destinationTTL,
+				  tcpSocketNum, rtpChannelId, rtcpChannelId,
+				  destinationAddress, destinationTTL, isMulticast,
 				  serverRTPPort, serverRTCPPort,
 				  fStreamStates[streamNum].streamToken);
   struct in_addr destinationAddr; destinationAddr.s_addr = destinationAddress;
   if (isMulticast) {
+    if (tcpStreamingRequested) {
+      // multicast streams can't be sent via TCP
+      handleCmd_unsupportedTransport(cseq);
+      return;
+    }
     sprintf((char*)fBuffer,
 	    "RTSP/1.0 200 OK\r\n"
 	    "CSeq: %s\r\n"
@@ -500,14 +579,25 @@ void RTSPServer::RTSPClientSession
 	    our_inet_ntoa(destinationAddr), ntohs(serverRTPPort.num()), destinationTTL,
 	    fOurSessionId);
   } else {
-    sprintf((char*)fBuffer,
-	    "RTSP/1.0 200 OK\r\n"
-	    "CSeq: %s\r\n"
-	    "Transport: RTP/AVP;unicast;destination=%s;client_port=%d-%d;server_port=%d-%d\r\n"
-	    "Session: %d\r\n\r\n",
-	    cseq,
-	    our_inet_ntoa(destinationAddr), ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
-	    fOurSessionId);
+    if (tcpStreamingRequested) {
+      sprintf((char*)fBuffer,
+	      "RTSP/1.0 200 OK\r\n"
+	      "CSeq: %s\r\n"
+	      "Transport: RTP/AVP/TCP;unicast;destination=%s;interleaved=%d-%d\r\n"
+	      "Session: %d\r\n\r\n",
+	      cseq,
+	      our_inet_ntoa(destinationAddr), rtpChannelId, rtcpChannelId,
+	      fOurSessionId);
+    } else {
+      sprintf((char*)fBuffer,
+	      "RTSP/1.0 200 OK\r\n"
+	      "CSeq: %s\r\n"
+	      "Transport: RTP/AVP;unicast;destination=%s;client_port=%d-%d;server_port=%d-%d\r\n"
+	      "Session: %d\r\n\r\n",
+	      cseq,
+	      our_inet_ntoa(destinationAddr), ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
+	      fOurSessionId);
+    }
   }
 }
 

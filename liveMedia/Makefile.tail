@@ -192,7 +192,7 @@ MediaSession.$(CPP):	include/liveMedia.hh
 include/MediaSession.hh:	include/RTCP.hh
 ServerMediaSession.$(CPP):	include/ServerMediaSession.hh
 PassiveServerMediaSubsession.$(CPP):	include/PassiveServerMediaSubsession.hh
-include/PassiveServerMediaSubsession.hh:	include/ServerMediaSession.hh include/RTPSink.hh
+include/PassiveServerMediaSubsession.hh:	include/ServerMediaSession.hh include/RTPSink.hh include/RTCP.hh
 OnDemandServerMediaSubsession.$(CPP):	include/OnDemandServerMediaSubsession.hh include/RTCP.hh
 include/OnDemandServerMediaSubsession.hh:	include/ServerMediaSession.hh include/RTPSink.hh
 FileServerMediaSubsession.$(CPP):	include/FileServerMediaSubsession.hh
