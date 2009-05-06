@@ -655,10 +655,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 					 Boolean streamOutgoing,
 					 Boolean streamUsingTCP) {
   char* cmd = NULL;
-
   char* setupStr = NULL;
-  char* setupFmt = NULL;
-  char* transportFmt = NULL;
 
   do {
     // Construct the SETUP command:
@@ -688,49 +685,71 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 
       char const* etag = fRealETagStr == NULL ? "" : fRealETagStr;
 
+      char* transportHeader;
+      if (subsession.parentSession().isRealNetworksRDT) {
+	transportHeader = strDup("Transport: x-pn-tng/tcp;mode=play,rtp/avp/unicast;mode=play\r\n");
+      } else {
+	// Use a regular "Transport:" header, but ask for TCP streaming:
+	streamUsingTCP = True;
+	char const* transportHeaderFmt
+	  = "Transport: RTP/AVP/TCP;unicast;interleaved=%d-%d\r\n";
+	unsigned transportHeaderSize = strlen(transportHeaderFmt)
+	  + 2*5 /* max port len */;
+	transportHeader = new char[transportHeaderSize];
+	unsigned short rtpNumber = fTCPStreamIdCount++;
+	unsigned short rtcpNumber = fTCPStreamIdCount++;
+	sprintf(transportHeader, transportHeaderFmt, rtpNumber, rtcpNumber);
+      }
       char const* transportFmt =
-	"Transport: x-pn-tng/tcp;mode=play,rtp/avp/unicast;mode=play\r\n"
+	"%s"
 	"RealChallenge2: %s, sd=%s\r\n"
 	"If-Match: %s\r\n";
       unsigned transportSize = strlen(transportFmt)
+	+ strlen(transportHeader)
 	+ sizeof challenge2 + sizeof checksum
 	+ strlen(etag);
       transportStr = new char[transportSize];
-      sprintf(transportStr, transportFmt, challenge2, checksum, etag);
+      sprintf(transportStr, transportFmt,
+	      transportHeader,
+	      challenge2, checksum,
+	      etag);
+      delete[] transportHeader;
 
-      // Also, tell the RDT source to use the RTSP TCP socket:
-      RealRDTSource* rdtSource = (RealRDTSource*)(subsession.readSource());
-      rdtSource->setInputSocket(fInputSocketNum);
+      if (subsession.parentSession().isRealNetworksRDT) {
+	// Also, tell the RDT source to use the RTSP TCP socket:
+	RealRDTSource* rdtSource
+	  = (RealRDTSource*)(subsession.readSource());
+	rdtSource->setInputSocket(fInputSocketNum);
+      }
     }
 #endif
 
     char const *prefix, *separator, *suffix;
     constructSubsessionURL(subsession, prefix, separator, suffix);
+    char* transportFmt;
 
     if (fServerIsKasenna && fKasennaContentType != NULL &&
 	(strncmp(fKasennaContentType, "MPEG-2", 6) == 0 ||
 	 strncmp(fKasennaContentType, "MPEG-1", 6) == 0)) {
-      setupFmt = "SETUP %s%s RTSP/1.0\r\n";
-      transportFmt = "Transport: RAW/RAW/UDP%s%s%s=%d-%d\r\n";
-
+      char const* setupFmt = "SETUP %s%s RTSP/1.0\r\n";
       unsigned setupSize = strlen(setupFmt)
         + strlen(prefix) + strlen (separator);
- 
       setupStr = new char[setupSize];
       sprintf(setupStr, setupFmt, prefix, separator);
+
+      transportFmt = "Transport: RAW/RAW/UDP%s%s%s=%d-%d\r\n";
     } else {
-      setupFmt = "SETUP %s%s%s RTSP/1.0\r\n";
-      transportFmt = "Transport: RTP/AVP%s%s%s=%d-%d\r\n";
-      
+      char const* setupFmt = "SETUP %s%s%s RTSP/1.0\r\n";
       unsigned setupSize = strlen(setupFmt)
         + strlen(prefix) + strlen (separator) + strlen(suffix);
- 
       setupStr = new char[setupSize];
       sprintf(setupStr, setupFmt, prefix, separator, suffix);
+
+      transportFmt = "Transport: RTP/AVP%s%s%s=%d-%d\r\n";
     }
 
     if (transportStr == NULL) {
-      // Use a standard "Transport:" header.
+      // Construct a "Transport:" header.
       char const* transportTypeStr;
       char const* modeStr = streamOutgoing ? ";mode=receive" : "";
           // Note: I think the above is nonstandard, but DSS wants it this way
@@ -788,7 +807,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 	    fUserAgentHeaderStr);
     delete[] authenticatorStr;
     if (sessionStr[0] != '\0') delete[] sessionStr;
-    delete[] transportStr;
+    delete[] setupStr; delete[] transportStr;
 
     // And then send it:
     if (!sendRequest(cmd, "SETUP")) break;
