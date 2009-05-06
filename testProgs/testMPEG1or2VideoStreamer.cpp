@@ -24,7 +24,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 // Uncomment the following if the input file is a MPEG Program Stream
 // rather than a MPEG Video Elementary Stream
-#define SOURCE_IS_PROGRAM_STREAM 1
+//#define SOURCE_IS_PROGRAM_STREAM 1
 
 // To stream using "source-specific multicast" (SSM), uncomment the following:
 //#define USE_SSM 1

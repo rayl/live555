@@ -28,15 +28,21 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class FileSink: public MediaSink {
 public:
   static FileSink* createNew(UsageEnvironment& env, char const* fileName,
-			     unsigned bufferSize = 10000);
+			     unsigned bufferSize = 10000,
+			     Boolean oneFilePerFrame = False);
   // "bufferSize" should be at least as large as the largest expected
-  // input frame.
+  //   input frame.
+  // "oneFilePerFrame" - if True - specifies that each input frame will
+  //   be written to a separate file (using the presentation time as a
+  //   file name suffix).  The default behavior ("oneFilePerFrame" == False)
+  //   is to output all incoming data into a single file.
 
   FILE* fid() const { return fOutFid; }
   // (Available in case a client wants to add extra data to the output file)
 
 protected:
-  FileSink(UsageEnvironment& env, FILE* fid, unsigned bufferSize);
+  FileSink(UsageEnvironment& env, FILE* fid, unsigned bufferSize,
+	   char const* perFrameFileNamePrefix);
       // called only by createNew()
   virtual ~FileSink();
 
@@ -45,11 +51,13 @@ protected:
 protected:
   static void afterGettingFrame(void* clientData, unsigned frameSize,
 				struct timeval presentationTime);
-  friend void afterGettingFrame(void*, unsigned, struct timeval);
+  void afterGettingFrame1(unsigned frameSize, struct timeval presentationTime);
 
   FILE* fOutFid;
   unsigned char* fBuffer;
   unsigned fBufferSize;
+  char* fPerFrameFileNamePrefix; // used if "oneFilePerFrame" is True
+  char* fPerFrameFileNameBuffer; // used if "oneFilePerFrame" is True
 
 private: // redefined virtual functions:
   virtual Boolean continuePlaying();

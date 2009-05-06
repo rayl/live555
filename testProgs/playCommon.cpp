@@ -62,6 +62,7 @@ double endTimeSlop = -1.0; // extra seconds to play at the end
 Boolean playContinuously = False;
 int simpleRTPoffsetArg = -1;
 Boolean sendOptionsRequestOnly = False;
+Boolean oneFilePerFrame = False;
 Boolean notifyOnPacketArrival = False;
 Boolean streamUsingTCP = False;
 char* username = NULL;
@@ -96,7 +97,7 @@ void usage() {
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "")
-       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] <url> (or " << progName << " -o [-V] <url>)\n";
+       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] [-m] <url> (or " << progName << " -o [-V] <url>)\n";
   //##### Add "-R <dest-rtsp-url>" #####
   shutdown();
 }
@@ -202,6 +203,11 @@ int main(int argc, char** argv) {
 
     case 'o': { // Send only the "OPTIONS" request to the server
       sendOptionsRequestOnly = True;
+      break;
+    }
+
+    case 'm': { // output multiple files - one for each frame
+      oneFilePerFrame = True;
       break;
     }
 
@@ -520,7 +526,8 @@ int main(int argc, char** argv) {
 	  sprintf(outFileName, "stdout");
 	}
 	FileSink* fileSink
-	  = FileSink::createNew(*env, outFileName, fileSinkBufferSize);
+	  = FileSink::createNew(*env, outFileName,
+				fileSinkBufferSize, oneFilePerFrame);
 	subsession->sink = fileSink;
 	if (subsession->sink == NULL) {
 	  *env << "Failed to create FileSink for \"" << outFileName
