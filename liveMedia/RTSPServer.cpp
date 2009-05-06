@@ -747,21 +747,39 @@ void RTSPServer::RTSPClientSession
 				  fStreamStates[streamNum].streamToken);
   struct in_addr destinationAddr; destinationAddr.s_addr = destinationAddress;
   if (fIsMulticast) {
-    if (streamingMode == RTP_TCP) {
-      // multicast streams can't be sent via TCP
-      handleCmd_unsupportedTransport(cseq);
-      return;
+    switch (streamingMode) {
+    case RTP_UDP:
+        snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
+                 "RTSP/1.0 200 OK\r\n"
+                 "CSeq: %s\r\n"
+                 "%s"
+                 "Transport: RTP/AVP;multicast;destination=%s;port=%d-%d;ttl=%d\r\n"
+                 "Session: %d\r\n\r\n",
+                 cseq,
+                 dateHeader(),
+                 our_inet_ntoa(destinationAddr), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()), destinationTTL,
+                 fOurSessionId);
+        break;
+    case RTP_TCP:
+        // multicast streams can't be sent via TCP
+        handleCmd_unsupportedTransport(cseq);
+        break;
+    case RAW_UDP:
+        snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
+                 "RTSP/1.0 200 OK\r\n"
+                 "CSeq: %s\r\n"
+                 "%s"
+                 "Transport: %s;multicast;destination=%s;client_port=%d;server_port=%d\r\n"
+                 "Session: %d\r\n\r\n",
+                 cseq,
+                 dateHeader(),
+                 streamingModeString,
+                 our_inet_ntoa(destinationAddr),
+                 ntohs(clientRTPPort.num()), ntohs(serverRTPPort.num()),
+                 fOurSessionId);
+        delete[] streamingModeString;
+        break;
     }
-    snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
-	     "RTSP/1.0 200 OK\r\n"
-	     "CSeq: %s\r\n"
-	     "%s"
-	     "Transport: RTP/AVP;multicast;destination=%s;port=%d-%d;ttl=%d\r\n"
-	     "Session: %d\r\n\r\n",
-	     cseq,
-	     dateHeader(),
-	     our_inet_ntoa(destinationAddr), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()), destinationTTL,
-	     fOurSessionId);
   } else {
     switch (streamingMode) {
     case RTP_UDP: {

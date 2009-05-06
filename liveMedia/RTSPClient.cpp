@@ -201,7 +201,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
     char* username; char* password;
     if (authenticator == NULL
 	&& parseRTSPURLUsernamePassword(url, username, password)) {
-      char* result = describeWithPassword(url, username, password);
+      char* result = describeWithPassword(url, username, password, allowKasennaProtocol);
       delete[] username; delete[] password; // they were dynamically allocated
       return result;
     }
@@ -311,7 +311,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
 		    << redirectionURL << "\"\n";
 	  }
 	  reset();
-	  char* result = describeURL(redirectionURL);
+	  char* result = describeURL(redirectionURL, authenticator, allowKasennaProtocol);
 	  delete[] redirectionURL;
 	  delete[] serverType;
 	  return result;
@@ -498,10 +498,11 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
 
 char* RTSPClient
 ::describeWithPassword(char const* url,
-		       char const* username, char const* password) {
+		       char const* username, char const* password,
+		       Boolean allowKasennaProtocol) {
   Authenticator authenticator;
   authenticator.setUsernameAndPassword(username, password);
-  char* describeResult = describeURL(url, &authenticator);
+  char* describeResult = describeURL(url, &authenticator, allowKasennaProtocol);
   if (describeResult != NULL) {
     // We are already authorized
     return describeResult;
@@ -514,7 +515,7 @@ char* RTSPClient
   }
 
   // Try again:
-  describeResult = describeURL(url, &authenticator);
+  describeResult = describeURL(url, &authenticator, allowKasennaProtocol);
   if (describeResult != NULL) {
     // The authenticator worked, so use it in future requests:
     fCurrentAuthenticator = authenticator;
@@ -2447,6 +2448,7 @@ void RTSPClient::incomingRequestHandler1() {
   bytesRead = getResponse1(readBuf, fResponseBufferSize);
   if (bytesRead == 0) {
     envir().setResultErrMsg("Failed to read response: ");
+    envir().taskScheduler().turnOffBackgroundReadHandling(fInputSocketNum); // because the connection died
     return;
   }
   // Parse the request string into command name and 'CSeq',

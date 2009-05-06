@@ -137,8 +137,6 @@ public:
   Boolean wasLoopedBackFromUs(UsageEnvironment& env,
 			      struct sockaddr_in& fromAddress);
   
-  static Groupsock* lookupByName(UsageEnvironment& env, char const* name);
-  
 public: // redefined virtual functions
   virtual Boolean handleRead(unsigned char* buffer, unsigned bufferMaxSize,
 			     unsigned& bytesRead,
