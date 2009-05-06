@@ -134,11 +134,14 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     }
 
     // Parse the line as "m=<medium_name> <client_portNum> RTP/AVP <fmt>"
+    // or "m=<medium_name> <client_portNum>/<num_ports> RTP/AVP <fmt>"
     // (Should we be checking for >1 payload format number here?)#####
     char* mediumName = strDupSize(sdpLine); // ensures we have enough space
     unsigned payloadFormat;
-    if (sscanf(sdpLine, "m=%s %hu RTP/AVP %u",
-	       mediumName, &subsession->fClientPortNum, &payloadFormat) != 3
+    if ((sscanf(sdpLine, "m=%s %hu RTP/AVP %u",
+		mediumName, &subsession->fClientPortNum, &payloadFormat) != 3 &&
+	 sscanf(sdpLine, "m=%s %hu/%*u RTP/AVP %u",
+		mediumName, &subsession->fClientPortNum, &payloadFormat) != 3)
 	|| payloadFormat > 127) {
       char* sdpLineStr;
       if (nextSDPLine == NULL) {
@@ -600,6 +603,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
     // (Later make this code more efficient, as this set grows #####)
     // (Also, add more fmts that can be implemented by SimpleRTPSource#####)
     Boolean createSimpleRTPSource = False;
+    Boolean doNormalMBitRule = False; // used if "createSimpleRTPSource"
     if (strcmp(fCodecName, "QCELP") == 0) { // QCELP audio
       fReadSource =
 	QCELPAudioRTPSource::createNew(env(), fRTPSocket, fRTPSource,
@@ -747,7 +751,8 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
       fReadSource = fRTPSource
 	= SimpleRTPSource::createNew(env(), fRTPSocket, fRTPPayloadFormat,
 				     fRTPTimestampFrequency, mimeType,
-				     (unsigned)useSpecialRTPoffset);
+				     (unsigned)useSpecialRTPoffset,
+				     doNormalMBitRule);
       delete[] mimeType;
     }
 

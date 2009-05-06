@@ -801,7 +801,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 
       nextLineStart = getLine(lineStart);
 
-      if (sscanf(lineStart, "Session: %s", sessionId) == 1) {
+      if (sscanf(lineStart, "Session: %[^;]", sessionId) == 1) {
 	subsession.sessionId = strDup(sessionId);
 	delete[] fLastSessionId; fLastSessionId = strDup(sessionId);
 	continue;
