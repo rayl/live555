@@ -230,7 +230,8 @@ RTSPServer::RTSPClientSession
   : fOurServer(ourServer), fOurSessionId(sessionId),
     fOurServerMediaSession(NULL),
     fClientSocket(clientSocket), fClientAddr(clientAddr),
-    fSessionIsActive(True), fNumStreamStates(0), fStreamStates(NULL) {
+    fSessionIsActive(True), fTCPStreamIdCount(0),
+    fNumStreamStates(0), fStreamStates(NULL) {
   // Arrange to handle incoming requests:
   envir().taskScheduler().turnOnBackgroundReadHandling(fClientSocket,
      (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
@@ -561,7 +562,7 @@ void RTSPServer::RTSPClientSession
   }
 
   // Look up information for the subsession (track) named "urlSuffix":
-  ServerMediaSubsession* subsession;
+  ServerMediaSubsession* subsession = NULL;
   unsigned streamNum;
   for (streamNum = 0; streamNum < fNumStreamStates; ++streamNum) {
     subsession = fStreamStates[streamNum].subsession;
@@ -585,6 +586,14 @@ void RTSPServer::RTSPClientSession
 		       clientsDestinationAddressStr, clientsDestinationTTL,
 		       clientRTPPortNum, clientRTCPPortNum,
 		       rtpChannelId, rtcpChannelId);
+  if (tcpStreamingRequested && rtpChannelId == 0xFF) {
+    // TCP streaming was requested, but with no "interleaving=" fields.
+    // (QuickTime Player sometimes does this.)  Set the RTP and RTCP channel ids to
+    // proper values:
+    rtpChannelId = fTCPStreamIdCount; rtcpChannelId = fTCPStreamIdCount+1;
+  }
+  fTCPStreamIdCount += 2;
+
   Port clientRTPPort(clientRTPPortNum);
   Port clientRTCPPort(clientRTCPPortNum);
 

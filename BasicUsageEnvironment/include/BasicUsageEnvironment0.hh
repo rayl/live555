@@ -76,8 +76,9 @@ public:
   virtual ~BasicTaskScheduler0();
 
   virtual void SingleStep(unsigned maxDelayTime = 0) = 0;
-      // "maxDelayTime" is in microseconds.
-      // 0 means: There's no maximum; just look at the delay queue
+      // "maxDelayTime" is in microseconds.  It allows a subclass to impose a limit
+      // on how long "select()" can delay, in case it wants to also do polling.
+      // 0 (the default value) means: There's no maximum; just look at the delay queue
   
 protected:
   BasicTaskScheduler0();

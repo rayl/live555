@@ -81,14 +81,14 @@ public:
       // Returns True iff this command succeeds
 
   Boolean playMediaSession(MediaSession& session,
-			   float start = 0.0, float end = -1.0,
-			   float scale = 1.0);
+			   float start = 0.0f, float end = -1.0f,
+			   float scale = 1.0f);
       // Issues an aggregate RTSP "PLAY" command on "session".
       // Returns True iff this command succeeds
       // (Note: start=-1 means 'resume'; end=-1 means 'play to end')
   Boolean playMediaSubsession(MediaSubsession& subsession,
-			      float start = 0.0, float end = -1.0,
-			      float scale = 1.0,
+			      float start = 0.0f, float end = -1.0f,
+			      float scale = 1.0f,
 			      Boolean hackForDSS = False);
       // Issues a RTSP "PLAY" command on "subsession".
       // Returns True iff this command succeeds
@@ -167,6 +167,7 @@ private:
 				 unsigned char& rtcpChannelId);
   Boolean parseRTPInfoHeader(char const* line, unsigned& trackId,
 			     u_int16_t& seqNum, u_int32_t& timestamp);
+  Boolean parseScaleHeader(char const* line, float& scale);
   void constructSubsessionURL(MediaSubsession const& subsession,
 			      char const*& prefix,
 			      char const*& separator,

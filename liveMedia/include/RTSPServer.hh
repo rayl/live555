@@ -143,6 +143,7 @@ private:
     unsigned char fBuffer[10000];
     Boolean fSessionIsActive;
     Authenticator fCurrentAuthenticator; // used if access control is needed
+    unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
     unsigned fNumStreamStates; 
     struct streamState {
       ServerMediaSubsession* subsession;

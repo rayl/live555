@@ -613,7 +613,6 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
       envir().setResultMsg("cannot handle ANNOUNCE response: ", firstLine);
       break;
     }
-    // (Later, check "CSeq" too #####)
 
     delete[] cmd;
     return True;
@@ -689,16 +688,35 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       if (subsession.parentSession().isRealNetworksRDT) {
 	transportHeader = strDup("Transport: x-pn-tng/tcp;mode=play,rtp/avp/unicast;mode=play\r\n");
       } else {
-	// Use a regular "Transport:" header, but ask for TCP streaming:
-	streamUsingTCP = True;
+	// Use a regular "Transport:" header:
 	char const* transportHeaderFmt
-	  = "Transport: RTP/AVP/TCP;unicast;interleaved=%d-%d\r\n";
+	  = "Transport: RTP/AVP%s%s=%d-%d\r\n";
+	char const* transportTypeStr;
+	char const* portTypeStr;
+	unsigned short rtpNumber, rtcpNumber;
+	if (streamUsingTCP) { // streaming over the RTSP connection
+	  transportTypeStr = "/TCP;unicast";
+	  portTypeStr = ";interleaved";
+	  rtpNumber = fTCPStreamIdCount++;
+	  rtcpNumber = fTCPStreamIdCount++;
+	} else { // normal RTP streaming
+	  unsigned connectionAddress = subsession.connectionEndpointAddress();
+	  transportTypeStr
+	    = IsMulticastAddress(connectionAddress) ? ";multicast" : ";unicast";
+	  portTypeStr = ";client_port";
+	  rtpNumber = subsession.clientPortNum();
+	  if (rtpNumber == 0) {
+	    envir().setResultMsg("Client port number unknown\n");
+	    break;
+	  }
+	  rtcpNumber = rtpNumber + 1;
+	}
+
 	unsigned transportHeaderSize = strlen(transportHeaderFmt)
-	  + 2*5 /* max port len */;
+	  + strlen(transportTypeStr) + strlen(portTypeStr) + 2*5 /* max port len */;
 	transportHeader = new char[transportHeaderSize];
-	unsigned short rtpNumber = fTCPStreamIdCount++;
-	unsigned short rtcpNumber = fTCPStreamIdCount++;
-	sprintf(transportHeader, transportHeaderFmt, rtpNumber, rtcpNumber);
+	sprintf(transportHeader, transportHeaderFmt,
+		transportTypeStr, portTypeStr, rtpNumber, rtcpNumber);
       }
       char const* transportFmt =
 	"%s"
@@ -819,7 +837,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 
     // Look for a "Session:" header (to set our session id), and
     // a "Transport: " header (to set the server address/port)
-    // For now, ignore other headers.  (Later, check for "CSeq" also #####)
+    // For now, ignore other headers.
     char* lineStart;
     char* sessionId = new char[fResponseBufferSize]; // ensures we have enough space
     while (1) {
@@ -973,6 +991,17 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
     char* firstLine; char* nextLineStart;
     if (!getResponse("PLAY", bytesRead, responseCode, firstLine, nextLineStart)) break;
 
+    // Look for various headers that we understand:
+    char* lineStart;
+    while (1) {
+      lineStart = nextLineStart;
+      if (lineStart == NULL) break;
+
+      nextLineStart = getLine(lineStart);
+
+      if (parseScaleHeader(lineStart, session.scale())) break;
+    }
+
     delete[] cmd;
     return True;
   } while (0);
@@ -1050,7 +1079,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
     char* firstLine; char* nextLineStart;
     if (!getResponse("PLAY", bytesRead, responseCode, firstLine, nextLineStart)) break;
 
-    // Look for a "RTP-Info:" header:
+    // Look for various headers that we understand:
     char* lineStart;
     while (1) {
       lineStart = nextLineStart;
@@ -1062,11 +1091,10 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
 			     subsession.rtpInfo.trackId,
 			     subsession.rtpInfo.seqNum,
 			     subsession.rtpInfo.timestamp)) {
-	break;
+	continue;
       }
+      if (parseScaleHeader(lineStart, subsession.scale())) continue;
     }
-
-    // (Later, check "CSeq" too #####)
 
     delete[] cmd;
     return True;
@@ -1931,6 +1959,13 @@ Boolean RTSPClient::parseRTPInfoHeader(char const* line,
 
   delete[] field;
   return True;
+}
+
+Boolean RTSPClient::parseScaleHeader(char const* line, float& scale) {
+  if (_strncasecmp(line, "Scale: ", 7) != 0) return False;
+  line += 7;
+
+  return sscanf(line, "%f", &scale) == 1;
 }
 
 Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix) {

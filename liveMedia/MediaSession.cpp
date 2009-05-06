@@ -61,7 +61,7 @@ Boolean MediaSession::lookupByName(UsageEnvironment& env,
 MediaSession::MediaSession(UsageEnvironment& env)
   : Medium(env),
     fSubsessionsHead(NULL), fSubsessionsTail(NULL),
-    fConnectionEndpointName(NULL), fMaxPlayEndTime(0.0) {
+    fConnectionEndpointName(NULL), fMaxPlayEndTime(0.0f), fScale(1.0f) {
 #ifdef SUPPORT_REAL_RTSP
   RealInitSDPAttributes(this);
 #endif
@@ -531,7 +531,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fConfig(NULL), fMode(NULL),
     fPlayEndTime(0.0),
     fMCT_SLAP_SessionId(0), fMCT_SLAP_Stagger(0),
-    fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1),
+    fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f),
     fRTPSocket(NULL), fRTCPSocket(NULL),
     fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL) {
 #ifdef SUPPORT_REAL_RTSP
