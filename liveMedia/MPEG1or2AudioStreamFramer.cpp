@@ -101,13 +101,19 @@ static unsigned const numSamplesByLayer[4] = {0, 384, 1152, 1152};
 struct timeval MPEG1or2AudioStreamFramer::currentFramePlayTime() const {
   MP3FrameParams const& fr = fParser->currentFrame();
   unsigned const numSamples = numSamplesByLayer[fr.layer];
+
+  struct timeval result;
   unsigned const freq = fr.samplingFreq*(1 + fr.isMPEG2);
+  if (freq == 0) {
+    result.tv_sec = 0;
+    result.tv_usec = 0;
+    return result;
+  }
 
   // result is numSamples/freq
   unsigned const uSeconds
     = ((numSamples*2*MILLION)/freq + 1)/2; // rounds to nearest integer
 
-  struct timeval result;
   result.tv_sec = uSeconds/MILLION;
   result.tv_usec = uSeconds%MILLION;
   return result;
