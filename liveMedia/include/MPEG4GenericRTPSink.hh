@@ -31,14 +31,16 @@ public:
   createNew(UsageEnvironment& env, Groupsock* RTPgs,
 	    u_int8_t rtpPayloadFormat, u_int32_t rtpTimestampFrequency,
 	    char const* sdpMediaTypeString, char const* mpeg4Mode,
-	    char const* configString);
+	    char const* configString,
+	    unsigned numChannels = 1);
 
 protected:
   MPEG4GenericRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 		      u_int8_t rtpPayloadFormat,
 		      u_int32_t rtpTimestampFrequency,
 		      char const* sdpMediaTypeString,
-		      char const* mpeg4Mode, char const* configString);
+		      char const* mpeg4Mode, char const* configString,
+		      unsigned numChannels);
 	// called only by createNew()
 
   virtual ~MPEG4GenericRTPSink();

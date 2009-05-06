@@ -16,6 +16,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // "liveMedia"
 // Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // RTP sink for MPEG-4 audio, using LATM multiplexing (RFC 3016)
+// (Note that the initial 'size' field is assumed to be present at the start of
+//  each frame.)
 // C++ header
 
 #ifndef _MPEG4_LATM_AUDIO_RTP_SINK_HH
@@ -32,6 +34,7 @@ public:
 					  unsigned char rtpPayloadFormat,
 					  u_int32_t rtpTimestampFrequency,
 					  char const* streamMuxConfigString,
+					  unsigned numChannels,
 					  Boolean allowMultipleFramesPerPacket = False);
 
 protected:
@@ -39,6 +42,7 @@ protected:
 			unsigned char rtpPayloadFormat,
 			u_int32_t rtpTimestampFrequency,
 			char const* streamMuxConfigString,
+			unsigned numChannels,
 			Boolean allowMultipleFramesPerPacket);
 	// called only by createNew()
 

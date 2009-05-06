@@ -25,9 +25,10 @@ MPEG4GenericRTPSink
 		      u_int8_t rtpPayloadFormat,
 		      u_int32_t rtpTimestampFrequency,
 		      char const* sdpMediaTypeString,
-		      char const* mpeg4Mode, char const* configString)
+		      char const* mpeg4Mode, char const* configString,
+		      unsigned numChannels)
   : MultiFramedRTPSink(env, RTPgs, rtpPayloadFormat,
-		       rtpTimestampFrequency, "MPEG4-GENERIC"),
+		       rtpTimestampFrequency, "MPEG4-GENERIC", numChannels),
   fSDPMediaTypeString(strDup(sdpMediaTypeString)),
   fMPEG4Mode(strDup(mpeg4Mode)), fConfigString(strDup(configString)) {
   // Check whether "mpeg4Mode" is one that we handle:
@@ -52,7 +53,7 @@ MPEG4GenericRTPSink
   char* fmtp = new char[fmtpFmtSize];
   sprintf(fmtp, fmtpFmt,
 	  rtpPayloadType(),
-	  strcmp(fSDPMediaTypeString, "video") == 0 ? 5 : 4,
+	  strcmp(fSDPMediaTypeString, "video") == 0 ? 4 : 5,
 	  fMPEG4Mode,
 	  fConfigString);
   fFmtpSDPLine = strDup(fmtp);
@@ -72,11 +73,11 @@ MPEG4GenericRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 			       u_int32_t rtpTimestampFrequency,
 			       char const* sdpMediaTypeString,
 			       char const* mpeg4Mode,
-			       char const* configString) {
+			       char const* configString, unsigned numChannels) {
   return new MPEG4GenericRTPSink(env, RTPgs, rtpPayloadFormat,
 				 rtpTimestampFrequency,
 				 sdpMediaTypeString, mpeg4Mode,
-				 configString);
+				 configString, numChannels);
 }
 
 Boolean MPEG4GenericRTPSink

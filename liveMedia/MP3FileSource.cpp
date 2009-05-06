@@ -151,5 +151,8 @@ Boolean MP3FileSource::initializeStream() {
   fStreamState->checkForXingHeader(); // in case this is a VBR file
 
   fHaveJustInitialized = True;
+  // Hack: It's possible that our environment's 'result message' has been
+  // reset within this function, so set it again to our name now:
+  envir().setResultMsg(name());
   return True;
 }

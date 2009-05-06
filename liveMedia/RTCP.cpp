@@ -97,6 +97,7 @@ void RTCPMemberDatabase::reapOldMembers(unsigned threshold) {
         foundOldMember = True;
       }
     }
+    delete iter;
 
     if (foundOldMember) {
 #ifdef DEBUG

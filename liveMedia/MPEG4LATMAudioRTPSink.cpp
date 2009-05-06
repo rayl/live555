@@ -22,12 +22,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 MPEG4LATMAudioRTPSink
 ::MPEG4LATMAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		   u_int8_t rtpPayloadFormat,
-		   u_int32_t rtpTimestampFrequency,
-		   char const* streamMuxConfigString,
-		   Boolean allowMultipleFramesPerPacket)
+			u_int8_t rtpPayloadFormat,
+			u_int32_t rtpTimestampFrequency,
+			char const* streamMuxConfigString,
+			unsigned numChannels,
+			Boolean allowMultipleFramesPerPacket)
   : AudioRTPSink(env, RTPgs, rtpPayloadFormat,
-		 rtpTimestampFrequency, "MP4A-LATM"),
+		 rtpTimestampFrequency, "MP4A-LATM", numChannels),
   fStreamMuxConfigString(strDup(streamMuxConfigString)),
   fAllowMultipleFramesPerPacket(allowMultipleFramesPerPacket) {
   // Set up the "a=fmtp:" SDP line for this stream:
@@ -52,13 +53,15 @@ MPEG4LATMAudioRTPSink::~MPEG4LATMAudioRTPSink() {
 
 MPEG4LATMAudioRTPSink*
 MPEG4LATMAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
-			    u_int8_t rtpPayloadFormat,
-			    u_int32_t rtpTimestampFrequency,
-			    char const* streamMuxConfigString,
-			    Boolean allowMultipleFramesPerPacket) {
+				 u_int8_t rtpPayloadFormat,
+				 u_int32_t rtpTimestampFrequency,
+				 char const* streamMuxConfigString,
+				 unsigned numChannels,
+				 Boolean allowMultipleFramesPerPacket) {
   return new MPEG4LATMAudioRTPSink(env, RTPgs, rtpPayloadFormat,
-			      rtpTimestampFrequency, streamMuxConfigString,
-			      allowMultipleFramesPerPacket);
+				   rtpTimestampFrequency, streamMuxConfigString,
+				   numChannels,
+				   allowMultipleFramesPerPacket);
 }
 
 Boolean MPEG4LATMAudioRTPSink
