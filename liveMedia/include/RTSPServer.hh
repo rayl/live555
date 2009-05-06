@@ -63,7 +63,7 @@ class RTSPServer: public Medium {
 public:
   static RTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554,
 			       UserAuthenticationDatabase* authDatabase = NULL,
-			       unsigned reclamationTestSeconds = 0);
+			       unsigned reclamationTestSeconds = 45);
       // If ourPort.num() == 0, we'll choose the port number
       // Note: The caller is responsible for reclaiming "authDatabase"
       // If "reclamationTestSeconds" > 0, then the "RTSPClientSession" state for
@@ -146,6 +146,7 @@ private:
 			       char* resultCSeq,
 			       unsigned resultCSeqMaxSize); 
     void noteLiveness();
+    Boolean isMulticast() const { return fIsMulticast; }
     static void noteClientLiveness(RTSPClientSession* clientSession);
     static void livenessTimeoutTask(RTSPClientSession* clientSession);
 
@@ -158,7 +159,7 @@ private:
     TaskToken fLivenessCheckTask;
     unsigned char fBuffer[RTSP_BUFFER_SIZE];
     unsigned char fResponseBuffer[RTSP_BUFFER_SIZE];
-    Boolean fSessionIsActive, fStreamAfterSETUP;
+    Boolean fIsMulticast, fSessionIsActive, fStreamAfterSETUP;
     Authenticator fCurrentAuthenticator; // used if access control is needed
     unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
     unsigned fNumStreamStates; 

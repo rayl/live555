@@ -426,9 +426,10 @@ void StreamState
 				fTotalBW, (unsigned char*)fCNAME,
 				fRTPSink, NULL /* we're a server */);
         // Note: This starts RTCP running automatically
+  }
+  if (fRTCPInstance != NULL)
     fRTCPInstance->setSpecificRRHandler(dests->addr.s_addr, dests->rtcpPort,
 					rtcpRRHandler, rtcpRRHandlerClientData);
-  }
 
   if (dests->isTCP) {
     // Change RTP and RTCP to use the TCP socket instead of UDP:

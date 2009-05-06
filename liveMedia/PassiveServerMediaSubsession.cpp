@@ -131,7 +131,7 @@ void PassiveServerMediaSubsession::startStream(unsigned /*clientSessionId*/,
 					       unsigned& rtpTimestamp) {
   // Note: We don't set a RTCP RR handler, because (i) we're called potentially
   // many times on the same "RTCPInstance", and (ii) the "RTCPInstance" remains
-  // in existence after "stopStream()" is called.
+  // in existence after "deleteStream()" is called.
   rtpSeqNum = fRTPSink.currentSeqNo();
   rtpTimestamp = fRTPSink.currentTimestamp();
 }

@@ -235,7 +235,8 @@ RTSPServer::RTSPClientSession
   : fOurServer(ourServer), fOurSessionId(sessionId),
     fOurServerMediaSession(NULL),
     fClientSocket(clientSocket), fClientAddr(clientAddr),
-    fLivenessCheckTask(NULL), fSessionIsActive(True), fStreamAfterSETUP(False),
+    fLivenessCheckTask(NULL),
+    fIsMulticast(False), fSessionIsActive(True), fStreamAfterSETUP(False),
     fTCPStreamIdCount(0), fNumStreamStates(0), fStreamStates(NULL) {
   // Arrange to handle incoming requests:
   envir().taskScheduler().turnOnBackgroundReadHandling(fClientSocket,
@@ -716,17 +717,16 @@ void RTSPServer::RTSPClientSession
   destinationTTL = clientsDestinationTTL;
 #endif
   delete[] clientsDestinationAddressStr;
-  Boolean isMulticast;
   Port serverRTPPort(0);
   Port serverRTCPPort(0);
   subsession->getStreamParameters(fOurSessionId, fClientAddr.sin_addr.s_addr,
 				  clientRTPPort, clientRTCPPort,
 				  tcpSocketNum, rtpChannelId, rtcpChannelId,
-				  destinationAddress, destinationTTL, isMulticast,
+				  destinationAddress, destinationTTL, fIsMulticast,
 				  serverRTPPort, serverRTCPPort,
 				  fStreamStates[streamNum].streamToken);
   struct in_addr destinationAddr; destinationAddr.s_addr = destinationAddress;
-  if (isMulticast) {
+  if (fIsMulticast) {
     if (streamingMode == RTP_TCP) {
       // multicast streams can't be sent via TCP
       handleCmd_unsupportedTransport(cseq);
@@ -1171,6 +1171,12 @@ void RTSPServer::RTSPClientSession
 ::livenessTimeoutTask(RTSPClientSession* clientSession) {
   // If this gets called, the client session is assumed to have timed out,
   // so delete it:
+
+  // However, we don't timeout multicast sessions, because to do so would require
+  // closing all client sessions that have requested the stream - not just this one.
+  // Also, the multicast stream itself would usually not be halted, in any case.
+  if (clientSession->isMulticast()) return;
+
 #ifdef DEBUG
   fprintf(stderr, "RTSP client session from %s has timed out (due to inactivity)\n", our_inet_ntoa(clientSession->fClientAddr.sin_addr));
 #endif

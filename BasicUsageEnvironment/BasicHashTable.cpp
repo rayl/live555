@@ -175,7 +175,11 @@ void BasicHashTable::assignKey(TableEntry* entry, char const* key) {
   } else if (fKeyType == ONE_WORD_HASH_KEYS) {
     entry->key = key;
   } else if (fKeyType > 0) {
-    entry->key = (char const*)(new unsigned[fKeyType]);
+    unsigned* keyFrom = (unsigned*)key;
+    unsigned* keyTo = new unsigned[fKeyType];
+    for (int i = 0; i < fKeyType; ++i) keyTo[i] = keyFrom[i];
+
+    entry->key = (char const*)keyTo;
   }
 }
 
