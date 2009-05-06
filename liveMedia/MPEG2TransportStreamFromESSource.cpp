@@ -82,6 +82,7 @@ void MPEG2TransportStreamFromESSource
 ::addNewVideoSource(FramedSource* inputSource, int mpegVersion) {
   u_int8_t streamId = 0xE0 | (fVideoSourceCounter++&0x0F);
   addNewInputSource(inputSource, streamId, mpegVersion);
+  fHaveVideoStreams = True;
 }
 
 void MPEG2TransportStreamFromESSource
@@ -94,6 +95,7 @@ MPEG2TransportStreamFromESSource
 ::MPEG2TransportStreamFromESSource(UsageEnvironment& env)
   : MPEG2TransportStreamMultiplexor(env),
     fInputSources(NULL), fVideoSourceCounter(0), fAudioSourceCounter(0) {
+  fHaveVideoStreams = False; // unless we add a video source
 }
 
 MPEG2TransportStreamFromESSource::~MPEG2TransportStreamFromESSource() {
@@ -186,7 +188,7 @@ void InputESSourceRecord::askForNewData() {
     fInputSource->getNextFrame(&fInputBuffer[fInputBufferBytesAvailable],
                                INPUT_BUFFER_SIZE-fInputBufferBytesAvailable,
                                afterGettingFrame, this,
-                               FramedSource::handleClosure, this);
+                               FramedSource::handleClosure, &fParent);
   }
 }
 

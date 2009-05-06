@@ -48,6 +48,8 @@ public:
   struct in_addr const& sourceFilterAddr() const { return fSourceFilterAddr; }
   float& scale() { return fScale; }
   char* mediaSessionType() const { return fMediaSessionType; }
+  char* sessionName() const { return fSessionName; }
+  char* sessionDescription() const { return fSessionDescription; }
 
   Boolean initiateByMediaType(char const* mimeType,
 			      MediaSubsession*& resultSubsession,
@@ -78,6 +80,8 @@ private:
 
   Boolean initializeWithSDP(char const* sdpDescription);
   Boolean parseSDPLine(char const* input, char const*& nextLine);
+  Boolean parseSDPLine_s(char const* sdpLine);
+  Boolean parseSDPLine_i(char const* sdpLine);
   Boolean parseSDPLine_c(char const* sdpLine);
   Boolean parseSDPAttribute_type(char const* sdpLine);
   Boolean parseSDPAttribute_range(char const* sdpLine);
@@ -103,6 +107,8 @@ private:
   struct in_addr fSourceFilterAddr; // used for SSM
   float fScale; // set from a RTSP "Scale:" header
   char* fMediaSessionType; // holds a=type value
+  char* fSessionName; // holds s=<session name> value
+  char* fSessionDescription; // holds i=<session description> value
 };
 
 

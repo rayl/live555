@@ -41,7 +41,7 @@ protected:
   virtual ~H263plusVideoStreamFramer();
 
 
-// private:
+public:
   static void continueReadProcessing(void* clientData,
 				     unsigned char* ptr, unsigned size,
 				     struct timeval presentationTime);

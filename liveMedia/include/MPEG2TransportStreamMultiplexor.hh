@@ -56,6 +56,9 @@ private:
 
   void setProgramStreamMap(unsigned frameSize);
 
+protected:
+  Boolean fHaveVideoStreams;
+
 private:
   unsigned fOutgoingPacketCounter;
   unsigned fProgramMapVersion;

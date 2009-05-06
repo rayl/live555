@@ -62,7 +62,7 @@ MediaSession::MediaSession(UsageEnvironment& env)
   : Medium(env),
     fSubsessionsHead(NULL), fSubsessionsTail(NULL),
     fConnectionEndpointName(NULL), fMaxPlayEndTime(0.0f),
-    fScale(1.0f), fMediaSessionType(NULL) {
+    fScale(1.0f), fMediaSessionType(NULL), fSessionName(NULL), fSessionDescription(NULL) {
 #ifdef SUPPORT_REAL_RTSP
   RealInitSDPAttributes(this);
 #endif
@@ -86,6 +86,8 @@ MediaSession::~MediaSession() {
   delete[] fCNAME;
   delete[] fConnectionEndpointName;
   delete[] fMediaSessionType;
+  delete[] fSessionName;
+  delete[] fSessionDescription;
 #ifdef SUPPORT_REAL_RTSP
   RealReclaimSDPAttributes(this);
 #endif
@@ -111,6 +113,8 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     if (sdpLine == NULL) break; // there are no m= lines at all 
 
     // Check for various special SDP lines that we understand:
+    if (parseSDPLine_s(sdpLine)) continue;
+    if (parseSDPLine_i(sdpLine)) continue;
     if (parseSDPLine_c(sdpLine)) continue;
     if (parseSDPAttribute_range(sdpLine)) continue;
     if (parseSDPAttribute_type(sdpLine)) continue;
@@ -288,6 +292,34 @@ static char* parseCLine(char const* sdpLine) {
   return resultStr;
 }
 
+Boolean MediaSession::parseSDPLine_s(char const* sdpLine) {
+  // Check for "s=<session name>" line
+  char* buffer = strDupSize(sdpLine);
+  Boolean parseSuccess = False;
+  
+  if (sscanf(sdpLine, "s=%[^\r\n]", buffer) == 1) {
+    delete[] fSessionName; fSessionName = strDup(buffer);
+    parseSuccess = True;
+  }
+  delete[] buffer;
+
+  return parseSuccess;
+}
+
+Boolean MediaSession::parseSDPLine_i(char const* sdpLine) {
+  // Check for "i=<session description>" line
+  char* buffer = strDupSize(sdpLine);
+  Boolean parseSuccess = False;
+  
+  if (sscanf(sdpLine, "i=%[^\r\n]", buffer) == 1) {
+    delete[] fSessionDescription; fSessionDescription = strDup(buffer);
+    parseSuccess = True;
+  }
+  delete[] buffer;
+
+  return parseSuccess;
+}  
+
 Boolean MediaSession::parseSDPLine_c(char const* sdpLine) {
   // Check for "c=IN IP4 <connection-endpoint>"
   // or "c=IN IP4 <connection-endpoint>/<ttl+numAddresses>"
@@ -306,14 +338,10 @@ Boolean MediaSession::parseSDPAttribute_type(char const* sdpLine) {
   // Check for a "a=type:broadcast|meeting|moderated|test|H.332|recvonly" line:
   Boolean parseSuccess = False;
 
-  char *resultStr = NULL;
   char* buffer = strDupSize(sdpLine);
   if (sscanf(sdpLine, "a=type: %[^ ]", buffer) == 1) {
-    resultStr = strDup(buffer);
-    if (resultStr != NULL) {
-      delete[] fMediaSessionType;
-      fMediaSessionType = resultStr;
-    }
+    delete[] fMediaSessionType;
+    fMediaSessionType = strDup(buffer);
     parseSuccess = True;
   }
   delete[] buffer;

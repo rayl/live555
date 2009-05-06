@@ -31,6 +31,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 MPEG2TransportStreamMultiplexor
 ::MPEG2TransportStreamMultiplexor(UsageEnvironment& env)
   : FramedSource(env),
+    fHaveVideoStreams(True/*by default*/),
     fOutgoingPacketCounter(0), fProgramMapVersion(0),
     fPreviousInputProgramMapVersion(0xFF), fCurrentInputProgramMapVersion(0xFF),
     fPCR_PID(0), fCurrentPID(0),
@@ -106,11 +107,12 @@ void MPEG2TransportStreamMultiplexor
     if (streamType == 0) {
       // Instead, set the stream's type to default values, based on whether
       // the stream is audio or video, and whether it's MPEG-1 or MPEG-2:
-      if ((stream_id&0xE0) == 0xC0) { // audio
-	streamType = mpegVersion == 1 ? 3 : 4;
-      } else if ((stream_id&0xF0) == 0xE0) { // video
+      if ((stream_id&0xF0) == 0xE0) { // video
 	streamType = mpegVersion == 1 ? 1 : 2;
 	if (fPCR_PID == 0) fPCR_PID = fCurrentPID; // use this stream's SCR for PCR
+      } else if ((stream_id&0xE0) == 0xC0) { // audio
+	streamType = mpegVersion == 1 ? 3 : 4;
+	if (!fHaveVideoStreams && fPCR_PID == 0) fPCR_PID = fCurrentPID; // use this stream's SCR for PCR
       } else if (stream_id == 0xBD) { // private_stream1 (usually AC-3)
 	streamType = 0x06; // for DVB; for ATSC, use 0x81 
       } else { // something else, e.g., AC-3 uses private_stream1 (0xBD)
