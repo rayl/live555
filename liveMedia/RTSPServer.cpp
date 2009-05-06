@@ -711,13 +711,13 @@ void RTSPServer::RTSPClientSession
   fSessionIsActive = False; // triggers deletion of ourself after responding
 }
 
-static void parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd) {
+static Boolean parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd) {
   // Initialize the result parameters to default values:
   rangeStart = rangeEnd = 0.0;
 
   // First, find "Range:"
   while (1) {
-    if (*buf == '\0') return; // not found
+    if (*buf == '\0') return False; // not found
     if (_strncasecmp(buf, "Range: ", 7) == 0) break;
     ++buf;
   }
@@ -731,7 +731,11 @@ static void parseRangeHeader(char const* buf, float& rangeStart, float& rangeEnd
     rangeEnd = end;
   } else if (sscanf(fields, "npt = %f -", &start) == 1) {
     rangeStart = start;
+  } else {
+    return False; // The header is malformed
   }
+
+  return True;
 }
 
 void RTSPServer::RTSPClientSession
@@ -742,7 +746,7 @@ void RTSPServer::RTSPClientSession
 
   // Parse the client's "Range:" header, if any: 
   float rangeStart, rangeEnd;
-  parseRangeHeader(fullRequestStr, rangeStart, rangeEnd);
+  Boolean sawRangeHeader = parseRangeHeader(fullRequestStr, rangeStart, rangeEnd);
 
   // Use this information, plus the stream's duration (if known), to create
   // our own "Range:" header, for the response:
@@ -763,7 +767,9 @@ void RTSPServer::RTSPClientSession
 
   char buf[100];
   char* rangeHeader;
-  if (rangeEnd == 0.0) {
+  if (!sawRangeHeader) {
+    buf[0] = '\0'; // Because we didn't see a Range: header, don't send one back
+  } else if (rangeEnd == 0.0) {
     sprintf(buf, "Range: npt=%.3f-\r\n", rangeStart);
   } else {
     sprintf(buf, "Range: npt=%.3f-%.3f\r\n", rangeStart, rangeEnd);
@@ -789,9 +795,11 @@ void RTSPServer::RTSPClientSession
 	|| subsession == fStreamStates[i].subsession) {
       unsigned short rtpSeqNum = 0;
       unsigned rtpTimestamp = 0;
-      fStreamStates[i].subsession->seekStream(fOurSessionId,
-					      fStreamStates[i].streamToken,
-					      rangeStart);
+      if (sawRangeHeader) {
+	fStreamStates[i].subsession->seekStream(fOurSessionId,
+						fStreamStates[i].streamToken,
+						rangeStart);
+      }
       fStreamStates[i].subsession->startStream(fOurSessionId,
 					       fStreamStates[i].streamToken,
 					       rtpSeqNum, rtpTimestamp);

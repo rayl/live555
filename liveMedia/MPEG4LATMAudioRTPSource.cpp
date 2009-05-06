@@ -87,8 +87,12 @@ unsigned LATMBufferedPacket
     if (framePtr[i] != 0xFF) break;
   }
   ++i;
+#ifdef OMIT_DATA_LENGTH_FIELD
   framePtr += i;
   dataSize -= i;
+#else
+  resultFrameSize += i;
+#endif
 
   return (resultFrameSize <= dataSize) ? resultFrameSize : dataSize;
 }

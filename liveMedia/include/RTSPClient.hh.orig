@@ -47,8 +47,7 @@ public:
 			      char const* sourceName,
 			      RTSPClient*& resultClient);
 
-  char* describeURL(char const* url, Authenticator* authenticator = NULL,
-		    Boolean allowKasennaProtocol = False);
+  char* describeURL(char const* url, Authenticator* authenticator = NULL);
       // Issues a RTSP "DESCRIBE" command
       // Returns the SDP description of a session, or NULL if none
       // (This is dynamically allocated, and must later be freed
@@ -194,10 +193,6 @@ private:
   // 0: OK; 1: connection failed; 2: stream unavailable
   char* fResponseBuffer;
   unsigned fResponseBufferSize;
-
-  // The following fields are used to implement the non-standard Kasenna protocol:
-  Boolean fServerIsKasenna;
-  char* fKasennaContentType;
 };
 
 #endif

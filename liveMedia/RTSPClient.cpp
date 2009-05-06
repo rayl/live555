@@ -67,10 +67,11 @@ RTSPClient::RTSPClient(UsageEnvironment& env,
     fVerbosityLevel(verbosityLevel),
     fTunnelOverHTTPPortNum(tunnelOverHTTPPortNum),
     fInputSocketNum(-1), fOutputSocketNum(-1), fServerAddress(0),
-    fBaseURL(NULL), fTCPStreamIdCount(0), fLastSessionId(NULL)
+    fBaseURL(NULL), fTCPStreamIdCount(0), fLastSessionId(NULL),
 #ifdef SUPPORT_REAL_RTSP
-  , fRealChallengeStr(NULL), fRealETagStr(NULL)
+    fRealChallengeStr(NULL), fRealETagStr(NULL),
 #endif
+    fServerIsKasenna(False), fKasennaContentType(NULL)
 {
   fResponseBufferSize = 20000;
   fResponseBuffer = new char[fResponseBufferSize+1];
@@ -121,6 +122,7 @@ void RTSPClient::reset() {
 
   fCurrentAuthenticator.reset();
 
+  delete[] fKasennaContentType; fKasennaContentType = NULL;
 #ifdef SUPPORT_REAL_RTSP
   delete[] fRealChallengeStr; fRealChallengeStr = NULL;
   delete[] fRealETagStr; fRealETagStr = NULL;
@@ -142,7 +144,8 @@ static char* getLine(char* startOfLine) {
   return NULL;
 }
 
-char* RTSPClient::describeURL(char const* url, Authenticator* authenticator) {
+char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
+			      Boolean allowKasennaProtocol) {
   char* cmd = NULL;
   fDescribeStatusCode = 0;
   do {  
@@ -164,13 +167,17 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator) {
     char* authenticatorStr
       = createAuthenticatorString(authenticator, "DESCRIBE", url);
 
+    char const* acceptStr = allowKasennaProtocol
+      ? "Accept: application/x-rtsp-mh, application/sdp\r\n"
+      : "Accept: application/sdp\r\n";
+
     // (Later implement more, as specified in the RTSP spec, sec D.1 #####)
     char* const cmdFmt =
       "DESCRIBE %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
-      "Accept: application/sdp\r\n"
       "%s"
-     "%s"
+      "%s"
+      "%s"
 #ifdef SUPPORT_REAL_RTSP
       REAL_DESCRIBE_HEADERS
 #endif
@@ -178,12 +185,14 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator) {
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(url)
       + 20 /* max int len */
+      + strlen(acceptStr)
       + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize;
     cmd = new char[cmdSize];
     sprintf(cmd, cmdFmt,
 	    url,
 	    ++fCSeq,
+            acceptStr,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
     delete[] authenticatorStr;
@@ -217,6 +226,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator) {
     // We should really do some checking on the headers here - e.g., to
     // check for "Content-type: application/sdp", "Content-base",
     // "Content-location", "CSeq", etc. #####
+    char* serverType = new char[fResponseBufferSize]; // ensures enough space
     int contentLength = -1;
     char* lineStart;
     while (1) {
@@ -233,6 +243,8 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator) {
 			       lineStart, "\"");
 	  break;
 	}
+      } else if (sscanf(lineStart, "Server: %s", serverType) == 1) {
+	if (strncmp(serverType, "Kasenna", 7) == 0) fServerIsKasenna = True;
 #ifdef SUPPORT_REAL_RTSP
       } else if (sscanf(lineStart, "ETag: %s", fRealETagStr) == 1) {
 #endif
@@ -246,10 +258,12 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator) {
 	  reset();
 	  char* result = describeURL(redirectionURL);
 	  delete[] redirectionURL;
+	  delete[] serverType;
 	  return result;
 	}
       }
     } 
+    delete[] serverType;
 
     // We're now at the end of the response header lines
     if (wantRedirection) {
@@ -323,10 +337,104 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator) {
       bodyStart[to] = '\0'; // trims any extra data
     }
 
+    ////////// BEGIN Kasenna BS //////////
+    // If necessary, handle Kasenna's non-standard BS response:
+    if (fServerIsKasenna && strncmp(bodyStart, "<MediaDescription>", 18) == 0) {
+      // Translate from x-rtsp-mh to sdp
+      int videoPid, audioPid;
+      unsigned mh_duration;
+      char* currentWord = new char[fResponseBufferSize]; // ensures enough space
+      delete[] fKasennaContentType;
+      fKasennaContentType = new char[fResponseBufferSize]; // ensures enough space
+      char* currentPos = bodyStart;
+      
+      while (strcmp(currentWord, "</MediaDescription>") != 0) {
+          sscanf(currentPos, "%s", currentWord);
+	  
+          if (strcmp(currentWord, "VideoPid") == 0) {
+	    currentPos += strlen(currentWord) + 1;
+	    sscanf(currentPos, "%s", currentWord);
+	    currentPos += strlen(currentWord) + 1;
+	    sscanf(currentPos, "%d", &videoPid);
+	    currentPos += 3;
+          }
+	  
+          if (strcmp(currentWord, "AudioPid") == 0) {
+	    currentPos += strlen(currentWord) + 1;
+	    sscanf(currentPos, "%s", currentWord);
+	    currentPos += strlen(currentWord) + 1;
+	    sscanf(currentPos, "%d", &audioPid);
+	    currentPos += 3;
+          }
+	  
+          if (strcmp(currentWord, "Duration") == 0) {
+	    currentPos += strlen(currentWord) + 1;
+	    sscanf(currentPos, "%s", currentWord);
+	    currentPos += strlen(currentWord) + 1;
+	    sscanf(currentPos, "%d", &mh_duration);
+	    currentPos += 3;
+          }
+	  
+          if (strcmp(currentWord, "TypeSpecificData") == 0) {
+	    currentPos += strlen(currentWord) + 1;
+	    sscanf(currentPos, "%s", currentWord);
+	    currentPos += strlen(currentWord) + 1;
+	    sscanf(currentPos, "%s", fKasennaContentType);
+	    currentPos += 3;
+	    printf("Kasenna Content Type: %s\n", fKasennaContentType);
+          }
+          
+          currentPos += strlen(currentWord) + 1;
+	}
+      
+      if (fKasennaContentType != NULL
+	  && strcmp(fKasennaContentType, "PARTNER_41_MPEG-4") == 0) {
+          char* describeSDP = describeURL(url, authenticator, True);
+	  
+	  delete[] currentWord;
+          delete[] cmd;
+          return describeSDP;
+      }
+      
+      unsigned char byte1 = fServerAddress & 0x000000ff;
+      unsigned char byte2 = (fServerAddress & 0x0000ff00) >>  8;
+      unsigned char byte3 = (fServerAddress & 0x00ff0000) >> 16;
+      unsigned char byte4 = (fServerAddress & 0xff000000) >> 24;
+      
+      char const* sdpFmt =
+	"v=0\r\n"
+	"o=NoSpacesAllowed 1 1 IN IP4 %u.%u.%u.%u\r\n"
+	"s=%s\r\n"
+	"c=IN IP4 %u.%u.%u.%u\r\n"
+	"t=0 0\r\n"
+	"a=control:*\r\n"
+	"a=range:npt=0-%u\r\n"
+	"m=video 1554 RAW/RAW/UDP 33\r\n"
+	"a=control:trackID=%d\r\n";
+      unsigned sdpBufSize = strlen(sdpFmt)
+	+ 4*3 // IP address
+	+ strlen(url)
+	+ 20 // max int length
+	+ 20; // max int length
+      char* sdpBuf = new char[sdpBufSize];
+      sprintf(sdpBuf, sdpFmt,
+	      byte1, byte2, byte3, byte4,
+	      url,
+	      byte1, byte2, byte3, byte4,
+	      (unsigned)(mh_duration/1000000),
+	      videoPid);
+      
+      char* result = strDup(sdpBuf);
+      delete[] sdpBuf; delete[] currentWord;
+      delete[] cmd;
+      return result;
+    }
+    ////////// END Kasenna BS //////////
+    
     delete[] cmd;
     return strDup(bodyStart);
   } while (0);
-
+  
   delete[] cmd;
   if (fDescribeStatusCode == 0) fDescribeStatusCode = 2;
   return NULL;
@@ -547,6 +655,11 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 					 Boolean streamOutgoing,
 					 Boolean streamUsingTCP) {
   char* cmd = NULL;
+
+  char* setupStr = NULL;
+  char* setupFmt = NULL;
+  char* transportFmt = NULL;
+
   do {
     // Construct the SETUP command:
 
@@ -590,6 +703,32 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       rdtSource->setInputSocket(fInputSocketNum);
     }
 #endif
+
+    char const *prefix, *separator, *suffix;
+    constructSubsessionURL(subsession, prefix, separator, suffix);
+
+    if (fServerIsKasenna && fKasennaContentType != NULL &&
+	(strncmp(fKasennaContentType, "MPEG-2", 6) == 0 ||
+	 strncmp(fKasennaContentType, "MPEG-1", 6) == 0)) {
+      setupFmt = "SETUP %s%s RTSP/1.0\r\n";
+      transportFmt = "Transport: RAW/RAW/UDP%s%s%s=%d-%d\r\n";
+
+      unsigned setupSize = strlen(setupFmt)
+        + strlen(prefix) + strlen (separator);
+ 
+      setupStr = new char[setupSize];
+      sprintf(setupStr, setupFmt, prefix, separator);
+    } else {
+      setupFmt = "SETUP %s%s%s RTSP/1.0\r\n";
+      transportFmt = "Transport: RTP/AVP%s%s%s=%d-%d\r\n";
+      
+      unsigned setupSize = strlen(setupFmt)
+        + strlen(prefix) + strlen (separator) + strlen(suffix);
+ 
+      setupStr = new char[setupSize];
+      sprintf(setupStr, setupFmt, prefix, separator, suffix);
+    }
+
     if (transportStr == NULL) {
       // Use a standard "Transport:" header.
       char const* transportTypeStr;
@@ -614,7 +753,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 	}
 	rtcpNumber = rtpNumber + 1;
       }
-      char const* transportFmt = "Transport: RTP/AVP%s%s%s=%d-%d\r\n";
+
       unsigned transportSize = strlen(transportFmt)
 	+ strlen(transportTypeStr) + strlen(modeStr) + strlen(portTypeStr) + 2*5 /* max port len */;
       transportStr = new char[transportSize];
@@ -624,7 +763,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 
     // (Later implement more, as specified in the RTSP spec, sec D.1 #####)
     char* const cmdFmt =
-      "SETUP %s%s%s RTSP/1.0\r\n"
+      "%s"
       "CSeq: %d\r\n"
       "%s"
       "%s"
@@ -632,11 +771,8 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       "%s"
       "\r\n";
 
-    char const *prefix, *separator, *suffix;
-    constructSubsessionURL(subsession, prefix, separator, suffix);
-
     unsigned cmdSize = strlen(cmdFmt)
-      + strlen(prefix) + strlen(separator) + strlen(suffix)
+      + strlen(setupStr)
       + 20 /* max int len */
       + strlen(transportStr)
       + strlen(sessionStr)
@@ -644,7 +780,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       + fUserAgentHeaderStrSize;
     cmd = new char[cmdSize];
     sprintf(cmd, cmdFmt,
-	    prefix, separator, suffix,
+	    setupStr,
 	    ++fCSeq,
 	    transportStr,
 	    sessionStr,
@@ -838,7 +974,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
 
     char const *prefix, *separator, *suffix;
     constructSubsessionURL(subsession, prefix, separator, suffix);
-    if (hackForDSS) {
+    if (hackForDSS || fServerIsKasenna) {
       // When "PLAY" is used to inject RTP packets into a DSS
       // (violating the RTSP spec, btw; "RECORD" should have been used)
       // the DSS can crash (or hang) if the '/trackid=...' portion of
@@ -977,6 +1113,8 @@ Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession) {
     
     char const *prefix, *separator, *suffix;
     constructSubsessionURL(subsession, prefix, separator, suffix);
+    if (fServerIsKasenna) separator = suffix = "";
+
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(prefix) + strlen(separator) + strlen(suffix)
       + 20 /* max int len */

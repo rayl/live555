@@ -34,6 +34,8 @@ public:
 
   virtual ~BasicUDPSource();
 
+  Groupsock* gs() const { return fInputGS; }
+
 private:
   BasicUDPSource(UsageEnvironment& env, Groupsock* inputGS);
       // called only by createNew()
