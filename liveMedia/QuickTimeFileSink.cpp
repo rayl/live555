@@ -546,7 +546,7 @@ SubsessionIOState::~SubsessionIOState() {
 Boolean SubsessionIOState::setQTstate() {
   char const* noCodecWarning1 = "Warning: We don't implement a QuickTime ";
   char const* noCodecWarning2 = " Media Data Type for the \"";
-  char const* noCodecWarning3 = "\" track, so we'll insert a dummy '???' Media Data Atom instead.  A separate, codec-specific editing pass will be needed before this track can be played.\n";
+  char const* noCodecWarning3 = "\" track, so we'll insert a dummy \"???\" Media Data Atom instead.  A separate, codec-specific editing pass will be needed before this track can be played.\n";
   Boolean supportPartiallyOnly = False;
 
   do {
@@ -1929,7 +1929,7 @@ addAtom(payt);
   delete[] rtpmapString;
 addAtomEnd;
 
-// A dummy atom (with name '????'):
+// A dummy atom (with name "????"):
 unsigned QuickTimeFileSink::addAtom_dummy() {
     unsigned initFilePosn = ftell(fOutFid);
     unsigned size = addAtomHeader("????");

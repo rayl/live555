@@ -27,12 +27,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class JPEGVideoRTPSink: public VideoRTPSink {
 public:
-  static JPEGVideoRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs,
-				     unsigned char rtpPayloadFormat);
+  static JPEGVideoRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs);
   
 protected:
-  JPEGVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		   unsigned char rtpPayloadFormat);
+  JPEGVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs);
 	// called only by createNew()
 
   virtual ~JPEGVideoRTPSink();

@@ -22,18 +22,16 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "JPEGVideoSource.hh"
 
 JPEGVideoRTPSink
-::JPEGVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		       unsigned char rtpPayloadFormat)
-  : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 90000, "JPEG") {
+::JPEGVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
+  : VideoRTPSink(env, RTPgs, 26, 90000, "JPEG") {
 }
 
 JPEGVideoRTPSink::~JPEGVideoRTPSink() {
 }
 
 JPEGVideoRTPSink*
-JPEGVideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
-				unsigned char rtpPayloadFormat) {
-  return new JPEGVideoRTPSink(env, RTPgs, rtpPayloadFormat);
+JPEGVideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
+  return new JPEGVideoRTPSink(env, RTPgs);
 }
 
 Boolean JPEGVideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {

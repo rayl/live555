@@ -93,7 +93,7 @@ A.7 Computing the RTCP Transmission Interval
        double const RTCP_SENDER_BW_FRACTION = 0.25;
        double const RTCP_RCVR_BW_FRACTION = (1-RTCP_SENDER_BW_FRACTION);
        /*
-       /* To compensate for "unconditional reconsideration" converging to a
+        * To compensate for "unconditional reconsideration" converging to a
         * value below the intended average.
         */
        double const COMPENSATION = 2.71828 - 1.5;
