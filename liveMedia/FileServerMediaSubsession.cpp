@@ -184,10 +184,10 @@ void FileServerMediaSubsession
   
   char const* const sdpFmt =
     "m=%s 0 RTP/AVP %d\r\n"
+    "c=IN IP4 0.0.0.0\r\n"
     "%s"
     "%s"
-    "a=control:%s\r\n"
-    "c=IN IP4 0.0.0.0\r\n";
+    "a=control:%s\r\n";
   unsigned sdpFmtSize = strlen(sdpFmt)
     + strlen(mediaType) + 3 /* max char len */
     + rtpmapLineSize

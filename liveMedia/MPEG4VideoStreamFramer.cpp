@@ -73,7 +73,7 @@ private:
   u_int32_t vop_time_increment_resolution;
   unsigned fNumVTIRBits;
       // # of bits needed to count to "vop_time_increment_resolution"
-  unsigned fSecondsSinceLastGOV, fTotalTicksSinceLastGOV; 
+  unsigned fSecondsSinceLastGOV, fTotalTicksSinceLastGOV, fPrevNewTotalTicks; 
 };
 
 
@@ -143,7 +143,8 @@ MPEG4VideoStreamParser
   : MPEGVideoStreamParser(usingSource, inputSource),
     fCurrentParseState(PARSING_VISUAL_OBJECT_SEQUENCE),
     vop_time_increment_resolution(0), fNumVTIRBits(0),
-    fSecondsSinceLastGOV(0), fTotalTicksSinceLastGOV(0) {
+    fSecondsSinceLastGOV(0), fTotalTicksSinceLastGOV(0),
+    fPrevNewTotalTicks((unsigned)(~0)) {
 }
 
 MPEG4VideoStreamParser::~MPEG4VideoStreamParser() {
@@ -216,7 +217,7 @@ unsigned MPEG4VideoStreamParser
   save4Bytes(first4Bytes);
 
   // The next byte is the "profile_and_level_indication":
-  u_int32_t pali = get1Byte();
+  u_int8_t pali = get1Byte();
 #ifdef DEBUG
   fprintf(stderr, "profile_and_level_indication: %02x\n", pali);
 #endif
@@ -388,7 +389,7 @@ void MPEG4VideoStreamParser::analyzeVOLHeader() {
       usingSource()->fFrameRate = (double)vop_time_increment_resolution;
     }
 #ifdef DEBUG
-    fprintf(stderr, "'frame' rate: %f\n", usingSource()->fFrameRate);
+    fprintf(stderr, "fixed_vop_rate: %d; 'frame' rate: %f\n", fixed_vop_rate, usingSource()->fFrameRate);
 #endif
 
     return;
@@ -488,7 +489,9 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
 
   // Get the "vop_coding_type" from the next byte:
   u_int8_t nextByte = get1Byte(); saveByte(nextByte);
-  //u_int8_t vop_coding_type = nextByte>>6;
+#ifdef DEBUG
+  u_int8_t vop_coding_type = nextByte>>6;
+#endif
 
   // Next, get the "modulo_time_base" by counting the '1' bits that follow.
   // We look at the next 32-bits only.  This should be enough in most cases.
@@ -534,8 +537,17 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
   unsigned newTotalTicks
     = fSecondsSinceLastGOV*vop_time_increment_resolution
     + vop_time_increment;
-  usingSource()->fPictureCount += newTotalTicks - fTotalTicksSinceLastGOV;
-  fTotalTicksSinceLastGOV = newTotalTicks;
+  if (newTotalTicks == fPrevNewTotalTicks) {
+    // This is apparently a buggy MPEG-4 video stream, because
+    // "vop_time_increment" did not change.  Overcome this error,
+    // by pretending that it did change.
+    usingSource()->fPictureCount += vop_time_increment;
+    fTotalTicksSinceLastGOV += vop_time_increment;
+  } else {
+    fPrevNewTotalTicks = newTotalTicks;
+    usingSource()->fPictureCount += newTotalTicks - fTotalTicksSinceLastGOV;
+    fTotalTicksSinceLastGOV = newTotalTicks;
+  }
   
   // The next thing to parse depends on the code that we just saw,
   // but we are assumed to have ended the current picture: 

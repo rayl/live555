@@ -27,7 +27,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 // A structure for holding input data to be parsed.
 // (Eventually replace with iostream stuff) ##### 
-#define BANK_SIZE 100000
+#define BANK_SIZE 150000
 
 class StreamParser {
 protected: // we're a virtual base class

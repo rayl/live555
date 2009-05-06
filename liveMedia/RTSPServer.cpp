@@ -302,7 +302,7 @@ void RTSPServer::RTSPClientSession
   fOurServerMediaSession = (ServerMediaSession*)
     (fOurServer.fServerMediaSessions->Lookup(urlSuffix));
   if (fOurServerMediaSession == NULL) {
-    sprintf((char*)fBuffer, "RTSP/1.0 404 Stream Not Found\r\n\r\n");
+    sprintf((char*)fBuffer, "RTSP/1.0 404 Stream Not Found\r\nCSeq: %s\r\n\r\n", cseq);
     return;
   }
 
@@ -312,7 +312,7 @@ void RTSPServer::RTSPClientSession
   if (sdpDescription == NULL) {
     // This usually means that a file name that was specified for a
     // "ServerMediaSubsession" does not exist.
-    sprintf((char*)fBuffer, "RTSP/1.0 404 File Not Found, Or In Incorrect Format\r\n\r\n");
+    sprintf((char*)fBuffer, "RTSP/1.0 404 File Not Found, Or In Incorrect Format\r\nCSeq: %s\r\n\r\n", cseq);
     return;
   }
 

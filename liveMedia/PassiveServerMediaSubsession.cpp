@@ -90,26 +90,26 @@ char const* PassiveServerMediaSubsession::sdpLines() {
     
     char const* const sdpFmt =
       "m=%s %d RTP/AVP %d\r\n"
+      "c=IN IP4 %s/%d\r\n" 
       "%s"
       "%s"
-      "a=control:%s\r\n"
-      "c=IN IP4 %s/%d\r\n"; 
+      "a=control:%s\r\n";
     unsigned sdpFmtSize = strlen(sdpFmt)
       + strlen(mediaType) + 5 /* max short len */ + 3 /* max char len */
+      + strlen(ipAddressStr) + 3 /* max char len */
       + rtpmapLineSize
       + auxSDPLineSize
-      + strlen(trackId())
-      + strlen(ipAddressStr) + 3 /* max char len */;
+      + strlen(trackId());
     char* sdpLines = new char[sdpFmtSize];
     sprintf(sdpLines, sdpFmt, 
 	    mediaType, // m= <media>
 	    portNum, // m= <port>
 	    rtpPayloadType, // m= <fmt list>
+	    ipAddressStr, // c= <connection address>
+	    ttl, // c= TTL
 	    rtpmapLine, // a=rtpmap:... (if present)
 	    auxSDPLine, // optional extra SDP line
-	    trackId(), // a=control:<track-id>
-	    ipAddressStr, // c= <connection address>
-	    ttl); // c= TTL
+	    trackId()); // a=control:<track-id>
     delete[] ipAddressStr; delete[] rtpmapLine;
     
     fSDPLines = strDup(sdpLines);
