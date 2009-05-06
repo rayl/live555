@@ -684,9 +684,7 @@ void SubsessionIOState::setFinalQTstate() {
   ChunkDescriptor* chunk = fHeadChunk;
   while (chunk != NULL) {
     unsigned const numFrames = chunk->fNumFrames;
-    unsigned const dur
-      = numFrames*chunk->fFrameDuration/fOurSubsession.numChannels();
-
+    unsigned const dur = numFrames*chunk->fFrameDuration;
     fQTDurationT += dur;
 
     chunk = chunk->fNextChunk;
