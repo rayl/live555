@@ -18,7 +18,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "Lock.hh"
-#include "NetCommon.h"
 #include <signal.h>
 
 ///// Read-Write Locks /////
