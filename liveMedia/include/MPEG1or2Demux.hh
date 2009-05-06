@@ -63,11 +63,17 @@ public:
 
   FramedSource* inputSource() const { return fInputSource; }
 
-  struct SCR {
+  class SCR {
+  public:
+    SCR();
+
     u_int8_t highBit;
     u_int32_t remainingBits;
     u_int16_t extension;
-  } lastSeenSCR;
+  };
+  SCR lastSeenSCR() const { return fLastSeenSCR; }
+
+  unsigned char mpegVersion() const { return fMPEGversion; }
 
 private:
   MPEG1or2Demux(UsageEnvironment& env,
@@ -98,6 +104,8 @@ private:
 
 private:
   FramedSource* fInputSource;
+  SCR fLastSeenSCR;
+  unsigned char fMPEGversion;
 
   unsigned char fNextAudioStreamNumber;
   unsigned char fNextVideoStreamNumber;

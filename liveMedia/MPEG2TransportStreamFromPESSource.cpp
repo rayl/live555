@@ -111,18 +111,24 @@ void MPEG2TransportStreamFromPESSource
     } else {
       fCurrentPID = stream_id;
       if (fPCR_PID == 0) fPCR_PID = fCurrentPID; // use this stream's SCR for PCR
-      fPIDState[fCurrentPID].streamType
-	= (stream_id&0xE0) == 0xC0 ? 3 // audio (assume MPEG-2)
-	: (stream_id&0xF0) == 0xE0 ? 2 // video (assume MPEG-2)
-	: 0x81; // private (for anything else, e.g., AC-3 uses private_stream1 (0xBD))
+
+      // Set the stream's type based on whether it's audio or video, and MPEG 1 or 2:
+      MPEG1or2DemuxedElementaryStream* source
+	= (MPEG1or2DemuxedElementaryStream*)fInputSource;
+      u_int8_t& streamType = fPIDState[fCurrentPID].streamType; // alias
+      if ((stream_id&0xE0) == 0xC0) { // audio
+	streamType = source->mpegVersion() == 1 ? 3 : 4;
+      } else if ((stream_id&0xF0) == 0xE0) { // video
+	streamType = source->mpegVersion() == 1 ? 1 : 2;
+      } else { // something else, e.g., AC-3 uses private_stream1 (0xBD)
+	streamType = 0x81; // private 
+      }
 
       if (fCurrentPID == fPCR_PID) {
 	// Record the input's current SCR timestamp, for use as our PCR:
-	MPEG1or2DemuxedElementaryStream* source
-	  = (MPEG1or2DemuxedElementaryStream*)fInputSource;
-	fPCRHighBit = source->lastSeenSCR.highBit;
-	fPCRRemainingBits = source->lastSeenSCR.remainingBits;
-	fPCRExtension = source->lastSeenSCR.extension;
+	fPCRHighBit = source->lastSeenSCR().highBit;
+	fPCRRemainingBits = source->lastSeenSCR().remainingBits;
+	fPCRExtension = source->lastSeenSCR().extension;
       }
     }
   }

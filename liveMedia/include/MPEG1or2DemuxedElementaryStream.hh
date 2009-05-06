@@ -27,11 +27,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class MPEG1or2DemuxedElementaryStream: public FramedSource {
 public:
-  struct SCR {
-    u_int8_t highBit;
-    u_int32_t remainingBits;
-    u_int16_t extension;
-  } lastSeenSCR;
+  MPEG1or2Demux::SCR lastSeenSCR() const { return fLastSeenSCR; }
+
+  unsigned char mpegVersion() const { return fMPEGversion; }
 
 private: // We are created only by a MPEG1or2Demux (a friend)
   MPEG1or2DemuxedElementaryStream(UsageEnvironment& env,
@@ -60,6 +58,8 @@ private:
   u_int8_t fOurStreamIdTag;
   MPEG1or2Demux& fOurSourceDemux;
   char const* fMIMEtype;
+  MPEG1or2Demux::SCR fLastSeenSCR;
+  unsigned char fMPEGversion;
 
   friend class MPEG1or2Demux;
 };

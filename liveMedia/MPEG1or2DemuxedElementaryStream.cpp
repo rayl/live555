@@ -26,9 +26,7 @@ MPEG1or2DemuxedElementaryStream::
 MPEG1or2DemuxedElementaryStream(UsageEnvironment& env, u_int8_t streamIdTag,
 			    MPEG1or2Demux& sourceDemux)
   : FramedSource(env),
-    fOurStreamIdTag(streamIdTag), fOurSourceDemux(sourceDemux) {
-  lastSeenSCR.highBit = 0; lastSeenSCR.remainingBits = 0; lastSeenSCR.extension = 0;
-
+    fOurStreamIdTag(streamIdTag), fOurSourceDemux(sourceDemux), fMPEGversion(0) {
   // Set our MIME type string for known media types:
   if ((streamIdTag&0xE0) == 0xC0) {
     fMIMEtype = "audio/mpeg";
@@ -58,9 +56,8 @@ char const* MPEG1or2DemuxedElementaryStream::MIMEtype() const {
 }
 
 unsigned MPEG1or2DemuxedElementaryStream::maxFrameSize() const {
-  return 25000;
-  // This is a hack, which might break for some MPEG sources, because
-  // the MPEG spec allows for PES packets as large as ~65536 bytes. #####
+  return 65536;
+      // because the MPEG spec allows for PES packets as large as ~65536 bytes
 }
 
 void MPEG1or2DemuxedElementaryStream
@@ -83,9 +80,8 @@ void MPEG1or2DemuxedElementaryStream
   fPresentationTime = presentationTime;
   fDurationInMicroseconds = durationInMicroseconds;
 
-  lastSeenSCR.highBit = fOurSourceDemux.lastSeenSCR.highBit;
-  lastSeenSCR.remainingBits = fOurSourceDemux.lastSeenSCR.remainingBits;
-  lastSeenSCR.extension = fOurSourceDemux.lastSeenSCR.extension;
+  fLastSeenSCR = fOurSourceDemux.lastSeenSCR();
+  fMPEGversion = fOurSourceDemux.mpegVersion();
 
   FramedSource::afterGetting(this);
 }

@@ -55,7 +55,6 @@ private:
 private:
   MPEG1or2Demux* fUsingSource;
   MPEGParseState fCurrentParseState;
-  unsigned char fMPEGversion;   
 };
 
 
@@ -83,11 +82,10 @@ MPEG1or2Demux
 ::MPEG1or2Demux(UsageEnvironment& env,
 		FramedSource* inputSource, Boolean reclaimWhenLastESDies)
   : Medium(env),
-    fInputSource(inputSource),
+    fInputSource(inputSource), fMPEGversion(0),
     fNextAudioStreamNumber(0), fNextVideoStreamNumber(0),
     fReclaimWhenLastESDies(reclaimWhenLastESDies), fNumOutstandingESs(0),
     fNumPendingReads(0), fHaveUndeliveredData(False) {
-  lastSeenSCR.highBit = 0; lastSeenSCR.remainingBits = 0; lastSeenSCR.extension = 0;
   fParser = new MPEGProgramStreamParser(this, inputSource);
   for (unsigned i = 0; i < 256; ++i) {
     fOutput[i].savedDataHead = fOutput[i].savedDataTail = NULL;
@@ -109,6 +107,10 @@ MPEG1or2Demux* MPEG1or2Demux
   // Need to add source type checking here???  #####
 
   return new MPEG1or2Demux(env, inputSource, reclaimWhenLastESDies);
+}
+
+MPEG1or2Demux::SCR::SCR()
+  : highBit(0), remainingBits(0), extension(0) {
 }
 
 void MPEG1or2Demux
@@ -407,9 +409,9 @@ void MPEGProgramStreamParser::parsePackHeader() {
   // The size of the pack header differs depending on whether it's
   // MPEG-1 or MPEG-2.  The next byte tells us this: 
   unsigned char nextByte = get1Byte();
-  struct MPEG1or2Demux::SCR& scr = fUsingSource->lastSeenSCR; // alias
+  MPEG1or2Demux::SCR& scr = fUsingSource->fLastSeenSCR; // alias
   if ((nextByte&0xF0) == 0x20) { // MPEG-1
-    fMPEGversion = 1;
+    fUsingSource->fMPEGversion = 1;
     scr.highBit =  (nextByte&0x08)>>3;
     scr.remainingBits = (nextByte&0x06)<<29;
     unsigned next4Bytes = get4Bytes();
@@ -424,7 +426,7 @@ void MPEGProgramStreamParser::parsePackHeader() {
     fprintf(stderr, "%08x\n", scr.remainingBits);
 #endif
   } else if ((nextByte&0xC0) == 0x40) { // MPEG-2
-    fMPEGversion = 2;
+    fUsingSource->fMPEGversion = 2;
     scr.highBit =  (nextByte&0x20)>>5;
     scr.remainingBits = (nextByte&0x18)<<27;
     scr.remainingBits |= (nextByte&0x03)<<28;
@@ -493,7 +495,7 @@ Boolean MPEGProgramStreamParser
 ::isSpecialStreamId(unsigned char stream_id) const {
   if (stream_id == RAW_PES) return True; // hack
 
-  if (fMPEGversion == 1) {
+  if (fUsingSource->fMPEGversion == 1) {
     return stream_id == private_stream_2;
   } else { // assume MPEG-2
     if (stream_id <= private_stream_2) {
@@ -570,7 +572,7 @@ unsigned char MPEGProgramStreamParser::parsePESPacket() {
   unsigned char dts_highBit = 0;
   unsigned dts_remainingBits = 0;
 #endif
-  if (fMPEGversion == 1) {
+  if (fUsingSource->fMPEGversion == 1) {
     if (!isSpecialStreamId(stream_id)) {
       unsigned char nextByte;
       while ((nextByte = get1Byte()) == 0xFF) { // stuffing_byte
