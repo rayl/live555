@@ -24,7 +24,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 MPEG1or2VideoHTTPSink* MPEG1or2VideoHTTPSink::createNew(UsageEnvironment& env, Port ourPort) {
   int ourSocket = -1;
-  MPEG1or2VideoHTTPSink* newSink = NULL;
 
   do {
     int ourSocket = setUpOurSocket(env, ourPort);
@@ -39,7 +38,6 @@ MPEG1or2VideoHTTPSink* MPEG1or2VideoHTTPSink::createNew(UsageEnvironment& env, P
   } while (0);
 
   if (ourSocket != -1) ::closeSocket(ourSocket);
-  delete newSink;
   return NULL;
 }
 

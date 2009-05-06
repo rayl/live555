@@ -40,7 +40,6 @@ RTSPServer::createNew(UsageEnvironment& env, Port ourPort,
 		      UserAuthenticationDatabase* authDatabase,
 		      unsigned reclamationTestSeconds) {
   int ourSocket = -1;
-  RTSPServer* newServer = NULL;
 
   do {
     int ourSocket = setUpOurSocket(env, ourPort);
@@ -51,7 +50,6 @@ RTSPServer::createNew(UsageEnvironment& env, Port ourPort,
   } while (0);
 
   if (ourSocket != -1) ::closeSocket(ourSocket);
-  delete newServer;
   return NULL;
 }
 
@@ -93,7 +91,7 @@ void RTSPServer::removeServerMediaSession(ServerMediaSession* serverMediaSession
 
   fServerMediaSessions->Remove(serverMediaSession->streamName());
   if (serverMediaSession->referenceCount() == 0) {
-    delete serverMediaSession;
+    Medium::close(serverMediaSession);
   } else {
     serverMediaSession->deleteWhenUnreferenced() = True;
   }

@@ -37,8 +37,6 @@ AMRAudioFileSink::~AMRAudioFileSink() {
 AMRAudioFileSink*
 AMRAudioFileSink::createNew(UsageEnvironment& env, char const* fileName,
 			    unsigned bufferSize, Boolean oneFilePerFrame) {
-  AMRAudioFileSink* newSink = NULL;
-
   do {
     FILE* fid;
     char const* perFrameFileNamePrefix;
@@ -53,13 +51,9 @@ AMRAudioFileSink::createNew(UsageEnvironment& env, char const* fileName,
       perFrameFileNamePrefix = NULL;
     }
 
-    newSink = new AMRAudioFileSink(env, fid, bufferSize, perFrameFileNamePrefix);
-    if (newSink == NULL) break;
-
-    return newSink;
+    return new AMRAudioFileSink(env, fid, bufferSize, perFrameFileNamePrefix);
   } while (0);
 
-  delete newSink;
   return NULL;
 }
 

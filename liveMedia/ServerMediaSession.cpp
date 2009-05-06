@@ -73,7 +73,7 @@ ServerMediaSession::ServerMediaSession(UsageEnvironment& env,
 }
 
 ServerMediaSession::~ServerMediaSession() {
-  delete fSubsessionsHead;
+  Medium::close(fSubsessionsHead);
   delete[] fStreamName;
   delete[] fInfoSDPString;
   delete[] fDescriptionSDPString;
@@ -323,7 +323,7 @@ ServerMediaSubsession::ServerMediaSubsession(UsageEnvironment& env)
 
 ServerMediaSubsession::~ServerMediaSubsession() {
   delete[] (char*)fTrackId;
-  delete fNext;
+  Medium::close(fNext);
 }
 
 char const* ServerMediaSubsession::trackId() {

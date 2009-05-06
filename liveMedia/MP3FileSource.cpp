@@ -56,7 +56,7 @@ MP3FileSource* MP3FileSource::createNew(UsageEnvironment& env, char const* fileN
     return newSource;
   } while (0);
 
-  delete newSource;
+  Medium::close(newSource);
   return NULL;
 }
 

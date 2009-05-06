@@ -320,8 +320,6 @@ QuickTimeFileSink::createNew(UsageEnvironment& env,
 			     Boolean syncStreams,
 			     Boolean generateHintTracks,
 			     Boolean generateMP4Format) {
-  QuickTimeFileSink* newSink = NULL;
-
   do {
     FILE* fid = OpenOutputFile(env, outputFileName);
     if (fid == NULL) break;
@@ -332,7 +330,6 @@ QuickTimeFileSink::createNew(UsageEnvironment& env,
 				 generateHintTracks, generateMP4Format);
   } while (0);
 
-  delete newSink;
   return NULL;
 }
 

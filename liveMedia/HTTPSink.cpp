@@ -30,7 +30,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 HTTPSink* HTTPSink::createNew(UsageEnvironment& env, Port ourPort) {
   int ourSocket = -1;
-  HTTPSink* newSink = NULL;
 
   do {
     int ourSocket = setUpOurSocket(env, ourPort);
@@ -45,7 +44,6 @@ HTTPSink* HTTPSink::createNew(UsageEnvironment& env, Port ourPort) {
   } while (0);
 
   if (ourSocket != -1) ::closeSocket(ourSocket);
-  delete newSink;
   return NULL;
 }
 

@@ -116,7 +116,7 @@ MPEG1or2Demux::SCR::SCR()
 void MPEG1or2Demux
 ::noteElementaryStreamDeletion(MPEG1or2DemuxedElementaryStream* /*es*/) {
   if (--fNumOutstandingESs == 0 && fReclaimWhenLastESDies) {
-    delete this;
+    Medium::close(this);
   }
 }
 

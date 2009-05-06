@@ -33,7 +33,8 @@ WAVAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
     WAVAudioFileSource* newSource = new WAVAudioFileSource(env, fid);
     if (newSource != NULL && newSource->bitsPerSample() == 0) {
       // The WAV file header was apparently invalid.
-      delete newSource; newSource = NULL;
+      Medium::close(newSource);
+      break;
     }
 
     newSource->fFileSize = GetFileSize(fileName, fid);

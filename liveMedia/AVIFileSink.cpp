@@ -34,7 +34,7 @@ public:
     reset();
     fData = new unsigned char[bufferSize];
   }
-  virtual ~SubsessionBuffer() { delete fData; }
+  virtual ~SubsessionBuffer() { delete[] fData; }
   void reset() { fBytesInUse = 0; }
   void addBytes(unsigned numBytes) { fBytesInUse += numBytes; }
 
@@ -164,8 +164,6 @@ AVIFileSink* AVIFileSink
 	    unsigned bufferSize,
 	    unsigned short movieWidth, unsigned short movieHeight,
 	    unsigned movieFPS, Boolean packetLossCompensate) {
-  AVIFileSink* newSink = NULL;
-
   do {
     FILE* fid = OpenOutputFile(env, outputFileName);
     if (fid == NULL) break;
@@ -175,7 +173,6 @@ AVIFileSink* AVIFileSink
 			   packetLossCompensate);
   } while (0);
 
-  delete newSink;
   return NULL;
 }
 

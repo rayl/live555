@@ -50,8 +50,6 @@ FileSink::~FileSink() {
 
 FileSink* FileSink::createNew(UsageEnvironment& env, char const* fileName,
 			      unsigned bufferSize, Boolean oneFilePerFrame) {
-  FileSink* newSink = NULL;
-
   do {
     FILE* fid;
     char const* perFrameFileNamePrefix;
@@ -66,13 +64,9 @@ FileSink* FileSink::createNew(UsageEnvironment& env, char const* fileName,
       perFrameFileNamePrefix = NULL;
     }
 
-    newSink = new FileSink(env, fid, bufferSize, perFrameFileNamePrefix);
-    if (newSink == NULL) break;
-
-    return newSink;
+    return new FileSink(env, fid, bufferSize, perFrameFileNamePrefix);
   } while (0);
 
-  delete newSink;
   return NULL;
 }
 
