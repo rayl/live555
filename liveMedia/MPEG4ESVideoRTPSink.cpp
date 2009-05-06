@@ -112,7 +112,7 @@ char const* MPEG4ESVideoRTPSink::auxSDPLine() {
   unsigned fmtpFmtSize = strlen(fmtpFmt)
     + 3 /* max char len */
     + 3 /* max char len */
-    + 2*configLength /* 2*, because each by prints as 2 chars */
+    + 2*configLength /* 2*, because each byte prints as 2 chars */
     + 2 /* trailing \r\n */;
   char* fmtp = new char[fmtpFmtSize];
   sprintf(fmtp, fmtpFmt, rtpPayloadType(), profile_level_id);

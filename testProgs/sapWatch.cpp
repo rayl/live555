@@ -59,6 +59,14 @@ int main(int argc, char** argv) {
       continue;
     }
 
+    // convert "application/sdp\0" -> "application/sdp\0x20"
+    // or all other nonprintable characters to blank, except new line
+    unsigned idx = 8;
+    while (idx < packetSize) {
+      if (packet[idx] < 0x20 && packet[idx] != '\n') packet[idx] = 0x20;
+      idx++;
+    }
+
     packet[packetSize] = '\0'; // just in case
     printf((char*)(packet+8));
   }

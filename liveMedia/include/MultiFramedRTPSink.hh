@@ -77,7 +77,9 @@ protected:
 				   unsigned bytePosition = 0);
   unsigned numFramesUsedSoFar() const { return fNumFramesUsedSoFar; }
 
-private: // redefined virtual functions:
+  unsigned ourMaxPacketSize() const { return fOurMaxPacketSize; }
+
+protected: // redefined virtual functions:
   virtual Boolean continuePlaying();
   virtual void stopPlaying();
 
@@ -115,6 +117,7 @@ private:
   unsigned fCurFrameSpecificHeaderPosition;
   unsigned fCurFrameSpecificHeaderSize; // size in bytes of cur frame-specific header
   unsigned fTotalFrameSpecificHeaderSizes; // size of all frame-specific hdrs in pkt
+  unsigned fOurMaxPacketSize;
 };
 
 #endif

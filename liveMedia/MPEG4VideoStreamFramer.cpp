@@ -135,7 +135,7 @@ void MPEG4VideoStreamFramer
 }
 
 void MPEG4VideoStreamFramer::completeNewConfig() {
-  delete fConfigBytes; fConfigBytes = fNewConfigBytes;
+  delete[] fConfigBytes; fConfigBytes = fNewConfigBytes;
   fNewConfigBytes = NULL;
   fNumConfigBytes = fNumNewConfigBytes;
   fNumNewConfigBytes = 0;

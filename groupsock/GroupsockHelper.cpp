@@ -458,8 +458,8 @@ Boolean socketLeaveGroup(UsageEnvironment&, int socket,
 #define IP_ADD_SOURCE_MEMBERSHIP   39
 #define IP_DROP_SOURCE_MEMBERSHIP 40
 #else
-#define IP_ADD_SOURCE_MEMBERSHIP   67
-#define IP_DROP_SOURCE_MEMBERSHIP 68
+#define IP_ADD_SOURCE_MEMBERSHIP   25
+#define IP_DROP_SOURCE_MEMBERSHIP 26
 #endif
 
 struct ip_mreq_source {

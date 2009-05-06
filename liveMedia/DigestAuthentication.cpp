@@ -126,13 +126,13 @@ void Authenticator::reclaimDigestResponse(char const* responseStr) const {
 }
 
 void Authenticator::resetRealmAndNonce() {
-  delete fRealm; fRealm = NULL;
-  delete fNonce; fNonce = NULL;
+  delete[] fRealm; fRealm = NULL;
+  delete[] fNonce; fNonce = NULL;
 }
 
 void Authenticator::resetUsernameAndPassword() {
-  delete fUsername; fUsername = NULL;
-  delete fPassword; fPassword = NULL;
+  delete[] fUsername; fUsername = NULL;
+  delete[] fPassword; fPassword = NULL;
   fPasswordIsMD5 = False;
 }
 

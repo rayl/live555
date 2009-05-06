@@ -62,6 +62,9 @@ int main(int argc, char** argv) {
 
   // Create a 'groupsock' for the destination address and port:
   char* outputAddressStr = "239.255.43.43"; // this could also be unicast
+    // Note: You may change "outputAddressStr" to use a different multicast
+    // (or unicast address), but do *not* change it to use the same multicast
+    // address as "inputAddressStr".
   struct in_addr outputAddress;
   outputAddress.s_addr = our_inet_addr(outputAddressStr);
   
