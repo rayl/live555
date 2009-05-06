@@ -39,7 +39,7 @@ class TaskScheduler; // forward
 
 class UsageEnvironment {
 public:
-  virtual ~UsageEnvironment();
+  void reclaim();
 
   // task scheduler:
   TaskScheduler& taskScheduler() const {return fScheduler;}
@@ -76,6 +76,7 @@ public:
 
 protected:
   UsageEnvironment(TaskScheduler& scheduler); // abstract base class
+  virtual ~UsageEnvironment(); // we are deleted only by reclaim()
 
 private:
   TaskScheduler& fScheduler;

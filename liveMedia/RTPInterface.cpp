@@ -38,7 +38,7 @@ static void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
 // sub-channels that are reading from this socket.
 
 static HashTable* socketHashTable(UsageEnvironment& env) {
-  _Tables* ourTables = getOurTables(env);
+  _Tables* ourTables = _Tables::getOurTables(env);
   if (ourTables->socketTable == NULL) {
     // Create a new socket number -> SocketDescriptor mapping table:
     ourTables->socketTable = HashTable::create(ONE_WORD_HASH_KEYS);
@@ -73,7 +73,16 @@ static SocketDescriptor* lookupSocketDescriptor(UsageEnvironment& env,
 
 static void removeSocketDescription(UsageEnvironment& env, int sockNum) {
   char const* key = (char const*)(long)sockNum;
-  socketHashTable(env)->Remove(key);
+  HashTable* table = socketHashTable(env);
+  table->Remove(key);
+
+  if (table->IsEmpty()) {
+    // We can also delete the table (to reclaim space):
+    _Tables* ourTables = _Tables::getOurTables(env);
+    delete table;
+    ourTables->socketTable = NULL;
+    ourTables->reclaimIfPossible();
+  }
 }
 
 ////////// RTPInterface - Implementation //////////

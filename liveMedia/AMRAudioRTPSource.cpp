@@ -573,7 +573,7 @@ void AMRDeinterleavingBuffer
 
   // Next, check whether this packet is part of a new interleave group
   if (!fHaveSeenPackets
-      || seqNumLT(fLastPacketSeqNumForGroup, packetSeqNum)) {
+      || seqNumLT(fLastPacketSeqNumForGroup, packetSeqNum + frameBlockIndex)) {
     // We've moved to a new interleave group
 #ifdef DEBUG
     fprintf(stderr, "AMRDeinterleavingBuffer::deliverIncomingFrame(): new interleave group\n");
@@ -592,7 +592,7 @@ void AMRDeinterleavingBuffer
   // Now move the incoming frame into the appropriate bin:
   unsigned const binNumber
     = ((ILP + frameBlockIndex*(ILL+1))*fNumChannels + frameWithinFrameBlock)
-    % fMaxInterleaveGroupSize; // the % is for sanity
+      % fMaxInterleaveGroupSize; // the % is for sanity
 #ifdef DEBUG
   fprintf(stderr, "AMRDeinterleavingBuffer::deliverIncomingFrame(): frameIndex %d (%d,%d) put in bank %d, bin %d (%d): size %d, header 0x%02x, presentationTime %lu.%06ld\n", frameIndex, frameBlockIndex, frameWithinFrameBlock, fIncomingBankId, binNumber, fMaxInterleaveGroupSize, frameSize, frameHeader, presentationTime.tv_sec, presentationTime.tv_usec);
 #endif

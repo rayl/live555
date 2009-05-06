@@ -24,62 +24,47 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A data structure for looking up a Medium by its string name
 class MediaLookupTable {
 public:
-  MediaLookupTable();
-  virtual ~MediaLookupTable();
-  
+  static MediaLookupTable* ourMedia(UsageEnvironment& env);
+
   Medium* lookup(char const* name) const;
       // Returns NULL if none already exists
 
   void addNew(Medium* medium, char* mediumName);
-  Medium* remove(char const* name);
+  void remove(char const* name);
 
   void generateNewName(char* mediumName, unsigned maxLen);
   
+protected:
+  MediaLookupTable(UsageEnvironment& env);
+  virtual ~MediaLookupTable();
+
 private:
+  UsageEnvironment& fEnv;
   HashTable* fTable;
   unsigned fNameGenerator;
 };
 
-_Tables::_Tables()
-  : mediaTable(NULL), socketTable(NULL) {
-}
-
-_Tables* getOurTables(UsageEnvironment& env) {
-  if (env.liveMediaPriv == NULL) {
-    env.liveMediaPriv = new _Tables;
-  }
-  return (_Tables*)(env.liveMediaPriv);
-}
-
-static MediaLookupTable* ourMedia(UsageEnvironment& env) {
-  _Tables* ourTables = getOurTables(env);
-  if (ourTables->mediaTable == NULL) {
-    // Create a new table to record the media that are to be created in
-    // this environment:
-    ourTables->mediaTable = new MediaLookupTable;
-  }
-  return (MediaLookupTable*)(ourTables->mediaTable);
-}
 
 ////////// Medium //////////
 
 Medium::Medium(UsageEnvironment& env)
 	: fEnviron(env), fNextTask(NULL) {
   // First generate a name for the new medium:
-  ourMedia(env)->generateNewName(fMediumName, mediumNameMaxLen);
+  MediaLookupTable::ourMedia(env)->generateNewName(fMediumName, mediumNameMaxLen);
   env.setResultMsg(fMediumName);
 
-  ourMedia(env)->addNew(this, fMediumName);
+  // Then add it to our table:
+  MediaLookupTable::ourMedia(env)->addNew(this, fMediumName);
 }
 
 Medium::~Medium() {
-	// Remove any tasks that might be pending for us:
-	fEnviron.taskScheduler().unscheduleDelayedTask(fNextTask);
+  // Remove any tasks that might be pending for us:
+  fEnviron.taskScheduler().unscheduleDelayedTask(fNextTask);
 }
 
 Boolean Medium::lookupByName(UsageEnvironment& env, char const* mediumName,
 				  Medium*& resultMedium) {
-  resultMedium = ourMedia(env)->lookup(mediumName);
+  resultMedium = MediaLookupTable::ourMedia(env)->lookup(mediumName);
   if (resultMedium == NULL) {
     env.setResultMsg("Medium ", mediumName, " does not exist");
     return False;
@@ -89,17 +74,13 @@ Boolean Medium::lookupByName(UsageEnvironment& env, char const* mediumName,
 }
 
 void Medium::close(UsageEnvironment& env, char const* name) {
-  Medium* toDelete = ourMedia(env)->remove(name);
-  delete toDelete;
+  MediaLookupTable::ourMedia(env)->remove(name);
 }
 
 void Medium::close(Medium* medium) {
   if (medium == NULL) return;
 
-  Medium* toDelete = ourMedia(medium->envir())->remove(medium->name());
-  if (toDelete != medium) return; // shouldn't happen
-
-  delete toDelete;
+  close(medium->envir(), medium->name());
 }
 
 Boolean Medium::isSource() const {
@@ -134,23 +115,43 @@ Boolean Medium::isDarwinInjector() const {
   return False; // default implementation
 }
 
-////////// MediaLookupTable //////////
 
-MediaLookupTable::MediaLookupTable()
-  : fTable(HashTable::create(STRING_HASH_KEYS)), fNameGenerator(0) {
-}
+////////// _Tables implementation //////////
 
-MediaLookupTable::~MediaLookupTable() {
-  // First, remove and delete all media from the table:
-  Medium* medium;
-  while ((medium = (Medium*)fTable->RemoveNext()) != NULL) {
-    delete medium;
+_Tables* _Tables::getOurTables(UsageEnvironment& env) {
+  if (env.liveMediaPriv == NULL) {
+    env.liveMediaPriv = new _Tables(env);
   }
-
-  // Then, delete the table itself:
-  delete fTable;
+  return (_Tables*)(env.liveMediaPriv);
 }
-  
+
+void _Tables::reclaimIfPossible() {
+  if (mediaTable == NULL && socketTable == NULL) {
+    delete this;
+    fEnv.liveMediaPriv = NULL;
+  }
+}
+
+_Tables::_Tables(UsageEnvironment& env)
+  : mediaTable(NULL), socketTable(NULL), fEnv(env) {
+}
+
+_Tables::~_Tables() {
+}
+
+
+////////// MediaLookupTable implementation //////////
+
+MediaLookupTable* MediaLookupTable::ourMedia(UsageEnvironment& env) {
+  _Tables* ourTables = _Tables::getOurTables(env);
+  if (ourTables->mediaTable == NULL) {
+    // Create a new table to record the media that are to be created in
+    // this environment:
+    ourTables->mediaTable = new MediaLookupTable(env);
+  }
+  return (MediaLookupTable*)(ourTables->mediaTable);
+}
+
 Medium* MediaLookupTable::lookup(char const* name) const {
   return (Medium*)(fTable->Lookup(name));
 }
@@ -159,15 +160,32 @@ void MediaLookupTable::addNew(Medium* medium, char* mediumName) {
   fTable->Add(mediumName, (void*)medium);
 }
 
-Medium* MediaLookupTable::remove(char const* name) {
+void MediaLookupTable::remove(char const* name) {
   Medium* medium = lookup(name);
-  if (medium != NULL) fTable->Remove(name);
-  
-  return medium;
+  if (medium != NULL) {
+    fTable->Remove(name);
+    delete medium;
+
+    if (fTable->IsEmpty()) {
+      // We can also delete ourselves (to reclaim space):
+      _Tables* ourTables = _Tables::getOurTables(fEnv);
+      delete this;
+      ourTables->mediaTable = NULL;
+      ourTables->reclaimIfPossible();
+    }
+  }
 }
 
 void MediaLookupTable::generateNewName(char* mediumName,
 				       unsigned /*maxLen*/) {
   // We should really use snprintf() here, but not all systems have it
   sprintf(mediumName, "liveMedia%d", fNameGenerator++);
+}
+
+MediaLookupTable::MediaLookupTable(UsageEnvironment& env)
+  : fEnv(env), fTable(HashTable::create(STRING_HASH_KEYS)), fNameGenerator(0) {
+}
+
+MediaLookupTable::~MediaLookupTable() {
+  delete fTable;
 }

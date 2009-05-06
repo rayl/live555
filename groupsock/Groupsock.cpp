@@ -415,6 +415,12 @@ static Boolean unsetGroupsockBySocket(Groupsock const* groupsock) {
     if (gs == NULL || gs != groupsock) break;
     sockets->Remove((char*)(long)sock);
     
+    if (sockets->IsEmpty()) {
+      // We can also delete the table (to reclaim space):
+      delete sockets;
+      (gs->env()).groupsockPriv = NULL;
+    }
+
     return True;
   } while (0);
   

@@ -88,13 +88,20 @@ private:
 // The structure pointed to by the "liveMediaPriv" UsageEnvironment field:
 class _Tables {
 public:
-  _Tables();
+  static _Tables* getOurTables(UsageEnvironment& env);
+      // returns a pointer to an "ourTables" structure (creating it if necessary)
+  void reclaimIfPossible();
+      // used to delete ourselves when we're no longer used
 
   void* mediaTable;
   void* socketTable;
-};
 
-_Tables* getOurTables(UsageEnvironment& env);
-// returns a pointer to an "ourTables" structure (creating it if necessary)
+protected:
+  _Tables(UsageEnvironment& env);
+  virtual ~_Tables();
+
+private:
+  UsageEnvironment& fEnv;
+};
 
 #endif
