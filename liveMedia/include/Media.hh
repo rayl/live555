@@ -83,4 +83,16 @@ private:
   TaskToken fNextTask;
 };
 
+// The structure pointed to by the "liveMediaPriv" UsageEnvironment field:
+class _Tables {
+public:
+  _Tables();
+
+  void* mediaTable;
+  void* socketTable;
+};
+
+_Tables* getOurTables(UsageEnvironment& env);
+// returns a pointer to an "ourTables" structure (creating it if necessary)
+
 #endif

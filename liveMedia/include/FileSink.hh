@@ -29,6 +29,9 @@ class FileSink: public MediaSink {
 public:
   static FileSink* createNew(UsageEnvironment& env, char const* fileName);
 
+  FILE* fid() const { return fOutFid; }
+  // (Available in case a client wants to add extra data to the output file)
+
 protected:
   FileSink(UsageEnvironment& env, FILE* fid); // called only by createNew()
   virtual ~FileSink();

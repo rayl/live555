@@ -125,6 +125,6 @@ char const* MPEG4GenericRTPSink::sdpMediaType() const {
   return fSDPMediaTypeString;
 }
 
-char const* MPEG4GenericRTPSink::auxSDPLine() const {
+char const* MPEG4GenericRTPSink::auxSDPLine() {
   return fFmtpSDPLine;
 }

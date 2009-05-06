@@ -40,13 +40,25 @@ private:
   unsigned fNameGenerator;
 };
 
-static MediaLookupTable* ourMedia(UsageEnvironment& env) {
+_Tables::_Tables()
+  : mediaTable(NULL), socketTable(NULL) {
+}
+
+_Tables* getOurTables(UsageEnvironment& env) {
   if (env.liveMediaPriv == NULL) {
+    env.liveMediaPriv = new _Tables;
+  }
+  return (_Tables*)(env.liveMediaPriv);
+}
+
+static MediaLookupTable* ourMedia(UsageEnvironment& env) {
+  _Tables* ourTables = getOurTables(env);
+  if (ourTables->mediaTable == NULL) {
     // Create a new table to record the media that are to be created in
     // this environment:
-    env.liveMediaPriv = new MediaLookupTable;
+    ourTables->mediaTable = new MediaLookupTable;
   }
-  return (MediaLookupTable*)(env.liveMediaPriv);
+  return (MediaLookupTable*)(ourTables->mediaTable);
 }
 
 ////////// Medium //////////

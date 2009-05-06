@@ -39,6 +39,7 @@ public:
   virtual Boolean isFramedSource() const;
   virtual Boolean isRTPSource() const;
   virtual Boolean isMPEG1or2VideoStreamFramer() const;
+  virtual Boolean isMPEG4VideoStreamFramer() const;
   virtual Boolean isJPEGVideoSource() const;
 
 protected:

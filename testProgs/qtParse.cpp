@@ -152,6 +152,7 @@ static int isKnownAtom(unsigned atomType, unsigned atomSize,
   case at('e','l','s','t'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('e','s','d','s'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('f','r','e','e'): {offsetToEnclosedAtoms = atomSize-8; break;}
+  case at('f','t','y','p'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('g','m','h','d'): {offsetToEnclosedAtoms = 0; break;}
   case at('g','m','i','n'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('h','2','6','3'): {offsetToEnclosedAtoms = atomSize-8; break;}

@@ -20,8 +20,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "MPEG1or2VideoStreamFramer.hh"
-#include "StreamParser.hh"
-#include <GroupsockHelper.hh>
+#include "MPEGVideoStreamParser.hh"
 #include <string.h>
 
 ////////// MPEG1or2VideoStreamParser definition //////////
@@ -37,23 +36,20 @@ enum MPEGParseState {
 
 #define VSH_MAX_SIZE 1000
 
-class MPEG1or2VideoStreamParser: public StreamParser {
+class MPEG1or2VideoStreamParser: public MPEGVideoStreamParser {
 public:
   MPEG1or2VideoStreamParser(MPEG1or2VideoStreamFramer* usingSource,
 			FramedSource* inputSource,
 			Boolean iFramesOnly, double vshPeriod);
   virtual ~MPEG1or2VideoStreamParser();
 
-public:
-  unsigned parse();
-      // returns the size of the frame that was acquired, or 0 if none was
-
-  void registerReadInterest(unsigned char* to, unsigned maxSize);
-
-private: // redefined virtual functions
-  virtual void restoreSavedParserState();
+private: // redefined virtual functions:
+  virtual unsigned parse();
 
 private:
+  MPEG1or2VideoStreamFramer* usingSource() {
+    return (MPEG1or2VideoStreamFramer*)fUsingSource;
+  }
   void setParseState(MPEGParseState parseState);
 
   unsigned parseVideoSequenceHeader(Boolean haveSeenStartCode = False);
@@ -61,67 +57,13 @@ private:
   unsigned parsePictureHeader();
   unsigned parseSlice();
 
-  // Record "byte" in the current output frame:
-  void saveByte(unsigned char byte) {
-    if (fTo >= fLimit) return; // there's no space left
-
-    *fTo++ = byte;
-  }
-
-  void save4Bytes(unsigned word) {
-    if (fTo+4 > fLimit) return; // there's no space left
-
-    *fTo++ = word>>24; *fTo++ = word>>16; *fTo++ = word>>8; *fTo++ = word;
-  }
-
-  // Save data until we see a sync word (0x000001xx):
-  void saveToNextCode(unsigned& curWord) {
-    save4Bytes(curWord);
-    curWord = get4Bytes();
-    while ((curWord&0xFFFFFF00) != 0x00000100) {
-      if ((unsigned)(curWord&0xFF) > 1) {
-	// a sync word definitely doesn't begin anywhere in "curWord"
-	save4Bytes(curWord);
-	curWord = get4Bytes();
-      } else {
-	// a sync word might begin in "curWord", although not at its start
-	saveByte(curWord>>24);
-	unsigned char newByte = get1Byte();
-	curWord = (curWord<<8)|newByte;
-      }
-    }
-  }
-
-  // Skip data until we see a sync word (0x000001xx):
-  void skipToNextCode(unsigned& curWord) {
-    curWord = get4Bytes();
-    while ((curWord&0xFFFFFF00) != 0x00000100) {
-      if ((unsigned)(curWord&0xFF) > 1) {
-	// a sync word definitely doesn't begin anywhere in "curWord"
-	curWord = get4Bytes();
-      } else {
-	// a sync word might begin in "curWord", although not at its start
-	unsigned char newByte = get1Byte();
-	curWord = (curWord<<8)|newByte;
-      }
-    }
-  }
-
 private:
-  MPEG1or2VideoStreamFramer* fUsingSource;
   MPEGParseState fCurrentParseState;
   unsigned fPicturesSinceLastGOP;
-      // used to compute timestamp for a video_sequence_header
+      // can be used to compute timestamp for a video_sequence_header
   unsigned short fCurPicTemporalReference;
       // used to compute slice timestamp
   unsigned char fCurrentSliceNumber; // set when parsing a slice
-
-  // state of the frame that's currently being read:
-  unsigned char* fStartOfFrame;
-  unsigned char* fTo;
-  unsigned char* fLimit;
-  unsigned curFrameSize() { return fTo - fStartOfFrame; }
-  unsigned char* fSavedTo;
   
   // A saved copy of the most recently seen 'video_sequence_header',
   // in case we need to insert it into the stream periodically:
@@ -139,30 +81,16 @@ private:
 
 ////////// MPEG1or2VideoStreamFramer implementation //////////
 
-#ifdef BSD
-static struct timezone Idunno;
-#else
-static int Idunno;
-#endif
-
 MPEG1or2VideoStreamFramer::MPEG1or2VideoStreamFramer(UsageEnvironment& env,
 					     FramedSource* inputSource,
 					     Boolean iFramesOnly,
 					     double vshPeriod)
-  : MPEGVideoStreamFramer(env, inputSource),
-    fPictureCount(0),
-    fFrameRate(0.0) /* until we learn otherwise (from a video seq hdr) */,
-    fPicturesAdjustment(0), fPictureTimeBase(0.0), fTcSecsBase(0),
-    fHaveSeenFirstTimeCode(False) {
-  // Use the current wallclock time as the base 'presentation time':
-  gettimeofday(&fPresentationTimeBase, &Idunno);
-
-  fParser
-    = new MPEG1or2VideoStreamParser(this, inputSource, iFramesOnly, vshPeriod);
+  : MPEGVideoStreamFramer(env, inputSource) {
+  fParser = new MPEG1or2VideoStreamParser(this, inputSource,
+					  iFramesOnly, vshPeriod);
 }
 
 MPEG1or2VideoStreamFramer::~MPEG1or2VideoStreamFramer() {
-  delete fParser;
 }
 
 MPEG1or2VideoStreamFramer*
@@ -174,80 +102,7 @@ MPEG1or2VideoStreamFramer::createNew(UsageEnvironment& env,
   return new MPEG1or2VideoStreamFramer(env, inputSource, iFramesOnly, vshPeriod);
 }
 
-void MPEG1or2VideoStreamFramer::doGetNextFrame() {
-  fParser->registerReadInterest(fTo, fMaxSize);
-  continueReadProcessing();
-}
-
-float MPEG1or2VideoStreamFramer::getPlayTime(unsigned /*numFrames*/) const {
-  // OK, this is going to be a bit of a hack, because the actual play time
-  // for us is going to be based not on "numFrames", but instead on how
-  // many *pictures* have been completed since the last call to this
-  // function.  (I.e., it's a hack because we're making an assumption about
-  // *why* this member function is being called.)
-  double result = fPictureCount/fFrameRate;
-  ((MPEG1or2VideoStreamFramer*)this)->fPictureCount = 0; // told you it's a hack
-  return (float)result;
-}
-
-void MPEG1or2VideoStreamFramer::continueReadProcessing(void* clientData,
-						   unsigned char* /*ptr*/,
-						   unsigned /*size*/) {
-  MPEG1or2VideoStreamFramer* framer = (MPEG1or2VideoStreamFramer*)clientData;
-  framer->continueReadProcessing();
-}
-
-void MPEG1or2VideoStreamFramer::continueReadProcessing() {
-  unsigned acquiredFrameSize = fParser->parse();
-  if (acquiredFrameSize > 0) {
-    // We were able to acquire a frame from the input.
-    // It has already been copied to the reader's space.
-    fFrameSize = acquiredFrameSize;
-    
-    // Call our own 'after getting' function.  Because we're not a 'leaf'
-    // source, we can call this directly, without risking infinite recursion.
-    afterGetting(this);
-  } else {
-    // We were unable to parse a complete frame from the input, because:
-    // - we had to read more data from the source stream, or
-    // - the source stream has ended.
-  }
-}
-
-void MPEG1or2VideoStreamFramer
-::computeTimestamp(unsigned numAdditionalPictures) {
-  // Computes "fPresentationTime" from the most recent GOP's
-  // time_code, along with the "numAdditionalPictures" parameter:
-  TimeCode& tc = fCurGOPTimeCode;
-
-  double pictureTime
-    = (tc.pictures + fPicturesAdjustment + numAdditionalPictures)/fFrameRate
-    - fPictureTimeBase;
-  unsigned pictureSeconds = (unsigned)pictureTime;
-  double pictureFractionOfSecond = pictureTime - (float)pictureSeconds;
-
-  unsigned tcSecs
-    = (((tc.days*24)+tc.hours)*60+tc.minutes)*60+tc.seconds - fTcSecsBase;
-  fPresentationTime = fPresentationTimeBase;
-  fPresentationTime.tv_sec += tcSecs + pictureSeconds;
-  fPresentationTime.tv_usec += (long)(pictureFractionOfSecond*1000000.0);
-  if (fPresentationTime.tv_usec >= 1000000) {
-    fPresentationTime.tv_usec -= 1000000;
-    ++fPresentationTime.tv_sec;
-  }
-#ifdef DEBUG_COMPUTE_TIMESTAMPS
-  fprintf(stderr, "MPEG1or2VideoStreamFramer::computeTimestamp(%d) -> %d.%06d\n", numAdditionalPictures, fPresentationTime.tv_sec, fPresentationTime.tv_usec);
-#endif
-}
-
-void MPEG1or2VideoStreamFramer::setTimeCodeBaseParams() {
-  TimeCode& tc = fCurGOPTimeCode;
-  fPictureTimeBase = tc.pictures/fFrameRate;
-  fTcSecsBase = (((tc.days*24)+tc.hours)*60+tc.minutes)*60+tc.seconds;
-  fHaveSeenFirstTimeCode = True;
-}
-
-double MPEG1or2VideoStreamFramer::getCurrentTimestamp() const {
+double MPEG1or2VideoStreamFramer::getCurrentPTS() const {
   return fPresentationTime.tv_sec + fPresentationTime.tv_usec/1000000.0;
 }
 
@@ -261,9 +116,7 @@ MPEG1or2VideoStreamParser
 ::MPEG1or2VideoStreamParser(MPEG1or2VideoStreamFramer* usingSource,
 			FramedSource* inputSource,
 			Boolean iFramesOnly, double vshPeriod)
-  : StreamParser(inputSource, FramedSource::handleClosure, usingSource,
-		 &MPEG1or2VideoStreamFramer::continueReadProcessing, usingSource),
-  fUsingSource(usingSource),
+  : MPEGVideoStreamParser(usingSource, inputSource),
   fCurrentParseState(PARSING_VIDEO_SEQUENCE_HEADER),
   fPicturesSinceLastGOP(0), fCurPicTemporalReference(0),
   fCurrentSliceNumber(0), fSavedVSHSize(0), fVSHPeriod(vshPeriod),
@@ -273,15 +126,9 @@ MPEG1or2VideoStreamParser
 MPEG1or2VideoStreamParser::~MPEG1or2VideoStreamParser() {
 }
 
-void MPEG1or2VideoStreamParser::restoreSavedParserState() {
-  StreamParser::restoreSavedParserState();
-  fTo = fSavedTo;
-}
-
 void MPEG1or2VideoStreamParser::setParseState(MPEGParseState parseState) {
   fCurrentParseState = parseState;
-  fSavedTo = fTo;
-  saveParserState();
+  MPEGVideoStreamParser::setParseState();
 }
 
 unsigned MPEG1or2VideoStreamParser::parse() {
@@ -314,23 +161,17 @@ unsigned MPEG1or2VideoStreamParser::parse() {
   }
 }
 
-void MPEG1or2VideoStreamParser::registerReadInterest(unsigned char* to,
-						 unsigned maxSize) {
-  fStartOfFrame = fTo = fSavedTo = to;
-  fLimit = to + maxSize;
-}
-
 void MPEG1or2VideoStreamParser::saveCurrentVSH() {
   unsigned frameSize = curFrameSize();
   if (frameSize > sizeof fSavedVSHBuffer) return; // too big to save
 
   memmove(fSavedVSHBuffer, fStartOfFrame, frameSize);
   fSavedVSHSize = frameSize;
-  fSavedVSHTimestamp = fUsingSource->getCurrentTimestamp();
+  fSavedVSHTimestamp = usingSource()->getCurrentPTS();
 }
 
 Boolean MPEG1or2VideoStreamParser::needToUseSavedVSH() {
-  return fUsingSource->getCurrentTimestamp() > fSavedVSHTimestamp+fVSHPeriod
+  return usingSource()->getCurrentPTS() > fSavedVSHTimestamp+fVSHPeriod
     && fSavedVSHSize > 0;
 }
 
@@ -342,7 +183,7 @@ unsigned MPEG1or2VideoStreamParser::useSavedVSH() {
   memmove(fStartOfFrame, fSavedVSHBuffer, bytesToUse);
 
   // Also reset the saved timestamp:
-  fSavedVSHTimestamp = fUsingSource->getCurrentTimestamp();
+  fSavedVSHTimestamp = usingSource()->getCurrentPTS();
 
 #ifdef DEBUG
   fprintf(stderr, "used saved video_sequence_header (%d bytes)\n", bytesToUse);
@@ -404,11 +245,11 @@ unsigned MPEG1or2VideoStreamParser
   unsigned char aspect_ratio_information = (paramWord1&0x000000F0)>>4;
 #endif
   unsigned char frame_rate_code          = (paramWord1&0x0000000F);
-  fUsingSource->fFrameRate = frameRateFromCode[frame_rate_code];
+  usingSource()->fFrameRate = frameRateFromCode[frame_rate_code];
 #ifdef DEBUG
   unsigned bit_rate_value                = (next4Bytes&0xFFFFC000)>>(32-18);
   unsigned vbv_buffer_size_value         = (next4Bytes&0x00001FF8)>>3;
-  fprintf(stderr, "horizontal_size_value: %d, vertical_size_value: %d, aspect_ratio_information: %d, frame_rate_code: %d (=>%f fps), bit_rate_value: %d (=>%d bps), vbv_buffer_size_value: %d\n", horizontal_size_value, vertical_size_value, aspect_ratio_information, frame_rate_code, fUsingSource->fFrameRate, bit_rate_value, bit_rate_value*400, vbv_buffer_size_value);
+  fprintf(stderr, "horizontal_size_value: %d, vertical_size_value: %d, aspect_ratio_information: %d, frame_rate_code: %d (=>%f fps), bit_rate_value: %d (=>%d bps), vbv_buffer_size_value: %d\n", horizontal_size_value, vertical_size_value, aspect_ratio_information, frame_rate_code, usingSource()->fFrameRate, bit_rate_value, bit_rate_value*400, vbv_buffer_size_value);
 #endif
 
   // Now, copy all bytes that we see, up until we reach a GROUP_START_CODE
@@ -422,7 +263,7 @@ unsigned MPEG1or2VideoStreamParser
 
   // Compute this frame's timestamp by noting how many pictures we've seen
   // since the last GOP header:
-  fUsingSource->computeTimestamp(fPicturesSinceLastGOP);
+  usingSource()->computePresentationTime(fPicturesSinceLastGOP);
 
   // Save this video_sequence_header, in case we need to insert a copy
   // into the stream later:
@@ -465,36 +306,18 @@ unsigned MPEG1or2VideoStreamParser::parseGOPHeader() {
   do {
     saveToNextCode(next4Bytes);
   } while (next4Bytes != PICTURE_START_CODE);
-  
-  setParseState(PARSING_PICTURE_HEADER);
 
   // Record the time code:
-  TimeCode& tc = fUsingSource->fCurGOPTimeCode; // abbrev
-  unsigned day = tc.days;
-  if (time_code_hours < tc.hours) {
-    // Assume that the 'day' has wrapped around:
-    ++day;
-  }
-  tc.days = day;
-  tc.hours = time_code_hours;
-  tc.minutes = time_code_minutes;
-  tc.seconds = time_code_seconds;
-  tc.pictures = time_code_pictures;
-  if (!fUsingSource->fHaveSeenFirstTimeCode) {
-    fUsingSource->setTimeCodeBaseParams();
-  } else if (fUsingSource->fCurGOPTimeCode == fUsingSource->fPrevGOPTimeCode) {
-    // The time code has not changed since last time.  Adjust for this:
-    fUsingSource->fPicturesAdjustment += fPicturesSinceLastGOP;
-  } else {
-    // Normal case: The time code changed since last time.
-    fUsingSource->fPrevGOPTimeCode = tc;
-    fUsingSource->fPicturesAdjustment = 0;
-  }
+  usingSource()->setTimeCode(time_code_hours, time_code_minutes,
+			     time_code_seconds, time_code_pictures,
+			     fPicturesSinceLastGOP);
 
   fPicturesSinceLastGOP = 0;
 
   // Compute this frame's timestamp:
-  fUsingSource->computeTimestamp(0);
+  usingSource()->computePresentationTime(0);
+  
+  setParseState(PARSING_PICTURE_HEADER);
 
   return curFrameSize();
 }
@@ -544,7 +367,7 @@ unsigned MPEG1or2VideoStreamParser::parsePictureHeader() {
   fCurPicTemporalReference = temporal_reference;
 
   // Compute this frame's timestamp:
-  fUsingSource->computeTimestamp(fCurPicTemporalReference);
+  usingSource()->computePresentationTime(fCurPicTemporalReference);
 
   if (fSkippingCurrentPicture) {
     return parse(); // try again, until we get a non-skipped frame
@@ -576,8 +399,8 @@ unsigned MPEG1or2VideoStreamParser::parseSlice() {
     // Because we don't see any more slices, we are assumed to have ended
     // the current picture:
     ++fPicturesSinceLastGOP;
-    ++fUsingSource->fPictureCount;
-    fUsingSource->fPictureEndMarker = True; // HACK #####
+    ++usingSource()->fPictureCount;
+    usingSource()->fPictureEndMarker = True; // HACK #####
 
     switch (next4Bytes) {
     case SEQUENCE_END_CODE: {
@@ -597,7 +420,7 @@ unsigned MPEG1or2VideoStreamParser::parseSlice() {
       break;
     }
     default: {
-      fUsingSource->envir() << "MPEG1or2VideoStreamParser::parseSlice(): Saw unexpected code "
+      usingSource()->envir() << "MPEG1or2VideoStreamParser::parseSlice(): Saw unexpected code "
 			    << (void*)next4Bytes << "\n";
       setParseState(PARSING_SLICE); // the safest way to recover...
       break;
@@ -606,7 +429,7 @@ unsigned MPEG1or2VideoStreamParser::parseSlice() {
   }
 
   // Compute this frame's timestamp:
-  fUsingSource->computeTimestamp(fCurPicTemporalReference);
+  usingSource()->computePresentationTime(fCurPicTemporalReference);
 
   if (fSkippingCurrentPicture) {
     return parse(); // try again, until we get a non-skipped frame

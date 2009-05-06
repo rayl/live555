@@ -510,7 +510,8 @@ int main(int argc, char** argv) {
 	} else {
 	  sprintf(outFileName, "stdout");
 	}
-	subsession->sink = FileSink::createNew(*env, outFileName);
+	FileSink* fileSink = FileSink::createNew(*env, outFileName);
+	subsession->sink = fileSink;
 	if (subsession->sink == NULL) {
 	  *env << "Failed to create FileSink for \"" << outFileName
 		  << "\": " << env->getResultMsg() << "\n";
@@ -522,6 +523,19 @@ int main(int argc, char** argv) {
 			<< "/" << subsession->codecName()
 			<< "\" subsession to 'stdout'\n";
 	  }
+
+	  if (strcmp(subsession->mediumName(), "video") == 0
+	      && strcmp(subsession->codecName(), "MP4V-ES") == 0
+	      && subsession->fmtp_config() != NULL) {
+	    // For MPEG-4 video RTP streams, the 'config' information
+	    // from the SDP description contains useful VOL etc. headers.
+	    // Insert this data at the front of the output file:
+	    unsigned configLen;
+	    unsigned char* configData
+	      = parseGeneralConfigStr(subsession->fmtp_config(), configLen);
+	    fwrite(configData, 1, configLen, fileSink->fid());
+	  }
+
 	  subsession->sink->startPlaying(*(subsession->readSource()),
 					 subsessionAfterPlaying,
 					 subsession);

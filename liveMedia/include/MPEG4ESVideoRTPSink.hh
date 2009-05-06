@@ -15,54 +15,47 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
-// MPEG4-GENERIC ("audio", "video", or "application") RTP stream sinks
+// RTP sink for MPEG-4 Elementary Stream video (RFC 3016)
 // C++ header
 
-#ifndef _MPEG4_GENERIC_RTP_SINK_HH
-#define _MPEG4_GENERIC_RTP_SINK_HH
+#ifndef _MPEG4ES_VIDEO_RTP_SINK_HH
+#define _MPEG4ES_VIDEO_RTP_SINK_HH
 
-#ifndef _MULTI_FRAMED_RTP_SINK_HH
-#include "MultiFramedRTPSink.hh"
+#ifndef _VIDEO_RTP_SINK_HH
+#include "VideoRTPSink.hh"
 #endif
 
-class MPEG4GenericRTPSink: public MultiFramedRTPSink {
+class MPEG4ESVideoRTPSink: public VideoRTPSink {
 public:
-  static MPEG4GenericRTPSink*
-  createNew(UsageEnvironment& env, Groupsock* RTPgs,
-	    u_int8_t rtpPayloadFormat, u_int32_t rtpTimestampFrequency,
-	    char const* sdpMediaTypeString, char const* mpeg4Mode,
-	    char const* configString);
+  static MPEG4ESVideoRTPSink* createNew(UsageEnvironment& env,
+					Groupsock* RTPgs,
+					unsigned char rtpPayloadFormat);
 
 protected:
-  MPEG4GenericRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		      u_int8_t rtpPayloadFormat,
-		      u_int32_t rtpTimestampFrequency,
-		      char const* sdpMediaTypeString,
-		      char const* mpeg4Mode, char const* configString);
+  MPEG4ESVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
+		      unsigned char rtpPayloadFormat);
 	// called only by createNew()
 
-  virtual ~MPEG4GenericRTPSink();
+  virtual ~MPEG4ESVideoRTPSink();
 
 private: // redefined virtual functions:
-  virtual
-  Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
-					 unsigned numBytesInFrame) const;
+  virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
+
   virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
                                       unsigned char* frameStart,
                                       unsigned numBytesInFrame,
                                       struct timeval frameTimestamp,
                                       unsigned numRemainingBytes);
-  virtual unsigned specialHeaderSize() const;
+  virtual Boolean allowFragmentationAfterStart() const;
+  virtual Boolean
+  frameCanAppearAfterPacketStart(unsigned char const* frameStart,
+				 unsigned numBytesInFrame) const;
 
-  virtual char const* sdpMediaType() const;
-
-  virtual char const* auxSDPLine(); // for the "a=fmtp:" SDP line
+  virtual char const* auxSDPLine();
 
 private:
-  char const* fSDPMediaTypeString;
-  char const* fMPEG4Mode;
-  char const* fConfigString;
-  char* fFmtpSDPLine;
+  Boolean fVOPIsPresent;
+  char* fAuxSDPLine;
 };
 
 #endif

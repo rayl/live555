@@ -46,6 +46,9 @@ Boolean MediaSource::isRTPSource() const {
 Boolean MediaSource::isMPEG1or2VideoStreamFramer() const {
   return False; // default implementation
 }
+Boolean MediaSource::isMPEG4VideoStreamFramer() const {
+  return False; // default implementation
+}
 Boolean MediaSource::isJPEGVideoSource() const {
   return False; // default implementation
 }

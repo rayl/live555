@@ -19,7 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "MPEG1or2VideoRTPSink.hh"
-#include "MPEG1or2VideoStreamFramer.hh" // hack #####
+#include "MPEG1or2VideoStreamFramer.hh"
 
 MPEG1or2VideoRTPSink::MPEG1or2VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
   : VideoRTPSink(env, RTPgs, 32, 90000, "MPV") {
@@ -36,6 +36,7 @@ MPEG1or2VideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
 }
 
 Boolean MPEG1or2VideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
+  // Our source must be an appropriate framer:
   return source.isMPEG1or2VideoStreamFramer();
 }
 
@@ -151,9 +152,7 @@ void MPEG1or2VideoRTPSink
 
   // Set the RTP 'M' (marker) bit iff this frame ends (i.e., is the last
   // slice of) a picture (and there are no fragments remaining).
-  // This relies on the source being a "MPEG1or2VideoStreamFramer",
-  // and so is a hack.  Eventually, we need a more general mechanism
-  // for accessing per-frame meta-data like this.
+  // This relies on the source being a "MPEG1or2VideoStreamFramer".
   MPEG1or2VideoStreamFramer* framerSource = (MPEG1or2VideoStreamFramer*)fSource;
   if (framerSource != NULL && framerSource->pictureEndMarker()
       && numRemainingBytes == 0) {
@@ -163,7 +162,6 @@ void MPEG1or2VideoRTPSink
 
   fPreviousFrameWasSlice = thisFrameIsASlice;
 }
-
 
 unsigned MPEG1or2VideoRTPSink::specialHeaderSize() const {
   // There's a 4 byte special audio header:

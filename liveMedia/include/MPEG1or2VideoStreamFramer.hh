@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
 // A filter that breaks up an MPEG 1 or 2 video elementary stream into
 //   frames for: Video_Sequence_Header, GOP_Header, Picture_Header
 // C++ header
@@ -42,32 +42,13 @@ private:
       // called only by createNew()
   virtual ~MPEG1or2VideoStreamFramer();
 
-  static void continueReadProcessing(void* clientData,
-				     unsigned char* ptr, unsigned size);
-  void continueReadProcessing();
-
 private:
   // redefined virtual functions:
   virtual Boolean isMPEG1or2VideoStreamFramer() const;
-  virtual void doGetNextFrame();
-  virtual float getPlayTime(unsigned numFrames) const; 
 
 private:
-  unsigned fPictureCount; // hack used to implement doGetNextFrame()
-  double fFrameRate;
-  struct timeval fPresentationTimeBase;
-  TimeCode fCurGOPTimeCode, fPrevGOPTimeCode;
-  unsigned fPicturesAdjustment;
-  double fPictureTimeBase;
-  unsigned fTcSecsBase;
-  Boolean fHaveSeenFirstTimeCode;
+  double getCurrentPTS() const;
 
-  void computeTimestamp(unsigned numAdditionalPictures); // sets fTimestamp
-  void setTimeCodeBaseParams();
-  double getCurrentTimestamp() const;
-
-private: // parsing state
-  class MPEG1or2VideoStreamParser* fParser;
   friend class MPEG1or2VideoStreamParser; // hack
 };
 

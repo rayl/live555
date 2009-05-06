@@ -109,6 +109,6 @@ char const* RTPSink::sdpMediaType() const {
   // default SDP media (m=) type, unless redefined by subclasses
 }
 
-char const* RTPSink::auxSDPLine() const {
+char const* RTPSink::auxSDPLine() {
   return NULL; // by default
 }

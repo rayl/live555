@@ -45,8 +45,36 @@ protected:
       // we're an abstract base class
   virtual ~MPEGVideoStreamFramer();
 
+  void computePresentationTime(unsigned numAdditionalPictures);
+      // sets "fPresentationTime"
+  void setTimeCode(unsigned hours, unsigned minutes, unsigned seconds,
+		   unsigned pictures, unsigned picturesSinceLastGOP);
+
+private: // redefined virtual functions
+  virtual void doGetNextFrame();
+  virtual float getPlayTime(unsigned numFrames) const;
+
+private:
+  static void continueReadProcessing(void* clientData,
+				     unsigned char* ptr, unsigned size);
+  void continueReadProcessing();
+
 protected:
+  double fFrameRate; // Note: For MPEG-4, this is really a 'tick rate'
+  unsigned fPictureCount; // hack used to implement doGetNextFrame()
   Boolean fPictureEndMarker;
+
+  // parsing state
+  class MPEGVideoStreamParser* fParser;
+  friend class MPEGVideoStreamParser; // hack
+
+private:
+  struct timeval fPresentationTimeBase;
+  TimeCode fCurGOPTimeCode, fPrevGOPTimeCode;
+  unsigned fPicturesAdjustment;
+  double fPictureTimeBase;
+  unsigned fTcSecsBase;
+  Boolean fHaveSeenFirstTimeCode;
 };
 
 #endif

@@ -43,25 +43,25 @@ protected: // we're a virtual base class
   void saveParserState();
   virtual void restoreSavedParserState();
 
-  unsigned get4Bytes() { // byte-aligned; returned in big-endian order
-    unsigned result = test4Bytes();
+  u_int32_t get4Bytes() { // byte-aligned; returned in big-endian order
+    u_int32_t result = test4Bytes();
     fCurParserIndex += 4;
     fRemainingUnparsedBits = 0;
 
     return result;
   }
-  unsigned test4Bytes() { // as above, but doesn't advance ptr
+  u_int32_t test4Bytes() { // as above, but doesn't advance ptr
     ensureValidBytes(4);
 
     unsigned char const* ptr = nextToParse();
     return (ptr[0]<<24)|(ptr[1]<<16)|(ptr[2]<<8)|ptr[3];
   }
 
-  unsigned short get2Bytes() {
+  u_int16_t get2Bytes() {
     ensureValidBytes(2);
 
     unsigned char const* ptr = nextToParse();
-    unsigned short result = (ptr[0]<<8)|ptr[1];
+    u_int16_t result = (ptr[0]<<8)|ptr[1];
 
     fCurParserIndex += 2;
     fRemainingUnparsedBits = 0;
@@ -69,13 +69,13 @@ protected: // we're a virtual base class
     return result;
   }
 
-  unsigned char get1Byte() { // byte-aligned
+  u_int8_t get1Byte() { // byte-aligned
     ensureValidBytes(1);
     fRemainingUnparsedBits = 0;
     return curBank()[fCurParserIndex++];
   }
 
-  void getBytes(unsigned char* to, unsigned numBytes) {
+  void getBytes(u_int8_t* to, unsigned numBytes) {
     ensureValidBytes(numBytes);
     memmove(to, nextToParse(), numBytes);
     fCurParserIndex += numBytes;

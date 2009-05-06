@@ -37,7 +37,14 @@ static void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
 // "SocketDescriptor" that contains a hash table for each of the
 // sub-channels that are reading from this socket.
 
-static HashTable* socketHashTable = NULL;
+static HashTable* socketHashTable(UsageEnvironment& env) {
+  _Tables* ourTables = getOurTables(env);
+  if (ourTables->socketTable == NULL) {
+    // Create a new socket number -> SocketDescriptor mapping table:
+    ourTables->socketTable = HashTable::create(ONE_WORD_HASH_KEYS);
+  }
+  return (HashTable*)(ourTables->socketTable);
+}
 
 class SocketDescriptor {
 public:
@@ -50,7 +57,7 @@ public:
   void deregisterRTPInterface(unsigned char streamChannelId);
 
 private:
-  static void tcpReadHandler(int socketNum, int mask);
+  static void tcpReadHandler(SocketDescriptor*, int mask);
 
 private:
   UsageEnvironment& fEnv;
@@ -58,11 +65,16 @@ private:
   HashTable* fSubChannelHashTable;
 };
 
-static SocketDescriptor* lookupSocketDescriptor(int sockNum) {
-  char const* lookupArg = (char const*)(long)sockNum;
-  return (SocketDescriptor*)(socketHashTable->Lookup(lookupArg));
+static SocketDescriptor* lookupSocketDescriptor(UsageEnvironment& env,
+						int sockNum) {
+  char const* key = (char const*)(long)sockNum;
+  return (SocketDescriptor*)(socketHashTable(env)->Lookup(key));
 }
 
+static void removeSocketDescription(UsageEnvironment& env, int sockNum) {
+  char const* key = (char const*)(long)sockNum;
+  socketHashTable(env)->Remove(key);
+}
 
 ////////// RTPInterface - Implementation //////////
 
@@ -101,15 +113,12 @@ void RTPInterface
     fReadHandlerProc = handlerProc;
 
     // Get a socket descriptor for "fStreamSockNum":
-    if (socketHashTable == NULL) {
-      socketHashTable = HashTable::create(ONE_WORD_HASH_KEYS);
-    }
     SocketDescriptor* socketDescriptor
-      = lookupSocketDescriptor(fStreamSocketNum);
+      = lookupSocketDescriptor(envir(), fStreamSocketNum);
     if (socketDescriptor == NULL) {
       socketDescriptor = new SocketDescriptor(envir(), fStreamSocketNum);
-      socketHashTable->Add((char const*)(long)fStreamSocketNum,
-			   socketDescriptor);
+      socketHashTable(envir())->Add((char const*)(long)fStreamSocketNum,
+				    socketDescriptor);
     }
 
     // Tell it about our subChannel:
@@ -161,13 +170,13 @@ void RTPInterface::stopNetworkReading() {
     envir().taskScheduler().
       turnOffBackgroundReadHandling(fGS->socketNum());
   } else {
-    if (socketHashTable == NULL) return;
-
     SocketDescriptor* socketDescriptor
-      = lookupSocketDescriptor(fStreamSocketNum);
+      = lookupSocketDescriptor(envir(), fStreamSocketNum);
     if (socketDescriptor == NULL) return;
 
     socketDescriptor->deregisterRTPInterface(fStreamChannelId);
+        // Note: This may delete "socketDescriptor",
+        // if no more interfaces are using this socket
   }
 }
 
@@ -226,8 +235,7 @@ void SocketDescriptor::registerRTPInterface(unsigned char streamChannelId,
     TaskScheduler::BackgroundHandlerProc* handler
       = (TaskScheduler::BackgroundHandlerProc*)&tcpReadHandler;
     fEnv.taskScheduler().
-      turnOnBackgroundReadHandling(fOurSocketNum,
-				   handler, (void*)(long)fOurSocketNum);
+      turnOnBackgroundReadHandling(fOurSocketNum, handler, this);
   }
 }
 
@@ -242,17 +250,18 @@ void SocketDescriptor
   fSubChannelHashTable->Remove((char const*)(long)streamChannelId);
 
   if (fSubChannelHashTable->IsEmpty()) {
+    // No more interfaces are using us, so it's curtains for us now
     fEnv.taskScheduler().turnOffBackgroundReadHandling(fOurSocketNum);
+    removeSocketDescription(fEnv, fOurSocketNum);
+    delete this;
   }
 }
 
-void SocketDescriptor::tcpReadHandler(int socketNum, int mask) {
+void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor,
+				      int mask) {
   do {
-    SocketDescriptor* socketDescriptor
-      = lookupSocketDescriptor(socketNum);  
-    if (socketDescriptor == 0) break;
-
     UsageEnvironment& env = socketDescriptor->fEnv; // abbrev
+    int socketNum = socketDescriptor->fOurSocketNum;
 
     // Begin by reading and discarding any characters that aren't '$'.
     // Any such characters are probably regular RTSP responses or
