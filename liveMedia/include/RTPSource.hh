@@ -78,6 +78,7 @@ protected:
   unsigned short fCurPacketRTPSeqNum;
   unsigned fCurPacketRTPTimestamp;
   Boolean fCurPacketMarkerBit;
+  Boolean fCurPacketHasBeenSynchronizedUsingRTCP;
 
 private:
   // redefined virtual functions:
@@ -124,6 +125,7 @@ public:
 			  unsigned timestampFrequency,
 			  Boolean useForJitterCalculation,
 			  struct timeval& resultPresentationTime,
+			  Boolean& resultHasBeenSyncedUsingRTCP,
 			  unsigned packetSize /* payload only */);
 
   // The following is called whenever a RTCP SR packet is received: 
@@ -135,9 +137,6 @@ private: // constructor and destructor, called only by RTPSource:
   friend class RTPSource;
   RTPReceptionStatsDB(RTPSource& rtpSource);
   virtual ~RTPReceptionStatsDB();
-
-  Boolean allSSRCsHaveBeenSynchronized();
-      // True iff a RTCP SR has been received for all known SSRCs
 
 private:
   RTPReceptionStats* lookup(unsigned SSRC) const;
@@ -198,6 +197,7 @@ private:
 			  unsigned timestampFrequency,
 			  Boolean useForJitterCalculation,
 			  struct timeval& resultPresentationTime,
+			  Boolean& resultHasBeenSyncedUsingRTCP,
 			  unsigned packetSize /* payload only */);
   void noteIncomingSR(unsigned ntpTimestampMSW, unsigned ntpTimestampLSW,
 		      unsigned rtpTimestamp);

@@ -88,12 +88,14 @@ public:
   Boolean fillInData(RTPInterface& rtpInterface);
   void assignMiscParams(unsigned short rtpSeqNo, unsigned rtpTimestamp,
 			struct timeval presentationTime,
+			Boolean hasBeenSyncedUsingRTCP, 
 			Boolean rtpMarkerBit, struct timeval timeReceived);
   void skip(unsigned numBytes); // used to skip over an initial header
   void removePadding(unsigned numBytes); // used to remove trailing bytes
   void use(unsigned char* to, unsigned toSize, unsigned& bytesUsed,
 	   unsigned short& rtpSeqNo, unsigned& rtpTimestamp,
-	   struct timeval& presentationTime, Boolean& rtpMarkerBit);
+	   struct timeval& presentationTime,
+	   Boolean& hasBeenSyncedUsingRTCP, Boolean& rtpMarkerBit);
 
   BufferedPacket*& nextPacket() { return fNextPacket; }
 
@@ -121,6 +123,7 @@ private:
   unsigned short fRTPSeqNo;
   unsigned fRTPTimestamp;
   struct timeval fPresentationTime; // corresponding to "fRTPTimestamp"
+  Boolean fHasBeenSyncedUsingRTCP;
   Boolean fRTPMarkerBit;
   struct timeval fTimeReceived;
 };

@@ -135,6 +135,9 @@ void play() {
   // Create 'groupsocks' for RTP and RTCP:
   struct in_addr destinationAddress;
   destinationAddress.s_addr = chooseRandomIPv4SSMAddress(*env);
+  // Note: This is a multicast address.  If you wish instead to stream
+  // using unicast, then you should use the "testOnDemandRTSPServer"
+  // test program - not this test program - as a model.
 
   const unsigned short rtpPortNum = 2222;
   const unsigned short rtcpPortNum = rtpPortNum+1;

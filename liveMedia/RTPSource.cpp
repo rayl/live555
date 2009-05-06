@@ -41,7 +41,7 @@ Boolean RTPSource::lookupByName(UsageEnvironment& env,
 }
 
 Boolean RTPSource::hasBeenSynchronizedUsingRTCP() {
-  return fReceptionStatsDB->allSSRCsHaveBeenSynchronized();
+  return fCurPacketHasBeenSynchronizedUsingRTCP;
 }
 
 Boolean RTPSource::isRTPSource() const {
@@ -52,7 +52,9 @@ RTPSource::RTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 		     unsigned char rtpPayloadFormat,
 		     unsigned rtpTimestampFrequency)
   : FramedSource(env),
-    fRTPInterface(this, RTPgs), fRTPPayloadFormat(rtpPayloadFormat),
+    fRTPInterface(this, RTPgs),
+    fCurPacketHasBeenSynchronizedUsingRTCP(False),
+    fRTPPayloadFormat(rtpPayloadFormat),
     fTimestampFrequency(rtpTimestampFrequency),
     fSSRC((unsigned)our_random()) {
   fReceptionStatsDB = new RTPReceptionStatsDB(*this);
@@ -105,6 +107,7 @@ void RTPReceptionStatsDB
 		     unsigned rtpTimestamp, unsigned timestampFrequency,
 		     Boolean useForJitterCalculation,
 		     struct timeval& resultPresentationTime,
+		     Boolean& resultHasBeenSyncedUsingRTCP,
 		     unsigned packetSize) {
   RTPReceptionStats* stats = lookup(SSRC);
   if (stats == NULL) {
@@ -121,7 +124,8 @@ void RTPReceptionStatsDB
 
   stats->noteIncomingPacket(seqNum, rtpTimestamp, timestampFrequency,
 			    useForJitterCalculation,
-			    resultPresentationTime, packetSize);
+			    resultPresentationTime,
+			    resultHasBeenSyncedUsingRTCP, packetSize);
 }
 
 void RTPReceptionStatsDB
@@ -138,16 +142,6 @@ void RTPReceptionStatsDB
   }
 
   stats->noteIncomingSR(ntpTimestampMSW, ntpTimestampLSW, rtpTimestamp);
-}
-
-Boolean RTPReceptionStatsDB::allSSRCsHaveBeenSynchronized() {
-  Iterator iter(*this);
-  RTPReceptionStats* stats;
-  while ((stats = iter.next()) != NULL) {
-    if (!stats->fHasBeenSynchronized) return False;
-  }
-
-  return True;
 }
 
 RTPReceptionStatsDB::Iterator
@@ -241,6 +235,7 @@ void RTPReceptionStats
 		     unsigned timestampFrequency,
 		     Boolean useForJitterCalculation,
 		     struct timeval& resultPresentationTime,
+		     Boolean& resultHasBeenSyncedUsingRTCP,
 		     unsigned packetSize) {
   if (!fHaveSeenInitialSequenceNumber) initSeqNum(seqNum);
 
@@ -349,6 +344,7 @@ void RTPReceptionStats
   }
   resultPresentationTime.tv_sec = seconds;
   resultPresentationTime.tv_usec = uSeconds;
+  resultHasBeenSyncedUsingRTCP = fHasBeenSynchronized;
 
   // Save these as the new synchronization timestamp & time:
   fSyncTimestamp = rtpTimestamp;

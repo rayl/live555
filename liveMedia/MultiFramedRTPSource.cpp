@@ -152,7 +152,9 @@ void MultiFramedRTPSource::doGetNextFrame1() {
       unsigned frameSize;
       nextPacket->use(fTo, fMaxSize, frameSize,
 		      fCurPacketRTPSeqNum, fCurPacketRTPTimestamp,
-		      fPresentationTime,fCurPacketMarkerBit);
+		      fPresentationTime,
+		      fCurPacketHasBeenSynchronizedUsingRTCP,
+		      fCurPacketMarkerBit);
       fFrameSize += frameSize;
     
       if (!nextPacket->hasUsableData()) {
@@ -245,17 +247,19 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
       = source->packetIsUsableInJitterCalculation((bPacket->data()),
 						  bPacket->dataSize());
     struct timeval presentationTime; // computed by:
+    Boolean hasBeenSyncedUsingRTCP; // computed by:
     source->receptionStatsDB()
       .noteIncomingPacket(rtpSSRC, rtpSeqNo, rtpTimestamp,
 			  source->timestampFrequency(),
 			  usableInJitterCalculation, presentationTime,
-			  bPacket->dataSize());
+			  hasBeenSyncedUsingRTCP, bPacket->dataSize());
   
     // Fill in the rest of the packet descriptor, and store it:
     struct timeval timeNow;
     gettimeofday(&timeNow, &Idunno);
     bPacket->assignMiscParams(rtpSeqNo, rtpTimestamp, presentationTime,
-			      rtpMarkerBit, timeNow);
+			      hasBeenSyncedUsingRTCP, rtpMarkerBit,
+			      timeNow);
     source->fReorderingBuffer->storePacket(bPacket);
 
     readSuccess = True;
@@ -310,11 +314,13 @@ Boolean BufferedPacket::fillInData(RTPInterface& rtpInterface) {
 
 void BufferedPacket
 ::assignMiscParams(unsigned short rtpSeqNo, unsigned rtpTimestamp,
-		   struct timeval presentationTime, Boolean rtpMarkerBit,
+		   struct timeval presentationTime,
+		   Boolean hasBeenSyncedUsingRTCP, Boolean rtpMarkerBit,
 		   struct timeval timeReceived) {
   fRTPSeqNo = rtpSeqNo;
   fRTPTimestamp = rtpTimestamp;
   fPresentationTime = presentationTime;
+  fHasBeenSyncedUsingRTCP = hasBeenSyncedUsingRTCP;
   fRTPMarkerBit = rtpMarkerBit;
   fTimeReceived = timeReceived;
 }
@@ -333,6 +339,7 @@ void BufferedPacket::use(unsigned char* to, unsigned toSize,
 			 unsigned& bytesUsed, 
 			 unsigned short& rtpSeqNo, unsigned& rtpTimestamp,
 			 struct timeval& presentationTime,
+			 Boolean& hasBeenSyncedUsingRTCP,
 			 Boolean& rtpMarkerBit) {
   unsigned char* origFramePtr = &fBuf[fHead];
   unsigned char* newFramePtr = origFramePtr; //may change in the call below
@@ -346,6 +353,7 @@ void BufferedPacket::use(unsigned char* to, unsigned toSize,
   rtpSeqNo = fRTPSeqNo;
   rtpTimestamp = fRTPTimestamp;
   presentationTime = fPresentationTime;
+  hasBeenSyncedUsingRTCP = fHasBeenSyncedUsingRTCP;
   rtpMarkerBit = fRTPMarkerBit;
 }
 
