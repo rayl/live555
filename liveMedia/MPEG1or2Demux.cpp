@@ -275,7 +275,7 @@ unsigned char MPEGProgramStreamParser::parse() {
     return acquiredStreamTagId;
   } catch (int /*e*/) {
 #ifdef DEBUG
-    fprintf(stderr, "MPEGProgramStreamParser::parse() EXCEPTION\n");
+    fprintf(stderr, "MPEGProgramStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)\n");
     fflush(stderr);
 #endif
     return 0;  // the parsing got interrupted

@@ -155,7 +155,7 @@ unsigned MPEG1or2VideoStreamParser::parse() {
     }
   } catch (int /*e*/) {
 #ifdef DEBUG
-    fprintf(stderr, "MPEG1or2VideoStreamParser::parse() EXCEPTION\n");
+    fprintf(stderr, "MPEG1or2VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)\n");
 #endif
     return 0;  // the parsing got interrupted
   }

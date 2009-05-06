@@ -181,7 +181,7 @@ unsigned MPEG1or2AudioStreamParser::parse(unsigned& numTruncatedBytes) {
     return frameSize;
   } catch (int /*e*/) {
 #ifdef DEBUG
-    fprintf(stderr, "MPEG1or2AudioStreamParser::parse() EXCEPTION\n");
+    fprintf(stderr, "MPEG1or2AudioStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)\n");
 #endif
     return 0;  // the parsing got interrupted
   }

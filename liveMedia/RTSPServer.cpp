@@ -554,6 +554,7 @@ void RTSPServer::RTSPClientSession
   // Also use the client-provided TTL.
   destinationTTL = clientsDestinationTTL;
 #endif
+  delete[] clientsDestinationAddressStr;
   Boolean isMulticast;
   Port serverRTPPort(0);
   Port serverRTCPPort(0);

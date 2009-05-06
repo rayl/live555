@@ -3,7 +3,7 @@
 ALL = testMP3Streamer$(EXE) testMP3Receiver$(EXE) testRelay$(EXE) testMPEG1or2Splitter$(EXE) testMPEG1or2VideoStreamer$(EXE) testMPEG1or2VideoReceiver$(EXE) testMPEG1or2AudioVideoStreamer$(EXE) testMPEG4VideoStreamer$(EXE) testWAVAudioStreamer$(EXE) testAMRAudioStreamer$(EXE) testOnDemandRTSPServer$(EXE) vobStreamer$(EXE) openRTSP$(EXE) playSIP$(EXE) sapWatch$(EXE) 
 all:	$(ALL)
 
-misc:	testMCT$(EXE) testGSMStreamer$(EXE)
+misc:	testGSMStreamer$(EXE)
 
 .$(C).$(OBJ):
 	$(C_COMPILER) -c $(C_FLAGS) $<       
@@ -26,7 +26,6 @@ VOB_STREAMER_OBJS	= vobStreamer.$(OBJ)
 OPEN_RTSP_OBJS    = openRTSP.$(OBJ) playCommon.$(OBJ)
 PLAY_SIP_OBJS     = playSIP.$(OBJ) playCommon.$(OBJ)
 SAP_WATCH_OBJS = sapWatch.$(OBJ)
-TEST_MCT_OBJS     = testMCT.$(OBJ)
 GSM_STREAMER_OBJS = testGSMStreamer.$(OBJ) testGSMEncoder.$(OBJ)
 
 openRTSP.$(CPP):	playCommon.hh
@@ -75,8 +74,6 @@ playSIP$(EXE):	$(PLAY_SIP_OBJS) $(LOCAL_LIBS)
 	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(PLAY_SIP_OBJS) $(LIBS)
 sapWatch$(EXE):	$(SAP_WATCH_OBJS) $(LOCAL_LIBS)
 	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(SAP_WATCH_OBJS) $(LIBS)
-testMCT$(EXE):	$(TEST_MCT_OBJS) $(LOCAL_LIBS)
-	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(TEST_MCT_OBJS) $(LIBS)
 testGSMStreamer$(EXE):	$(GSM_STREAMER_OBJS) $(LOCAL_LIBS)
 	$(LINK)$@ $(CONSOLE_LINK_OPTS) $(GSM_STREAMER_OBJS) $(LIBS)
 
