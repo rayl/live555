@@ -105,6 +105,7 @@ RTSPClient::RTSPClient(UsageEnvironment& env,
     fTunnelOverHTTPPortNum(tunnelOverHTTPPortNum),
     fInputSocketNum(-1), fOutputSocketNum(-1), fServerAddress(0),
     fBaseURL(NULL), fTCPStreamIdCount(0), fLastSessionId(NULL),
+    fSessionTimeoutParameter(0),
 #ifdef SUPPORT_REAL_RTSP
     fRealChallengeStr(NULL), fRealETagStr(NULL),
 #endif
@@ -131,6 +132,18 @@ RTSPClient::RTSPClient(UsageEnvironment& env,
   fUserAgentHeaderStr = new char[headerSize];
   sprintf(fUserAgentHeaderStr, formatStr,
 	  applicationName, libPrefix, libName, libVersionStr, libSuffix);
+  fUserAgentHeaderStrSize = strlen(fUserAgentHeaderStr);
+}
+
+void RTSPClient::setUserAgentString(char const* userAgentStr) {
+  if (userAgentStr == NULL) return;
+
+  // Change the existing user agent header string:
+  char const* const formatStr = "User-Agent: %s\r\n";
+  unsigned headerSize = strlen(formatStr) + strlen(userAgentStr);
+  delete[] fUserAgentHeaderStr;
+  fUserAgentHeaderStr = new char[headerSize];
+  sprintf(fUserAgentHeaderStr, formatStr, userAgentStr);
   fUserAgentHeaderStrSize = strlen(fUserAgentHeaderStr);
 }
 
@@ -944,6 +957,13 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       if (sscanf(lineStart, "Session: %[^;]", sessionId) == 1) {
 	subsession.sessionId = strDup(sessionId);
 	delete[] fLastSessionId; fLastSessionId = strDup(sessionId);
+
+	// Also look for an optional "; timeout = " parameter following this:
+	char* afterSessionId = lineStart + strlen(sessionId);
+	int timeoutVal;
+	if (sscanf(afterSessionId, "; timeout = %d", &timeoutVal) == 1) {
+	  fSessionTimeoutParameter = timeoutVal;
+	}
 	continue;
       }
 
@@ -1438,6 +1458,8 @@ Boolean RTSPClient::setMediaSessionParameter(MediaSession& /*session*/,
 Boolean RTSPClient::getMediaSessionParameter(MediaSession& /*session*/,
 					     char const* parameterName,
 					     char*& parameterValue) {
+  parameterValue = NULL; // default result
+  Boolean const haveParameterName = parameterName != NULL && parameterName[0] != '\0';
   char* cmd = NULL;
   do {
     // First, make sure that we have a RTSP session in progress
@@ -1452,33 +1474,57 @@ Boolean RTSPClient::getMediaSessionParameter(MediaSession& /*session*/,
       = createAuthenticatorString(&fCurrentAuthenticator,
 				  "GET_PARAMETER", fBaseURL);
 
-    char* const cmdFmt =
-      "GET_PARAMETER %s RTSP/1.0\r\n"
-      "CSeq: %d\r\n"
-      "Session: %s\r\n"
-      "%s"
-      "%s"
-      "Content-type: text/parameters\r\n"
-      "Content-length: %d\r\n\r\n"
-      "%s\r\n"
-      "\r\n";
-
-    unsigned cmdSize = strlen(cmdFmt)
-      + strlen(fBaseURL)
-      + 20 /* max int len */
-      + strlen(fLastSessionId)
-      + strlen(authenticatorStr)
-      + fUserAgentHeaderStrSize
-      + strlen(parameterName);
-    cmd = new char[cmdSize];
-    sprintf(cmd, cmdFmt,
-	    fBaseURL,
-	    ++fCSeq,
-	    fLastSessionId,
-	    authenticatorStr,
-	    fUserAgentHeaderStr,
-            strlen(parameterName)+2,
-	    parameterName);
+    if (haveParameterName) {
+      char* const cmdFmt =
+	"GET_PARAMETER %s RTSP/1.0\r\n"
+	"CSeq: %d\r\n"
+	"Session: %s\r\n"
+	"%s"
+	"%s"
+	"Content-type: text/parameters\r\n"
+	"Content-length: %d\r\n\r\n"
+	"%s\r\n"
+	"\r\n";
+      
+      unsigned cmdSize = strlen(cmdFmt)
+	+ strlen(fBaseURL)
+	+ 20 /* max int len */
+	+ strlen(fLastSessionId)
+	+ strlen(authenticatorStr)
+	+ fUserAgentHeaderStrSize
+	+ strlen(parameterName);
+      cmd = new char[cmdSize];
+      sprintf(cmd, cmdFmt,
+	      fBaseURL,
+	      ++fCSeq,
+	      fLastSessionId,
+	      authenticatorStr,
+	      fUserAgentHeaderStr,
+	      strlen(parameterName)+2,
+	      parameterName);
+    } else {
+      char* const cmdFmt =
+	"GET_PARAMETER %s RTSP/1.0\r\n"
+	"CSeq: %d\r\n"
+	"Session: %s\r\n"
+	"%s"
+	"%s"
+	"\r\n";
+      
+      unsigned cmdSize = strlen(cmdFmt)
+	+ strlen(fBaseURL)
+	+ 20 /* max int len */
+	+ strlen(fLastSessionId)
+	+ strlen(authenticatorStr)
+	+ fUserAgentHeaderStrSize;
+      cmd = new char[cmdSize];
+      sprintf(cmd, cmdFmt,
+	      fBaseURL,
+	      ++fCSeq,
+	      fLastSessionId,
+	      authenticatorStr,
+	      fUserAgentHeaderStr);
+    }
     delete[] authenticatorStr;
 
     if (!sendRequest(cmd, "GET_PARAMETER")) break;
@@ -1573,15 +1619,14 @@ Boolean RTSPClient::getMediaSessionParameter(MediaSession& /*session*/,
       }
     }
 
-    if (!parseGetParameterHeader(bodyStart, parameterName, parameterValue)) 
-      break;
+    if (haveParameterName
+	&& !parseGetParameterHeader(bodyStart, parameterName, parameterValue)) break;
 
     delete[] cmd;
     return True;
   } while (0);
   
   delete[] cmd;
-
   return False;
 }
 

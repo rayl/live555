@@ -33,7 +33,8 @@ H263plusVideoRTPSource
 			 unsigned char rtpPayloadFormat,
 			 unsigned rtpTimestampFrequency)
   : MultiFramedRTPSource(env, RTPgs,
-			 rtpPayloadFormat, rtpTimestampFrequency) {
+			 rtpPayloadFormat, rtpTimestampFrequency),
+  fNumSpecialHeaders(0), fSpecialHeaderBytesLength(0) {  
 }
 
 H263plusVideoRTPSource::~H263plusVideoRTPSource() {

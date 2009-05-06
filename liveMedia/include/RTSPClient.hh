@@ -141,6 +141,11 @@ public:
 
   unsigned describeStatus() const { return fDescribeStatusCode; }
 
+  void setUserAgentString(char const* userAgentStr);
+  // sets an alternative string to be used in RTSP "User-Agent:" headers
+
+  unsigned sessionTimeoutParameter() const { return fSessionTimeoutParameter; }
+
 #ifdef SUPPORT_REAL_RTSP
   Boolean usingRealNetworksChallengeResponse() const { return fRealChallengeStr != NULL; }
 #endif
@@ -205,6 +210,7 @@ private:
   Authenticator fCurrentAuthenticator;
   unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
   char* fLastSessionId;
+  unsigned fSessionTimeoutParameter; // optionally set in response "Session:" headers 
 #ifdef SUPPORT_REAL_RTSP
   char* fRealChallengeStr;
   char* fRealETagStr;
