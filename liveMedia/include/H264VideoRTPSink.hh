@@ -51,6 +51,8 @@ private: // redefined virtual functions:
                                       unsigned numBytesInFrame,
                                       struct timeval frameTimestamp,
                                       unsigned numRemainingBytes);
+  virtual Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
+						 unsigned numBytesInFrame) const;
   virtual char const* auxSDPLine();
 
 private:

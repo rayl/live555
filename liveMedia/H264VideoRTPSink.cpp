@@ -134,7 +134,7 @@ void H264VideoRTPSink::stopPlaying() {
 void H264VideoRTPSink::doSpecialFrameHandling(unsigned /*fragmentationOffset*/,
 					      unsigned char* /*frameStart*/,
 					      unsigned /*numBytesInFrame*/,
-					      struct timeval /*frameTimestamp*/,
+					      struct timeval frameTimestamp,
 					      unsigned /*numRemainingBytes*/) {
   // Set the RTP 'M' (marker) bit iff
   // 1/ The most recently delivered fragment was the end of
@@ -149,6 +149,14 @@ void H264VideoRTPSink::doSpecialFrameHandling(unsigned /*fragmentationOffset*/,
       setMarkerBit();
     }
   }
+
+  setTimestamp(frameTimestamp);
+}
+
+Boolean H264VideoRTPSink
+::frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
+				 unsigned /*numBytesInFrame*/) const {
+  return False;
 }
 
 char const* H264VideoRTPSink::auxSDPLine() {
