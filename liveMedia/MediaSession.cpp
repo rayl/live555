@@ -359,7 +359,7 @@ Boolean MediaSession
     }
 
     // Try to create a source for this subsession:
-    if (!subsession->initiate()) return False;
+    if (!subsession->initiate(useSpecialRTPoffset)) return False;
 
     // Make sure the source's MIME type is one that we handle:
     if (strcmp(subsession->readSource()->MIMEtype(), mimeType) != 0) {
@@ -607,6 +607,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	       || strcmp(fCodecName, "MP1S") == 0 // MPEG-1 System Stream
 	       || strcmp(fCodecName, "MP2T") == 0 // MPEG-2 Transport Str
 	       || strcmp(fCodecName, "MP2P") == 0 // MPEG-2 Program Stream
+	       || strcmp(fCodecName, "MP4A-LATM") == 0 // MPEG-4 audio
 	      ) {
       createSimpleRTPSource = True;
       useSpecialRTPoffset = 0;

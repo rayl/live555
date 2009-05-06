@@ -1,10 +1,10 @@
 // Version information for the "BasicUsageEnvironment" library
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
 
 #ifndef _BASICUSAGEENVIRONMENT_VERSION_HH
 #define _BASICUSAGEENVIRONMENT_VERSION_HH
 
-#define BASICUSAGEENVIRONMENT_LIBRARY_VERSION_STRING	"2002.12.20"
-#define BASICUSAGEENVIRONMENT_LIBRARY_VERSION_INT		1040342400
+#define BASICUSAGEENVIRONMENT_LIBRARY_VERSION_STRING	"2003.01.10"
+#define BASICUSAGEENVIRONMENT_LIBRARY_VERSION_INT		1042156800
 
 #endif
