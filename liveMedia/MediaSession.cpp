@@ -723,9 +723,9 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 					      fRTPPayloadFormat,
 					      fRTPTimestampFrequency);
       } else if (strcmp(fCodecName, "MP2T") == 0) { // MPEG-2 Transport Stream
-	fRTPSource = MPEG1or2VideoRTPSource::createNew(env(), fRTPSocket,
-						       fRTPPayloadFormat,
-						       fRTPTimestampFrequency);
+	fRTPSource = SimpleRTPSource::createNew(env(), fRTPSocket, fRTPPayloadFormat,
+						fRTPTimestampFrequency, "video/MP2T",
+						0, False);
 	fReadSource = MPEG2TransportStreamFramer::createNew(env(), fRTPSource);
 	    // this sets "durationInMicroseconds" correctly, based on the PCR values
       } else if (strcmp(fCodecName, "H261") == 0) { // H.261
