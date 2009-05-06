@@ -24,16 +24,13 @@ public:
 ////////// MPEG2TransportStreamFramer //////////
 
 MPEG2TransportStreamFramer* MPEG2TransportStreamFramer
-::createNew(UsageEnvironment& env, FramedSource* inputSource,
-	    unsigned numTSPacketsPerChunk) {
-  return new MPEG2TransportStreamFramer(env, inputSource, numTSPacketsPerChunk);
+::createNew(UsageEnvironment& env, FramedSource* inputSource) {
+  return new MPEG2TransportStreamFramer(env, inputSource);
 }
 
 MPEG2TransportStreamFramer
-::MPEG2TransportStreamFramer(UsageEnvironment& env, FramedSource* inputSource,
-			     unsigned numTSPacketsPerChunk)
+::MPEG2TransportStreamFramer(UsageEnvironment& env, FramedSource* inputSource)
   : FramedFilter(env, inputSource),
-    fNumTSPacketsPerChunk(numTSPacketsPerChunk),
     fTSPacketCount(0), fTSPacketDurationEstimate(0.0) {
   fPIDStatusTable = HashTable::create(ONE_WORD_HASH_KEYS);
 }
@@ -64,9 +61,10 @@ void MPEG2TransportStreamFramer
 
 void MPEG2TransportStreamFramer::afterGettingFrame1(unsigned frameSize,
 						    struct timeval presentationTime) {
-  if (frameSize < fNumTSPacketsPerChunk*TRANSPORT_PACKET_SIZE) {
-    // We read less than expected; assume that the input source has closed.
-    // (This may lose a few TS packets at the end.)
+  unsigned const numTSPackets = frameSize/TRANSPORT_PACKET_SIZE;
+  frameSize = numTSPackets*TRANSPORT_PACKET_SIZE; // an integral # of TS packets
+  if (frameSize == 0) {
+    // We didn't read a complete TS packet; assume that the input source has closed.
     handleClosure(this);
     return;
   }
@@ -76,12 +74,12 @@ void MPEG2TransportStreamFramer::afterGettingFrame1(unsigned frameSize,
 
   // Scan through the TS packets that we read, and update our estimate of
   // the duration of each packet:
-  for (unsigned i = 0; i < fNumTSPacketsPerChunk; ++i) {
+  for (unsigned i = 0; i < numTSPackets; ++i) {
     updateTSPacketDurationEstimate(&fTo[i*TRANSPORT_PACKET_SIZE]);
   }
 
   fDurationInMicroseconds
-    = fNumTSPacketsPerChunk * (unsigned)(fTSPacketDurationEstimate*1000000);
+    = numTSPackets * (unsigned)(fTSPacketDurationEstimate*1000000);
 
   // Complete the delivery to our client:
   afterGetting(this);

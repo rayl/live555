@@ -19,12 +19,10 @@
 class MPEG2TransportStreamFramer: public FramedFilter {
 public:
   static MPEG2TransportStreamFramer*
-  createNew(UsageEnvironment& env, FramedSource* inputSource,
-	    unsigned numTSPacketsPerChunk);
+  createNew(UsageEnvironment& env, FramedSource* inputSource);
 
 protected:
-  MPEG2TransportStreamFramer(UsageEnvironment& env, FramedSource* inputSource,
-			     unsigned numTSPacketsPerChunk);
+  MPEG2TransportStreamFramer(UsageEnvironment& env, FramedSource* inputSource);
       // called only by createNew()
   virtual ~MPEG2TransportStreamFramer();
 
@@ -43,7 +41,6 @@ private:
   void updateTSPacketDurationEstimate(unsigned char* pkt);
 
 private:
-  unsigned fNumTSPacketsPerChunk;
   unsigned fTSPacketCount;
   double fTSPacketDurationEstimate;
   HashTable* fPIDStatusTable;
