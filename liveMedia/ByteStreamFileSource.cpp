@@ -69,7 +69,7 @@ static int fseek64(FILE *fid, int64_t offset, int whence) {
 	clearerr(fid);
 	fflush(fid);
 #if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
-	return _lseeki64(_fileno(fid), offset, whence) == -1i64 ? -1 : 0;
+	return _lseeki64(_fileno(fid), offset, whence) == (int64_t)-1 ? -1 : 0;
 #else
 	return fseeko(fid, (off_t)(offset), whence);
 #endif
