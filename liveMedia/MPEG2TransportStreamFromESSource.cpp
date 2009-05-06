@@ -197,7 +197,7 @@ Boolean InputESSourceRecord::deliverBufferToClient() {
 
   // Fill in the PES_packet_length field that we left unset before:
   unsigned PES_packet_length = fInputBufferBytesAvailable - 6;
-  if (PES_packet_length > 0xFFFFFFFF) {
+  if (PES_packet_length > 0xFFFF) {
     // Set the PES_packet_length field to 0.  This indicates an unbounded length (see ISO 13818-1, 2.4.3.7)
     PES_packet_length = 0;
   }
