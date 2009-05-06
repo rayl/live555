@@ -67,7 +67,7 @@ H261VideoRTPSource.$(CPP):	include/H261VideoRTPSource.hh
 include/H261VideoRTPSource.hh:	include/MultiFramedRTPSource.hh
 H263plusVideoRTPSource.$(CPP):	include/H263plusVideoRTPSource.hh
 include/H263plusVideoRTPSource.hh:	include/MultiFramedRTPSource.hh
-H264VideoRTPSource.$(CPP):      include/H264VideoRTPSource.hh
+H264VideoRTPSource.$(CPP):      include/H264VideoRTPSource.hh include/Base64.hh
 include/H264VideoRTPSource.hh:  include/MultiFramedRTPSource.hh
 QCELPAudioRTPSource.$(CPP):	include/QCELPAudioRTPSource.hh include/MultiFramedRTPSource.hh include/FramedFilter.hh
 include/QCELPAudioRTPSource.hh:		include/RTPSource.hh

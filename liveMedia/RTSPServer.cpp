@@ -228,8 +228,6 @@ void RTSPServer::incomingConnectionHandler1() {
 #endif
 
   // Create a new object for this RTSP session:
-  // (Later, we need to do some garbage collection on sessions that #####
-  //  aren't closed down via TEARDOWN) #####
   new RTSPClientSession(*this, ++fSessionIdCounter,
 			clientSocket, clientAddr);
 }

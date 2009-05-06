@@ -19,6 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation 
 
 #include "H264VideoRTPSource.hh"
+#include "Base64.hh"
 
 H264VideoRTPSource*
 H264VideoRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
@@ -88,4 +89,36 @@ Boolean H264VideoRTPSource
 
 char const* H264VideoRTPSource::MIMEtype() const {
   return "video/H264";
+}
+
+SPropRecord* parseSPropParameterSets(char const* sPropParameterSetsStr,
+                                     // result parameter:
+                                     unsigned& numSPropRecords) {
+  // Make a copy of the input string, so we can replace the commas with '\0's:
+  char* inStr = strDup(sPropParameterSetsStr);
+  if (inStr == NULL) {
+    numSPropRecords = 0;
+    return NULL;
+  }
+
+  // Count the number of commas (and thus the number of parameter sets):
+  numSPropRecords = 1;
+  char* s;
+  for (s = inStr; *s != '\0'; ++s) {
+    if (*s == ',') {
+      ++numSPropRecords;
+      *s = '\0';
+    }
+  }
+  
+  // Allocate and fill in the result array:
+  SPropRecord* resultArray = new SPropRecord[numSPropRecords];
+  s = inStr;
+  for (unsigned i = 0; i < numSPropRecords; ++i) {
+    resultArray[i].sPropBytes = base64Decode(s, resultArray[i].sPropLength);
+    s += strlen(s) + 1;
+  }
+
+  delete[] inStr;
+  return resultArray;
 }

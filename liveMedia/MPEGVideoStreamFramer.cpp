@@ -76,15 +76,19 @@ void MPEGVideoStreamFramer
   // time_code, along with the "numAdditionalPictures" parameter:
   TimeCode& tc = fCurGOPTimeCode;
 
+  unsigned tcSecs
+    = (((tc.days*24)+tc.hours)*60+tc.minutes)*60+tc.seconds - fTcSecsBase;
   double pictureTime = fFrameRate == 0.0 ? 0.0
-    : (tc.pictures + fPicturesAdjustment + numAdditionalPictures)/fFrameRate
-    - fPictureTimeBase;
+    : (tc.pictures + fPicturesAdjustment + numAdditionalPictures)/fFrameRate;
+  while (pictureTime < fPictureTimeBase) { // "if" should be enough, but just in case
+    if (tcSecs > 0) tcSecs -= 1;
+    pictureTime += 1.0;
+  }
+  pictureTime -= fPictureTimeBase;
   if (pictureTime < 0.0) pictureTime = 0.0; // sanity check
   unsigned pictureSeconds = (unsigned)pictureTime;
   double pictureFractionOfSecond = pictureTime - (double)pictureSeconds;
 
-  unsigned tcSecs
-    = (((tc.days*24)+tc.hours)*60+tc.minutes)*60+tc.seconds - fTcSecsBase;
   fPresentationTime = fPresentationTimeBase;
   fPresentationTime.tv_sec += tcSecs + pictureSeconds;
   fPresentationTime.tv_usec += (long)(pictureFractionOfSecond*1000000.0);
