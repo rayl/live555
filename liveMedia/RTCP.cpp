@@ -136,6 +136,11 @@ RTCPInstance::RTCPInstance(UsageEnvironment& env, Groupsock* RTCPgs,
 #ifdef DEBUG
   fprintf(stderr, "RTCPInstance[%p]::RTCPInstance()\n", this);
 #endif
+  if (fTotSessionBW == 0) { // not allowed!
+    env << "RTCPInstance::RTCPInstance error: totSessionBW parameter should not be zero!\n";
+    fTotSessionBW = 1;
+  }
+
   if (isSSMSource) RTCPgs->multicastSendOnly(); // don't receive multicast
     
   double timeNow = dTimeNow();
