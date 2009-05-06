@@ -38,7 +38,7 @@ public:
   virtual ~IndexRecord();
   
   RecordType& recordType() { return fRecordType; }
-  void setFirstFlag() { *(u_int8_t*)&fRecordType |= 0x80; }
+  void setFirstFlag() { fRecordType = (RecordType)(((u_int8_t)fRecordType) | 0x80); }
   u_int8_t startOffset() const { return fStartOffset; }
   u_int8_t& size() { return fSize; }
   float pcr() const { return fPCR; }

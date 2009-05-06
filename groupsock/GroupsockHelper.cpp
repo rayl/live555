@@ -462,7 +462,25 @@ Boolean socketLeaveGroup(UsageEnvironment&, int socket,
 // The source-specific join/leave operations require special setsockopt()
 // commands, and a special structure (ip_mreq_source).  If the include files
 // didn't define these, we do so here:
+#if !defined(IP_ADD_SOURCE_MEMBERSHIP) || defined(__CYGWIN32__)
+// NOTE TO CYGWIN DEVELOPERS:
+//    The "defined(__CYGWIN32__)" test was added above, because - as of January 2007 - the Cygwin header files
+//    define IP_ADD_SOURCE_MEMBERSHIP (and IP_DROP_SOURCE_MEMBERSHIP), but do not define ip_mreq_source.
+//    This has been acknowledged as a bug (see <http://cygwin.com/ml/cygwin/2007-01/msg00516.html>), but it's
+//    not clear when it is going to be fixed.  When the Cygwin header files finally define "ip_mreq_source",
+//    this code will no longer compile, due to "ip_mreq_source" being defined twice.  When this happens, please
+//    let us know, by sending email to the "live-devel" mailing list.
+//    (See <http://lists.live555.com/mailman/listinfo/live-devel/> to subscribe to that mailing list.)
+// END NOTE TO CYGWIN DEVELOPERS
+struct ip_mreq_source {
+  struct  in_addr imr_multiaddr;  /* IP multicast address of group */
+  struct  in_addr imr_sourceaddr; /* IP address of source */
+  struct  in_addr imr_interface;  /* local IP address of interface */
+};
+#endif
+
 #ifndef IP_ADD_SOURCE_MEMBERSHIP
+
 #ifdef LINUX
 #define IP_ADD_SOURCE_MEMBERSHIP   39
 #define IP_DROP_SOURCE_MEMBERSHIP 40
@@ -471,11 +489,6 @@ Boolean socketLeaveGroup(UsageEnvironment&, int socket,
 #define IP_DROP_SOURCE_MEMBERSHIP 26
 #endif
 
-struct ip_mreq_source {
-  struct  in_addr imr_multiaddr;  /* IP multicast address of group */
-  struct  in_addr imr_sourceaddr; /* IP address of source */
-  struct  in_addr imr_interface;  /* local IP address of interface */
-};
 #endif
 
 Boolean socketJoinGroupSSM(UsageEnvironment& env, int socket,
