@@ -766,7 +766,9 @@ Boolean RTSPServer::RTSPClientSession
     // Next, the username has to be known to us:
     char const* password = fOurServer.fAuthDB->lookupPassword(username);
     if (password == NULL) break;
-    fCurrentAuthenticator.setUsernameAndPassword(username, password);
+    fCurrentAuthenticator.
+      setUsernameAndPassword(username, password,
+			     fOurServer.fAuthDB->passwordsAreMD5());
 
     // Finally, compute a digest response from the information that we have,
     // and compare it to the one that we were given:
@@ -899,9 +901,11 @@ RTSPServer::RTSPClientSession
 
 ////////// UserAuthenticationDatabase implementation //////////
 
-UserAuthenticationDatabase::UserAuthenticationDatabase(char const* realm)
+UserAuthenticationDatabase::UserAuthenticationDatabase(char const* realm,
+						       Boolean passwordsAreMD5)
   : fTable(HashTable::create(STRING_HASH_KEYS)),
-    fRealm(strDup(realm == NULL ? "LIVE.COM Streaming Media" : realm)) {
+    fRealm(strDup(realm == NULL ? "LIVE.COM Streaming Media" : realm)),
+    fPasswordsAreMD5(passwordsAreMD5) {
 }
 
 UserAuthenticationDatabase::~UserAuthenticationDatabase() {

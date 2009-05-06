@@ -21,6 +21,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _DIGEST_AUTHENTICATION_HH
 #define _DIGEST_AUTHENTICATION_HH
 
+#ifndef _BOOLEAN_HH
+#include <Boolean.hh>
+#endif
+
 // A class used for digest authentication.
 // The "realm", and "nonce" fields are supplied by the server
 // (in a "401 Unauthorized" response).
@@ -37,7 +41,10 @@ public:
   void setRealmAndRandomNonce(char const* realm);
       // as above, except that the nonce is created randomly.
       // (This is used by servers.)
-  void setUsernameAndPassword(char const* username, char const* password);
+  void setUsernameAndPassword(char const* username, char const* password,
+			      Boolean passwordIsMD5 = False);
+      // If "passwordIsMD5" is True, then "password" is actually the value computed
+      // by md5(<username>:<realm>:<actual-password>)
 
   char const* realm() const { return fRealm; }
   char const* nonce() const { return fNonce; }
@@ -51,13 +58,15 @@ private:
   void resetRealmAndNonce();
   void resetUsernameAndPassword();
   void assignRealmAndNonce(char const* realm, char const* nonce);
-  void assignUsernameAndPassword(char const* username, char const* password);
+  void assignUsernameAndPassword(char const* username, char const* password,
+				 Boolean passwordIsMD5);
   void assign(char const* realm, char const* nonce,
-	      char const* username, char const* password);
+	      char const* username, char const* password, Boolean passwordIsMD5);
 
 private:
   char* fRealm; char* fNonce;
   char* fUsername; char* fPassword;
+  Boolean fPasswordIsMD5;
 };
 
 #endif

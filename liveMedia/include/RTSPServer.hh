@@ -35,20 +35,26 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class UserAuthenticationDatabase {
 public:
-  UserAuthenticationDatabase(char const* realm = NULL);
+  UserAuthenticationDatabase(char const* realm = NULL,
+			     Boolean passwordsAreMD5 = False);
+    // If "passwordsAreMD5" is True, then each password stored into, or removed from,
+    // the database is actually the value computed
+    // by md5(<username>:<realm>:<actual-password>)
   virtual ~UserAuthenticationDatabase();
 
-  void addUserRecord(char const* username, char const* password);
-  void removeUserRecord(char const* username);
+  virtual void addUserRecord(char const* username, char const* password);
+  virtual void removeUserRecord(char const* username);
 
-  char const* lookupPassword(char const* username);
+  virtual char const* lookupPassword(char const* username);
       // returns NULL if the user name was not present
 
   char const* realm() { return fRealm; }
+  Boolean passwordsAreMD5() { return fPasswordsAreMD5; }
 
-private:
+protected:
   HashTable* fTable;
   char* fRealm;
+  Boolean fPasswordsAreMD5;
 };
 
 class RTSPServer: public Medium {

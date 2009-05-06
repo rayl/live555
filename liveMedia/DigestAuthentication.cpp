@@ -27,18 +27,19 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <string.h>
 
 Authenticator::Authenticator() {
-  assign(NULL, NULL, NULL, NULL);
+  assign(NULL, NULL, NULL, NULL, False);
 }
 
 Authenticator::Authenticator(const Authenticator& orig) {
-  assign(orig.realm(), orig.nonce(), orig.username(), orig.password());
+  assign(orig.realm(), orig.nonce(), orig.username(), orig.password(),
+	 orig.fPasswordIsMD5);
 }
 
 Authenticator& Authenticator::operator=(const Authenticator& rightSide) {
   if (&rightSide != this) {
     reset();
     assign(rightSide.realm(), rightSide.nonce(),
-	   rightSide.username(), rightSide.password());
+	   rightSide.username(), rightSide.password(), rightSide.fPasswordIsMD5);
   }
 
   return *this;
@@ -84,22 +85,30 @@ void Authenticator::setRealmAndRandomNonce(char const* realm) {
 }
 
 void Authenticator::setUsernameAndPassword(char const* username,
-					   char const* password) {
+					   char const* password,
+					   Boolean passwordIsMD5) {
   resetUsernameAndPassword();
-  assignUsernameAndPassword(username, password);
+  assignUsernameAndPassword(username, password, passwordIsMD5);
 }
 
 char const* Authenticator::computeDigestResponse(char const* cmd,
 						 char const* url) const {
   // The "response" field is computed as:
   //    md5(md5(<username>:<realm>:<password>):<nonce>:md5(<cmd>:<url>))
-  unsigned const ha1DataLen = strlen(username()) + 1
-    + strlen(realm()) + 1 + strlen(password());
-  unsigned char* ha1Data = new unsigned char[ha1DataLen+1];
-  sprintf((char*)ha1Data, "%s:%s:%s", username(), realm(), password());
+  // or, if "fPasswordIsMD5" is True:
+  //    md5(<password>:<nonce>:md5(<cmd>:<url>))
   char ha1Buf[33];
-  our_MD5Data(ha1Data, ha1DataLen, ha1Buf);
-  delete[] ha1Data;
+  if (fPasswordIsMD5) {
+    strncpy(ha1Buf, password(), 32);
+    ha1Buf[32] = '\0'; // just in case
+  } else {
+    unsigned const ha1DataLen = strlen(username()) + 1
+      + strlen(realm()) + 1 + strlen(password());
+    unsigned char* ha1Data = new unsigned char[ha1DataLen+1];
+    sprintf((char*)ha1Data, "%s:%s:%s", username(), realm(), password());
+    our_MD5Data(ha1Data, ha1DataLen, ha1Buf);
+    delete[] ha1Data;
+  }
 
   unsigned const ha2DataLen = strlen(cmd) + 1 + strlen(url);
   unsigned char* ha2Data = new unsigned char[ha2DataLen+1];
@@ -130,6 +139,7 @@ void Authenticator::resetRealmAndNonce() {
 void Authenticator::resetUsernameAndPassword() {
   delete fUsername; fUsername = NULL;
   delete fPassword; fPassword = NULL;
+  fPasswordIsMD5 = False;
 }
 
 void Authenticator::assignRealmAndNonce(char const* realm, char const* nonce) {
@@ -138,13 +148,16 @@ void Authenticator::assignRealmAndNonce(char const* realm, char const* nonce) {
 }
 
 void Authenticator
-::assignUsernameAndPassword(char const* username, char const* password) {
+::assignUsernameAndPassword(char const* username, char const* password,
+			    Boolean passwordIsMD5) {
   fUsername = strDup(username);
   fPassword = strDup(password);
+  fPasswordIsMD5 = passwordIsMD5;
 }
 
 void Authenticator::assign(char const* realm, char const* nonce,
-			   char const* username, char const* password) {
+			   char const* username, char const* password,
+			   Boolean passwordIsMD5) {
   assignRealmAndNonce(realm, nonce);
-  assignUsernameAndPassword(username, password);
+  assignUsernameAndPassword(username, password, passwordIsMD5);
 }
