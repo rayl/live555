@@ -110,10 +110,8 @@ void MPEG2TransportStreamMultiplexor
       // the stream is audio or video, and whether it's MPEG-1 or MPEG-2:
       if ((stream_id&0xF0) == 0xE0) { // video
 	streamType = mpegVersion == 1 ? 1 : mpegVersion == 2 ? 2 : 0x10;
-	if (fPCR_PID == 0) fPCR_PID = fCurrentPID; // use this stream's SCR for PCR
       } else if ((stream_id&0xE0) == 0xC0) { // audio
 	streamType = mpegVersion == 1 ? 3 : mpegVersion == 2 ? 4 : 0xF;
-	if (!fHaveVideoStreams && fPCR_PID == 0) fPCR_PID = fCurrentPID; // use this stream's SCR for PCR
       } else if (stream_id == 0xBD) { // private_stream1 (usually AC-3)
 	streamType = 0x06; // for DVB; for ATSC, use 0x81 
       } else { // something else, e.g., AC-3 uses private_stream1 (0xBD)
@@ -121,6 +119,12 @@ void MPEG2TransportStreamMultiplexor
       }
     }
     
+    if (fPCR_PID == 0) { // set it to this stream, if it's appropriate:
+      if ((!fHaveVideoStreams && (streamType == 3 || streamType == 4 || streamType == 0xF))/* audio stream */ ||
+	  (streamType == 1 || streamType == 2 || streamType == 0x10)/* video stream */) {
+	fPCR_PID = fCurrentPID; // use this stream's SCR for PCR
+      }
+    }
     if (fCurrentPID == fPCR_PID) {
       // Record the input's current SCR timestamp, for use as our PCR:
       fPCR = scr;

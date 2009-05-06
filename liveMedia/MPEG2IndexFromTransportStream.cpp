@@ -20,7 +20,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "MPEG2IndexFromTransportStream.hh"
 
-#define DEBUG 1 //#####@@@@@
 ////////// IndexRecord definition //////////
 
 enum RecordType {

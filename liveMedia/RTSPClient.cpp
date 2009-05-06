@@ -100,7 +100,7 @@ void RTSPClient::setUserAgentString(char const* userAgentStr) {
 
   // Change the existing user agent header string:
   char const* const formatStr = "User-Agent: %s\r\n";
-  unsigned headerSize = strlen(formatStr) + strlen(userAgentStr);
+  unsigned const headerSize = strlen(formatStr) + strlen(userAgentStr) + 1;
   delete[] fUserAgentHeaderStr;
   fUserAgentHeaderStr = new char[headerSize];
   sprintf(fUserAgentHeaderStr, formatStr, userAgentStr);
@@ -1979,7 +1979,7 @@ RTSPClient::createAuthenticatorString(Authenticator const* authenticator,
       sprintf(usernamePassword, "%s:%s", authenticator->username(), authenticator->password());
 
       char* response = base64Encode(usernamePassword, usernamePasswordLength);
-      unsigned authBufSize = strlen(authFmt) + strlen(response);
+      unsigned const authBufSize = strlen(authFmt) + strlen(response) + 1;
       authenticatorStr = new char[authBufSize];
       sprintf(authenticatorStr, authFmt, response);
       delete[] response; delete[] usernamePassword;
