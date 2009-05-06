@@ -401,8 +401,9 @@ int main(int argc, char** argv) {
     shutdown();
   }
 
+  // Begin by sending an "OPTIONS" command:
+  char* optionsResponse = getOptionsResponse(ourClient, url);
   if (sendOptionsRequestOnly) {
-    char* optionsResponse = getOptionsResponse(ourClient, url);
     if (optionsResponse == NULL) {
       *env << clientProtocolName << " \"OPTIONS\" request failed: "
 	   << env->getResultMsg() << "\n";

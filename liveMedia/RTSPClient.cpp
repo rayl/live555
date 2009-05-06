@@ -144,10 +144,18 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
       "DESCRIBE %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Accept: application/sdp\r\n"
-      // Uncomment the following to simulate a RealNetworks client
+#ifdef SUPPORT_REAL_RTSP
+      // Simulate a RealNetworks client
       // (RealNetworks' servers sometimes behave differently if they
       //  think the client is one of theirs.):
-      //"ClientID: WinNT_4.0_6.0.11.818_RealPlayer_RN10PD_en-us_686\r\n"
+      "Bandwidth: 10485800\r\n"
+      "GUID: 00000000-0000-0000-0000-000000000000\r\n"
+      "RegionData: 0\r\n"
+      "ClientID: Linux_2.4_6.0.9.1235_play32_RN01_EN_586\r\n"
+      "SupportsMaximumASMBandwidth: 1\r\n"
+      "Language: en-US\r\n"
+      "Require: com.real.retain-entity-for-setup\r\n"
+#endif
       "%s"
       "%s\r\n";
     unsigned cmdSize = strlen(cmdFmt)
@@ -378,6 +386,18 @@ char* RTSPClient::sendOptionsCmd(char const* url) {
     char* const cmdFmt =
       "OPTIONS * RTSP/1.0\r\n"
       "CSeq: %d\r\n"
+#ifdef SUPPORT_REAL_RTSP
+      // Simulate a RealNetworks client
+      // (RealNetworks' servers sometimes behave differently if they
+      //  think the client is one of theirs.):
+      "User-Agent: RealMedia Player Version 6.0.9.1235 (linux-2.0-libc6-i386-gcc2.95)\r\n"
+      "ClientChallenge: 9e26d33f2984236010ef6253fb1887f7\r\n"
+      "PlayerStarttime: [28/03/2003:22:50:23 00:00]\r\n"
+      "CompanyID: KnKV4M4I/B2FjJ1TToLycw==\r\n"
+      "GUID: 00000000-0000-0000-0000-000000000000\r\n"
+      "RegionData: 0\r\n"
+      "ClientID: Linux_2.4_6.0.9.1235_play32_RN01_EN_586\r\n"
+#endif
       "%s\r\n";
     unsigned cmdSize = strlen(cmdFmt)
       + 20 /* max int len */
@@ -420,8 +440,7 @@ char* RTSPClient::sendOptionsCmd(char const* url) {
       nextLineStart = getLine(lineStart);
 
       if (_strncasecmp(lineStart, "Public: ", 8) == 0) {
-	result = strDup(&lineStart[8]);
-	break;
+	delete[] result; result = strDup(&lineStart[8]);
       }
     }
   } while (0);
@@ -653,7 +672,11 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     char* const cmdFmt =
       "SETUP %s%s%s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
+#ifdef SUPPORT_REAL_RTSP
+      "Transport: x-pn-tng/tcp;mode=play,rtp/avp/unicast;mode=play\r\n"
+#else
       "Transport: RTP/AVP%s%s%s=%d-%d\r\n"
+#endif
       "%s"
       "%s"
       "%s\r\n";
@@ -695,8 +718,10 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     sprintf(cmd, cmdFmt,
 	    prefix, separator, suffix,
 	    ++fCSeq,
+#ifndef SUPPORT_REAL_RTSP
 	    transportTypeString, modeString, portTypeString,
 	        rtpNumber, rtcpNumber,
+#endif
 	    sessionStr,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
