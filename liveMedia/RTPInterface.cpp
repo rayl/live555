@@ -86,9 +86,12 @@ RTPInterface::RTPInterface(Medium* owner, Groupsock* gs)
 
 RTPInterface::~RTPInterface() {}
 
+Boolean RTPOverTCP_OK = True; // HACK: For detecting TCP socket failure externally #####
+
 void RTPInterface::setStreamSocket(int sockNum,
 				   unsigned char streamChannelId) {
   fStreamSocketNum = sockNum;
+  if (fStreamSocketNum >= 0) RTPOverTCP_OK = True; //##### HACK
   fStreamChannelId = streamChannelId;
 }
 
@@ -125,8 +128,6 @@ void RTPInterface
     socketDescriptor->registerRTPInterface(fStreamChannelId, this);
   }
 }
-
-Boolean RTPOverTCP_OK = True; // HACK: For detecting TCP socket failure externally #####
 
 Boolean RTPInterface::handleRead(unsigned char* buffer,
 				 unsigned bufferMaxSize,

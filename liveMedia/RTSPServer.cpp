@@ -307,7 +307,7 @@ void RTSPServer::RTSPClientSession
   }
 
   // Then, assemble a SDP description for this session:
-  char const* sdpDescription
+  char* sdpDescription
     = fOurServerMediaSession->generateSDPDescription();
   if (sdpDescription == NULL) {
     // This usually means that a file name that was specified for a
@@ -333,6 +333,7 @@ void RTSPServer::RTSPClientSession
   if (sdpDescriptionSize > sizeof fBuffer - 200) { // sanity check
     sprintf((char*)fBuffer, "RTSP/1.0 500 Internal Server Error\r\nCSeq: %s\r\n\r\n",
 	    cseq);
+    delete[] sdpDescription;
     return;
   }
   
