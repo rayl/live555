@@ -27,20 +27,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// Main program //////////
 
-UsageEnvironment* env;
-
-void play(); // forward
-
-int main(int argc, char** argv) {
-  // Begin by setting up our usage environment:
-  TaskScheduler* scheduler = BasicTaskScheduler::createNew();
-  env = BasicUsageEnvironment::createNew(*scheduler);
-
-  play(); // does not return
-
-  return 0; // only to prevent compiler warning
-}
-
 // To stream using "source-specific multicast" (SSM), uncomment the following:
 //#define USE_SSM 1
 #ifdef USE_SSM
@@ -57,6 +43,8 @@ Boolean const isSSM = False;
 RTSPServer* rtspServer;
 #endif
 
+UsageEnvironment* env;
+
 void afterPlaying(void* clientData); // forward
 
 // A structure to hold the state of the current session.
@@ -69,15 +57,13 @@ struct sessionState_t {
   Groupsock* rtcpGroupsock;
 } sessionState;
 
-void play() {
-  // Open the input source:
-  extern FramedSource* createNewGSMAudioSource(UsageEnvironment&);
-  sessionState.source = createNewGSMAudioSource(*env);
-  if (sessionState.source == NULL) {
-    *env << "Failed to create GSM source\n";
-    exit(1);
-  }
-  
+void play(); // forward
+
+int main(int argc, char** argv) {
+  // Begin by setting up our usage environment:
+  TaskScheduler* scheduler = BasicTaskScheduler::createNew();
+  env = BasicUsageEnvironment::createNew(*scheduler);
+
   // Create 'groupsocks' for RTP and RTCP:
   char* destinationAddressStr
 #ifdef USE_SSM
@@ -141,11 +127,24 @@ void play() {
   delete[] url;
 #endif
 
+  play();
+
+  env->taskScheduler().doEventLoop(); // does not return
+  return 0; // only to prevent compiler warning
+}
+
+void play() {
+  // Open the input source:
+  extern FramedSource* createNewGSMAudioSource(UsageEnvironment&);
+  sessionState.source = createNewGSMAudioSource(*env);
+  if (sessionState.source == NULL) {
+    *env << "Failed to create GSM source\n";
+    exit(1);
+  }
+  
   // Finally, start the streaming:
   *env << "Beginning streaming...\n";
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);
-
-  env->taskScheduler().doEventLoop();
 }
 
 
@@ -156,10 +155,10 @@ void afterPlaying(void* /*clientData*/) {
 #ifdef IMPLEMENT_RTSP_SERVER
   Medium::close(rtspServer);
 #endif
+  Medium::close(sessionState.rtcpInstance);
   Medium::close(sessionState.sink);
   delete sessionState.rtpGroupsock;
   Medium::close(sessionState.source);
-  Medium::close(sessionState.rtcpInstance);
   delete sessionState.rtcpGroupsock;
 
   // And start another loop:

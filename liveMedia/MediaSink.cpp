@@ -109,7 +109,8 @@ unsigned OutPacketBuffer::numPacketsLimit = 20; // by default
 OutPacketBuffer::OutPacketBuffer(unsigned preferredPacketSize,
 				 unsigned maxPacketSize)
   : fPreferred(preferredPacketSize), fMax(maxPacketSize),
-    fLimit(numPacketsLimit*maxPacketSize), fBuf(new unsigned char[fLimit]) {
+    fLimit(numPacketsLimit*maxPacketSize), fBuf(new unsigned char[fLimit]),
+    fOverflowDataSize(0) {
   resetPacketStart();
   resetOffset();
   resetOverflowData();

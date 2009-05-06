@@ -98,7 +98,7 @@ char* RTSPServer
   }
 
   resultURL = strDup(urlBuffer);
-  delete urlBuffer;
+  delete[] urlBuffer;
   return resultURL;
 }
 
@@ -607,9 +607,11 @@ void RTSPServer::RTSPClientSession
 			  char const* urlPreSuffix, char const* urlSuffix,
 			  char const* cseq) {
   // This will either be:
-  // - a non-aggregated operation, if "urlPreSuffix" is the session (stream) name and
-  //   "urlSuffix" is the subsession (track) name, or
-  // - a aggregated operation, if "urlSuffix" is the session (stream) name.
+  // - a non-aggregated operation, if "urlPreSuffix" is the session (stream)
+  //   name and "urlSuffix" is the subsession (track) name, or
+  // - a aggregated operation, if "urlSuffix" is the session (stream) name,
+  //   or "urlPreSuffix" is the session (stream) name, and "urlSuffix"
+  //   is empty.
   // First, figure out which of these it is:
   if (fOurServerMediaSession == NULL) { // There wasn't a previous SETUP!
     handleCmd_notSupported(cseq);
@@ -628,7 +630,8 @@ void RTSPServer::RTSPClientSession
       handleCmd_notFound(cseq);
       return;
     }
-  } else if (strcmp(fOurServerMediaSession->streamName(), urlSuffix) == 0) {
+  } else if (strcmp(fOurServerMediaSession->streamName(), urlSuffix) == 0 ||
+	     strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0) {
     // Aggregated operation
     subsession = NULL;
   } else { // the request doesn't match a known stream and/or track at all!

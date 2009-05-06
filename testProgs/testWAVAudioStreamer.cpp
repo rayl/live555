@@ -37,7 +37,8 @@ int main(int argc, char** argv) {
 
   play();
 
-  return 0;
+  env->taskScheduler().doEventLoop(); // does not return
+  return 0; // only to prevent compiler warnings
 }
 
 char const* inputFileName = "test.wav";
@@ -193,8 +194,6 @@ void play() {
   // Finally, start the streaming:
   *env << "Beginning streaming...\n";
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);
-
-  env->taskScheduler().doEventLoop();
 }
 
 
@@ -203,10 +202,10 @@ void afterPlaying(void* /*clientData*/) {
 
   // End by closing the media:
   Medium::close(sessionState.rtspServer);
+  Medium::close(sessionState.rtcpInstance);
   Medium::close(sessionState.sink);
   delete sessionState.rtpGroupsock;
   Medium::close(sessionState.source);
-  Medium::close(sessionState.rtcpInstance);
   delete sessionState.rtcpGroupsock;
 
   // We're done:

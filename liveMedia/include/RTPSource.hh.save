@@ -98,7 +98,6 @@ class RTPReceptionStats; // forward
 
 class RTPReceptionStatsDB {
 public:
-  unsigned totNumPacketsReceived() const { return fTotNumPacketsReceived; }
   unsigned numActiveSourcesSinceLastReset() const {
     return fNumActiveSourcesSinceLastReset;
  }
@@ -147,7 +146,6 @@ private:
   RTPSource& fOurRTPSource;
   HashTable* fTable;
   unsigned fNumActiveSourcesSinceLastReset;
-  unsigned fTotNumPacketsReceived; // for all SSRCs
 };
 
 class RTPReceptionStats {

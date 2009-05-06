@@ -40,6 +40,12 @@ Boolean writeSocket(UsageEnvironment& env,
 		    u_int8_t ttlArg,
 		    unsigned char* buffer, unsigned bufferSize);
 
+unsigned getSendBufferSize(UsageEnvironment& env, int socket);
+unsigned getReceiveBufferSize(UsageEnvironment& env, int socket);
+unsigned setSendBufferTo(UsageEnvironment& env,
+			 int socket, unsigned requestedSize);
+unsigned setReceiveBufferTo(UsageEnvironment& env,
+			    int socket, unsigned requestedSize);
 unsigned increaseSendBufferTo(UsageEnvironment& env,
 			      int socket, unsigned requestedSize);
 unsigned increaseReceiveBufferTo(UsageEnvironment& env,

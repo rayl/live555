@@ -40,6 +40,7 @@ void sessionTimerHandler(void* clientData);
 void shutdown(int exitCode = 1);
 void signalHandlerShutdown(int sig);
 void checkForPacketArrival(void* clientData);
+void checkInterPacketGaps(void* clientData);
 void beginQOSMeasurement();
 Boolean setupDestinationRTSPServer();
 
@@ -49,6 +50,7 @@ Medium* ourClient = NULL;
 MediaSession* session = NULL;
 TaskToken sessionTimerTask = NULL;
 TaskToken arrivalCheckTimerTask = NULL;
+TaskToken interPacketGapCheckTimerTask = NULL;
 TaskToken qosMeasurementTimerTask = NULL;
 Boolean createReceivers = True;
 Boolean outputQuickTimeFile = False;
@@ -59,6 +61,8 @@ char const* singleMedium = NULL;
 int verbosityLevel = 0;
 double endTime = 0;
 double endTimeSlop = -1.0; // extra seconds to play at the end
+unsigned interPacketGapMaxTime = 0;
+unsigned totNumPacketsReceived = ~0; // used if checking inter-packet gaps
 Boolean playContinuously = False;
 int simpleRTPoffsetArg = -1;
 Boolean sendOptionsRequestOnly = False;
@@ -76,6 +80,7 @@ unsigned short movieHeight = 180;
 unsigned movieFPS = 15;
 char* fileNamePrefix = "";
 unsigned fileSinkBufferSize = 20000;
+unsigned socketInputBufferSize = 0;
 Boolean packetLossCompensate = False;
 Boolean syncStreams = False;
 Boolean generateHintTracks = False;
@@ -92,12 +97,12 @@ struct timeval startTime;
 
 void usage() {
   *env << "Usage: " << progName
-       << " [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-c] [-s <offset>] [-n]"
+       << " [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-E <max-inter-packet-gap-time> [-c] [-s <offset>] [-n]"
 	   << (controlConnectionUsesTCP ? " [-t]" : "")
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "")
-       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] [-m] <url> (or " << progName << " -o [-V] <url>)\n";
+       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] [-B <input-socket-buffer-size>] [-m] <url> (or " << progName << " -o [-V] <url>)\n";
   //##### Add "-R <dest-rtsp-url>" #####
   shutdown();
 }
@@ -179,6 +184,14 @@ int main(int argc, char** argv) {
       } else {
 	endTime = arg;
 	endTimeSlop = 0;
+      }
+      ++argv; --argc;
+      break;
+    }
+
+    case 'E': { // specify maximum number of seconds to wait for packets:
+      if (sscanf(argv[2], "%u", &interPacketGapMaxTime) != 1) {
+	usage();
       }
       ++argv; --argc;
       break;
@@ -296,6 +309,14 @@ int main(int argc, char** argv) {
 
     case 'b': { // specify the size of buffers for "FileSink"s
       if (sscanf(argv[2], "%u", &fileSinkBufferSize) != 1) {
+	usage();
+      }
+      ++argv; --argc;
+      break;
+    }
+
+    case 'B': { // specify the size of input socket buffers
+      if (sscanf(argv[2], "%u", &socketInputBufferSize) != 1) {
 	usage();
       }
       ++argv; --argc;
@@ -456,19 +477,36 @@ int main(int argc, char** argv) {
 			<< "-" << subsession->clientPortNum()+1 << ")\n";
 		madeProgress = True;
 
-		// Because we're saving the incoming data, rather than playing it
-		// in real time, allow an especially large time threshold (1 second)
-		// for reordering misordered incoming packets:
 		if (subsession->rtpSource() != NULL) {
-		 unsigned const thresh = 1000000; // 1 second 
-		 subsession->rtpSource()->setPacketReorderingThresholdTime(thresh);
+		  // Because we're saving the incoming data, rather than playing
+		  // it in real time, allow an especially large time threshold
+		  // (1 second) for reordering misordered incoming packets:
+		  unsigned const thresh = 1000000; // 1 second 
+		  subsession->rtpSource()->setPacketReorderingThresholdTime(thresh);
+
+		  if (socketInputBufferSize > 0) {
+		    // Set the RTP source's input buffer size as specified:
+		    int socketNum
+		      = subsession->rtpSource()->RTPgs()->socketNum();
+		    unsigned curBufferSize
+		      = getReceiveBufferSize(*env, socketNum);
+		    unsigned newBufferSize
+		      = setReceiveBufferTo(*env, socketNum, socketInputBufferSize);
+		    *env << "Changed socket receive buffer size for the \""
+			 << subsession->mediumName()
+			 << "/" << subsession->codecName()
+			 << "\" subsession from "
+			 << curBufferSize << " to "
+			 << newBufferSize << " bytes\n";
+		  }
 		}
       }
     } else {
       if (subsession->clientPortNum() == 0) {
-		*env << "No client port was specified for the \"" << subsession->mediumName()
-			<< "/" << subsession->codecName()
-			<< "\" subsession.  (Try adding the \"-p <portNum>\" option.)\n";
+	*env << "No client port was specified for the \""
+	     << subsession->mediumName()
+	     << "/" << subsession->codecName()
+	     << "\" subsession.  (Try adding the \"-p <portNum>\" option.)\n";
       } else {	
 		madeProgress = True;
       }
@@ -662,6 +700,7 @@ void startPlayingStreams() {
 
   // Watch for incoming packets (if desired):
   checkForPacketArrival(NULL);
+  checkInterPacketGaps(NULL);
 }
 
 void tearDownStreams() {
@@ -943,6 +982,7 @@ void shutdown(int exitCode) {
   if (env != NULL) {
     env->taskScheduler().unscheduleDelayedTask(sessionTimerTask);
     env->taskScheduler().unscheduleDelayedTask(arrivalCheckTimerTask);
+    env->taskScheduler().unscheduleDelayedTask(interPacketGapCheckTimerTask);
     env->taskScheduler().unscheduleDelayedTask(qosMeasurementTimerTask);
   }
 
@@ -969,7 +1009,7 @@ void signalHandlerShutdown(int /*sig*/) {
   shutdown(0);
 }
 
-void checkForPacketArrival(void* clientData) {
+void checkForPacketArrival(void* /*clientData*/) {
   if (!notifyOnPacketArrival) return; // we're not checking 
 
   // Check each subsession, to see whether it has received data packets:
@@ -1023,6 +1063,35 @@ void checkForPacketArrival(void* clientData) {
   arrivalCheckTimerTask
     = env->taskScheduler().scheduleDelayedTask(uSecsToDelay,
 			       (TaskFunc*)checkForPacketArrival, NULL);
+}
+
+void checkInterPacketGaps(void* /*clientData*/) {
+  if (interPacketGapMaxTime == 0) return; // we're not checking 
+
+  // Check each subsession, counting up how many packets have been received:
+  unsigned newTotNumPacketsReceived = 0;
+
+  MediaSubsessionIterator iter(*session);
+  MediaSubsession* subsession;
+  while ((subsession = iter.next()) != NULL) {
+    RTPSource* src = subsession->rtpSource();
+    if (src == NULL) continue;
+    newTotNumPacketsReceived += src->receptionStatsDB().totNumPacketsReceived();
+  }
+
+  if (newTotNumPacketsReceived == totNumPacketsReceived) {
+    // No additional packets have been received since the last time we
+    // checked, so end this stream:
+    *env << "Closing session, because we stopped receiving packets.\n";
+    interPacketGapCheckTimerTask = NULL;
+    sessionAfterPlaying();
+  } else {
+    totNumPacketsReceived = newTotNumPacketsReceived;
+    // Check again, after the specified delay: 
+    interPacketGapCheckTimerTask
+      = env->taskScheduler().scheduleDelayedTask(interPacketGapMaxTime*1000000,
+				 (TaskFunc*)checkInterPacketGaps, NULL);
+  }
 }
 
 // WORK IN PROGRESS #####

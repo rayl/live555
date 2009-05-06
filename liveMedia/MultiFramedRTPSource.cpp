@@ -226,7 +226,7 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
     // Skip over any CSRC identifiers in the header:
     unsigned cc = (rtpHdr>>24)&0xF;
     if (bPacket->dataSize() < cc) break;
-    ADVANCE(cc);
+    ADVANCE(cc*4);
     
     // Check for (& ignore) any RTP header extension
     if (rtpHdr&0x10000000) {

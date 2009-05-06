@@ -112,7 +112,7 @@ void afterPlaying(void* /*clientData*/) {
   *env << "...done receiving\n";
 
   // End by closing the media:
+  Medium::close(sessionState.rtcpInstance); // Note: Sends a RTCP BYE
   Medium::close(sessionState.sink);
   Medium::close(sessionState.source);
-  Medium::close(sessionState.rtcpInstance); // Note: Sends a RTCP BYE
 }

@@ -22,21 +22,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "BasicUsageEnvironment.hh"
 
-UsageEnvironment* env;
-
-void play(); // forward
-
-int main(int argc, char** argv) {
-  // Begin by setting up our usage environment:
-  TaskScheduler* scheduler = BasicTaskScheduler::createNew();
-  env = BasicUsageEnvironment::createNew(*scheduler);
-
-  play(); // does not return
-
-  return 0; // only to prevent compiler warning
-}
-
-
 // To stream using 'ADUs' rather than raw MP3 frames, uncomment the following:
 //#define STREAM_USING_ADUS 1
 // To also reorder ADUs before streaming, uncomment the following:
@@ -60,9 +45,7 @@ Boolean const isSSM = False;
 RTSPServer* rtspServer;
 #endif
 
-char const* inputFileName = "test.mp3";
-
-void afterPlaying(void* clientData); // forward
+UsageEnvironment* env;
 
 // A structure to hold the state of the current session.
 // It is used in the "afterPlaying()" function to clean up the session.
@@ -74,38 +57,14 @@ struct sessionState_t {
   Groupsock* rtcpGroupsock;
 } sessionState;
 
-void play() {
-  // Open the file as a 'MP3 file source':
-  sessionState.source = MP3FileSource::createNew(*env, inputFileName);
-  if (sessionState.source == NULL) {
-    *env << "Unable to open file \"" << inputFileName
-	 << "\" as a MP3 file source\n";
-    exit(1);
-  }
-  
-#ifdef STREAM_USING_ADUS
-  // Add a filter that converts the source MP3s to ADUs:
-  sessionState.source
-    = ADUFromMP3Source::createNew(*env, sessionState.source);
-  if (sessionState.source == NULL) {
-    *env << "Unable to create a MP3->ADU filter for the source\n";
-    exit(1);
-  }
+char const* inputFileName = "test.mp3";
 
-#ifdef INTERLEAVE_ADUS
-  // Add another filter that interleaves the ADUs before packetizing them:
-  unsigned char interleaveCycle[] = {0,2,1,3}; // or choose your own order...
-  unsigned const interleaveCycleSize
-    = (sizeof interleaveCycle)/(sizeof (unsigned char));
-  Interleaving interleaving(interleaveCycleSize, interleaveCycle); 
-  sessionState.source
-    = MP3ADUinterleaver::createNew(*env, interleaving, sessionState.source);
-  if (sessionState.source == NULL) {
-    *env << "Unable to create an ADU interleaving filter for the source\n";
-    exit(1);
-  }
-#endif
-#endif
+void play(); // forward
+
+int main(int argc, char** argv) {
+  // Begin by setting up our usage environment:
+  TaskScheduler* scheduler = BasicTaskScheduler::createNew();
+  env = BasicUsageEnvironment::createNew(*scheduler);
 
   // Create 'groupsocks' for RTP and RTCP:
   char* destinationAddressStr
@@ -180,26 +139,58 @@ void play() {
   delete[] url;
 #endif
 
+  play();
+
+  env->taskScheduler().doEventLoop(); // does not return
+  return 0; // only to prevent compiler warning
+}
+
+void afterPlaying(void* clientData); // forward
+
+void play() {
+  // Open the file as a 'MP3 file source':
+  sessionState.source = MP3FileSource::createNew(*env, inputFileName);
+  if (sessionState.source == NULL) {
+    *env << "Unable to open file \"" << inputFileName
+	 << "\" as a MP3 file source\n";
+    exit(1);
+  }
+  
+#ifdef STREAM_USING_ADUS
+  // Add a filter that converts the source MP3s to ADUs:
+  sessionState.source
+    = ADUFromMP3Source::createNew(*env, sessionState.source);
+  if (sessionState.source == NULL) {
+    *env << "Unable to create a MP3->ADU filter for the source\n";
+    exit(1);
+  }
+
+#ifdef INTERLEAVE_ADUS
+  // Add another filter that interleaves the ADUs before packetizing them:
+  unsigned char interleaveCycle[] = {0,2,1,3}; // or choose your own order...
+  unsigned const interleaveCycleSize
+    = (sizeof interleaveCycle)/(sizeof (unsigned char));
+  Interleaving interleaving(interleaveCycleSize, interleaveCycle); 
+  sessionState.source
+    = MP3ADUinterleaver::createNew(*env, interleaving, sessionState.source);
+  if (sessionState.source == NULL) {
+    *env << "Unable to create an ADU interleaving filter for the source\n";
+    exit(1);
+  }
+#endif
+#endif
+
   // Finally, start the streaming:
   *env << "Beginning streaming...\n";
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);
-
-  env->taskScheduler().doEventLoop();
 }
 
 
 void afterPlaying(void* /*clientData*/) {
   *env << "...done streaming\n";
 
-  // End this loop by closing the media:
-#ifdef IMPLEMENT_RTSP_SERVER
-  Medium::close(rtspServer);
-#endif
-  Medium::close(sessionState.sink);
-  delete sessionState.rtpGroupsock;
+  // End this loop by closing the current source:
   Medium::close(sessionState.source);
-  Medium::close(sessionState.rtcpInstance);
-  delete sessionState.rtcpGroupsock;
 
   // And start another loop:
   play();

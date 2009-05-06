@@ -324,39 +324,69 @@ Boolean writeSocket(UsageEnvironment& env,
 	return False;
 }
 
-unsigned increaseBufferTo(UsageEnvironment& env, int bufOptName,
-			  int socket, unsigned requestedSize) {
-	// First, get the current buffer size.  If it's already at least
-	// as big as what we're requesting, do nothing.
-	unsigned curSize;
-	SOCKLEN_T sizeSize = sizeof curSize;
-	if (getsockopt(socket, SOL_SOCKET, bufOptName,
-		       (char*)&curSize, &sizeSize) < 0) {
-		socketErr(env, "increaseBufferTo() error: ");
-		return 0;
-	}
+static unsigned getBufferSize(UsageEnvironment& env, int bufOptName,
+			      int socket) {
+  unsigned curSize;
+  SOCKLEN_T sizeSize = sizeof curSize;
+  if (getsockopt(socket, SOL_SOCKET, bufOptName,
+		 (char*)&curSize, &sizeSize) < 0) {
+    socketErr(env, "getBufferSize() error: ");
+    return 0;
+  }
 
-	// Next, try to increase the buffer to the requested size,
-	// or to some smaller size, if that's not possible:
-	while (requestedSize > curSize) {
-		if (setsockopt(socket, SOL_SOCKET, bufOptName,
-		    (char*)&requestedSize, sizeSize) >= 0) {
-			// success
-			return requestedSize;
-		}
-		requestedSize = (requestedSize+curSize)/2;
-	}
-
-	return curSize;
+  return curSize;
+}
+unsigned getSendBufferSize(UsageEnvironment& env, int socket) {
+  return getBufferSize(env, SO_SNDBUF, socket);
+}
+unsigned getReceiveBufferSize(UsageEnvironment& env, int socket) {
+  return getBufferSize(env, SO_RCVBUF, socket);
 }
 
+static unsigned setBufferTo(UsageEnvironment& env, int bufOptName,
+			    int socket, unsigned requestedSize) {
+  SOCKLEN_T sizeSize = sizeof requestedSize;
+  setsockopt(socket, SOL_SOCKET, bufOptName, (char*)&requestedSize, sizeSize);
+
+  // Get and return the actual, resulting buffer size:
+  return getBufferSize(env, bufOptName, socket);
+}
+unsigned setSendBufferTo(UsageEnvironment& env,
+			 int socket, unsigned requestedSize) {
+	return setBufferTo(env, SO_SNDBUF, socket, requestedSize);
+}
+unsigned setReceiveBufferTo(UsageEnvironment& env,
+			    int socket, unsigned requestedSize) {
+	return setBufferTo(env, SO_RCVBUF, socket, requestedSize);
+}
+
+static unsigned increaseBufferTo(UsageEnvironment& env, int bufOptName,
+				 int socket, unsigned requestedSize) {
+  // First, get the current buffer size.  If it's already at least
+  // as big as what we're requesting, do nothing.
+  unsigned curSize = getBufferSize(env, bufOptName, socket);
+
+  // Next, try to increase the buffer to the requested size,
+  // or to some smaller size, if that's not possible:
+  while (requestedSize > curSize) {
+    SOCKLEN_T sizeSize = sizeof requestedSize;
+    if (setsockopt(socket, SOL_SOCKET, bufOptName,
+		   (char*)&requestedSize, sizeSize) >= 0) {
+      // success
+      return requestedSize;
+    }
+    requestedSize = (requestedSize+curSize)/2;
+  }
+
+  return getBufferSize(env, bufOptName, socket);
+}
 unsigned increaseSendBufferTo(UsageEnvironment& env,
 			      int socket, unsigned requestedSize) {
-	return increaseBufferTo(env, SO_SNDBUF, socket, requestedSize);
+  return increaseBufferTo(env, SO_SNDBUF, socket, requestedSize);
 }
 unsigned increaseReceiveBufferTo(UsageEnvironment& env,
 				 int socket, unsigned requestedSize) {
-	return increaseBufferTo(env, SO_RCVBUF, socket, requestedSize);
+  return increaseBufferTo(env, SO_RCVBUF, socket, requestedSize);
 }
 
 Boolean socketJoinGroup(UsageEnvironment& env, int socket,
