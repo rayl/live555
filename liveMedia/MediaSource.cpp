@@ -49,6 +49,9 @@ Boolean MediaSource::isMPEG1or2VideoStreamFramer() const {
 Boolean MediaSource::isMPEG4VideoStreamFramer() const {
   return False; // default implementation
 }
+Boolean MediaSource::isH264VideoStreamFramer() const {
+  return False; // default implementation
+}
 Boolean MediaSource::isJPEGVideoSource() const {
   return False; // default implementation
 }

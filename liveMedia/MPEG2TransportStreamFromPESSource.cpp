@@ -20,7 +20,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "MPEG2TransportStreamFromPESSource.hh"
 
-#define MAX_PES_PACKET_SIZE 65536
+#define MAX_PES_PACKET_SIZE (6+65535)
 
 MPEG2TransportStreamFromPESSource* MPEG2TransportStreamFromPESSource
 ::createNew(UsageEnvironment& env, MPEG1or2DemuxedElementaryStream* inputSource) {

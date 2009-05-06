@@ -15,42 +15,31 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
-// Media Sources
+// Any source that feeds into a "H264VideoRTPSink" must be of this class.
+// This is a virtual base class; subclasses must implement the
+// "currentNALUnitEndsAccessUnit()" virtual function.
 // C++ header
 
-#ifndef _MEDIA_SOURCE_HH
-#define _MEDIA_SOURCE_HH
+#ifndef _H264_VIDEO_STREAM_FRAMER_HH
+#define _H264_VIDEO_STREAM_FRAMER_HH
 
-#ifndef _MEDIA_HH
-#include "Media.hh"
+#ifndef _FRAMED_SOURCE_HH
+#include "FramedSource.hh"
 #endif
 
-class MediaSource: public Medium {
+class H264VideoStreamFramer: public FramedSource {
 public:
-  static Boolean lookupByName(UsageEnvironment& env, char const* sourceName,
-			      MediaSource*& resultSource);
-  virtual void getAttributes() const;
-      // attributes are returned in "env's" 'result message'
-
-  // The MIME type of this source:
-  virtual char const* MIMEtype() const;
-
-  // Test for specific types of source:
-  virtual Boolean isFramedSource() const;
-  virtual Boolean isRTPSource() const;
-  virtual Boolean isMPEG1or2VideoStreamFramer() const;
-  virtual Boolean isMPEG4VideoStreamFramer() const;
-  virtual Boolean isH264VideoStreamFramer() const;
-  virtual Boolean isJPEGVideoSource() const;
-  virtual Boolean isAMRAudioSource() const;
+  virtual Boolean currentNALUnitEndsAccessUnit() = 0;
+  // subclasses must define this function.  It returns True iff the
+  // most recenty received NAL unit ends a video 'access unit' (i.e., 'frame')
 
 protected:
-  MediaSource(UsageEnvironment& env); // abstract base class
-  virtual ~MediaSource();
+  H264VideoStreamFramer(UsageEnvironment& env);
+  virtual ~H264VideoStreamFramer();
 
 private:
   // redefined virtual functions:
-  virtual Boolean isSource() const;
+  virtual Boolean isH264VideoStreamFramer() const;
 };
 
 #endif

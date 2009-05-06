@@ -190,7 +190,7 @@ int H263plusVideoStreamParser::parseH263Frame( )
    do {
       *bufferIndex = get1Byte();
    } while ((bufferIndex < bufferEnd) &&                    // We have place in the buffer
-            ((row = fStates[row][*(bufferIndex++)]) != -1)); // Start code was not found
+            ((row = fStates[(unsigned char)row][*(bufferIndex++)]) != -1)); // Start code was not found
 
    if (row != -1) {
       fprintf(stderr, "%s: Buffer too small (%u)\n",

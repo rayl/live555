@@ -43,8 +43,14 @@ protected:
   virtual ~H264VideoRTPSink();
 
 private: // redefined virtual functions:
+  virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
   virtual Boolean continuePlaying();
   virtual void stopPlaying();
+  virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
+                                      unsigned char* frameStart,
+                                      unsigned numBytesInFrame,
+                                      struct timeval frameTimestamp,
+                                      unsigned numRemainingBytes);
   virtual char const* auxSDPLine();
 
 private:

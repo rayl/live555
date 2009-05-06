@@ -19,6 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "H264VideoRTPSink.hh"
+#include "H264VideoStreamFramer.hh"
 #include "FramedFilter.hh"
 
 ////////// H264FUAFragmenter definition //////////
@@ -35,6 +36,8 @@ public:
 		    unsigned inputBufferMax, unsigned maxOutputPacketSize);
 
   virtual ~H264FUAFragmenter();
+
+  Boolean lastFragmentCompletedNALUnit() const { return fLastFragmentCompletedNALUnit; }
 
 private: // redefined virtual functions:
   virtual void doGetNextFrame();
@@ -56,6 +59,7 @@ private:
   unsigned fNumValidDataBytes;
   unsigned fCurDataOffset;
   unsigned fSaveNumTruncatedBytes;
+  Boolean fLastFragmentCompletedNALUnit;
 };
 
 
@@ -66,7 +70,7 @@ H264VideoRTPSink
 		   unsigned char rtpPayloadFormat,
 		   unsigned profile_level_id,
 		   char const* sprop_parameter_sets_str)
-  : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 60000, "H264"),
+  : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 90000, "H264"),
     fOurFragmenter(NULL) {
   // Set up the "a=fmtp:" SDP line for this stream:
   char const* fmtpFmt =
@@ -100,6 +104,11 @@ H264VideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 			      profile_level_id, sprop_parameter_sets_str);
 }
 
+Boolean H264VideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
+  // Our source must be an appropriate framer:
+  return source.isH264VideoStreamFramer();
+}
+
 Boolean H264VideoRTPSink::continuePlaying() {
   // First, check whether we have a 'fragmenter' class set up yet.
   // If not, create it now:
@@ -122,6 +131,26 @@ void H264VideoRTPSink::stopPlaying() {
   Medium::close(fOurFragmenter); fOurFragmenter = NULL;
 }
 
+void H264VideoRTPSink::doSpecialFrameHandling(unsigned /*fragmentationOffset*/,
+					      unsigned char* /*frameStart*/,
+					      unsigned /*numBytesInFrame*/,
+					      struct timeval /*frameTimestamp*/,
+					      unsigned /*numRemainingBytes*/) {
+  // Set the RTP 'M' (marker) bit iff
+  // 1/ The most recently delivered fragment was the end of
+  //    (or the only fragment of) an NAL unit, and
+  // 2/ This NAL unit was the last NAL unit of an 'access unit' (i.e. video frame).
+  if (fOurFragmenter != NULL) {
+    H264VideoStreamFramer* framerSource
+      = (H264VideoStreamFramer*)(fOurFragmenter->inputSource());
+    // This relies on our fragmenter's source being a "MPEG4VideoStreamFramer".
+    if (fOurFragmenter->lastFragmentCompletedNALUnit()
+	&& framerSource != NULL && framerSource->currentNALUnitEndsAccessUnit()) {
+      setMarkerBit();
+    }
+  }
+}
+
 char const* H264VideoRTPSink::auxSDPLine() {
   return fFmtpSDPLine;
 }
@@ -129,12 +158,14 @@ char const* H264VideoRTPSink::auxSDPLine() {
 
 ////////// H264FUAFragmenter implementation //////////
 
-H264FUAFragmenter::H264FUAFragmenter(UsageEnvironment& env, FramedSource* inputSource,
+H264FUAFragmenter::H264FUAFragmenter(UsageEnvironment& env,
+				     FramedSource* inputSource,
 				     unsigned inputBufferMax,
 				     unsigned maxOutputPacketSize)
   : FramedFilter(env, inputSource),
     fInputBufferSize(inputBufferMax+1), fMaxOutputPacketSize(maxOutputPacketSize),
-    fNumValidDataBytes(1), fCurDataOffset(1), fSaveNumTruncatedBytes(0) {
+    fNumValidDataBytes(1), fCurDataOffset(1), fSaveNumTruncatedBytes(0),
+    fLastFragmentCompletedNALUnit(True) {
   fInputBuffer = new unsigned char[fInputBufferSize];
 }
 
@@ -167,6 +198,7 @@ void H264FUAFragmenter::doGetNextFrame() {
       fMaxSize = fMaxOutputPacketSize;
     }
 
+    fLastFragmentCompletedNALUnit = True; // by default
     if (fCurDataOffset == 1) { // case 1 or 2
       if (fNumValidDataBytes - 1 <= fMaxSize) { // case 1
 	memmove(fTo, &fInputBuffer[1], fNumValidDataBytes - 1);
@@ -181,6 +213,7 @@ void H264FUAFragmenter::doGetNextFrame() {
 	memmove(fTo, fInputBuffer, fMaxSize);
 	fFrameSize = fMaxSize;
 	fCurDataOffset += fMaxSize - 1;
+	fLastFragmentCompletedNALUnit = False;
       }
     } else { // case 3
       // We are sending this NAL unit data as FU-A packets.  We've already sent the
@@ -194,6 +227,7 @@ void H264FUAFragmenter::doGetNextFrame() {
       if (numBytesToSend > fMaxSize) {
 	// We can't send all of the remaining data this time:
 	numBytesToSend = fMaxSize;
+	fLastFragmentCompletedNALUnit = False;
       } else {
 	// This is the last fragment:
 	fInputBuffer[fCurDataOffset-1] |= 0x40; // set the E bit in the FU header

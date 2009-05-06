@@ -34,6 +34,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GSMAudioRTPSink.hh"
 #include "H263plusVideoRTPSink.hh"
 #include "H264VideoRTPSink.hh"
+#include "H264VideoStreamFramer.hh"
 #include "JPEGVideoRTPSink.hh"
 #include "SimpleRTPSink.hh"
 #include "uLawAudioFilter.hh"
