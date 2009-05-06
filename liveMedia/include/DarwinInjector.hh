@@ -57,7 +57,7 @@ class SubstreamDescriptor; // forward
 class DarwinInjector: public Medium {
 public:
   static DarwinInjector* createNew(UsageEnvironment& env,
-				   char const* applicationName = NULL,
+				   char const* applicationName = "DarwinInjector",
 				   int verbosityLevel = 0);
 
   static Boolean lookupByName(UsageEnvironment& env, char const* name,

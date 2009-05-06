@@ -39,6 +39,8 @@ public:
   // Test for specific types of sink:
   virtual Boolean isRTPSink() const;
 
+  FramedSource* source() const {return fSource;}
+
 protected:
   MediaSink(UsageEnvironment& env); // abstract base class
   virtual ~MediaSink();

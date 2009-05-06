@@ -33,6 +33,8 @@ public:
 				    Boolean sourceIsWideband = False,
 				    unsigned numChannelsInSource = 1);
 
+  Boolean sourceIsWideband() const { return fSourceIsWideband; }
+
 protected:
   AMRAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 		  unsigned char rtpPayloadFormat,

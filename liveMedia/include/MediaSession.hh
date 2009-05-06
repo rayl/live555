@@ -64,10 +64,10 @@ public:
   unsigned char* fRealAbstract; unsigned fRealAbstractSize;
 #endif
 
-private: // redefined virtual functions
+protected: // redefined virtual functions
   virtual Boolean isMediaSession() const;
 
-private:
+protected:
   MediaSession(UsageEnvironment& env);
       // called only by createNew();
   virtual ~MediaSession();
@@ -87,7 +87,7 @@ private:
   static unsigned guessRTPTimestampFrequency(char const* mediumName,
 					     char const* codecName);
 
-private:
+protected:
   friend class MediaSubsessionIterator;
   char* fCNAME; // used for RTCP
 
@@ -222,7 +222,7 @@ public:
   unsigned fRealRuleNumber;
 #endif
 
-private:
+protected:
   friend class MediaSession;
   friend class MediaSubsessionIterator;
   MediaSubsession(MediaSession& parent);
@@ -240,7 +240,7 @@ private:
   Boolean parseSDPAttribute_x_dimensions(char const* sdpLine);
   Boolean parseSDPAttribute_framerate(char const* sdpLine);
 
-private:
+protected:
   // Linkage fields:
   MediaSession& fParent;
   MediaSubsession* fNext;

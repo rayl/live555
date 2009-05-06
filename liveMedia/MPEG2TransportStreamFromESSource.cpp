@@ -87,7 +87,7 @@ void MPEG2TransportStreamFromESSource
 
 void MPEG2TransportStreamFromESSource
 ::addNewAudioSource(FramedSource* inputSource, int mpegVersion) {
-  u_int8_t streamId = 0xC0 | (fVideoSourceCounter++&0x0F);
+  u_int8_t streamId = 0xC0 | (fAudioSourceCounter++&0x0F);
   addNewInputSource(inputSource, streamId, mpegVersion);
 }
 

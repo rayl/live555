@@ -32,18 +32,18 @@ public:
 				     Boolean oneFilePerFrame = False);
   // (See "FileSink.hh" for a description of these parameters.)
 
-private:
+protected:
   AMRAudioFileSink(UsageEnvironment& env, FILE* fid, unsigned bufferSize,
 		   char const* perFrameFileNamePrefix);
       // called only by createNew()
   virtual ~AMRAudioFileSink();
 
-private: // redefined virtual functions:
+protected: // redefined virtual functions:
   virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
   virtual void afterGettingFrame1(unsigned frameSize,
 				  struct timeval presentationTime);
 
-private:
+protected:
   Boolean fHaveWrittenHeader;
 };
 

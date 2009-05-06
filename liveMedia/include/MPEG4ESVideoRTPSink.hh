@@ -40,7 +40,7 @@ protected:
 
   virtual ~MPEG4ESVideoRTPSink();
 
-private: // redefined virtual functions:
+protected: // redefined virtual functions:
   virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
 
   virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
@@ -55,8 +55,10 @@ private: // redefined virtual functions:
 
   virtual char const* auxSDPLine();
 
-private:
+protected:
   Boolean fVOPIsPresent;
+
+private:
   char* fAuxSDPLine;
 };
 
