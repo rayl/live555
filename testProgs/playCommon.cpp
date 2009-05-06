@@ -550,7 +550,9 @@ int main(int argc, char** argv) {
 	    unsigned configLen;
 	    unsigned char* configData
 	      = parseGeneralConfigStr(subsession->fmtp_config(), configLen);
-	    fwrite(configData, 1, configLen, fileSink->fid());
+	    struct timeval timeNow;
+	    gettimeofday(&timeNow, &Idunno);
+	    fileSink->addData(configData, configLen, timeNow);
 	  }
 
 	  subsession->sink->startPlaying(*(subsession->readSource()),

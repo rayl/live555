@@ -37,7 +37,8 @@ public:
   //   file name suffix).  The default behavior ("oneFilePerFrame" == False)
   //   is to output all incoming data into a single file.
 
-  FILE* fid() const { return fOutFid; }
+  void addData(unsigned char* data, unsigned dataSize,
+	       struct timeval presentationTime);
   // (Available in case a client wants to add extra data to the output file)
 
 protected:

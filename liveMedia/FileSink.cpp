@@ -117,8 +117,8 @@ void FileSink::afterGettingFrame(void* clientData, unsigned frameSize,
   sink->afterGettingFrame1(frameSize, presentationTime);
 } 
 
-void FileSink::afterGettingFrame1(unsigned frameSize,
-				  struct timeval presentationTime) {
+void FileSink::addData(unsigned char* data, unsigned dataSize,
+		       struct timeval presentationTime) {
   if (fPerFrameFileNameBuffer != NULL) {
     // Special case: Open a new file on-the-fly for this frame
     sprintf(fPerFrameFileNameBuffer, "%s-%lu.%06lu", fPerFrameFileNamePrefix,
@@ -138,8 +138,13 @@ void FileSink::afterGettingFrame1(unsigned frameSize,
   if (!packetIsLost)
 #endif
   if (fOutFid != NULL) {
-    fwrite(fBuffer, frameSize, 1, fOutFid);
+    fwrite(data, dataSize, 1, fOutFid);
   }
+}
+
+void FileSink::afterGettingFrame1(unsigned frameSize,
+				  struct timeval presentationTime) {
+  addData(fBuffer, frameSize, presentationTime);
 
   if (fOutFid == NULL || fflush(fOutFid) == EOF) {
     // The output file has closed.  Handle this the same way as if the
@@ -151,7 +156,7 @@ void FileSink::afterGettingFrame1(unsigned frameSize,
   }
  
   if (fPerFrameFileNameBuffer != NULL) {
-    if (fOutFid != NULL) fclose(fOutFid);
+    if (fOutFid != NULL) { fclose(fOutFid); fOutFid = NULL; }
   }
 
   // Then try getting the next frame:
