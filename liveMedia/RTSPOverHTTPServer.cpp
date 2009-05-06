@@ -232,7 +232,8 @@ void RTSPOverHTTPServer::HTTPClientConnection::incomingRequestHandler1() {
     } else if (strcmp(cmdName, "TEARDOWN") == 0
                || strcmp(cmdName, "PLAY") == 0
                || strcmp(cmdName, "PAUSE") == 0
-               || strcmp(cmdName, "GET_PARAMETER") == 0) {
+               || strcmp(cmdName, "GET_PARAMETER") == 0
+               || strcmp(cmdName, "SET_PARAMETER") == 0) {
       handleCmd_withinSession(cmdName, urlPreSuffix, urlSuffix, cseq,
                               (char const*)fRequestBuffer);
     } else {

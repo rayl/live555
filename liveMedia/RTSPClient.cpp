@@ -1019,7 +1019,7 @@ static char* createScaleString(float scale, float currentScale) {
     // This is the default value; we don't need a "Scale:" header:
     buf[0] = '\0';
   } else {
-    Locale("C", LC_NUMERIC);
+    Locale l("C", LC_NUMERIC);
     sprintf(buf, "Scale: %f\r\n", scale);
   }
 
@@ -1033,11 +1033,11 @@ static char* createRangeString(double start, double end) {
     buf[0] = '\0';
   } else if (end < 0) {
     // There's no end time:
-    Locale("C", LC_NUMERIC);
+    Locale l("C", LC_NUMERIC);
     sprintf(buf, "Range: npt=%.3f-\r\n", start);
   } else {
     // There's both a start and an end time; include them both in the "Range:" hdr
-    Locale("C", LC_NUMERIC);
+    Locale l("C", LC_NUMERIC);
     sprintf(buf, "Range: npt=%.3f-%.3f\r\n", start, end);
   }
 
@@ -2342,7 +2342,7 @@ Boolean RTSPClient::parseScaleHeader(char const* line, float& scale) {
   if (_strncasecmp(line, "Scale: ", 7) != 0) return False;
   line += 7;
 
-  Locale("C", LC_NUMERIC);
+  Locale l("C", LC_NUMERIC);
   return sscanf(line, "%f", &scale) == 1;
 }
 
@@ -2510,7 +2510,7 @@ void RTSPClient::incomingRequestHandler1() {
   char* readBuf = fResponseBuffer;
   bytesRead = getResponse1(readBuf, fResponseBufferSize);
   if (bytesRead == 0) {
-    envir().setResultErrMsg("Failed to read response: ");
+    envir().setResultMsg("Failed to read response: Connection was closed by the remote host.");
     envir().taskScheduler().turnOffBackgroundReadHandling(fInputSocketNum); // because the connection died
     return;
   }

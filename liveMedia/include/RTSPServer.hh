@@ -141,20 +141,20 @@ protected:
 					 char const* cseq, char const* fullRequestStr);
     virtual void handleCmd_SET_PARAMETER(ServerMediaSubsession* subsession,
 					 char const* cseq, char const* fullRequestStr);
-  private:
+  protected:
     UsageEnvironment& envir() { return fOurServer.envir(); }
     void reclaimStreamStates();
     void resetRequestBuffer();
-    static void incomingRequestHandler(void*, int /*mask*/);
-    void incomingRequestHandler1();
     Boolean authenticationOK(char const* cmdName, char const* cseq,
                              char const* urlSuffix,
                              char const* fullRequestStr);
-    void noteLiveness();
     Boolean isMulticast() const { return fIsMulticast; }
+    static void incomingRequestHandler(void*, int /*mask*/);
+    void incomingRequestHandler1();
+    void noteLiveness();
     static void noteClientLiveness(RTSPClientSession* clientSession);
     static void livenessTimeoutTask(RTSPClientSession* clientSession);
-  private:
+  protected:
     RTSPServer& fOurServer;
     unsigned fOurSessionId;
     ServerMediaSession* fOurServerMediaSession;
@@ -175,12 +175,29 @@ protected:
     } * fStreamStates;
   };
 
+  // If you subclass "RTSPClientSession", then you should also redefine this virtual function in order
+  // to create new objects of your subclass:
+  virtual RTSPClientSession*
+  createNewClientSession(unsigned sessionId, int clientSocket, struct sockaddr_in clientAddr);
+
+  // An iterator over our "ServerMediaSession" objects:
+  class ServerMediaSessionIterator {
+  public:
+    ServerMediaSessionIterator(RTSPServer& server);
+    virtual ~ServerMediaSessionIterator();
+    ServerMediaSession* next();
+  private:
+    HashTable::Iterator *fOurIterator;
+    ServerMediaSession* fNextPtr;
+  };
+
 private:
   static void incomingConnectionHandler(void*, int /*mask*/);
   void incomingConnectionHandler1();
 
 private:
   friend class RTSPClientSession;
+  friend class ServerMediaSessionIterator;
   int fServerSocket;
   Port fServerPort;
   UserAuthenticationDatabase* fAuthDB;

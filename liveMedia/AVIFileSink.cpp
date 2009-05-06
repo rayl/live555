@@ -326,7 +326,7 @@ void AVIFileSink::completeOutputFile() {
 AVISubsessionIOState::AVISubsessionIOState(AVIFileSink& sink,
 				     MediaSubsession& subsession)
   : fOurSink(sink), fOurSubsession(subsession),
-    fMaxBytesPerSecond(0), fNumFrames(0) {
+    fMaxBytesPerSecond(0), fIsVideo(False), fIsAudio(False), fIsByteSwappedAudio(False), fNumFrames(0) {
   fBuffer = new SubsessionBuffer(fOurSink.fBufferSize);
   fPrevBuffer = sink.fPacketLossCompensate
     ? new SubsessionBuffer(fOurSink.fBufferSize) : NULL;

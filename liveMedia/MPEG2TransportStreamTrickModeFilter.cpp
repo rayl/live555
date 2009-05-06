@@ -24,6 +24,14 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEG2TransportStreamTrickModeFilter.hh"
 #include <ByteStreamFileSource.hh>
 
+// Define the following to be True if we want the output file to have the same frame rate as the original file.
+//    (Because the output file contains I-frames only, this means that each I-frame will appear in the output file
+//     several times, and therefore the output file's bitrate will be significantly higher than that of the original.)
+// Define the following to be False if we want the output file to include each I-frame no more than once.
+//    (This means that - except for high 'scale' values - both the output frame rate and the output bit rate
+//     will be less than that of the original.)
+#define KEEP_ORIGINAL_FRAME_RATE False
+
 MPEG2TransportStreamTrickModeFilter* MPEG2TransportStreamTrickModeFilter
 ::createNew(UsageEnvironment& env, FramedSource* inputSource,
 	    MPEG2TransportStreamIndexFile* indexFile, int scale) {
@@ -37,7 +45,7 @@ MPEG2TransportStreamTrickModeFilter
     fHaveStarted(False), fIndexFile(indexFile), fScale(scale), fDirection(1),
     fState(SKIPPING_FRAME), fFrameCount(0),
     fNextIndexRecordNum(0), fNextTSPacketNum(0),
-    fCurrentTSPacketNum((unsigned long)(-1)) {
+    fCurrentTSPacketNum((unsigned long)(-1)), fUseSavedFrameNextTime(False) {
   if (fScale < 0) { // reverse play
     fScale = -fScale;
     fDirection = -1;
@@ -105,8 +113,9 @@ void MPEG2TransportStreamTrickModeFilter::doGetNextFrame() {
       if (isIFrameStart(recordType)) {
 	// Save a record of this frame:
 	fSavedFrameIndexRecordStart = fNextIndexRecordNum - fDirection;
+	fUseSavedFrameNextTime = True;
 	//	fprintf(stderr, "\trecording\n");//#####
-	if ((fFrameCount++)%fScale == 0) {
+	if ((fFrameCount++)%fScale == 0 && fUseSavedFrameNextTime) {
 	  // A frame is due now.
 	  fFrameCount = 1; // reset to avoid overflow
 	  if (fDirection > 0) {
@@ -131,7 +140,7 @@ void MPEG2TransportStreamTrickModeFilter::doGetNextFrame() {
 	  fState = SKIPPING_FRAME;
 	}
       } else if (isNonIFrameStart(recordType)) {
-	if ((fFrameCount++)%fScale == 0) {
+	if ((fFrameCount++)%fScale == 0 && fUseSavedFrameNextTime) {
 	  // A frame is due now, so begin delivering the one that we had saved:
 	  // (This relies on the index records having begun with an I-frame.)
 	  fFrameCount = 1; // reset to avoid overflow
@@ -166,6 +175,7 @@ void MPEG2TransportStreamTrickModeFilter::doGetNextFrame() {
 	// We've reached the end of the saved frame, so revert to the
 	// original sequence of index records:
 	fNextIndexRecordNum = fSavedSequentialIndexRecordNum;
+	fUseSavedFrameNextTime = KEEP_ORIGINAL_FRAME_RATE;
 	fState = SKIPPING_FRAME;
       } else {
 	// Continue delivering:

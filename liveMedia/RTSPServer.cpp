@@ -31,7 +31,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #define RTPINFO_INCLUDE_RTPTIME 1
 
-////////// RTSPServer //////////
+////////// RTSPServer implementation //////////
 
 RTSPServer*
 RTSPServer::createNew(UsageEnvironment& env, Port ourPort,
@@ -236,16 +236,15 @@ void RTSPServer::incomingConnectionHandler1() {
   increaseSendBufferTo(envir(), clientSocket, 50*1024);
 
 #if defined(DEBUG) || defined(DEBUG_CONNECTIONS)
-  fprintf(stderr, "accept()ed connection from %s\n", our_inet_ntoa(clientAddr.sin_addr));
+  envir() << "accept()ed connection from " << our_inet_ntoa(clientAddr.sin_addr) << '\n';
 #endif
 
   // Create a new object for this RTSP session:
-  new RTSPClientSession(*this, ++fSessionIdCounter,
-			clientSocket, clientAddr);
+  (void)createNewClientSession(++fSessionIdCounter, clientSocket, clientAddr);
 }
 
 
-////////// RTSPServer::RTSPClientSession //////////
+////////// RTSPServer::RTSPClientSession implementation //////////
 
 RTSPServer::RTSPClientSession
 ::RTSPClientSession(RTSPServer& ourServer, unsigned sessionId,
@@ -378,7 +377,8 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
     } else if (strcmp(cmdName, "TEARDOWN") == 0
 	       || strcmp(cmdName, "PLAY") == 0
 	       || strcmp(cmdName, "PAUSE") == 0
-	       || strcmp(cmdName, "GET_PARAMETER") == 0) {
+	       || strcmp(cmdName, "GET_PARAMETER") == 0
+	       || strcmp(cmdName, "SET_PARAMETER") == 0) {
       handleCmd_withinSession(cmdName, urlPreSuffix, urlSuffix, cseq,
 			      (char const*)fRequestBuffer);
     } else {
@@ -433,7 +433,7 @@ static char const* dateHeader() {
 }
 
 static char const* allowedCommandNames
-  = "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE";
+  = "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, GET_PARAMETER, SET_PARAMETER";
 
 void RTSPServer::RTSPClientSession::handleCmd_bad(char const* /*cseq*/) {
   // Don't do anything with "cseq", because it might be nonsense
@@ -901,7 +901,7 @@ void RTSPServer::RTSPClientSession
   char* rtspURL = fOurServer.rtspURL(fOurServerMediaSession, fClientSocket);
   unsigned rtspURLSize = strlen(rtspURL);
 
-  //// Parse the client's "Scale:" header, if any:
+  // Parse the client's "Scale:" header, if any:
   float scale;
   Boolean sawScaleHeader = parseScaleHeader(fullRequestStr, scale);
 
@@ -921,7 +921,7 @@ void RTSPServer::RTSPClientSession
   }
   scaleHeader = strDup(buf);
 
-  //// Parse the client's "Range:" header, if any:
+  // Parse the client's "Range:" header, if any:
   double rangeStart = 0.0, rangeEnd = 0.0;
   Boolean sawRangeHeader = parseRangeHeader(fullRequestStr, rangeStart, rangeEnd);
 
@@ -1217,16 +1217,35 @@ void RTSPServer::RTSPClientSession
 ::livenessTimeoutTask(RTSPClientSession* clientSession) {
   // If this gets called, the client session is assumed to have timed out,
   // so delete it:
-
-  // However, we don't timeout multicast sessions, because to do so would require
-  // closing all client sessions that have requested the stream - not just this one.
-  // Also, the multicast stream itself would usually not be halted, in any case.
-  if (clientSession->isMulticast()) return;
-
 #ifdef DEBUG
   fprintf(stderr, "RTSP client session from %s has timed out (due to inactivity)\n", our_inet_ntoa(clientSession->fClientAddr.sin_addr));
 #endif
   delete clientSession;
+}
+
+RTSPServer::RTSPClientSession*
+RTSPServer::createNewClientSession(unsigned sessionId, int clientSocket, struct sockaddr_in clientAddr) {
+  return new RTSPClientSession(*this, sessionId, clientSocket, clientAddr);
+}
+
+
+////////// ServerMediaSessionIterator implementation //////////
+
+RTSPServer::ServerMediaSessionIterator
+::ServerMediaSessionIterator(RTSPServer& server)
+  : fOurIterator((server.fServerMediaSessions == NULL)
+		 ? NULL : HashTable::Iterator::create(*server.fServerMediaSessions)) {
+}
+
+RTSPServer::ServerMediaSessionIterator::~ServerMediaSessionIterator() {
+  delete fOurIterator;
+}
+
+ServerMediaSession* RTSPServer::ServerMediaSessionIterator::next() {
+  if (fOurIterator == NULL) return NULL;
+
+  char const* key; // dummy
+  return (ServerMediaSession*)(fOurIterator->next(key));
 }
 
 

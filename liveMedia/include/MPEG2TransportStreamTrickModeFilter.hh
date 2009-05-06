@@ -93,6 +93,7 @@ private:
   float fDesiredDataPCR, fFirstPCR;
   unsigned long fSavedFrameIndexRecordStart;
   unsigned long fSavedSequentialIndexRecordNum;
+  Boolean fUseSavedFrameNextTime;
 };
 
 #endif

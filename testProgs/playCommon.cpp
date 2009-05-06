@@ -1263,7 +1263,7 @@ void checkForPacketArrival(void* /*clientData*/) {
     struct timeval timeNow;
     gettimeofday(&timeNow, NULL);
 	char timestampStr[100];
-	sprintf(timestampStr, "%ld%03ld", timeNow.tv_sec, timeNow.tv_usec/1000);
+	sprintf(timestampStr, "%ld%03ld", timeNow.tv_sec, (long)(timeNow.tv_usec/1000));
     *env << (syncStreams ? "Synchronized d" : "D")
 		<< "ata packets have begun arriving [" << timestampStr << "]\007\n";
     return;

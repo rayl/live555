@@ -1004,7 +1004,7 @@ Boolean MediaSubsession::parseSDPAttribute_rtpmap(char const* sdpLine) {
       // codec name and timestamp frequency:
       // (First, make sure the codec name is upper case)
       {
-	Locale("POSIX");
+	Locale l("POSIX");
 	for (char* p = codecName; *p != '\0'; ++p) *p = toupper(*p);
       }
       delete[] fCodecName; fCodecName = strDup(codecName);
@@ -1072,7 +1072,7 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
     // First, convert the line to lower-case, to ease comparison:
     char* const lineCopy = strDup(sdpLine); char* line = lineCopy;
     {
-      Locale("POSIX");
+      Locale l("POSIX");
       for (char* c = line; *c != '\0'; ++c) *c = tolower(*c);
     }
     while (*line != '\0' && *line != '\r' && *line != '\n') {
@@ -1187,7 +1187,7 @@ Boolean MediaSubsession::parseSDPAttribute_framerate(char const* sdpLine) {
 
   float frate;
   int rate;
-  if (sscanf(sdpLine, "a=framerate: %f", &frate) == 1) {
+  if (sscanf(sdpLine, "a=framerate: %f", &frate) == 1 || sscanf(sdpLine, "a=framerate:%f", &frate) == 1) {
     parseSuccess = True;
     fVideoFPS = (unsigned)frate;
   } else if (sscanf(sdpLine, "a=x-framerate: %d", &rate) == 1) {

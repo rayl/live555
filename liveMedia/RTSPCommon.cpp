@@ -146,7 +146,7 @@ Boolean parseRangeHeader(char const* buf, double& rangeStart, double& rangeEnd) 
   char const* fields = buf + 7;
   while (*fields == ' ') ++fields;
   double start, end;
-  Locale("C", LC_NUMERIC);
+  Locale l("C", LC_NUMERIC);
   if (sscanf(fields, "npt = %lf - %lf", &start, &end) == 2) {
     rangeStart = start;
     rangeEnd = end;

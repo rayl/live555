@@ -83,6 +83,6 @@ void BasicUsageEnvironment0::appendToResultMsg(MsgString msg) {
 }
 
 void BasicUsageEnvironment0::reportBackgroundError() {
-  fputs(fResultMsgBuffer, stderr);
+  fputs(getResultMsg(), stderr);
 }
 
