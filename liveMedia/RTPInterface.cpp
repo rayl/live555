@@ -85,15 +85,67 @@ static void removeSocketDescription(UsageEnvironment& env, int sockNum) {
   }
 }
 
+
+////////// class GroupsockList //////////
+
+class GroupsockList {
+public:
+  GroupsockList(Groupsock* gs, GroupsockList* next)
+    : fNext(next), fGS(gs) {
+  }
+
+  virtual ~GroupsockList() { delete fNext; }
+
+  GroupsockList*& next() { return fNext; }
+  Groupsock* gs() const { return fGS; }
+
+private:
+  GroupsockList* fNext;
+  Groupsock* fGS;
+};
+
+
 ////////// RTPInterface - Implementation //////////
 
 RTPInterface::RTPInterface(Medium* owner, Groupsock* gs)
-  : fOwner(owner), fGS(gs), fStreamSocketNum(-1),
+  : fOwner(owner), fPrimaryGS(gs), fStreamSocketNum(-1),
     fNextTCPReadSize(0), fReadHandlerProc(NULL),
     fAuxReadHandlerFunc(NULL), fAuxReadHandlerClientData(NULL) {
+  fDestinationGSs = new GroupsockList(gs, NULL);
 }
 
-RTPInterface::~RTPInterface() {}
+RTPInterface::~RTPInterface() {
+  delete fDestinationGSs;
+}
+
+void RTPInterface::addDestination(Groupsock* gs) {
+  if (gs != fPrimaryGS) {
+    fDestinationGSs = new GroupsockList(gs, fDestinationGSs);
+  }
+}
+
+void RTPInterface::removeDestination(Groupsock* gs) {
+  GroupsockList* toRemove = NULL;
+
+  if (gs == fDestinationGSs->gs()) {
+    toRemove = fDestinationGSs;
+    fDestinationGSs = fDestinationGSs->next();
+  } else {
+    GroupsockList* groupsocks = fDestinationGSs;
+    while (groupsocks != NULL) {
+      if (groupsocks->next()->gs() == gs) {
+	toRemove = groupsocks->next();
+	groupsocks->next() = toRemove->next();
+	break;
+      }
+    }
+  }
+
+  if (toRemove != NULL) {
+    toRemove->next() = NULL;
+    delete toRemove;
+  }
+}
 
 Boolean RTPOverTCP_OK = True; // HACK: For detecting TCP socket failure externally #####
 
@@ -106,8 +158,12 @@ void RTPInterface::setStreamSocket(int sockNum,
 
 void RTPInterface::sendPacket(unsigned char* packet, unsigned packetSize) {
   if (fStreamSocketNum < 0) {
-    // Normal case: Send as a UDP packet:
-    fGS->output(envir(), fGS->ttl(), packet, packetSize);
+    // Normal case: Send as a UDP packet, to each destination groupsock:
+    for (GroupsockList* gsList = fDestinationGSs; gsList != NULL;
+	 gsList = gsList->next()) {
+      Groupsock* gs = gsList->gs();
+      gs->output(envir(), gs->ttl(), packet, packetSize);
+    }
   } else {
     // Send RTP over TCP:
     sendRTPOverTCP(packet, packetSize, fStreamSocketNum, fStreamChannelId);
@@ -119,7 +175,8 @@ void RTPInterface
   if (fStreamSocketNum < 0) {
     // Normal case: Arrange to read UDP packets:
     envir().taskScheduler().
-      turnOnBackgroundReadHandling(fGS->socketNum(), handlerProc, fOwner);
+      turnOnBackgroundReadHandling(fPrimaryGS->socketNum(),
+				   handlerProc, fOwner);
   } else {
     // Receive RTP over TCP.
     fReadHandlerProc = handlerProc;
@@ -146,7 +203,7 @@ Boolean RTPInterface::handleRead(unsigned char* buffer,
   if (fStreamSocketNum < 0) {
     // Normal case: read from the (datagram) 'groupsock':
     readSuccess
-      = fGS->handleRead(buffer, bufferMaxSize, bytesRead, fromAddress);
+      = fPrimaryGS->handleRead(buffer, bufferMaxSize, bytesRead, fromAddress);
   } else {
     // Read from the TCP connection:
     bytesRead = 0;
@@ -181,7 +238,7 @@ void RTPInterface::stopNetworkReading() {
   if (fStreamSocketNum < 0) {
     // Normal case
     envir().taskScheduler().
-      turnOffBackgroundReadHandling(fGS->socketNum());
+      turnOffBackgroundReadHandling(fPrimaryGS->socketNum());
   } else {
     SocketDescriptor* socketDescriptor
       = lookupSocketDescriptor(envir(), fStreamSocketNum);

@@ -40,7 +40,10 @@ public:
   RTPInterface(Medium* owner, Groupsock* gs);
   virtual ~RTPInterface();
 
-  Groupsock* gs() const { return fGS; }
+  Groupsock* gs() const { return fPrimaryGS; }
+
+  void addDestination(Groupsock* gs);
+  void removeDestination(Groupsock* gs);
 
   void setStreamSocket(int sockNum, unsigned char streamChannelId);
 
@@ -63,7 +66,8 @@ public:
 private:
   friend class SocketDescriptor;
   Medium* fOwner;
-  Groupsock* fGS;
+  Groupsock* fPrimaryGS;
+  class GroupsockList* fDestinationGSs;
 
   int fStreamSocketNum;
   unsigned char fStreamChannelId;

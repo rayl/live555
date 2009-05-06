@@ -62,6 +62,9 @@ public:
 
   Groupsock* RTCPgs() const { return fRTCPInterface.gs(); }
 
+  void addDestination(Groupsock* gs) {fRTCPInterface.addDestination(gs);}
+  void removeDestination(Groupsock* gs) {fRTCPInterface.removeDestination(gs);}
+
   void setStreamSocket(int sockNum, unsigned char streamChannelId);
     // hack to allow sending RTP over TCP (RFC 2236, section 10.12)
 

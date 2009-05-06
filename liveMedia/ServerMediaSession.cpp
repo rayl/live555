@@ -232,12 +232,15 @@ char const* ServerMediaSubsession::trackId() {
   return fTrackId;
 }
 
-void ServerMediaSubsession::startStream(void* /*streamToken*/) {
+void ServerMediaSubsession::startStream(unsigned clientSessionId,
+					void* /*streamToken*/) {
   // default implementation: do nothing
 }
-void ServerMediaSubsession::pauseStream(void* /*streamToken*/) {
+void ServerMediaSubsession::pauseStream(unsigned clientSessionId,
+					void* /*streamToken*/) {
   // default implementation: do nothing
 }
-void ServerMediaSubsession::deleteStream(void*& /*streamToken*/) {
+void ServerMediaSubsession::deleteStream(unsigned clientSessionId,
+					 void*& /*streamToken*/) {
   // default implementation: do nothing
 }

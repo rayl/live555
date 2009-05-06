@@ -115,9 +115,9 @@ public:
 				   Port& serverRTCPPort, // out
 				   void*& streamToken // out
 				   ) = 0;
-  virtual void startStream(void* streamToken);
-  virtual void pauseStream(void* streamToken);
-  virtual void deleteStream(void*& streamToken);
+  virtual void startStream(unsigned clientSessionId, void* streamToken);
+  virtual void pauseStream(unsigned clientSessionId, void* streamToken);
+  virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 
 protected: // we're a virtual base class
   ServerMediaSubsession(UsageEnvironment& env);

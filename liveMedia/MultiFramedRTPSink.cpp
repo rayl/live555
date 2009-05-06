@@ -24,8 +24,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// MultiFramedRTPSink //////////
 
-static unsigned const maxPacketSize = 1450;
+static unsigned const maxPacketSize = 1448;
 	// bytes (1500, minus some allowance for IP, UDP, UMTP headers)
+        // (Also, make it a multiple of 4 bytes, just in case that matters.)
 static unsigned const preferredPacketSize = 1000; // bytes
 
 MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,

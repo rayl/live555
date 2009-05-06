@@ -128,7 +128,6 @@ _Tables* _Tables::getOurTables(UsageEnvironment& env) {
 void _Tables::reclaimIfPossible() {
   if (mediaTable == NULL && socketTable == NULL) {
     delete this;
-    fEnv.liveMediaPriv = NULL;
   }
 }
 

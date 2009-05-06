@@ -230,7 +230,8 @@ RTSPServer::RTSPClientSession::~RTSPClientSession() {
 void RTSPServer::RTSPClientSession::reclaimStreamStates() {
   for (unsigned i = 0; i < fNumStreamStates; ++i) {
     if (fStreamStates[i].subsession != NULL) {
-      fStreamStates[i].subsession->deleteStream(fStreamStates[i].streamToken);
+      fStreamStates[i].subsession->deleteStream(fOurSessionId,
+						fStreamStates[i].streamToken);
     }
   }
   delete[] fStreamStates; fStreamStates = NULL;
@@ -659,7 +660,8 @@ void RTSPServer::RTSPClientSession
   for (unsigned i = 0; i < fNumStreamStates; ++i) {
     if (subsession == NULL /* means: aggregated operation */
 	|| subsession == fStreamStates[i].subsession) {
-      fStreamStates[i].subsession->startStream(fStreamStates[i].streamToken);
+      fStreamStates[i].subsession->startStream(fOurSessionId,
+					       fStreamStates[i].streamToken);
     }
   }
   sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nSession: %d\r\n\r\n",
@@ -671,7 +673,8 @@ void RTSPServer::RTSPClientSession
   for (unsigned i = 0; i < fNumStreamStates; ++i) {
     if (subsession == NULL /* means: aggregated operation */
 	|| subsession == fStreamStates[i].subsession) {
-      fStreamStates[i].subsession->pauseStream(fStreamStates[i].streamToken);
+      fStreamStates[i].subsession->pauseStream(fOurSessionId,
+					       fStreamStates[i].streamToken);
     }
   }
   sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nSession: %d\r\n\r\n",
