@@ -56,7 +56,7 @@ char const* MPEG1or2DemuxedElementaryStream::MIMEtype() const {
 }
 
 unsigned MPEG1or2DemuxedElementaryStream::maxFrameSize() const {
-  return 10000;
+  return 25000;
   // This is a hack, which might break for some MPEG sources, because
   // the MPEG spec allows for PES packets as large as ~65536 bytes. #####
 }

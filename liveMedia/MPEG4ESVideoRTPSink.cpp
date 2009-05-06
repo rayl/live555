@@ -51,12 +51,14 @@ void MPEG4ESVideoRTPSink
 			 unsigned numBytesInFrame,
 			 struct timeval frameTimestamp,
 			 unsigned numRemainingBytes) {
-  // Begin by inspecting the 4-byte code at the start of the frame:
-  if (numBytesInFrame < 4) return; // shouldn't happen
-  unsigned startCode = (frameStart[0]<<24) | (frameStart[1]<<16)
-    | (frameStart[2]<<8) | frameStart[3];
+  if (fragmentationOffset == 0) {
+    // Begin by inspecting the 4-byte code at the start of the frame:
+    if (numBytesInFrame < 4) return; // shouldn't happen
+    unsigned startCode = (frameStart[0]<<24) | (frameStart[1]<<16)
+      | (frameStart[2]<<8) | frameStart[3];
 
-  fVOPIsPresent = startCode == VOP_START_CODE;
+    fVOPIsPresent = startCode == VOP_START_CODE;
+  }
 
   // Set the RTP 'M' (marker) bit iff this frame ends a VOP
   // (and there are no fragments remaining).
