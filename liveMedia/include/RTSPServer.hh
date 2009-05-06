@@ -57,6 +57,8 @@ protected:
   Boolean fPasswordsAreMD5;
 };
 
+#define RTSP_BUFFER_SIZE 10000 // for incoming requests, and outgoing responses
+
 class RTSPServer: public Medium {
 public:
   static RTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554,
@@ -144,7 +146,8 @@ private:
     ServerMediaSession* fOurServerMediaSession;
     int fClientSocket;
     struct sockaddr_in fClientAddr;
-    unsigned char fBuffer[10000];
+    unsigned char fBuffer[RTSP_BUFFER_SIZE];
+    unsigned char fResponseBuffer[RTSP_BUFFER_SIZE];
     Boolean fSessionIsActive, fStreamAfterSETUP;
     Authenticator fCurrentAuthenticator; // used if access control is needed
     unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP

@@ -27,6 +27,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEGVideoStreamParser.hh"
 #include <string.h>
 
+#define DEBUG 1 //#####@@@@@
 ////////// MPEG4VideoStreamParser definition //////////
 
 // An enum representing the current state of the parser:
