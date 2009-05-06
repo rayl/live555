@@ -60,7 +60,7 @@ void MP3StreamState::assignStream(FILE* fid, unsigned fileSize) {
     fFileSize = fileSize;
   }
   fNumFramesInFile = 0; // until we know otherwise
-  fIsVBR = False; // ditto
+  fIsVBR = fHasXingTOC = False; // ditto
 
   // Set the first frame's 'presentation time' to the current wall time:
   gettimeofday(&fNextFramePresentationTime, &Idunno);
@@ -95,11 +95,37 @@ float MP3StreamState::filePlayTime() const {
 void MP3StreamState::seekWithinFile(float seekNPT) {
   if (fFidIsReallyASocket) return; // it's not seekable
 
-  // NOTE: The following doesn't work well for VBR files; need to fix. #####
   float fileDuration = filePlayTime();
-  if (seekNPT > fileDuration) seekNPT = fileDuration;
-  unsigned byteNumber = (unsigned)((seekNPT/fileDuration)*fFileSize);
-  fseek(fFid, byteNumber, SEEK_SET);
+  if (seekNPT < 0.0) {
+    seekNPT = 0.0;
+  } else if (seekNPT > fileDuration) {
+    seekNPT = fileDuration;
+  }
+  float seekFraction = seekNPT/fileDuration;
+
+  unsigned seekByteNumber;
+  if (fHasXingTOC) {
+    // The file is VBR, with a Xing TOC; use it to determine which byte to seek to:
+    float percent = seekFraction*100.0f;
+    unsigned a = (unsigned)percent;
+    if (a > 99) a = 99;
+
+    unsigned fa = fXingTOC[a];
+    unsigned fb;
+    if (a < 99) {
+      fb = fXingTOC[a+1];
+    } else {
+      fb = 256;
+    }
+    float seekByteFraction = (fa + (fb-fa)*(percent-a))/256.0f;
+
+    seekByteNumber = (unsigned)(seekByteFraction*fFileSize);
+  } else {
+    // Normal case: Treat the file as if it's CBR:
+    seekByteNumber = (unsigned)(seekFraction*fFileSize);
+  }
+
+  fseek(fFid, seekByteNumber, SEEK_SET);
 }
 
 unsigned MP3StreamState::findNextHeader(struct timeval& presentationTime) {
@@ -229,9 +255,11 @@ Boolean MP3StreamState::findNextFrame() {
     fprintf(stderr, "init_resync: fr().hdr: 0x%08x\n", fr().hdr);
 #endif
     if (   (fr().hdr & 0xffe00000) != 0xffe00000
-	|| (fr().hdr & 0x00000C00) == 0x00000C00/* 'stream error' test below */
-	|| (fr().hdr & 0x0000F000) == 0 /* 'free format' test below */
-//#####   || (fr().hdr & 0x00060000) != 0x00020000 /* test for layer 3 */
+	|| (fr().hdr & 0x00060000) == 0 // undefined 'layer' field
+	|| (fr().hdr & 0x0000F000) == 0 // 'free format' bitrate index
+	|| (fr().hdr & 0x0000F000) == 0x0000F000 // undefined bitrate index
+	|| (fr().hdr & 0x00000C00) == 0x00000C00 // undefined frequency index
+	|| (fr().hdr & 0x00000003) != 0x00000000 // 'emphasis' field unexpectedly set
        ) {
       /* RSF: Do the following test even if we're not at the
 	 start of the file, in case we have two or more
@@ -401,18 +429,48 @@ unsigned MP3StreamState::readFromStream(unsigned char* buf,
   }
 }
 
+#define XING_FRAMES_FLAG       0x0001
+#define XING_BYTES_FLAG        0x0002
+#define XING_TOC_FLAG          0x0004
+#define XING_VBR_SCALE_FLAG    0x0008
+
 void MP3StreamState::checkForXingHeader() {
   // Look for 'Xing' in the first 4 bytes after the 'side info':
-  if (fr().frameSize < fr().sideInfoSize + 12) return;
+  if (fr().frameSize < fr().sideInfoSize) return;
+  unsigned bytesAvailable = fr().frameSize - fr().sideInfoSize;
   unsigned char* p = &(fr().frameBytes[fr().sideInfoSize]);
+
+  if (bytesAvailable < 8) return;
   if (p[0] != 'X' || p[1] != 'i' || p[2] != 'n' || p[3] != 'g') return;
 
   // We found it.
   fIsVBR = True;
 
-  // Next, check whether there's a '# of frames' field:
-  if (!(p[7]&1)) return;
+  u_int32_t flags = (p[4]<<24) | (p[5]<<16) | (p[6]<<8) | p[7];
+  unsigned i = 8;
+  bytesAvailable -= 8;
 
-  // The next 4 bytes are the number of frames:
-  fNumFramesInFile = (p[8]<<24)|(p[9]<<16)|(p[10]<<8)|(p[11]);
+  if (flags&XING_FRAMES_FLAG) {
+    // The next 4 bytes are the number of frames:
+    if (bytesAvailable < 4) return;
+    fNumFramesInFile = (p[i]<<24)|(p[i+1]<<16)|(p[i+2]<<8)|(p[i+3]);
+    i += 4; bytesAvailable -= 4;
+  }
+
+  if (flags&XING_BYTES_FLAG) {
+    // The next 4 bytes is the file size:
+    if (bytesAvailable < 4) return;
+    fFileSize = (p[i]<<24)|(p[i+1]<<16)|(p[i+2]<<8)|(p[i+3]);
+    i += 4; bytesAvailable -= 4;
+  }
+
+  if (flags&XING_TOC_FLAG) {
+    // Fill in the Xing 'table of contents': 
+    if (bytesAvailable < XING_TOC_LENGTH) return;
+    fHasXingTOC = True;
+    for (unsigned j = 0; j < XING_TOC_LENGTH; ++j) {
+      fXingTOC[j] = p[i+j];
+    }
+    i += XING_TOC_FLAG; bytesAvailable -= XING_TOC_FLAG;
+  }
 }

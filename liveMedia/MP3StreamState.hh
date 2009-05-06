@@ -36,6 +36,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include <stdio.h>
 
+#define XING_TOC_LENGTH 100
+
 class MP3StreamState {
 public:
   MP3StreamState(UsageEnvironment& env);
@@ -74,7 +76,8 @@ private:
   Boolean fFidIsReallyASocket;
   unsigned fFileSize;
   unsigned fNumFramesInFile;
-  Boolean fIsVBR;
+  Boolean fIsVBR, fHasXingTOC;
+  u_int8_t fXingTOC[XING_TOC_LENGTH]; // set iff "fHasXingTOC" is True
 
   MP3FrameParams fCurrentFrame;
   struct timeval fNextFramePresentationTime;

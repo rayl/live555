@@ -26,6 +26,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MP3FileSource.hh"
 #include "MP3ADU.hh"
 
+#define ADD_ADU_FILTERS_FOR_SEEKING 1
+
 MP3AudioFileServerMediaSubsession* MP3AudioFileServerMediaSubsession
 ::createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource,
 	    Boolean useADUs, Interleaving* interleaving) {
@@ -52,14 +54,24 @@ void MP3AudioFileServerMediaSubsession
   MP3FileSource* mp3Source;
   if (fUseADUs) {
     // "inputSource" is a filter; use its input source instead.
-    FramedFilter* filter;
+    ADUFromMP3Source* filter;
     if (fInterleaving != NULL) {
       // There's another filter as well.
-      filter = (FramedFilter*)(((FramedFilter*)inputSource)->inputSource());
+      filter = (ADUFromMP3Source*)(((FramedFilter*)inputSource)->inputSource());
     } else {
-      filter = (FramedFilter*)inputSource;
+      filter = (ADUFromMP3Source*)inputSource;
     }
+    filter->resetInput(); // because we're about to seek within its source
     mp3Source = (MP3FileSource*)(filter->inputSource());
+#ifdef ADD_ADU_FILTERS_FOR_SEEKING
+  } else if (fFileDuration > 0.0) {
+    // There are a pair of filters - MP3->ADU and ADU->MP3 - in front of the
+    // original MP3 source:
+    MP3FromADUSource* filter2 = (MP3FromADUSource*)inputSource;
+    ADUFromMP3Source* filter1 = (ADUFromMP3Source*)(filter2->inputSource());
+    filter1->resetInput(); // because we're about to seek within its source
+    mp3Source = (MP3FileSource*)(filter1->inputSource());
+#endif
   } else {
     // "inputSource" is the original MP3 source:
     mp3Source = (MP3FileSource*)inputSource;
@@ -91,6 +103,17 @@ FramedSource* MP3AudioFileServerMediaSubsession
 						    streamSource);
 	if (streamSource == NULL) break;
       }
+#ifdef ADD_ADU_FILTERS_FOR_SEEKING
+    } else if (fFileDuration > 0.0) {
+      // Because this is a seekable file, insert a pair of filters: one that
+      // converts the input MP3 stream to ADUs; another that converts these
+      // ADUs back to MP3.  This allows us to seek within the input stream without
+      // tripping over the MP3 'bit reservoir':
+      streamSource = ADUFromMP3Source::createNew(envir(), streamSource);
+      if (streamSource == NULL) break;
+      streamSource = MP3FromADUSource::createNew(envir(), streamSource);
+      if (streamSource == NULL) break;
+#endif
     }
   } while (0);
 

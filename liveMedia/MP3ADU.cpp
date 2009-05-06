@@ -54,9 +54,9 @@ unsigned const Segment::headerSize = 4;
 class SegmentQueue {
 public:
   SegmentQueue(Boolean directionIsToADU, Boolean includeADUdescriptors)
-    : fHeadIndex(0), fNextFreeIndex(0), fTotalDataSize(0),
-      fDirectionIsToADU(directionIsToADU),
+    : fDirectionIsToADU(directionIsToADU),
       fIncludeADUdescriptors(includeADUdescriptors) {
+    reset();
   }
 
   Segment s[SegmentQueueSize];
@@ -79,6 +79,8 @@ public:
   Boolean dequeue();
 
   Boolean insertDummyBeforeTail(unsigned backpointer);
+
+  void reset() { fHeadIndex = fNextFreeIndex = fTotalDataSize = 0; }
 
 private:
   static void sqAfterGettingSegment(void* clientData,
@@ -136,6 +138,10 @@ ADUFromMP3Source* ADUFromMP3Source::createNew(UsageEnvironment& env,
   }
 
   return new ADUFromMP3Source(env, inputSource, includeADUdescriptors);
+}
+
+void ADUFromMP3Source::resetInput() {
+  fSegments->reset();
 }
 
 void ADUFromMP3Source::doGetNextFrame() {

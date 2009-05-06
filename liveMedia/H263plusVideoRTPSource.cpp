@@ -68,8 +68,7 @@ Boolean H263plusVideoRTPSource
     if (packetSize < expectedHeaderSize) return False;
   }
 
-  fCurrentPacketBeginsFrame = fCurrentPacketCompletesFrame;
-          // whether the *previous* packet ended a frame
+  fCurrentPacketBeginsFrame = P;
   if (fCurrentPacketBeginsFrame) {
     fNumSpecialHeaders = fSpecialHeaderBytesLength = 0;
   }

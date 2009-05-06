@@ -31,6 +31,12 @@ public:
 				     FramedSource* inputSource,
 				     Boolean includeADUdescriptors = True);
 
+  void resetInput();
+      // This is called whenever there's a discontinuity in the input MP3 source
+      // (e.g., due to seeking within the source).  It causes any still-unprocessed
+      // MP3 frame data within our queue to be discarded, so that it does not
+      // erroneously get used by backpointers from the new MP3 frames.
+
 protected:
   ADUFromMP3Source(UsageEnvironment& env,
 		   FramedSource* inputSource,
