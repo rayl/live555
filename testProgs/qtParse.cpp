@@ -134,6 +134,7 @@ static unsigned parseAtom(unsigned char const* ptr, unsigned size) {
 
 static int isKnownAtom(unsigned atomType, unsigned atomSize,
 		       unsigned& offsetToEnclosedAtoms) {
+  static int isMP4Format = 0; // by default
   switch(atomType) {
   case at('?','?','?','?'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('a','g','s','m'): {offsetToEnclosedAtoms = atomSize-8; break;}
@@ -152,7 +153,7 @@ static int isKnownAtom(unsigned atomType, unsigned atomSize,
   case at('e','l','s','t'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('e','s','d','s'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('f','r','e','e'): {offsetToEnclosedAtoms = atomSize-8; break;}
-  case at('f','t','y','p'): {offsetToEnclosedAtoms = atomSize-8; break;}
+  case at('f','t','y','p'): {isMP4Format = 1; offsetToEnclosedAtoms = atomSize-8; break;}
   case at('g','m','h','d'): {offsetToEnclosedAtoms = 0; break;}
   case at('g','m','i','n'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('h','2','6','3'): {offsetToEnclosedAtoms = atomSize-8; break;}
@@ -171,7 +172,7 @@ static int isKnownAtom(unsigned atomType, unsigned atomSize,
   case at('m','i','n','f'): {offsetToEnclosedAtoms = 0; break;}
   case at('m','o','o','v'): {offsetToEnclosedAtoms = 0; break;}
   case at('m','p','3',' '): {offsetToEnclosedAtoms = 7*4; break;}
-  case at('m','p','4','a'): {offsetToEnclosedAtoms = 11*4; break;}
+  case at('m','p','4','a'): {offsetToEnclosedAtoms = isMP4Format ? 7*4 : 11*4; break;}
   case at('m','p','4','v'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('m','v','h','d'): {offsetToEnclosedAtoms = 25*4; break;}
   case at('n','a','m','e'): {offsetToEnclosedAtoms = atomSize-8; break;}
@@ -196,6 +197,7 @@ static int isKnownAtom(unsigned atomType, unsigned atomSize,
   case at('s','t','s','z'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('s','t','t','s'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('S','V','Q','1'): {offsetToEnclosedAtoms = atomSize-8; break;}
+  case at('S','V','Q','3'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('t','e','x','t'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('t','i','m','s'): {offsetToEnclosedAtoms = 1*4; break;}
   case at('t','k','h','d'): {offsetToEnclosedAtoms = 21*4; break;}

@@ -24,6 +24,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 #include "WAVAudioFileSource.hh"
+#include "InputFile.hh"
 #include "GroupsockHelper.hh"
 
 ////////// WAVAudioFileSource //////////
@@ -31,21 +32,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 WAVAudioFileSource*
 WAVAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
   do {
-    FILE* fid;
-
-    // Check for a special case file name: "stdin"
-    if (strcmp(fileName, "stdin") == 0) {
-      fid = stdin;
-#if defined(__WIN32__) || defined(_WIN32)
-      _setmode(_fileno(stdin), _O_BINARY); // convert to binary mode
-#endif
-    } else { 
-      fid = fopen(fileName, "rb");
-      if (fid == NULL) {
-	env.setResultMsg("unable to open file \"",fileName, "\"");
-	break;
-      }
-    }
+    FILE* fid = OpenInputFile(env, fileName);
+    if (fid == NULL) break;
 
     WAVAudioFileSource* newSource = new WAVAudioFileSource(env, fid);
     if (newSource != NULL && newSource->bitsPerSample() == 0) {
@@ -175,7 +163,7 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
 }
 
 WAVAudioFileSource::~WAVAudioFileSource() {
-  fclose(fFid);
+  CloseInputFile(fFid);
 }
 
 #ifdef BSD

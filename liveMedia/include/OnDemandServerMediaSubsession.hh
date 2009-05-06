@@ -49,7 +49,9 @@ private: // redefined virtual functions
                                    Port& serverRTPPort,
                                    Port& serverRTCPPort,
                                    void*& streamToken);
-  virtual void startStream(unsigned clientSessionId, void* streamToken);
+  virtual void startStream(unsigned clientSessionId, void* streamToken,
+			   unsigned short& rtpSeqNum,
+                           unsigned& rtpTimestamp);
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
   virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 

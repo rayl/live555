@@ -18,12 +18,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A source object for AMR audio files (as defined in RFC 3267, section 5)
 // Implementation
 
-#if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
-#include <io.h>
-#include <fcntl.h>
-#endif
-
 #include "AMRAudioFileSource.hh"
+#include "InputFile.hh"
 #include "GroupsockHelper.hh"
 
 ////////// AMRAudioFileSource //////////
@@ -34,19 +30,8 @@ AMRAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
   Boolean magicNumberOK = True;
   do {
 
-    // Check for a special case file name: "stdin"
-    if (strcmp(fileName, "stdin") == 0) {
-      fid = stdin;
-#if defined(__WIN32__) || defined(_WIN32)
-      _setmode(_fileno(stdin), _O_BINARY); // convert to binary mode
-#endif
-    } else { 
-      fid = fopen(fileName, "rb");
-      if (fid == NULL) {
-	env.setResultMsg("unable to open file \"",fileName, "\"");
-	break;
-      }
-    }
+    fid = OpenInputFile(env, fileName);
+    if (fid == NULL) break;
 
     // Now, having opened the input file, read the first few bytes, to
     // check the required 'magic number':
@@ -92,7 +77,7 @@ AMRAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
   } while (0);
 
   // An error occurred:
-  if (fid != NULL) fclose(fid);
+  CloseInputFile(fid);
   if (!magicNumberOK) {
     env.setResultMsg("Bad (or nonexistent) AMR file header");
   }
@@ -107,7 +92,7 @@ AMRAudioFileSource
 }
 
 AMRAudioFileSource::~AMRAudioFileSource() {
-  fclose(fFid);
+  CloseInputFile(fFid);
 }
 
 #ifdef BSD

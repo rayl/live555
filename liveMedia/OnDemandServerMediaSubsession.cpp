@@ -113,6 +113,8 @@ public:
   Port const& serverRTPPort() const { return fServerRTPPort; }
   Port const& serverRTCPPort() const { return fServerRTCPPort; }
 
+  RTPSink const* rtpSink() const { return fRTPSink; }
+
 private:
   unsigned fReferenceCount;
 
@@ -212,11 +214,19 @@ void OnDemandServerMediaSubsession
 }
 
 void OnDemandServerMediaSubsession::startStream(unsigned clientSessionId,
-						void* streamToken) {
+						void* streamToken,
+						unsigned short& rtpSeqNum,
+						unsigned& rtpTimestamp) {
   StreamState* streamState = (StreamState*)streamToken; 
   Destinations* destinations
     = (Destinations*)(fDestinationsHashTable->Lookup((char const*)clientSessionId));
-  if (streamState != NULL) streamState->startPlaying(destinations);
+  if (streamState != NULL) {
+    streamState->startPlaying(destinations);
+    if (streamState->rtpSink() != NULL) {
+      rtpSeqNum = streamState->rtpSink()->currentSeqNo();
+      rtpTimestamp = streamState->rtpSink()->currentTimestamp();
+    }
+  }
 }
 
 void OnDemandServerMediaSubsession::pauseStream(unsigned /*clientSessionId*/,

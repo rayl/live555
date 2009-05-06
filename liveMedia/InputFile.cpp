@@ -1,0 +1,51 @@
+/**********
+This library is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the
+Free Software Foundation; either version 2.1 of the License, or (at your
+option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
+
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+**********/
+// "liveMedia"
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
+// Common routines for opening/closing named input files
+// Implementation
+
+#if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
+#include <io.h>
+#include <fcntl.h>
+#endif
+#include <string.h>
+
+#include "InputFile.hh"
+
+FILE* OpenInputFile(UsageEnvironment& env, char const* fileName) {
+  FILE* fid;
+
+  // Check for a special case file name: "stdin"
+  if (strcmp(fileName, "stdin") == 0) {
+    fid = stdin;
+#if defined(__WIN32__) || defined(_WIN32)
+    _setmode(_fileno(stdin), _O_BINARY); // convert to binary mode
+#endif
+  } else { 
+    fid = fopen(fileName, "rb");
+    if (fid == NULL) {
+      env.setResultMsg("unable to open file \"",fileName, "\"");
+    }
+  }
+
+  return fid;
+}
+
+void CloseInputFile(FILE* fid) {
+  // Don't close 'stdin', in case we want to use it again later.
+  if (fid != NULL && fid != stdin) fclose(fid);
+}

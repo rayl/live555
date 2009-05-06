@@ -57,6 +57,7 @@ TaskToken interPacketGapCheckTimerTask = NULL;
 TaskToken qosMeasurementTimerTask = NULL;
 Boolean createReceivers = True;
 Boolean outputQuickTimeFile = False;
+Boolean generateMP4Format = False;
 QuickTimeFileSink* qtOut = NULL;
 Boolean audioOnly = False;
 Boolean videoOnly = False;
@@ -104,7 +105,7 @@ struct timeval startTime;
 
 void usage() {
   *env << "Usage: " << progName
-       << " [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-E <max-inter-packet-gap-time> [-c] [-s <offset>] [-n] [-O]"
+       << " [-p <startPortNum>] [-r|-q|-4] [-a|-v] [-V] [-e <endTime>] [-E <max-inter-packet-gap-time> [-c] [-s <offset>] [-n] [-O]"
 	   << (controlConnectionUsesTCP ? " [-t]" : "")
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
@@ -159,6 +160,12 @@ int main(int argc, char** argv) {
 
     case 'q': { // output a QuickTime file (to stdout)
       outputQuickTimeFile = True;
+      break;
+    }
+
+    case '4': { // output a 'mp4'-format file (to stdout)
+      outputQuickTimeFile = True;
+      generateMP4Format = True;
       break;
     }
 
@@ -382,7 +389,7 @@ int main(int argc, char** argv) {
   }
   if (argc != 2) usage();
   if (!createReceivers && outputQuickTimeFile) {
-    *env << "The -r and -q flags cannot both be used!\n";
+    *env << "The -r and -q (or -4) flags cannot both be used!\n";
     usage();
   }
   if (destRTSPURL != NULL && (!createReceivers || outputQuickTimeFile)) {
@@ -546,7 +553,8 @@ int main(int argc, char** argv) {
 					   movieFPS,
 					   packetLossCompensate,
 					   syncStreams,
-					   generateHintTracks);
+					   generateHintTracks,
+					   generateMP4Format);
       if (qtOut == NULL) {
 		*env << "Failed to create QuickTime file sink for stdout: " << env->getResultMsg();
 		shutdown();

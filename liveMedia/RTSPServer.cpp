@@ -23,11 +23,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
 #define _strncasecmp _strnicmp
+#define snprintf _snprintf
 #else
 #include <signal.h>
 #define USE_SIGNALS 1
 #define _strncasecmp strncasecmp
 #endif
+#include <time.h> // for "strftime()" and "gmtime()"
 
 ////////// RTSPServer //////////
 
@@ -339,35 +341,50 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
 
 // Handler routines for specific RTSP commands:
 
+// Generate a "Date:" header for use in a RTSP response:
+static char const* dateHeader() {
+  static char buf[200];
+  time_t tt = time(NULL);
+  strftime(buf, sizeof buf, "Date: %a, %b %d %Y %H:%M:%S GMT\r\n", gmtime(&tt));
+  return buf;
+}
+
 static char const* allowedCommandNames
   = "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE";
 
 void RTSPServer::RTSPClientSession::handleCmd_bad(char const* /*cseq*/) {
   // Don't do anything with "cseq", because it might be nonsense
-  sprintf((char*)fBuffer, "RTSP/1.0 400 Bad Request\r\nAllow: %s\r\n\r\n",
-	  allowedCommandNames);
+  snprintf((char*)fBuffer, sizeof fBuffer,
+	   "RTSP/1.0 400 Bad Request\r\n%sAllow: %s\r\n\r\n",
+	   dateHeader(), allowedCommandNames);
   fSessionIsActive = False; // triggers deletion of ourself after responding
 }
 
 void RTSPServer::RTSPClientSession::handleCmd_notSupported(char const* cseq) {
-  sprintf((char*)fBuffer, "RTSP/1.0 405 Method Not Allowed\r\nCSeq: %s\r\nAllow: %s\r\n\r\n",
-	  cseq, allowedCommandNames);
+  snprintf((char*)fBuffer, sizeof fBuffer,
+	   "RTSP/1.0 405 Method Not Allowed\r\nCSeq: %s\r\n%sAllow: %s\r\n\r\n",
+	   cseq, dateHeader(), allowedCommandNames);
   fSessionIsActive = False; // triggers deletion of ourself after responding
 }
 
 void RTSPServer::RTSPClientSession::handleCmd_notFound(char const* cseq) {
-  sprintf((char*)fBuffer, "RTSP/1.0 404 Stream Not Found\r\nCSeq: %s\r\n\r\n", cseq);
+  snprintf((char*)fBuffer, sizeof fBuffer,
+	   "RTSP/1.0 404 Stream Not Found\r\nCSeq: %s\r\n%s\r\n",
+	   cseq, dateHeader());
   fSessionIsActive = False; // triggers deletion of ourself after responding
 }
 
 void RTSPServer::RTSPClientSession::handleCmd_unsupportedTransport(char const* cseq) {
-  sprintf((char*)fBuffer, "RTSP/1.0 461 Unsupported Transport\r\nCSeq: %s\r\n\r\n", cseq);
+  snprintf((char*)fBuffer, sizeof fBuffer,
+	   "RTSP/1.0 461 Unsupported Transport\r\nCSeq: %s\r\n%s\r\n",
+	   cseq, dateHeader());
   fSessionIsActive = False; // triggers deletion of ourself after responding
 }
 
 void RTSPServer::RTSPClientSession::handleCmd_OPTIONS(char const* cseq) {
-  sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nPublic: %s\r\n\r\n",
-	  cseq, allowedCommandNames);
+  snprintf((char*)fBuffer, sizeof fBuffer,
+	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%sPublic: %s\r\n\r\n",
+	   cseq, dateHeader(), allowedCommandNames);
 }
 
 void RTSPServer::RTSPClientSession
@@ -395,7 +412,12 @@ void RTSPServer::RTSPClientSession
     if (sdpDescription == NULL) {
       // This usually means that a file name that was specified for a
       // "ServerMediaSubsession" does not exist.
-      sprintf((char*)fBuffer, "RTSP/1.0 404 File Not Found, Or In Incorrect Format\r\nCSeq: %s\r\n\r\n", cseq);
+      snprintf((char*)fBuffer, sizeof fBuffer,
+	       "RTSP/1.0 404 File Not Found, Or In Incorrect Format\r\n"
+	       "CSeq: %s\r\n"
+	       "%s\r\n",
+	       cseq,
+	       dateHeader());
      break;
     }
     unsigned sdpDescriptionSize = strlen(sdpDescription);
@@ -404,24 +426,19 @@ void RTSPServer::RTSPClientSession
     // (which is necessary to ensure that the correct URL gets used in
     // subsequent "SETUP" requests).
     rtspURL = fOurServer.rtspURL(session);
-    unsigned rtspURLSize = strlen(rtspURL); 
 
-    if (sdpDescriptionSize + rtspURLSize > sizeof fBuffer - 200) { // sanity check
-      sprintf((char*)fBuffer,
-	      "RTSP/1.0 500 Internal Server Error\r\nCSeq: %s\r\n\r\n", cseq);
-      break;
-    }
-  
-    sprintf((char*)fBuffer,
-	    "RTSP/1.0 200 OK\r\nCSeq: %s\r\n"
-	    "Content-Base: %s/\r\n"
-	    "Content-Type: application/sdp\r\n"
-	    "Content-Length: %d\r\n\r\n"
-	    "%s",
-	    cseq,
-	    rtspURL,
-	    sdpDescriptionSize,
-	    sdpDescription);
+    snprintf((char*)fBuffer, sizeof fBuffer,
+	     "RTSP/1.0 200 OK\r\nCSeq: %s\r\n"
+	     "%s"
+	     "Content-Base: %s/\r\n"
+	     "Content-Type: application/sdp\r\n"
+	     "Content-Length: %d\r\n\r\n"
+	     "%s",
+	     cseq,
+	     dateHeader(),
+	     rtspURL,
+	     sdpDescriptionSize,
+	     sdpDescription);
   } while (0);
 
   delete[] sdpDescription;
@@ -580,33 +597,39 @@ void RTSPServer::RTSPClientSession
       handleCmd_unsupportedTransport(cseq);
       return;
     }
-    sprintf((char*)fBuffer,
-	    "RTSP/1.0 200 OK\r\n"
-	    "CSeq: %s\r\n"
-	    "Transport: RTP/AVP;multicast;destination=%s;port=%d;ttl=%d\r\n"
-	    "Session: %d\r\n\r\n",
-	    cseq,
-	    our_inet_ntoa(destinationAddr), ntohs(serverRTPPort.num()), destinationTTL,
-	    fOurSessionId);
+    snprintf((char*)fBuffer, sizeof fBuffer,
+	     "RTSP/1.0 200 OK\r\n"
+	     "CSeq: %s\r\n"
+	     "%s"
+	     "Transport: RTP/AVP;multicast;destination=%s;port=%d;ttl=%d\r\n"
+	     "Session: %d\r\n\r\n",
+	     cseq,
+	     dateHeader(),
+	     our_inet_ntoa(destinationAddr), ntohs(serverRTPPort.num()), destinationTTL,
+	     fOurSessionId);
   } else {
     if (tcpStreamingRequested) {
-      sprintf((char*)fBuffer,
-	      "RTSP/1.0 200 OK\r\n"
-	      "CSeq: %s\r\n"
-	      "Transport: RTP/AVP/TCP;unicast;destination=%s;interleaved=%d-%d\r\n"
-	      "Session: %d\r\n\r\n",
-	      cseq,
-	      our_inet_ntoa(destinationAddr), rtpChannelId, rtcpChannelId,
-	      fOurSessionId);
+      snprintf((char*)fBuffer, sizeof fBuffer,
+	       "RTSP/1.0 200 OK\r\n"
+	       "CSeq: %s\r\n"
+	       "%s"
+	       "Transport: RTP/AVP/TCP;unicast;destination=%s;interleaved=%d-%d\r\n"
+	       "Session: %d\r\n\r\n",
+	       cseq,
+	       dateHeader(),
+	       our_inet_ntoa(destinationAddr), rtpChannelId, rtcpChannelId,
+	       fOurSessionId);
     } else {
-      sprintf((char*)fBuffer,
-	      "RTSP/1.0 200 OK\r\n"
-	      "CSeq: %s\r\n"
-	      "Transport: RTP/AVP;unicast;destination=%s;client_port=%d-%d;server_port=%d-%d\r\n"
-	      "Session: %d\r\n\r\n",
-	      cseq,
-	      our_inet_ntoa(destinationAddr), ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
-	      fOurSessionId);
+      snprintf((char*)fBuffer, sizeof fBuffer,
+	       "RTSP/1.0 200 OK\r\n"
+	       "CSeq: %s\r\n"
+	       "%s"
+	       "Transport: RTP/AVP;unicast;destination=%s;client_port=%d-%d;server_port=%d-%d\r\n"
+	       "Session: %d\r\n\r\n",
+	       cseq,
+	       dateHeader(),
+	       our_inet_ntoa(destinationAddr), ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
+	       fOurSessionId);
     }
   }
 }
@@ -659,21 +682,81 @@ void RTSPServer::RTSPClientSession
 
 void RTSPServer::RTSPClientSession
   ::handleCmd_TEARDOWN(ServerMediaSubsession* subsession, char const* cseq) {
-  sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\n\r\n", cseq);
+  snprintf((char*)fBuffer, sizeof fBuffer,
+	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%s\r\n",
+	   cseq, dateHeader());
   fSessionIsActive = False; // triggers deletion of ourself after responding
 }
 
 void RTSPServer::RTSPClientSession
   ::handleCmd_PLAY(ServerMediaSubsession* subsession, char const* cseq) {
+  char* rtspURL = fOurServer.rtspURL(fOurServerMediaSession);
+  unsigned rtspURLSize = strlen(rtspURL);
+  char const* rtpInfoFmt =
+    "%s" // "RTP-Info:", plus any preceding rtpInfo items
+    "%s" // comma separator, if needed 
+    "url=%s/%s"
+    ";seq=%d"
+#ifdef INCLUDE_RTPINFO_RTPTIME
+    ";rtptime=%d";
+#endif
+  ;
+  unsigned rtpInfoFmtSize = strlen(rtpInfoFmt);
+  char* rtpInfo = strDup("RTP-Info: ");
+  unsigned numRTPInfoItems = 0;
+
   for (unsigned i = 0; i < fNumStreamStates; ++i) {
     if (subsession == NULL /* means: aggregated operation */
 	|| subsession == fStreamStates[i].subsession) {
+      unsigned short rtpSeqNum = 0;
+      unsigned rtpTimestamp = 0;
       fStreamStates[i].subsession->startStream(fOurSessionId,
-					       fStreamStates[i].streamToken);
+					       fStreamStates[i].streamToken,
+					       rtpSeqNum, rtpTimestamp);
+      const char *urlSuffix = fStreamStates[i].subsession->trackId();
+      char* prevRTPInfo = rtpInfo;
+      unsigned rtpInfoSize = rtpInfoFmtSize
+	+ strlen(prevRTPInfo)
+	+ 1
+	+ rtspURLSize + strlen(urlSuffix)
+	+ 5 /*max unsigned short len*/
+#ifdef INCLUDE_RTPINFO_RTPTIME
+	+ 10 /*max unsigned (32-bit) len*/
+#endif
+	+ 2 /*allows for trailing \r\n at final end of string*/; 
+      rtpInfo = new char[rtpInfoSize];
+      sprintf(rtpInfo, rtpInfoFmt,
+	      prevRTPInfo,
+	      numRTPInfoItems++ == 0 ? "" : ",",
+	      rtspURL, urlSuffix,
+	      rtpSeqNum
+#ifdef INCLUDE_RTPINFO_RTPTIME
+	      ,rtpTimestamp
+#endif
+);
+      delete[] prevRTPInfo;
     }
   }
-  sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nSession: %d\r\n\r\n",
-	  cseq, fOurSessionId);
+  if (numRTPInfoItems == 0) {
+    rtpInfo[0] = '\0';
+  } else {
+    unsigned rtpInfoLen = strlen(rtpInfo);
+    rtpInfo[rtpInfoLen] = '\r';
+    rtpInfo[rtpInfoLen+1] = '\n';
+    rtpInfo[rtpInfoLen+2] = '\0';
+  }
+  snprintf((char*)fBuffer, sizeof fBuffer,
+	   "RTSP/1.0 200 OK\r\n"
+	   "CSeq: %s\r\n"
+	   "%s"
+	   "Range: npt=0.00-\r\n"
+	   "Session: %d\r\n"
+	   "%s\r\n",
+	   cseq,
+	   dateHeader(),
+	   fOurSessionId,
+	   rtpInfo);
+  delete[] rtpInfo;
 }
 
 void RTSPServer::RTSPClientSession
@@ -685,8 +768,9 @@ void RTSPServer::RTSPClientSession
 					       fStreamStates[i].streamToken);
     }
   }
-  sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nSession: %d\r\n\r\n",
-	  cseq, fOurSessionId);
+  snprintf((char*)fBuffer, sizeof fBuffer,
+	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%sSession: %d\r\n\r\n",
+	   cseq, dateHeader(), fOurSessionId);
 }
 
 static Boolean parseAuthorizationHeader(char const* buf,
@@ -788,12 +872,14 @@ Boolean RTSPServer::RTSPClientSession
   // If we get here, there was some kind of authentication failure.
   // Send back a "401 Unauthorized" response, with a new random nonce:
   fCurrentAuthenticator.setRealmAndRandomNonce(fOurServer.fAuthDB->realm());
-  sprintf((char*)fBuffer,
-	  "RTSP/1.0 401 Unauthorized\r\n"
-	  "CSeq: %s\r\n"
-	  "WWW-Authenticate: Digest realm=\"%s\", nonce=\"%s\"\r\n\r\n",
-	  cseq,
-	  fCurrentAuthenticator.realm(), fCurrentAuthenticator.nonce());
+  snprintf((char*)fBuffer, sizeof fBuffer,
+	   "RTSP/1.0 401 Unauthorized\r\n"
+	   "CSeq: %s\r\n"
+	   "%s"
+	   "WWW-Authenticate: Digest realm=\"%s\", nonce=\"%s\"\r\n\r\n",
+	   cseq,
+	   dateHeader(),
+	   fCurrentAuthenticator.realm(), fCurrentAuthenticator.nonce());
   return False;
 }
 

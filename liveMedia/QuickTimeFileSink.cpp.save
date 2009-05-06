@@ -221,12 +221,10 @@ QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
 				     unsigned movieFPS,
 				     Boolean packetLossCompensate,
 				     Boolean syncStreams,
-				     Boolean generateHintTracks,
-				     Boolean generateMP4Format)
+				     Boolean generateHintTracks)
   : Medium(env), fInputSession(inputSession), fOutFid(outFid),
     fBufferSize(bufferSize), fPacketLossCompensate(packetLossCompensate),
-    fSyncStreams(syncStreams), fGenerateMP4Format(generateMP4Format),
-    fAreCurrentlyBeingPlayed(False),
+    fSyncStreams(syncStreams), fAreCurrentlyBeingPlayed(False),
     fLargestRTPtimestampFrequency(0),
     fNumSubsessions(0), fNumSyncedSubsessions(0),
     fHaveCompletedOutputFile(False),
@@ -331,8 +329,7 @@ QuickTimeFileSink::createNew(UsageEnvironment& env,
 			     unsigned movieFPS,
 			     Boolean packetLossCompensate,
 			     Boolean syncStreams,
-			     Boolean generateHintTracks,
-			     Boolean generateMP4Format) {
+			     Boolean generateHintTracks) {
   QuickTimeFileSink* newSink = NULL;
 
   do {
@@ -342,7 +339,7 @@ QuickTimeFileSink::createNew(UsageEnvironment& env,
     return new QuickTimeFileSink(env, inputSession, fid, bufferSize,
 				 movieWidth, movieHeight, movieFPS,
 				 packetLossCompensate, syncStreams,
-				 generateHintTracks, generateMP4Format);
+				 generateHintTracks);
   } while (0);
 
   delete newSink;
@@ -498,11 +495,6 @@ void QuickTimeFileSink::completeOutputFile() {
     }
   }
 
-  if (fGenerateMP4Format) {
-    // Begin with a "ftyp" atom:
-    addAtom_ftyp();
-  }
-
   // Then, add a "moov" atom for the file metadata:
   addAtom_moov();
 
@@ -615,8 +607,7 @@ Boolean SubsessionIOState::setQTstate() {
       } else if (strcmp(fOurSubsession.codecName(), "QCELP") == 0) {
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_Qclp;
 	fQTSamplesPerFrame = 160;
-      } else if (strcmp(fOurSubsession.codecName(), "MPEG4-GENERIC") == 0 ||
-		 strcmp(fOurSubsession.codecName(), "MP4A-LATM") == 0) {
+      } else if (strcmp(fOurSubsession.codecName(), "MPEG4-GENERIC") == 0) {
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_mp4a;
 	fQTTimeUnitsPerSample = 1024; // QT considers each frame to be a 'sample'
 	// The time scale (frequency) comes from the 'config' information.
@@ -851,12 +842,9 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
   // However, for some RTP sources, then we also need to reuse the special
   // header bytes that were at the start of each of the RTP packets.
   Boolean hack263 = strcmp(fOurSubsession.codecName(), "H263-1998") == 0;
-  Boolean hackm4a_generic = strcmp(fOurSubsession.mediumName(), "audio") == 0
+  Boolean hackm4a = strcmp(fOurSubsession.mediumName(), "audio") == 0
     && strcmp(fOurSubsession.codecName(), "MPEG4-GENERIC") == 0;
-  Boolean hackm4a_latm = strcmp(fOurSubsession.mediumName(), "audio") == 0
-    && strcmp(fOurSubsession.codecName(), "MP4A-LATM") == 0;
-  Boolean hackm4a = hackm4a_generic || hackm4a_latm;
-  Boolean haveSpecialHeaders = (hack263 || hackm4a_generic);
+  Boolean haveSpecialHeaders = (hack263 || hackm4a);
 
   // If there has been a previous frame, then output a 'hint sample' for it.
   // (We use the current frame's presentation time to compute the previous
@@ -1019,7 +1007,7 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
     for (i = 0; i < rs_263->fNumSpecialHeaders; ++i) {
       fPrevFrameState.packetSizes[i] = rs_263->fPacketSizes[i];
     }
-  } else if (hackm4a_generic) {
+  } else if (hackm4a) {
     // Synthesize a special header, so that this frame can be in its own RTP packet.
     unsigned const sizeLength = fOurSubsession.fmtp_sizelength();
     unsigned const indexLength = fOurSubsession.fmtp_indexlength();
@@ -1247,19 +1235,8 @@ void QuickTimeFileSink::setWord(unsigned filePosn, unsigned size) {
   return size; \
 }
 
-addAtom(ftyp);
-  size += add4ByteString("mp42");
-  size += addWord(0x00000000);
-  size += add4ByteString("mp42");
-  size += add4ByteString("isom");
-addAtomEnd;
-
 addAtom(moov);
   size += addAtom_mvhd();
-
-  if (fGenerateMP4Format) {
-    size += addAtom_iods();
-  }
 
   // Add a 'trak' atom for each subsession:
   // (For some unknown reason, QuickTime Player (5.0 at least)
@@ -1318,13 +1295,6 @@ addAtom(mvhd);
   size += addWord(0x40000000); // matrix bottom right corner
   size += addZeroWords(6); // various time fields
   size += addWord(SubsessionIOState::fCurrentTrackNumber+1);// Next track ID
-addAtomEnd;
-
-addAtom(iods);
-  size += addWord(0x00000000); // Version + Flags
-  size += addWord(0x10808080);
-  size += addWord(0x07004FFF);
-  size += addWord(0xFF0FFFFF);
 addAtomEnd;
 
 addAtom(trak);
@@ -1691,19 +1661,15 @@ unsigned QuickTimeFileSink::addAtom_mp4a() {
   fCurrentIOState->fQTSoundSampleVersion = 1;
   unsigned size = addAtom_soundMediaGeneral();
 
-  if (fGenerateMP4Format) {
-    size += addAtom_esds();
-  } else {
-    // Next, add the four fields that are particular to version 1:
-    // (Later, parameterize these #####)
-    size += addWord(fCurrentIOState->fQTTimeUnitsPerSample);
-    size += addWord(0x00000001); // ???
-    size += addWord(0x00000001); // ???
-    size += addWord(0x00000002); // bytes per sample (uncompressed)
+  // Next, add the four fields that are particular to version 1:
+  // (Later, parameterize these #####)
+  size += addWord(fCurrentIOState->fQTTimeUnitsPerSample);
+  size += addWord(0x00000001); // ???
+  size += addWord(0x00000001); // ???
+  size += addWord(0x00000002); // bytes per sample (uncompressed)
 
-    // Other special fields are in a 'wave' atom that follows:
-    size += addAtom_wave();
-  }
+  // Other special fields are in a 'wave' atom that follows:
+  size += addAtom_wave();
 addAtomEnd;
 
 addAtom(esds);

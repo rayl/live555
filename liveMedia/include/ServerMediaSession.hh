@@ -117,7 +117,9 @@ public:
 				   Port& serverRTCPPort, // out
 				   void*& streamToken // out
 				   ) = 0;
-  virtual void startStream(unsigned clientSessionId, void* streamToken);
+  virtual void startStream(unsigned clientSessionId, void* streamToken,
+			   unsigned short& rtpSeqNum,
+			   unsigned& rtpTimestamp) = 0;
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
   virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 

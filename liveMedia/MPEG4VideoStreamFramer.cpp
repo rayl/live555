@@ -213,14 +213,14 @@ unsigned MPEG4VideoStreamParser
   usingSource()->startNewConfig();
   u_int32_t first4Bytes;
   if (!haveSeenStartCode) {
-    while ((first4Bytes = get4Bytes())
-	   != VISUAL_OBJECT_SEQUENCE_START_CODE) {
+    while ((first4Bytes = test4Bytes()) != VISUAL_OBJECT_SEQUENCE_START_CODE) {
 #ifdef DEBUG
       fprintf(stderr, "ignoring non VS header: 0x%08x\n", first4Bytes);
 #endif
-      setParseState(PARSING_VISUAL_OBJECT_SEQUENCE);
+      get1Byte(); setParseState(PARSING_VISUAL_OBJECT_SEQUENCE);
           // ensures we progress over bad data
     }
+    first4Bytes = get4Bytes();
   } else {
     // We've already seen the start code
     first4Bytes = VISUAL_OBJECT_SEQUENCE_START_CODE;

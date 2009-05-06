@@ -21,13 +21,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _WIN32_WCE
 #include <sys/stat.h>
 #endif
-#if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
-#include <io.h>
-#include <fcntl.h>
-#endif
 
 #include "MP3FileSource.hh"
 #include "MP3StreamState.hh"
+#include "InputFile.hh"
 
 ////////// MP3FileSource //////////
 
@@ -51,27 +48,18 @@ MP3FileSource* MP3FileSource::createNew(UsageEnvironment& env, char const* fileN
     FILE* fid;
     unsigned fileSize = 0;
 
-    // Check for a special case file name: "stdin"
-    if (strcmp(fileName, "stdin") == 0) {
-      fid = stdin;
-#if defined(__WIN32__) || defined(_WIN32)
-      _setmode(_fileno(stdin), _O_BINARY); // convert to binary mode
-#endif
-    } else { 
-      fid = fopen(fileName, "rb");
-      if (fid == NULL) {
-	env.setResultMsg("unable to open file \"",fileName, "\"");
-	break;
-      }
+    fid = OpenInputFile(env, fileName);
+    if (fid == NULL) break;
+    if (fid != stdin) {
 #if defined(_WIN32_WCE)
-        fseek(fid, 0, SEEK_END);
-        fileSize = ftell(fid);
-        fseek(fid, 0, SEEK_SET);
+      fseek(fid, 0, SEEK_END);
+      fileSize = ftell(fid);
+      fseek(fid, 0, SEEK_SET);
 #else
-        struct stat sb;
-        if (stat(fileName, &sb) == 0) {
-            fileSize = sb.st_size;
-        }
+      struct stat sb;
+      if (stat(fileName, &sb) == 0) {
+	fileSize = sb.st_size;
+      }
 #endif
     }
 

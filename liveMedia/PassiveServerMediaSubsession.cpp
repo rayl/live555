@@ -152,5 +152,13 @@ void PassiveServerMediaSubsession
   streamToken = NULL; // not used
 }
 
+void PassiveServerMediaSubsession::startStream(unsigned /*clientSessionId*/,
+					       void* /*streamToken*/,
+                                                unsigned short& rtpSeqNum,
+                                                unsigned& rtpTimestamp) {
+  rtpSeqNum = fRTPSink.currentSeqNo();
+  rtpTimestamp = fRTPSink.currentTimestamp();
+}
+
 PassiveServerMediaSubsession::~PassiveServerMediaSubsession() {
 }

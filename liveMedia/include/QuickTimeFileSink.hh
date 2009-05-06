@@ -36,7 +36,8 @@ public:
 				      unsigned movieFPS = 15,
 				      Boolean packetLossCompensate = False,
 				      Boolean syncStreams = False,
-				      Boolean generateHintTracks = False);
+				      Boolean generateHintTracks = False,
+				      Boolean generateMP4Format = False);
 
   typedef void (afterPlayingFunc)(void* clientData);
   Boolean startPlaying(afterPlayingFunc* afterFunc,
@@ -49,7 +50,8 @@ private:
 		    FILE* outFid, unsigned bufferSize,
 		    unsigned short movieWidth, unsigned short movieHeight,
 		    unsigned movieFPS, Boolean packetLossCompensate,
-		    Boolean syncStreams, Boolean generateHintTracks);
+		    Boolean syncStreams, Boolean generateHintTracks,
+		    Boolean generateMP4Format);
       // called only by createNew()
   virtual ~QuickTimeFileSink();
 
@@ -69,7 +71,7 @@ private:
   FILE* fOutFid;
   unsigned fBufferSize;
   Boolean fPacketLossCompensate;
-  Boolean fSyncStreams;
+  Boolean fSyncStreams, fGenerateMP4Format;
   struct timeval fNewestSyncTime, fFirstDataTime;
   Boolean fAreCurrentlyBeingPlayed;
   afterPlayingFunc* fAfterFunc;
@@ -101,8 +103,10 @@ private:
 
   // Define member functions for outputting various types of atom:
 #define _atom(name) unsigned addAtom_##name()
+  _atom(ftyp); // for MP4 format files
   _atom(moov);
-  _atom(mvhd);
+      _atom(mvhd);
+  _atom(iods); // for MP4 format files
       _atom(trak);
           _atom(tkhd);
           _atom(edts);
