@@ -55,10 +55,18 @@ public:
 
   unsigned numMembers() const;
 
-  void setByeHandler(TaskFunc* handlerTask, void* clientData);
+  void setByeHandler(TaskFunc* handlerTask, void* clientData,
+		     Boolean handleActiveParticipantsOnly = True);
       // assigns a handler routine to be called if a "BYE" arrives.
       // The handler is called once only; for subsequent "BYE"s,
       // "setByeHandler()" would need to be called again.
+      // If "handleActiveParticipantsOnly" is True, then the handler is called
+      // only if the SSRC is for a known sender (if we have a "RTPSource"),
+      // or if the SSRC is for a known receiver (if we have a "RTPSink").
+      // This prevents (for example) the handler for a multicast receiver being
+      // called if some other multicast receiver happens to exit.
+      // If "handleActiveParticipantsOnly" is False, then the handler is called
+      // for any incoming RTCP "BYE". 
 
   Groupsock* RTCPgs() const { return fRTCPInterface.gs(); }
 
@@ -136,6 +144,7 @@ private:
 
   TaskFunc* fByeHandlerTask;
   void* fByeHandlerClientData;
+  Boolean fByeHandleActiveParticipantsOnly;
 
 public: // because this stuff is used by an external "C" function
   void schedule(double nextTime);

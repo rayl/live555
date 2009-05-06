@@ -142,13 +142,14 @@ public:
   // The following is called when a RTCP BYE packet is received:
   void removeRecord(u_int32_t SSRC);
 
+  RTPReceptionStats* lookup(u_int32_t SSRC) const;
+
 private: // constructor and destructor, called only by RTPSource:
   friend class RTPSource;
   RTPReceptionStatsDB(RTPSource& rtpSource);
   virtual ~RTPReceptionStatsDB();
 
 private:
-  RTPReceptionStats* lookup(u_int32_t SSRC) const;
   void add(u_int32_t SSRC, RTPReceptionStats* stats);
 
 private:

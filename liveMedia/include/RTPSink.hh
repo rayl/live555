@@ -144,13 +144,14 @@ public:
   // The following is called when a RTCP BYE packet is received:
   void removeRecord(u_int32_t SSRC);
 
+  RTPTransmissionStats* lookup(u_int32_t SSRC) const;
+
 private: // constructor and destructor, called only by RTPSink:
   friend class RTPSink;
   RTPTransmissionStatsDB(RTPSink& rtpSink);
   virtual ~RTPTransmissionStatsDB();
 
 private:
-  RTPTransmissionStats* lookup(u_int32_t SSRC) const;
   void add(u_int32_t SSRC, RTPTransmissionStats* stats);
 
 private:

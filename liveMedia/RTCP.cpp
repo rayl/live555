@@ -212,9 +212,11 @@ unsigned RTCPInstance::numMembers() const {
   return fKnownMembers->numMembers();
 }
 
-void RTCPInstance::setByeHandler(TaskFunc* handlerTask, void* clientData) {
+void RTCPInstance::setByeHandler(TaskFunc* handlerTask, void* clientData,
+				 Boolean handleActiveParticipantsOnly) {
   fByeHandlerTask = handlerTask;
   fByeHandlerClientData = clientData;
+  fByeHandleActiveParticipantsOnly = handleActiveParticipantsOnly;
 }
 
 void RTCPInstance::setStreamSocket(int sockNum,
@@ -392,7 +394,12 @@ void RTCPInstance::incomingReportHandler1() {
 #endif
 	  // If a 'BYE handler' was set, call it now:
 	  TaskFunc* byeHandler = fByeHandlerTask;
-	  if (byeHandler != NULL) {
+	  if (byeHandler != NULL
+	      && (!fByeHandleActiveParticipantsOnly
+		  || (fSource != NULL
+		      && fSource->receptionStatsDB().lookup(reportSenderSSRC) != NULL)
+		  || (fSink != NULL
+		      && fSink->transmissionStatsDB().lookup(reportSenderSSRC) != NULL))) {
 	    fByeHandlerTask = NULL;
 	        // we call this only once by default 
 	    (*byeHandler)(fByeHandlerClientData);
