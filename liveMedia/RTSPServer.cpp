@@ -21,8 +21,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPServer.hh"
 #include <GroupsockHelper.hh>
 
-#define COMPENSATE_FOR_QUICKTIME_PLAYER_BUG 1
-
 ////////// RTSPServer //////////
 
 RTSPServer*
@@ -315,6 +313,7 @@ void RTSPServer::RTSPClientSession::handleCmd_OPTIONS(char const* cseq) {
 void RTSPServer::RTSPClientSession
 ::handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix) {
   char* sdpDescription = NULL;
+  char* rtspURL = NULL;
   do {
     // We should really check that the request contains an "Accept:" #####
     // for "application/sdp", because that's what we're sending back #####
@@ -327,26 +326,6 @@ void RTSPServer::RTSPClientSession
       handleCmd_notFound(cseq);
       break;
     }
-#ifdef COMPENSATE_FOR_QUICKTIME_PLAYER_BUG
-    // QuickTime Player sometimes doesn't properly include the session name in
-    // the subsequent "SETUP" commands, so, to allow for this, set
-    // "fOurServerMediaSession" (and "fStreamStates") now:
-    //#####
-    fOurServerMediaSession = session;
-
-    // Set up our array of states for this session's subsessions (tracks):
-    reclaimStreamStates();
-    ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
-    for (fNumStreamStates = 0; iter.next() != NULL; ++fNumStreamStates) {}
-    fStreamStates = new struct streamState[fNumStreamStates];
-    iter.reset();
-    ServerMediaSubsession* subsession;
-    for (unsigned i = 0; i < fNumStreamStates; ++i) {
-      subsession = iter.next();
-      fStreamStates[i].subsession = subsession;
-      fStreamStates[i].streamToken = NULL; // for now; reset by SETUP later
-    }
-#endif
 
     // Then, assemble a SDP description for this session:
     sdpDescription = session->generateSDPDescription();
@@ -358,17 +337,24 @@ void RTSPServer::RTSPClientSession
     }
     unsigned sdpDescriptionSize = strlen(sdpDescription);
 
-    if (sdpDescriptionSize > sizeof fBuffer - 200) { // sanity check
+    // Also, generate out RTSP URL, for the "Content-Base:" header
+    // (which isn't strictly necessary, but without it, QuickTime Player gives us
+    // a bad URL in "SETUP" requests).
+    rtspURL = fOurServer.rtspURL(session);
+    unsigned rtspURLSize = strlen(rtspURL); 
+
+    if (sdpDescriptionSize + rtspURLSize > sizeof fBuffer - 200) { // sanity check
       sprintf((char*)fBuffer,
 	      "RTSP/1.0 500 Internal Server Error\r\nCSeq: %s\r\n\r\n", cseq);
       break;
     }
   
-    sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nContent-Type: application/sdp\r\nContent-Length: %d\r\n\r\n%s",
-	    cseq, sdpDescriptionSize, sdpDescription);
+    sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nContent-Base: %s/\r\nContent-Type: application/sdp\r\nContent-Length: %d\r\n\r\n%s",
+	    cseq, rtspURL, sdpDescriptionSize, sdpDescription);
   } while (0);
 
   delete[] sdpDescription;
+  delete[] rtspURL;
 }
 
 static void parseTransportHeader(char const* buf,
@@ -399,17 +385,10 @@ void RTSPServer::RTSPClientSession
   // Check whether we have existing session state, and, if so, whether it's
   // for the session that's named in "urlPreSuffix".  (Note that we don't
   // support more than one concurrent session on the same client connection.) #####
-#ifndef COMPENSATE_FOR_QUICKTIME_PLAYER_BUG
-  // QuickTime Player sometimes doesn't include the session (stream) name in
-  // the "urlPreSuffix".  Until this is fixed, we have to set
-  // "fOurServerMediaSession" (and "fStreamStates") when handling the
-  // earlier "DESCRIBE", and we also omit the following test:
-  //#####
   if (fOurServerMediaSession != NULL
       && strcmp(urlPreSuffix, fOurServerMediaSession->streamName()) != 0) {
     fOurServerMediaSession = NULL;
   }
-#endif
   if (fOurServerMediaSession == NULL) {
     // Set up this session's state.
 

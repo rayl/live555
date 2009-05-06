@@ -88,8 +88,8 @@ void RTCPMemberDatabase::reapOldMembers(unsigned threshold) {
     unsigned long timeCount;
     char const* key;
     while ((timeCount = (unsigned long)(iter->next(key))) != 0) {
-#ifdef DEBUG_PRINT
-      fprintf(stderr, "reap: checking SSRC 0x%x: %d (threshold %d)\n", (unsigned long)key, timeCount, threshold);
+#ifdef DEBUG
+      fprintf(stderr, "reap: checking SSRC 0x%lx: %ld (threshold %d)\n", (unsigned long)key, timeCount, threshold);
 #endif
       if (timeCount < (unsigned long)threshold) { // this SSRC is old
         unsigned long ssrc = (unsigned long)key;
@@ -99,7 +99,7 @@ void RTCPMemberDatabase::reapOldMembers(unsigned threshold) {
     }
 
     if (foundOldMember) {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
         fprintf(stderr, "reap: removing SSRC 0x%x\n", oldSSRC);
 #endif
       remove(oldSSRC);
@@ -133,7 +133,7 @@ RTCPInstance::RTCPInstance(UsageEnvironment& env, Groupsock* RTCPgs,
     fTypeOfEvent(EVENT_UNKNOWN), fTypeOfPacket(PACKET_UNKNOWN_TYPE),
     fHaveJustSentPacket(False), fLastPacketSentSize(0),
     fByeHandlerTask(NULL), fByeHandlerClientData(NULL) {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
   fprintf(stderr, "RTCPInstance[%p]::RTCPInstance()\n", this);
 #endif
   if (isSSMSource) RTCPgs->multicastSendOnly(); // don't receive multicast
@@ -157,7 +157,7 @@ RTCPInstance::RTCPInstance(UsageEnvironment& env, Groupsock* RTCPgs,
 }
 
 RTCPInstance::~RTCPInstance() {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
   fprintf(stderr, "RTCPInstance[%p]::~RTCPInstance()\n", this);
 #endif
   // Turn off background read handling:
@@ -277,7 +277,7 @@ void RTCPInstance::incomingReportHandler1() {
       fLastPacketSentSize = packetSize;
     }
 
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
     fprintf(stderr, "[%p]saw incoming RTCP packet (from address %s, port %d)\n", this, our_inet_ntoa(fromAddress.sin_addr), ntohs(fromAddress.sin_port));
     unsigned char* p = pkt;
     for (unsigned i = 0; i < packetSize; ++i) {
@@ -295,7 +295,7 @@ void RTCPInstance::incomingReportHandler1() {
     if (packetSize < 4) break;
     unsigned rtcpHdr = ntohl(*(unsigned*)pkt);
     if ((rtcpHdr & 0xE0FE0000) != (0x80000000 | (RTCP_PT_SR<<16))) {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
       fprintf(stderr, "rejected bad RTCP packet: header 0x%08x\n", rtcpHdr);
 #endif
       break;
@@ -319,7 +319,7 @@ void RTCPInstance::incomingReportHandler1() {
       Boolean subPacketOK = False;
       switch (pt) {
         case RTCP_PT_SR: {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
 	  fprintf(stderr, "SR\n");
 #endif
 	  if (length < 20) break; length -= 20;
@@ -338,7 +338,7 @@ void RTCPInstance::incomingReportHandler1() {
 	  // The rest of the SR is handled like a RR (so, no "break;" here)
 	}
         case RTCP_PT_RR: {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
 	  fprintf(stderr, "RR\n");
 #endif
 	  unsigned reportBlocksSize = rc*(6*4);
@@ -352,7 +352,7 @@ void RTCPInstance::incomingReportHandler1() {
 	  break;
 	}
         case RTCP_PT_BYE: {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
 	  fprintf(stderr, "BYE\n");
 #endif
 	  // If a 'BYE handler' was set, call it now:
@@ -371,7 +371,7 @@ void RTCPInstance::incomingReportHandler1() {
 	}
 	// Later handle SDES, APP, and compound RTCP packets #####
         default:
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
 	  fprintf(stderr, "UNSUPPORTED TYPE(0x%x)\n", pt);
 #endif
 	  subPacketOK = True;
@@ -381,7 +381,7 @@ void RTCPInstance::incomingReportHandler1() {
 
       // need to check for (& handle) SSRC collision! #####
 
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
       fprintf(stderr, "validated RTCP subpacket (type %d): %d, %d, %d, 0x%08x\n", typeOfPacket, rc, pt, length, reportSenderSSRC);
 #endif
       
@@ -393,14 +393,14 @@ void RTCPInstance::incomingReportHandler1() {
 	packetOK = True;
 	break;
       } else if (packetSize < 4) {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
 	fprintf(stderr, "extraneous %d bytes at end of RTCP packet!\n", packetSize);
 #endif
 	break;
       }
       rtcpHdr = ntohl(*(unsigned*)pkt);
       if ((rtcpHdr & 0xC0000000) != 0x80000000) {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
 	fprintf(stderr, "bad RTCP subpacket: header 0x%08x\n", rtcpHdr);
 #endif
 	break;
@@ -408,12 +408,12 @@ void RTCPInstance::incomingReportHandler1() {
     }
       
     if (!packetOK) {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
       fprintf(stderr, "rejected bad RTCP subpacket: header 0x%08x\n", rtcpHdr);
 #endif
       break;
     } else {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
       fprintf(stderr, "validated entire RTCP packet\n");
 #endif
     }
@@ -443,7 +443,7 @@ void RTCPInstance::onReceive(int typeOfPacket, int totPacketSize,
 }
 
 void RTCPInstance::sendReport() {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
   fprintf(stderr, "sending REPORT\n");
 #endif
   // Begin by including a SR and/or RR report:
@@ -464,7 +464,7 @@ void RTCPInstance::sendReport() {
 }
 
 void RTCPInstance::sendBYE() {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
   fprintf(stderr, "sending BYE\n");
 #endif
   // The packet must begin with a SR and/or RR report:
@@ -475,7 +475,7 @@ void RTCPInstance::sendBYE() {
 }
 
 void RTCPInstance::sendBuiltPacket() {
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
   fprintf(stderr, "sending RTCP packet\n");
   unsigned char* p = fOutBuf->packet();
   for (unsigned i = 0; i < fOutBuf->curPacketSize(); ++i) {
@@ -702,7 +702,7 @@ void RTCPInstance::schedule(double nextTime) {
   fNextReportTime = nextTime;
 
   double secondsToDelay = nextTime - dTimeNow();
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
   fprintf(stderr, "schedule(%f->%f)\n", secondsToDelay, nextTime);
 #endif
   int usToGo = (int)(secondsToDelay * 1000000);

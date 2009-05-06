@@ -77,6 +77,7 @@ private:
       // # of bits needed to count to "vop_time_increment_resolution"
   unsigned fixed_vop_time_increment; // used if 'fixed_vop_rate' is set
   unsigned fSecondsSinceLastGOV, fTotalTicksSinceLastGOV, fPrevNewTotalTicks; 
+  unsigned fPrevPictureCountDelta;
 };
 
 
@@ -148,7 +149,7 @@ MPEG4VideoStreamParser
     vop_time_increment_resolution(0), fNumVTIRBits(0),
     fixed_vop_time_increment(0),
     fSecondsSinceLastGOV(0), fTotalTicksSinceLastGOV(0),
-    fPrevNewTotalTicks(0) {
+    fPrevNewTotalTicks(0), fPrevPictureCountDelta(1) {
 }
 
 MPEG4VideoStreamParser::~MPEG4VideoStreamParser() {
@@ -486,7 +487,7 @@ unsigned MPEG4VideoStreamParser::parseGroupOfVideoObjectPlane() {
 
 unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
 #ifdef DEBUG
-  fprintf(stderr, "parsing VideoObjectPlane\n");
+  fprintf(stderr, "#parsing VideoObjectPlane\n");
 #endif
   // Note that we've already read the VOP_START_CODE
   save4Bytes(VOP_START_CODE);
@@ -539,8 +540,8 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
   // Update our counters based on the frame timing information that we saw:
   if (fixed_vop_time_increment > 0) {
     // This is a 'fixed_vop_rate' stream.  Use 'fixed_vop_time_increment':
+    usingSource()->fPictureCount += fixed_vop_time_increment;
     if (vop_time_increment > 0 || modulo_time_base > 0) {
-      usingSource()->fPictureCount += fixed_vop_time_increment;
       fTotalTicksSinceLastGOV += fixed_vop_time_increment;
       // Note: "fSecondsSinceLastGOV" and "fPrevNewTotalTicks" are not used.
     }
@@ -572,7 +573,11 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
 	newTotalTicks += vop_time_increment_resolution;
       }
       fPrevNewTotalTicks = newTotalTicks;
-      usingSource()->fPictureCount += newTotalTicks - fTotalTicksSinceLastGOV;
+      unsigned pictureCountDelta = newTotalTicks - fTotalTicksSinceLastGOV;
+      if (pictureCountDelta == 0) pictureCountDelta = fPrevPictureCountDelta;
+          // ensures that the picture count always increases
+      usingSource()->fPictureCount += pictureCountDelta;
+      fPrevPictureCountDelta = pictureCountDelta;
       fTotalTicksSinceLastGOV = newTotalTicks;
     }
   }
