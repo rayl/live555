@@ -215,7 +215,10 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
     }
     
     // Check the Payload Type.
-    if ((rtpHdr&0x007F0000) != source->RTPPayloadFormat()) break;
+    if ((unsigned char)((rtpHdr&0x007F0000)>>16)
+	!= source->rtpPayloadFormat()) {
+      break;
+    }
     
     // The rest of the packet is the usable data.  Record and save it:
     unsigned short rtpSeqNo = (unsigned short)(rtpHdr&0xFFFF);

@@ -28,7 +28,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <ws2tcpip.h>
 #endif
 #else
-#include <string.h>
 #include <ctype.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -146,6 +145,9 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
       delete mediumName;
       return False;
     }
+    char const* mStart = sdpLine;
+    subsession->fSavedSDPLines = strdup(mStart);
+
     subsession->fMediumName = strdup(mediumName);
     delete mediumName;
     subsession->fRTPPayloadFormat = payloadFormat;
@@ -153,7 +155,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     // Process the following SDP lines, up until the next "m=":
     while (1) {
       sdpLine = nextSDPLine;
-      if (sdpLine == NULL) break; // we've reached a blank line, or the end
+      if (sdpLine == NULL) break; // we've reached the end
       if (!parseSDPLine(sdpLine, nextSDPLine)) return False;
 
       if (sdpLine[0] == 'm') break; // we've reached the next subsession
@@ -169,6 +171,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
 
       // (Later, check for malformed lines, and other valid SDP lines#####)
     }
+    if (sdpLine != NULL) subsession->fSavedSDPLines[sdpLine-mStart] = '\0';
 
     // If we don't yet know the codec name, try looking it up from the
     // list of static payload types:
@@ -434,7 +437,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fParent(parent), fNext(NULL),
     fConnectionEndpointName(NULL),
     fClientPortNum(0), fRTPPayloadFormat(0xFF),
-    fMediumName(NULL), fCodecName(NULL),
+    fSavedSDPLines(NULL), fMediumName(NULL), fCodecName(NULL),
     fRTPTimestampFrequency(0), fControlPath(NULL), fPlayEndTime(0.0),
     fMCT_SLAP_SessionId(0), fMCT_SLAP_Stagger(0),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0),
@@ -446,7 +449,7 @@ MediaSubsession::~MediaSubsession() {
   deInitiate();
 
   delete fConnectionEndpointName;
-  delete fMediumName; delete fCodecName;
+  delete fSavedSDPLines; delete fMediumName; delete fCodecName;
   delete fControlPath;
 
   delete fNext;

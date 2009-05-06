@@ -52,7 +52,7 @@ RTPSource::RTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 		     unsigned char rtpPayloadFormat,
 		     unsigned rtpTimestampFrequency)
   : FramedSource(env),
-    fRTPInterface(this, RTPgs), fRTPPayloadFormat(rtpPayloadFormat << 16),
+    fRTPInterface(this, RTPgs), fRTPPayloadFormat(rtpPayloadFormat),
     fTimestampFrequency(rtpTimestampFrequency),
     fSSRC((unsigned)our_random()),
     fReceptionStatsDB(new RTPReceptionStatsDB(*this)) {

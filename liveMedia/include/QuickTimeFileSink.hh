@@ -34,18 +34,21 @@ public:
 				      unsigned short movieHeight = 180,
 				      unsigned movieFPS = 15,
 				      Boolean packetLossCompensate = False,
-				      Boolean syncStreams = False);
+				      Boolean syncStreams = False,
+				      Boolean generateHintTracks = False);
 
   typedef void (afterPlayingFunc)(void* clientData);
   Boolean startPlaying(afterPlayingFunc* afterFunc,
                        void* afterClientData);
+
+  unsigned numActiveSubsessions() const { return fNumSubsessions; }
 
 private:
   QuickTimeFileSink(UsageEnvironment& env, MediaSession& inputSession,
 		    FILE* outFid,
 		    unsigned short movieWidth, unsigned short movieHeight,
 		    unsigned movieFPS, Boolean packetLossCompensate,
-		    Boolean syncStreams);
+		    Boolean syncStreams, Boolean generateHintTracks);
       // called only by createNew()
   virtual ~QuickTimeFileSink();
 
@@ -78,9 +81,14 @@ private:
 
   unsigned addWord(unsigned word);
   unsigned addHalfWord(unsigned short halfWord);
-  unsigned addZeroWords(unsigned word);
+  unsigned QuickTimeFileSink::addByte(unsigned char byte) {
+    putc(byte, fOutFid);
+    return 1;
+  }
+  unsigned addZeroWords(unsigned numWords);
   unsigned add4ByteString(char const* str);
-  unsigned addArbitraryString(char const* str);
+  unsigned addArbitraryString(char const* str,
+			      Boolean oneByteLength = True);
   unsigned addAtomHeader(char const* atomName);
       // strlen(atomName) must be 4
   void setWord(unsigned filePosn, unsigned size);
@@ -93,12 +101,16 @@ private:
           _atom(tkhd);
           _atom(edts);
               _atom(elst);
+          _atom(tref);
+              _atom(hint);
           _atom(mdia);
               _atom(mdhd);
               _atom(hdlr);
               _atom(minf);
                   _atom(smhd);
                   _atom(vmhd);
+                  _atom(gmhd);
+                      _atom(gmin);
                   unsigned addAtom_hdlr2();
                   _atom(dinf);
                       _atom(dref);
@@ -115,16 +127,23 @@ private:
                                   _atom(Fclp);
                                   _atom(Hclp);
                           _atom(h263);
+                          _atom(rtp);
+                              _atom(tims);
                       _atom(stts);
                       _atom(stsc);
                       _atom(stsz);
                       _atom(stco);
+          _atom(udta);
+              _atom(name);
+              _atom(hnti);
+                  _atom(sdp);
+              _atom(hinf);
+                  _atom(payt);
   unsigned addAtom_dummy();
 
 private:
   unsigned short fMovieWidth, fMovieHeight;
   unsigned fMovieFPS;
-  unsigned fCurrentTrackNumber;
   unsigned fMDATposition;
   MediaSubsession* fCurrentSubsession;
   class SubsessionIOState* fCurrentIOState;

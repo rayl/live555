@@ -32,7 +32,6 @@ extern "C" int initializeWinsockIfNecessary();
 #include <time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <string.h>
 #include <unistd.h>
 #include <netdb.h>
 #include <fcntl.h>

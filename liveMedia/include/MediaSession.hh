@@ -107,6 +107,7 @@ public:
   MediaSession const& parentSession() const { return fParent; }
 
   unsigned short clientPortNum() const { return fClientPortNum; }
+  char const* savedSDPLines() const { return fSavedSDPLines; }
   char const* mediumName() const { return fMediumName; }
   char const* codecName() const { return fCodecName; }
   char const* controlPath() const { return fControlPath; }
@@ -183,6 +184,7 @@ private:
   unsigned short fClientPortNum; // in host byte order
       // This field is also set by initiate()
   unsigned char fRTPPayloadFormat;
+  char* fSavedSDPLines;
   char* fMediumName;
   char* fCodecName;
   unsigned fRTPTimestampFrequency;

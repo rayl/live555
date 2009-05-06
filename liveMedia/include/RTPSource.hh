@@ -39,6 +39,8 @@ public:
   unsigned curPacketRTPTimestamp() const { return fCurPacketRTPTimestamp; }
   Boolean curPacketMarkerBit() const { return fCurPacketMarkerBit; }
 
+  unsigned char rtpPayloadFormat() const { return fRTPPayloadFormat; }
+
   virtual Boolean hasBeenSynchronizedUsingRTCP();
 
   Groupsock* RTPgs() const { return fRTPInterface.gs(); }
@@ -65,10 +67,6 @@ protected:
       // abstract base class
   virtual ~RTPSource();
 
-  unsigned RTPPayloadFormat() const {
-	return fRTPPayloadFormat;
-  }
-
 protected:
   RTPInterface fRTPInterface;
   unsigned short fCurPacketRTPSeqNum;
@@ -82,7 +80,7 @@ private:
   virtual float getPlayTime(unsigned numFrames) const;
 
 private:
-  unsigned fRTPPayloadFormat;
+  unsigned char fRTPPayloadFormat;
   unsigned fTimestampFrequency;
   unsigned fSSRC;
 

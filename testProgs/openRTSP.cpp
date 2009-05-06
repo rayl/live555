@@ -73,6 +73,7 @@ unsigned short movieHeight = 180;
 unsigned movieFPS = 15;
 Boolean packetLossCompensate = False;
 Boolean syncStreams = False;
+Boolean generateHintTracks = False;
 
 #ifdef BSD
 static struct timezone Idunno;
@@ -82,7 +83,7 @@ static int Idunno;
 struct timeval startTime;
 
 void usage() {
-  fprintf(stderr, "Usage: %s [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-c] [-s <offset>] [-n] [-t] [-u <username> <password>] [-w <width> -h <height>] [-f <frames-per-second>] [-y] <url>\n", progName);
+  fprintf(stderr, "Usage: %s [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-c] [-s <offset>] [-n] [-t] [-u <username> <password>] [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] <url>\n", progName);
   shutdown();
 }
 
@@ -241,6 +242,11 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 'H': { // generate hint tracks (as well as the regular data tracks)
+      generateHintTracks = True;
+      break;
+    }
+
     default: {
       usage();
       break;
@@ -370,7 +376,8 @@ int main(int argc, char** argv) {
 					   movieWidth, movieHeight,
 					   movieFPS,
 					   packetLossCompensate,
-					   syncStreams);
+					   syncStreams,
+					   generateHintTracks);
       if (qtOut == NULL) {
 	fprintf(stderr,
 		"Failed to create QuickTime file sink for stdout: %s",
@@ -619,30 +626,42 @@ void checkForPacketArrival(void* clientData) {
   if (!notifyOnPacketArrival) return; // we're not checking 
 
   // Check each subsession, to see whether it has received data packets:
-  Boolean someSubsessionsHaveReceivedDataPackets = False;
-  Boolean allSubsessionsHaveReceivedDataPackets = True;
-  Boolean allSubsessionsHaveBeenSynced = True;
+  unsigned numSubsessionsChecked = 0;
+  unsigned numSubsessionsWithReceivedData = 0;
+  unsigned numSubsessionsThatHaveBeenSynced = 0;
+
   MediaSubsessionIterator iter(*session);
   MediaSubsession* subsession;
   while ((subsession = iter.next()) != NULL) {
     RTPSource* src = subsession->rtpSource();
     if (src == NULL) continue;
+    ++numSubsessionsChecked;
+
     if (src->receptionStatsDB().numActiveSourcesSinceLastReset() > 0) {
       // At least one data packet has arrived
-      someSubsessionsHaveReceivedDataPackets = True;
-    } else {
-      allSubsessionsHaveReceivedDataPackets = False;
+      ++numSubsessionsWithReceivedData;
     }
-    if (!src->hasBeenSynchronizedUsingRTCP()) {
-      // At least one subsession remains unsynchronized:
-      allSubsessionsHaveBeenSynced = False;
+    if (src->hasBeenSynchronizedUsingRTCP()) {
+      ++numSubsessionsThatHaveBeenSynced;
     }
   }
 
-  if ((!syncStreams && someSubsessionsHaveReceivedDataPackets) ||
-      (syncStreams && allSubsessionsHaveReceivedDataPackets
-       && allSubsessionsHaveBeenSynced)) {
-    // Notify the user:
+  unsigned numSubsessionsToCheck = numSubsessionsChecked;
+  if (qtOut != NULL) {
+    // Special case for "QuickTimeFileSink"s: They might not use all of the
+    // input sources:
+    numSubsessionsToCheck = qtOut->numActiveSubsessions();
+  }
+
+  Boolean notifyTheUser;
+  if (!syncStreams) {
+    notifyTheUser = numSubsessionsWithReceivedData > 0; // easy case
+  } else {
+    notifyTheUser = numSubsessionsWithReceivedData >= numSubsessionsToCheck
+      && numSubsessionsThatHaveBeenSynced == numSubsessionsChecked;
+    // Note: A subsession with no active sources is considered to be synced
+  }
+  if (notifyTheUser) {
     struct timeval timeNow;
     gettimeofday(&timeNow, &Idunno);
     fprintf(stderr, "%sata packets have begun arriving [%ld%03ld]\007\n",
