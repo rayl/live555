@@ -76,9 +76,14 @@ public:
 
   Boolean setupMediaSubsession(MediaSubsession& subsession,
 			       Boolean streamOutgoing = False,
-			       Boolean streamUsingTCP = False);
+			       Boolean streamUsingTCP = False,
+			       Boolean forceMulticastOnUnspecified = False);
       // Issues a RTSP "SETUP" command on "subsession".
       // Returns True iff this command succeeds
+      // If "forceMulticastOnUnspecified" is True (and "streamUsingTCP" is False),
+      // then the client will request a multicast stream if the media address
+      // in the original SDP response was unspecified (i.e., 0.0.0.0).
+      // Note, however, that not all servers will support this. 
 
   Boolean playMediaSession(MediaSession& session,
 			   float start = 0.0f, float end = -1.0f,

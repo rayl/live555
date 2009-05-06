@@ -691,7 +691,8 @@ Boolean RTSPClient
 
 Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 					 Boolean streamOutgoing,
-					 Boolean streamUsingTCP) {
+					 Boolean streamUsingTCP,
+					 Boolean forceMulticastOnUnspecified) {
   char* cmd = NULL;
   char* setupStr = NULL;
 
@@ -748,8 +749,9 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 	  rtcpNumber = fTCPStreamIdCount++;
 	} else { // normal RTP streaming
 	  unsigned connectionAddress = subsession.connectionEndpointAddress();
-	  transportTypeStr
-	    = IsMulticastAddress(connectionAddress) ? ";multicast" : ";unicast";
+	  Boolean requestMulticastStreaming = IsMulticastAddress(connectionAddress)
+	    || (connectionAddress == 0 && forceMulticastOnUnspecified);
+	  transportTypeStr = requestMulticastStreaming ? ";multicast" : ";unicast";
 	  portTypeStr = ";client_port";
 	  rtpNumber = subsession.clientPortNum();
 	  if (rtpNumber == 0) {
@@ -825,8 +827,9 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 	rtcpNumber = fTCPStreamIdCount++;
       } else { // normal RTP streaming      
 	unsigned connectionAddress = subsession.connectionEndpointAddress();
-	transportTypeStr
-	  = IsMulticastAddress(connectionAddress) ? ";multicast" : ";unicast";
+	Boolean requestMulticastStreaming = IsMulticastAddress(connectionAddress)
+	  || (connectionAddress == 0 && forceMulticastOnUnspecified);
+	transportTypeStr = requestMulticastStreaming ? ";multicast" : ";unicast";
 	portTypeStr = ";client_port";
 	rtpNumber = subsession.clientPortNum();
 	if (rtpNumber == 0) {
@@ -2091,6 +2094,8 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
   unsigned rtpCid, rtcpCid;
   Boolean isMulticast = True; // by default
   char* foundDestinationStr = NULL;
+  portNumBits multicastPortNumRTP, multicastPortNumRTCP;
+  Boolean foundMulticastPortNum = False;
 
   // First, check for "Transport:"
   if (_strncasecmp(line, "Transport: ", 11) != 0) return False;
@@ -2114,6 +2119,9 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
     } else if (_strncasecmp(field, "destination=", 12) == 0) {
       delete[] foundDestinationStr;
       foundDestinationStr = strDup(field+12);
+    } else if (sscanf(field, "port=%hu-%hu",
+		      &multicastPortNumRTP, &multicastPortNumRTCP) == 2) {
+      foundMulticastPortNum = True;
     }
 
     fields += strlen(field);
@@ -2125,9 +2133,10 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
   // If we're multicast, and have a "destination=" (multicast) address, then use this
   // as the 'server' address (because some weird servers don't specify the multicast
   // address earlier, in the "DESCRIBE" response's SDP:
-  if (isMulticast && foundDestinationStr != NULL) {
+  if (isMulticast && foundDestinationStr != NULL && foundMulticastPortNum) {
     delete[] foundServerAddressStr;
     serverAddressStr = foundDestinationStr;
+    serverPortNum = multicastPortNumRTP;
   }
   delete[] foundDestinationStr;
 

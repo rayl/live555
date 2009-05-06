@@ -740,11 +740,11 @@ void RTSPServer::RTSPClientSession
 	     "RTSP/1.0 200 OK\r\n"
 	     "CSeq: %s\r\n"
 	     "%s"
-	     "Transport: RTP/AVP;multicast;destination=%s;port=%d;ttl=%d\r\n"
+	     "Transport: RTP/AVP;multicast;destination=%s;port=%d-%d;ttl=%d\r\n"
 	     "Session: %d\r\n\r\n",
 	     cseq,
 	     dateHeader(),
-	     our_inet_ntoa(destinationAddr), ntohs(serverRTPPort.num()), destinationTTL,
+	     our_inet_ntoa(destinationAddr), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()), destinationTTL,
 	     fOurSessionId);
   } else {
     switch (streamingMode) {
