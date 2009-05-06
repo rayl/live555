@@ -48,6 +48,10 @@ public:
 	    unsigned samplingFrequency, unsigned granularityInMS = 20);
   static AudioPortNames* getPortNames();
 
+  static char** allowedDeviceNames;
+  // If this is set to non-NULL, then it's a NULL-terminated array of strings
+  // of device names that we are allowed to access.
+
 protected:
   AudioInputDevice(UsageEnvironment& env,
 		   unsigned char bitsPerSample,

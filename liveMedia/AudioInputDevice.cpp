@@ -31,6 +31,7 @@ AudioInputDevice
 AudioInputDevice::~AudioInputDevice() {
 }
 
+char** AudioInputDevice::allowedDeviceNames = NULL;
 
 ////////// AudioPortNames implementation //////////
 

@@ -13,12 +13,12 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
-// Copyright (c) 2001-2003 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 2001-2004 Live Networks, Inc.  All rights reserved.
 // Windows implementation of a generic audio input device
+// This version uses Windows' built-in software mixer.
 // Implementation
 
-#include <WindowsAudioInputDevice.hh>
-#include <GroupsockHelper.hh>
+#include <WindowsAudioInputDevice_mixer.hh>
 
 ////////// Mixer and AudioInputPort definition //////////
 
@@ -117,8 +117,6 @@ AudioPortNames* AudioInputDevice::getPortNames() {
 
 ////////// WindowsAudioInputDevice implementation //////////
 
-static unsigned _bitsPerSample = 16;
-
 WindowsAudioInputDevice
 ::WindowsAudioInputDevice(UsageEnvironment& env, int inputPortNumber,
 			  unsigned char bitsPerSample,
@@ -126,20 +124,10 @@ WindowsAudioInputDevice
 			  unsigned samplingFrequency,
 			  unsigned granularityInMS,
 			  Boolean& success)
-  : AudioInputDevice(env, bitsPerSample, numChannels, samplingFrequency, granularityInMS),
-    fCurMixerId(-1), fCurPortIndex(-1), fHaveStarted(False) {
-  _bitsPerSample = bitsPerSample;
-  
-  if (!setInputPort(inputPortNumber)) {
-    char errMsgPrefix[100];
-    sprintf(errMsgPrefix, "Failed to set audio input port number to %d: ", inputPortNumber);
-    char* errMsgSuffix = strDup(env.getResultMsg());
-    env.setResultMsg(errMsgPrefix, errMsgSuffix);
-    delete[] errMsgSuffix;
-    success = False;
-  } else {
-    success = True;
-  }
+  : WindowsAudioInputDevice_common(env, inputPortNumber,
+		bitsPerSample, numChannels, samplingFrequency, granularityInMS),
+	fCurMixerId(-1) {
+	success = initialSetInputPort(inputPortNumber);
 }
 
 WindowsAudioInputDevice::~WindowsAudioInputDevice() {
@@ -147,88 +135,6 @@ WindowsAudioInputDevice::~WindowsAudioInputDevice() {
   
   delete[] ourMixers; ourMixers = NULL;
   numMixers = numInputPortsTotal = 0;
-}
-
-void WindowsAudioInputDevice::doGetNextFrame() {
-  if (!fHaveStarted) {
-    // Before reading the first audio data, flush any existing data:
-    while (readHead != NULL) releaseHeadBuffer();
-    fHaveStarted = True;
-  }
-  fTotalPollingDelay = 0;
-  audioReadyPoller1();
-}
-
-void WindowsAudioInputDevice::doStopGettingFrames() {
-  // Turn off the audio poller:
-  envir().taskScheduler().unscheduleDelayedTask(nextTask()); nextTask() = NULL;
-}
-
-Boolean WindowsAudioInputDevice::setInputPort(int portIndex) {
-  initializeIfNecessary();
-  
-  if (portIndex < 0 || portIndex >= (int)numInputPortsTotal) { // bad index
-    envir().setResultMsg("Bad input port index\n");
-    return False;
-  }
-  
-  // Find the mixer and port that corresponds to "portIndex":
-  int newMixerId, portWithinMixer, portIndexCount = 0;
-  for (newMixerId = 0; newMixerId < (int)numMixers; ++newMixerId) {
-    int prevPortIndexCount = portIndexCount;
-    portIndexCount += ourMixers[newMixerId].numPorts;
-    if (portIndexCount > portIndex) { // it's with this mixer
-      portWithinMixer = portIndex - prevPortIndexCount;
-      break;
-    }
-  }
-  
-  if (newMixerId != fCurMixerId) { 
-    // The mixer has changed, so close the old one and open the new one:
-    if (fCurMixerId >= 0) ourMixers[fCurMixerId].close();
-    fCurMixerId = newMixerId;
-    ourMixers[fCurMixerId].open(fNumChannels, fSamplingFrequency, fGranularityInMS);
-  }
-  if (portIndex != fCurPortIndex) {
-    // Change the input port:
-    fCurPortIndex = portIndex;
-    char const* errReason;
-    MMRESULT errCode;
-    if (!ourMixers[newMixerId].enableInputPort(portWithinMixer, errReason, errCode)) {
-      char resultMsg[100];
-      sprintf(resultMsg, "Failed to enable input port: %s failed (0x%08x)\n", errReason, errCode);
-      envir().setResultMsg(resultMsg);
-      return False;
-    }
-    // Later, may also need to transfer 'gain' to new port #####
-  }
-  return True;
-}
-
-double WindowsAudioInputDevice::getAverageLevel() const {
-  // If the input audio queue is empty, return the previous level,
-  // otherwise use the input queue to recompute "averageLevel":
-  if (readHead != NULL) {
-    double levelTotal = 0.0;
-    unsigned totNumSamples = 0;
-    WAVEHDR* curHdr = readHead;
-    while (1) {
-      short* samplePtr = (short*)(curHdr->lpData);
-      unsigned numSamples = blockSize/2;
-      totNumSamples += numSamples;
-      
-      while (numSamples-- > 0) {
-	short sample = *samplePtr++;
-	if (sample < 0) sample = -sample;
-	levelTotal += (unsigned short)sample;
-      }
-      
-      if (curHdr == readTail) break;
-      curHdr = curHdr->lpNext;
-    }
-    averageLevel = levelTotal/(totNumSamples*(double)0x8000);
-  }
-  return averageLevel;
 }
 
 void WindowsAudioInputDevice::initializeIfNecessary() {
@@ -257,183 +163,57 @@ void WindowsAudioInputDevice::initializeIfNecessary() {
   }
 }
 
-void WindowsAudioInputDevice::audioReadyPoller(void* clientData) {
-  WindowsAudioInputDevice* inputDevice = (WindowsAudioInputDevice*)clientData;
-  inputDevice->audioReadyPoller1();
-}
-
-void WindowsAudioInputDevice::audioReadyPoller1() {
-  if (readHead != NULL) {
-    onceAudioIsReady();
-  } else {
-    unsigned const maxPollingDelay = (100 + fGranularityInMS)*1000;
-    if (fTotalPollingDelay > maxPollingDelay) {
-      // We've waited too long for the audio device - assume it's down:
-      handleClosure(this);
-      return;
-    }
-    
-    // Try again after a short delay:
-    unsigned const uSecondsToDelay = fGranularityInMS*1000;
-    fTotalPollingDelay += uSecondsToDelay;
-    nextTask() = envir().taskScheduler().scheduleDelayedTask(uSecondsToDelay,
-							     (TaskFunc*)audioReadyPoller, this);
+Boolean WindowsAudioInputDevice::setInputPort(int portIndex) {
+  initializeIfNecessary();
+  
+  if (portIndex < 0 || portIndex >= (int)numInputPortsTotal) { // bad index
+    envir().setResultMsg("Bad input port index\n");
+    return False;
   }
-}
-
-void WindowsAudioInputDevice::onceAudioIsReady() {
-  fFrameSize = readFromBuffers(fTo, fMaxSize, fPresentationTime);
-  if (fFrameSize == 0) {
-    // The source is no longer readable
-    handleClosure(this);
-    return;
-  }
-  fDurationInMicroseconds = 1000000/fSamplingFrequency;
   
-  // Call our own 'after getting' function.  Because we sometimes get here
-  // after returning from a delay, we can call this directly, without risking
-  // infinite recursion
-  afterGetting(this);
-}
-
-static void CALLBACK waveInCallback(HWAVEIN /*hwi*/, UINT uMsg,
-				    DWORD /*dwInstance*/, DWORD dwParam1, DWORD /*dwParam2*/) {
-  switch (uMsg) {
-  case WIM_DATA:
-    WAVEHDR* hdr = (WAVEHDR*)dwParam1;
-    WindowsAudioInputDevice::waveInProc(hdr);
-    break;
-  }
-}
-
-Boolean WindowsAudioInputDevice::waveIn_open(unsigned uid, WAVEFORMATEX& wfx) {
-  if (shWaveIn != NULL) return True; // already open
-  
-  do {
-    waveIn_reset();
-    if (waveInOpen(&shWaveIn, uid, &wfx,
-		   (DWORD)waveInCallback, 0, CALLBACK_FUNCTION) != MMSYSERR_NOERROR) break;
-    
-    // Allocate read buffers, and headers:
-    readData = new unsigned char[numBlocks*blockSize];
-    if (readData == NULL) break;
-    
-    readHdrs = new WAVEHDR[numBlocks];
-    if (readHdrs == NULL) break;
-    readHead = readTail = NULL;
-    
-    readTimes = new struct timeval[numBlocks];
-    if (readTimes == NULL) break;
-    
-    // Initialize headers:
-    for (unsigned i = 0; i < numBlocks; ++i) {
-      readHdrs[i].lpData = (char*)&readData[i*blockSize];
-      readHdrs[i].dwBufferLength = blockSize;
-      readHdrs[i].dwFlags = 0;
-      if (waveInPrepareHeader(shWaveIn, &readHdrs[i], sizeof (WAVEHDR)) != MMSYSERR_NOERROR) break;
-      if (waveInAddBuffer(shWaveIn, &readHdrs[i], sizeof (WAVEHDR)) != MMSYSERR_NOERROR) break;
-    }
-    
-    if (waveInStart(shWaveIn) != MMSYSERR_NOERROR) break;
-    
-    hAudioReady = CreateEvent(NULL, TRUE, FALSE, "waveIn Audio Ready");
-    return True;
-  } while (0);
-  
-  waveIn_reset();
-  return False;
-}
-
-void WindowsAudioInputDevice::waveIn_close() {
-  if (shWaveIn == NULL) return; // already closed
-  
-  waveInStop(shWaveIn);
-  waveInReset(shWaveIn);
-  
-  for (unsigned i = 0; i < numBlocks; ++i) {
-    if (readHdrs[i].dwFlags & WHDR_PREPARED) {
-      waveInUnprepareHeader(shWaveIn, &readHdrs[i], sizeof (WAVEHDR));
+  // Find the mixer and port that corresponds to "portIndex":
+  int newMixerId, portWithinMixer, portIndexCount = 0;
+  for (newMixerId = 0; newMixerId < (int)numMixers; ++newMixerId) {
+    int prevPortIndexCount = portIndexCount;
+    portIndexCount += ourMixers[newMixerId].numPorts;
+    if (portIndexCount > portIndex) { // it's with this mixer
+      portWithinMixer = portIndex - prevPortIndexCount;
+      break;
     }
   }
   
-  waveInClose(shWaveIn);
-  waveIn_reset();
-}
-
-void WindowsAudioInputDevice::waveIn_reset() {
-  shWaveIn = NULL;
+  // Check that this mixer is allowed:
+  if (allowedDeviceNames != NULL) {
+	  int i;
+	  for (i = 0; allowedDeviceNames[i] != NULL; ++i) {
+		  if (strcmp(allowedDeviceNames[i], ourMixers[newMixerId].name) == 0) break; // allowed
+	  }
+	  if (allowedDeviceNames[i] == NULL) { // this mixer is not on the allowed list
+		envir().setResultMsg("Access to this audio device is not allowed\n");
+		return False;
+	  }
+  }
   
-  delete[] readData; readData = NULL;
-  bytesUsedAtReadHead = 0;
-  
-  delete[] readHdrs; readHdrs = NULL;
-  readHead = readTail = NULL;
-  
-  delete[] readTimes; readTimes = NULL;
-  
-  hAudioReady = NULL;
-}
-
-unsigned WindowsAudioInputDevice::readFromBuffers(unsigned char* to, unsigned numBytesWanted, struct timeval& creationTime) {
-  // Begin by computing the creation time of (the first bytes of) this returned audio data:
-  if (readHead != NULL) {
-    int hdrIndex = readHead - readHdrs;
-    creationTime = readTimes[hdrIndex];
-    
-    // Adjust this time to allow for any data that's already been read from this buffer:
-    if (bytesUsedAtReadHead > 0) {
-      creationTime.tv_usec += (unsigned)(uSecsPerByte*bytesUsedAtReadHead);
-      creationTime.tv_sec += creationTime.tv_usec/1000000;
-      creationTime.tv_usec %= 1000000;
+  if (newMixerId != fCurMixerId) { 
+    // The mixer has changed, so close the old one and open the new one:
+    if (fCurMixerId >= 0) ourMixers[fCurMixerId].close();
+    fCurMixerId = newMixerId;
+    ourMixers[fCurMixerId].open(fNumChannels, fSamplingFrequency, fGranularityInMS);
+  }
+  if (portIndex != fCurPortIndex) {
+    // Change the input port:
+    fCurPortIndex = portIndex;
+    char const* errReason;
+    MMRESULT errCode;
+    if (!ourMixers[newMixerId].enableInputPort(portWithinMixer, errReason, errCode)) {
+      char resultMsg[100];
+      sprintf(resultMsg, "Failed to enable input port: %s failed (0x%08x)\n", errReason, errCode);
+      envir().setResultMsg(resultMsg);
+      return False;
     }
+    // Later, may also need to transfer 'gain' to new port #####
   }
-  
-  // Then, read from each available buffer, until we have the data that we want:
-  unsigned numBytesRead = 0;
-  while (readHead != NULL && numBytesRead < numBytesWanted) {
-    unsigned thisRead = min(readHead->dwBytesRecorded - bytesUsedAtReadHead, numBytesWanted - numBytesRead);
-    memmove(&to[numBytesRead], &readHead->lpData[bytesUsedAtReadHead], thisRead);
-    numBytesRead += thisRead;
-    bytesUsedAtReadHead += thisRead;
-    if (bytesUsedAtReadHead == readHead->dwBytesRecorded) {
-      // We're finished with the block; give it back to the device:
-      releaseHeadBuffer();
-    }
-  }
-  
-  return numBytesRead;
-}
-
-void WindowsAudioInputDevice::releaseHeadBuffer() {
-  WAVEHDR* toRelease = readHead;
-  if (readHead == NULL) return;
-  
-  readHead = readHead->lpNext;
-  if (readHead == NULL) readTail = NULL;
-  
-  toRelease->lpNext = NULL; 
-  toRelease->dwBytesRecorded = 0; 
-  toRelease->dwFlags &= ~WHDR_DONE;
-  waveInAddBuffer(shWaveIn, toRelease, sizeof (WAVEHDR)); 
-  bytesUsedAtReadHead = 0;
-}
-
-void WindowsAudioInputDevice::waveInProc(WAVEHDR* hdr) {
-  unsigned hdrIndex = hdr - readHdrs;
-  
-  // Record the time that the data arrived:
-  int dontCare;
-  gettimeofday(&readTimes[hdrIndex], &dontCare);
-  
-  // Add the block to the tail of the queue:
-  hdr->lpNext = NULL;
-  if (readTail != NULL) {
-    readTail->lpNext = hdr;
-    readTail = hdr;
-  } else {
-    readHead = readTail = hdr;
-  }
-  SetEvent(hAudioReady);
+  return True;
 }
 
 unsigned WindowsAudioInputDevice::numMixers = 0;
@@ -441,24 +221,6 @@ unsigned WindowsAudioInputDevice::numMixers = 0;
 Mixer* WindowsAudioInputDevice::ourMixers = NULL;
 
 unsigned WindowsAudioInputDevice::numInputPortsTotal = 0;
-
-HWAVEIN WindowsAudioInputDevice::shWaveIn = NULL;
-
-unsigned WindowsAudioInputDevice::blockSize = 0;
-unsigned WindowsAudioInputDevice::numBlocks = 0;
-
-unsigned char* WindowsAudioInputDevice::readData = NULL;
-DWORD WindowsAudioInputDevice::bytesUsedAtReadHead = 0;
-double WindowsAudioInputDevice::uSecsPerByte = 0.0;
-double WindowsAudioInputDevice::averageLevel = 0.0;
-
-WAVEHDR* WindowsAudioInputDevice::readHdrs = NULL;
-WAVEHDR* WindowsAudioInputDevice::readHead = NULL;
-WAVEHDR* WindowsAudioInputDevice::readTail = NULL;
-
-struct timeval* WindowsAudioInputDevice::readTimes = NULL;
-
-HANDLE WindowsAudioInputDevice::hAudioReady = NULL;
 
 
 ////////// Mixer and AudioInputPort implementation //////////
@@ -474,9 +236,6 @@ Mixer::~Mixer() {
 void Mixer::open(unsigned numChannels, unsigned samplingFrequency, unsigned granularityInMS) {
   HMIXER newHMixer = NULL;
   do {
-    WindowsAudioInputDevice::uSecsPerByte
-      = (8*1e6)/(_bitsPerSample*numChannels*samplingFrequency);
-    
     MIXERCAPS mc;
     if (mixerGetDevCaps(index, &mc, sizeof mc) != MMSYSERR_NOERROR) break;
     
@@ -514,28 +273,8 @@ void Mixer::open(unsigned numChannels, unsigned samplingFrequency, unsigned gran
     if (mixerGetDevCaps((UINT)newHMixer, &mc, sizeof mc) != MMSYSERR_NOERROR) break;
     if (mc.cDestinations < 1) break; // error: this mixer has no destinations         
     
-    WAVEFORMATEX wfx;
-    wfx.wFormatTag      = WAVE_FORMAT_PCM;
-    wfx.nChannels       = numChannels;
-    wfx.nSamplesPerSec  = samplingFrequency;
-    wfx.wBitsPerSample  = _bitsPerSample;
-    wfx.nBlockAlign     = (numChannels*_bitsPerSample)/8;
-    wfx.nAvgBytesPerSec = samplingFrequency*wfx.nBlockAlign;
-    wfx.cbSize          = 0;
-    
-    WindowsAudioInputDevice::blockSize = (wfx.nAvgBytesPerSec*granularityInMS)/1000;
-    
-    // Use a 10-second input buffer, to allow for CPU competition from video, etc.,
-    // and also for some audio cards that buffer as much as 5 seconds of audio.
-    unsigned const bufferSeconds = 10;
-    WindowsAudioInputDevice::numBlocks = (bufferSeconds*1000)/granularityInMS;
-    
-    if (!WindowsAudioInputDevice::waveIn_open(uWavIn, wfx)) break;
-    
-    // Set this process's priority high. I'm not sure how much this is really needed,
-    // but the "rat" code does this:
-    SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-    
+	if (!WindowsAudioInputDevice_common::openWavInPort(uWavIn, numChannels, samplingFrequency, granularityInMS)) break;
+
     hMixer = newHMixer;
     return;
   } while (0);
@@ -710,7 +449,7 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
 
 
 void Mixer::close() {
-  WindowsAudioInputDevice::waveIn_close();
+  WindowsAudioInputDevice_common::waveIn_close();
   if (hMixer != NULL) mixerClose(hMixer);
   hMixer = NULL; dwRecLineID = 0;
 }

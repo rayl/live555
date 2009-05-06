@@ -13,41 +13,45 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
-// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Windows implementation of a generic audio input device
+// Base class for both library versions:
+//     One that uses Windows' built-in software mixer; another that doesn't.
 // C++ header
-//
-// To use this, call "AudioInputDevice::createNew()".
-// You can also call "AudioInputDevice::getPortNames()" to get a list
-// of port names. 
 
-#ifndef _WINDOWS_AUDIO_INPUT_DEVICE_HH
-#define _WINDOWS_AUDIO_INPUT_DEVICE_HH
+#ifndef _WINDOWS_AUDIO_INPUT_DEVICE_COMMON_HH
+#define _WINDOWS_AUDIO_INPUT_DEVICE_COMMON_HH
 
 #ifndef _AUDIO_INPUT_DEVICE_HH
 #include "AudioInputDevice.hh"
 #endif
 
-class WindowsAudioInputDevice: public AudioInputDevice {
-protected:
-  WindowsAudioInputDevice(UsageEnvironment& env, int inputPortNumber,
-	unsigned char bitsPerSample, unsigned char numChannels,
-	unsigned samplingFrequency, unsigned granularityInMS,
-	Boolean& success);
-	// called only by createNew()
+class WindowsAudioInputDevice_common: public AudioInputDevice {
+public:
+  static Boolean openWavInPort(int index, unsigned numChannels, unsigned samplingFrequency, unsigned granularityInMS);
+  static void waveIn_close();
+  static void waveInProc(WAVEHDR* hdr); // Windows audio callback function 
 
-  virtual ~WindowsAudioInputDevice();
+protected:
+  WindowsAudioInputDevice_common(UsageEnvironment& env, int inputPortNumber,
+	unsigned char bitsPerSample, unsigned char numChannels,
+	unsigned samplingFrequency, unsigned granularityInMS);
+	// virtual base class
+
+  virtual ~WindowsAudioInputDevice_common();
+
+  Boolean initialSetInputPort(int portIndex);
+
+protected:
+  int fCurPortIndex;
 
 private:
   // redefined virtual functions:
   virtual void doGetNextFrame();
   virtual void doStopGettingFrames();
-  virtual Boolean setInputPort(int portIndex);
   virtual double getAverageLevel() const;
 
 private:
-  friend class AudioInputDevice; friend class Mixer;
-  static void initializeIfNecessary();
   static void audioReadyPoller(void* clientData);
 
   void audioReadyPoller1();
@@ -55,19 +59,12 @@ private:
 
   // Audio input buffering:
   static Boolean waveIn_open(unsigned uid, WAVEFORMATEX& wfx);
-  static void waveIn_close();
   static void waveIn_reset(); // used to implement both of the above
   static unsigned readFromBuffers(unsigned char* to, unsigned numBytesWanted, struct timeval& creationTime);
   static void releaseHeadBuffer(); // from the input header queue
 
-public:
-  static void waveInProc(WAVEHDR* hdr); // Windows audio callback function 
-
 private:
-  static unsigned numMixers;
-  static class Mixer* ourMixers;
-  static unsigned numInputPortsTotal;
-
+  static unsigned _bitsPerSample;
   static HWAVEIN shWaveIn;
   static unsigned blockSize, numBlocks;
   static unsigned char* readData; // buffer for incoming audio data
@@ -78,9 +75,8 @@ private:
   static struct timeval* readTimes;
   static HANDLE hAudioReady; // audio ready event
 
-  int fCurMixerId, fCurPortIndex;
-  unsigned fTotalPollingDelay; // uSeconds
   Boolean fHaveStarted;
+  unsigned fTotalPollingDelay; // uSeconds
 };
 
 #endif
