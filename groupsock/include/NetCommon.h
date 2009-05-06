@@ -22,6 +22,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #define _NET_COMMON_H
 
 #include <string.h>
+
 #if defined(IMN_PIM)
 #include "IMN_PIMNetCommon.h"
 #else
@@ -68,6 +69,10 @@ typedef unsigned char u_int8_t;
 #define u_int8_t uint8_t
 #endif
 #endif
+#endif
+
+#ifndef SOCKLEN_T
+#define SOCKLEN_T int
 #endif
 
 #endif

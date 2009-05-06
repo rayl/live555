@@ -25,10 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "NetAddress.hh"
 #endif
 
-#ifndef SOCKLEN_T
-#define SOCKLEN_T int
-#endif
-
 int setupDatagramSocket(UsageEnvironment& env,
 			Port port, Boolean setLoopback = True);
 int setupStreamSocket(UsageEnvironment& env,
