@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A source object for AMR audio files (as defined in RFC 3267, section 5)
 // Implementation
 
@@ -180,6 +180,7 @@ void AMRAudioFileSource::doGetNextFrame() {
       
   // Next, read the frame into the buffer provided
   if (fFrameSize > fMaxSize) {
+    fNumTruncatedBytes = fFrameSize - fMaxSize;
     fFrameSize = fMaxSize;
   }
   fFrameSize = fread(fTo, 1, fFrameSize, fFid);
@@ -195,11 +196,9 @@ void AMRAudioFileSource::doGetNextFrame() {
     fPresentationTime.tv_usec = uSeconds%1000000;
   }
 
+  fDurationInMicroseconds = 20000; // each frame is 20 ms
+
   // Switch to another task, and inform the reader that he has data:
   nextTask() = envir().taskScheduler().scheduleDelayedTask(0,
 				(TaskFunc*)FramedSource::afterGetting, this);
  }
-
-float AMRAudioFileSource::getPlayTime(unsigned numFrames) const {
-  return (float)(numFrames*0.020); // each frame is 20 ms
-}

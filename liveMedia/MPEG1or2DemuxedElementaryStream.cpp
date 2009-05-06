@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A MPEG 1 or 2 Elementary Stream, demultiplexed from a Program Stream
 // Implementation
 
@@ -60,16 +60,16 @@ unsigned MPEG1or2DemuxedElementaryStream::maxFrameSize() const {
   // the MPEG spec allows for PES packets as large as ~65536 bytes. #####
 }
 
-float MPEG1or2DemuxedElementaryStream::getPlayTime(unsigned numFrames) const {
-  return fOurSourceDemux.inputSource()->getPlayTime(numFrames);
-}
-
 void MPEG1or2DemuxedElementaryStream
 ::afterGettingFrame(void* clientData,
-		    unsigned frameSize, struct timeval presentationTime) {
+		    unsigned frameSize, unsigned numTruncatedBytes,
+		    struct timeval presentationTime,
+		    unsigned durationInMicroseconds) {
   MPEG1or2DemuxedElementaryStream* stream
     = (MPEG1or2DemuxedElementaryStream*)clientData;
   stream->fFrameSize = frameSize;
+  stream->fNumTruncatedBytes = numTruncatedBytes;
   stream->fPresentationTime = presentationTime;
+  stream->fDurationInMicroseconds = durationInMicroseconds;
   FramedSource::afterGetting(stream);
 }

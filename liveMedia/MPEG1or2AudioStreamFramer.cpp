@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A filter that breaks up an MPEG (1,2) audio elementary stream into frames
 // Implementation
 
@@ -32,7 +32,7 @@ public:
   virtual ~MPEG1or2AudioStreamParser();
 
 public:
-  unsigned parse();
+  unsigned parse(unsigned& numTruncatedBytes);
       // returns the size of the frame that was acquired, or 0 if none was
 
   void registerReadInterest(unsigned char* to, unsigned maxSize);
@@ -100,14 +100,6 @@ struct timeval MPEG1or2AudioStreamFramer::currentFramePlayTime() const {
   return result;
 }
 
-float MPEG1or2AudioStreamFramer::getPlayTime(unsigned numFrames) const {
-  // Note: This won't work properly for VBR streams #####
-  struct timeval const pt = currentFramePlayTime();
-  float fpt = pt.tv_sec + pt.tv_usec/(float)MILLION;
-
-  return numFrames*fpt;
-}
-
 void MPEG1or2AudioStreamFramer::continueReadProcessing(void* clientData,
 						   unsigned char* /*ptr*/,
 						   unsigned /*size*/) {
@@ -116,7 +108,7 @@ void MPEG1or2AudioStreamFramer::continueReadProcessing(void* clientData,
 }
 
 void MPEG1or2AudioStreamFramer::continueReadProcessing() {
-  unsigned acquiredFrameSize = fParser->parse();
+  unsigned acquiredFrameSize = fParser->parse(fNumTruncatedBytes);
   if (acquiredFrameSize > 0) {
     // We were able to acquire a frame from the input.
     // It has already been copied to the reader's space.
@@ -127,6 +119,7 @@ void MPEG1or2AudioStreamFramer::continueReadProcessing() {
     fPresentationTime = fNextFramePresentationTime;
 
     struct timeval framePlayTime = currentFramePlayTime();
+    fDurationInMicroseconds = framePlayTime.tv_sec*MILLION + framePlayTime.tv_usec;
     fNextFramePresentationTime.tv_usec += framePlayTime.tv_usec;
     fNextFramePresentationTime.tv_sec
       += framePlayTime.tv_sec + fNextFramePresentationTime.tv_usec/MILLION;
@@ -161,7 +154,7 @@ void MPEG1or2AudioStreamParser::registerReadInterest(unsigned char* to,
   fMaxSize = maxSize;
 }
 
-unsigned MPEG1or2AudioStreamParser::parse() {
+unsigned MPEG1or2AudioStreamParser::parse(unsigned& numTruncatedBytes) {
   try {
     saveParserState();
     
@@ -175,8 +168,15 @@ unsigned MPEG1or2AudioStreamParser::parse() {
     
     // Copy the frame to the requested destination:
     unsigned frameSize = fCurrentFrame.frameSize + 4; // include header
-    if (frameSize > fMaxSize) frameSize = fMaxSize;
+    if (frameSize > fMaxSize) {
+      numTruncatedBytes = frameSize - fMaxSize;
+      frameSize = fMaxSize;
+    } else {
+      numTruncatedBytes = 0;
+    }
+
     getBytes(fTo, frameSize);
+    skipBytes(numTruncatedBytes);
     
     return frameSize;
   } catch (int /*e*/) {

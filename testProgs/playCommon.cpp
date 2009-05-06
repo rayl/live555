@@ -1037,9 +1037,13 @@ private:
 
   static void afterGettingFrame(void* clientData,
                                 unsigned numBytesRead,
-                                struct timeval presentationTime);
+				unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+				unsigned durationInMicroseconds);
   void afterGettingFrame1(unsigned numBytesRead,
-			  struct timeval presentationTime);
+			  unsigned numTruncatedBytes,
+			  struct timeval presentationTime,
+			  unsigned durationInMicroseconds);
 
 private: // redefined virtual function:
   virtual void doGetNextFrame();
@@ -1070,15 +1074,22 @@ void RTPTranslator::doGetNextFrame() {
 
 void RTPTranslator::afterGettingFrame(void* clientData,
 				      unsigned numBytesRead,
-				      struct timeval presentationTime) {
+				      unsigned numTruncatedBytes,
+				      struct timeval presentationTime,
+				      unsigned durationInMicroseconds) {
   RTPTranslator* rtpTranslator = (RTPTranslator*)clientData;
-  rtpTranslator->afterGettingFrame1(numBytesRead, presentationTime);
+  rtpTranslator->afterGettingFrame1(numBytesRead, numTruncatedBytes,
+				    presentationTime, durationInMicroseconds);
 }
 
 void RTPTranslator::afterGettingFrame1(unsigned numBytesRead,
-				       struct timeval presentationTime) {
+				       unsigned numTruncatedBytes,
+				       struct timeval presentationTime,
+				       unsigned durationInMicroseconds) {
   fFrameSize = numBytesRead;
   fPresentationTime = presentationTime;
+  fNumTruncatedBytes = numTruncatedBytes;
+  fDurationInMicroseconds = durationInMicroseconds;
   afterGetting(this);
 }
 

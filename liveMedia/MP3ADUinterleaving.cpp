@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Interleaving of MP3 ADUs
 // Implementation
 
@@ -65,7 +65,9 @@ FramedSource* MP3ADUinterleaverBase::getInputSource(UsageEnvironment& env,
 
 void MP3ADUinterleaverBase::afterGettingFrame(void* clientData,
 					      unsigned numBytesRead,
-					      struct timeval presentationTime) {
+					      unsigned /*numTruncatedBytes*/,
+					      struct timeval presentationTime,
+					      unsigned /*durationInMicroseconds*/) {
   MP3ADUinterleaverBase* interleaverBase = (MP3ADUinterleaverBase*)clientData;
   // Finish up after reading:
   interleaverBase->afterGettingFrame(numBytesRead, presentationTime);
@@ -128,7 +130,7 @@ void MP3ADUinterleaver::doGetNextFrame() {
   // If there's a frame immediately available, deliver it, otherwise get new
   // frames from the source until one's available:
   if (fFrames->haveReleaseableFrame()) {
-    fFrameSize = releaseOutgoingFrame(fPresentationTime);
+    releaseOutgoingFrame();
 
     // Call our own 'after getting' function.  Because we're not a 'leaf'
     // source, we can call this directly, without risking infinite recursion.
@@ -147,18 +149,18 @@ void MP3ADUinterleaver::doGetNextFrame() {
   }
 }
 
-unsigned MP3ADUinterleaver::releaseOutgoingFrame(struct timeval& presentationTime) {
+void MP3ADUinterleaver::releaseOutgoingFrame() {
   unsigned char* fromPtr;
-  unsigned bytesToCopy;
   fFrames->getReleasingFrameParams(fFrames->nextIndexToRelease(),
-				   fromPtr, bytesToCopy, presentationTime);
+				   fromPtr, fFrameSize, fPresentationTime);
 
-  if (fMaxSize < bytesToCopy) bytesToCopy = fMaxSize;
-  memmove(fTo, fromPtr, bytesToCopy);
+  if (fFrameSize > fMaxSize) {
+    fNumTruncatedBytes = fFrameSize - fMaxSize;
+    fFrameSize = fMaxSize;
+  }
+  memmove(fTo, fromPtr, fFrameSize);
 
   fFrames->releaseNext();
-
-  return bytesToCopy;
 }
 
 void MP3ADUinterleaver::afterGettingFrame(unsigned numBytesRead,
@@ -223,7 +225,7 @@ void MP3ADUdeinterleaver::doGetNextFrame() {
   // If there's a frame immediately available, deliver it, otherwise get new
   // frames from the source until one's available:
   if (fFrames->haveReleaseableFrame()) {
-    fFrameSize = releaseOutgoingFrame(fPresentationTime);
+    releaseOutgoingFrame();
 
     // Call our own 'after getting' function.  Because we're not a 'leaf'
     // source, we can call this directly, without risking infinite recursion.
@@ -289,17 +291,17 @@ void MP3ADUdeinterleaver::afterGettingFrame(unsigned numBytesRead,
   fIIlastSeen = ii;
 }
 
-unsigned MP3ADUdeinterleaver::releaseOutgoingFrame(struct timeval& presentationTime) {
+void MP3ADUdeinterleaver::releaseOutgoingFrame() {
   unsigned char* fromPtr;
-  unsigned bytesToCopy;
-  fFrames->getReleasingFrameParams(fromPtr, bytesToCopy, presentationTime);
+  fFrames->getReleasingFrameParams(fromPtr, fFrameSize, fPresentationTime);
 
-  if (fMaxSize < bytesToCopy) bytesToCopy = fMaxSize;
-  memmove(fTo, fromPtr, bytesToCopy);
+  if (fFrameSize > fMaxSize) {
+    fNumTruncatedBytes = fFrameSize - fMaxSize;
+    fFrameSize = fMaxSize;
+  }
+  memmove(fTo, fromPtr, fFrameSize);
 
   fFrames->releaseNext();
-
-  return bytesToCopy;
 }
 
 ////////// InterleavingFrames (implementation) //////////

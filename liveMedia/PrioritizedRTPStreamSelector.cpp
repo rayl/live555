@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Select from multiple, prioritized RTP streams, based on RTP sequence
 // number, producing a single output stream
 // Implementation
@@ -43,8 +43,7 @@ public:
   unsigned char*& buffer() { return fBuffer; }
   unsigned bufferSize() const { return fBufferSize; }
 
-  void afterGettingFrame1(unsigned frameSize,
-			  struct timeval presentationTime);
+  void afterGettingFrame1(unsigned frameSize);
   void onSourceClosure1();
 
 private:
@@ -59,7 +58,9 @@ private:
 };
 
 static void afterGettingFrame(void* clientData, unsigned frameSize,
-			      struct timeval presentationTime);
+			      unsigned numTruncatedBytes,
+			      struct timeval presentationTime,
+			      unsigned durationInMicroseconds);
 static void onSourceClosure(void* clientData);
 
 
@@ -187,10 +188,6 @@ void PrioritizedRTPStreamSelector::doGetNextFrame() {
   }
 }
 
-float PrioritizedRTPStreamSelector::getPlayTime(unsigned) const {
-  return 0.0; //##### would need to fix this if this routine were needed
-}
-
 void PrioritizedRTPStreamSelector::startReadingProcess() {
   if (fAmCurrentlyReading) return; // already ongoing
   if (fWarehouse->isFull()) return; // no room now for any more
@@ -238,7 +235,10 @@ Boolean PrioritizedRTPStreamSelector
 
   if (buffer != NULL) {
     // A frame was available
-    if (fFrameSize > fMaxSize) fFrameSize = fMaxSize;
+    if (fFrameSize > fMaxSize) {
+      fNumTruncatedBytes = fFrameSize - fMaxSize;
+      fFrameSize = fMaxSize;
+    }
     memmove(fTo, buffer, fFrameSize);
 
     delete[] buffer;
@@ -283,15 +283,16 @@ PrioritizedInputStreamDescriptor::~PrioritizedInputStreamDescriptor() {
 }
 
 static void afterGettingFrame(void* clientData, unsigned frameSize,
-			      struct timeval presentationTime) {
+			      unsigned /*numTruncatedBytes*/,
+			      struct timeval /*presentationTime*/,
+			      unsigned /*durationInMicroseconds*/) {
   PrioritizedInputStreamDescriptor* inputStream
     = (PrioritizedInputStreamDescriptor*)clientData;
-  inputStream->afterGettingFrame1(frameSize, presentationTime);
+  inputStream->afterGettingFrame1(frameSize);
 }
 
 void PrioritizedInputStreamDescriptor
-::afterGettingFrame1(unsigned frameSize,
-		     struct timeval /*presentationTime*/) {
+::afterGettingFrame1(unsigned frameSize) {
   unsigned short rtpSeqNo = rtpStream()->curPacketRTPSeqNum();
   // Deliver this frame to our selector:
   fOurSelector->handleNewIncomingFrame(fPriority, rtpSeqNo,

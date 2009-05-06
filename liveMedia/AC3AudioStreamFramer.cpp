@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A filter that breaks up an AC3 audio elementary stream into frames
 // Implementation
 
@@ -47,7 +47,7 @@ public:
   Boolean testStreamCode(unsigned char ourStreamCode,
 			 unsigned char* ptr, unsigned size);
      // returns True iff the initial stream code is ours
-  unsigned parseFrame();
+  unsigned parseFrame(unsigned& numTruncatedBytes);
      // returns the size of the frame that was acquired, or 0 if none was
 
   void registerReadInterest(unsigned char* to, unsigned maxSize);
@@ -59,9 +59,10 @@ public:
 
 private:
   static void afterGettingSavedFrame(void* clientData, unsigned frameSize,
-                                     struct timeval presentationTime);
-  void afterGettingSavedFrame1(unsigned frameSize,
-                               struct timeval presentationTime);
+				     unsigned numTruncatedBytes,
+                                     struct timeval presentationTime,
+				     unsigned durationInMicroseconds);
+  void afterGettingSavedFrame1(unsigned frameSize);
   static void onSavedFrameClosure(void* clientData);
   void onSavedFrameClosure1();
 
@@ -143,13 +144,6 @@ struct timeval AC3AudioStreamFramer::currentFramePlayTime() const {
   return result;
 }
 
-float AC3AudioStreamFramer::getPlayTime(unsigned numFrames) const {
-  struct timeval const pt = currentFramePlayTime();
-  float fpt = pt.tv_sec + pt.tv_usec/(float)MILLION;
-
-  return numFrames*fpt;
-}
-
 void AC3AudioStreamFramer
 ::handleNewData(void* clientData, unsigned char* ptr, unsigned size) {
   AC3AudioStreamFramer* framer = (AC3AudioStreamFramer*)clientData;
@@ -169,7 +163,7 @@ void AC3AudioStreamFramer
 }
 
 void AC3AudioStreamFramer::parseNextFrame() {
-  unsigned acquiredFrameSize = fParser->parseFrame();
+  unsigned acquiredFrameSize = fParser->parseFrame(fNumTruncatedBytes);
   if (acquiredFrameSize > 0) {
     // We were able to acquire a frame from the input.
     // It has already been copied to the reader's space.
@@ -180,6 +174,7 @@ void AC3AudioStreamFramer::parseNextFrame() {
     fPresentationTime = fNextFramePresentationTime;
 
     struct timeval framePlayTime = currentFramePlayTime();
+    fDurationInMicroseconds = framePlayTime.tv_sec*MILLION + framePlayTime.tv_usec;
     fNextFramePresentationTime.tv_usec += framePlayTime.tv_usec;
     fNextFramePresentationTime.tv_sec
       += framePlayTime.tv_sec + fNextFramePresentationTime.tv_usec/MILLION;
@@ -264,7 +259,7 @@ Boolean AC3AudioStreamParser
   }
 }
 
-unsigned AC3AudioStreamParser::parseFrame() {
+unsigned AC3AudioStreamParser::parseFrame(unsigned& numTruncatedBytes) {
   if (fSavedFrameSize > 0) {
     // We've already read and parsed a frame.  Use it instead:
     memmove(fTo, fSavedFrame, fSavedFrameSize);
@@ -292,13 +287,19 @@ unsigned AC3AudioStreamParser::parseFrame() {
     
     // Copy the frame to the requested destination:
     unsigned frameSize = fCurrentFrame.frameSize;
-    if (frameSize > fMaxSize) frameSize = fMaxSize;
+    if (frameSize > fMaxSize) {
+      numTruncatedBytes = frameSize - fMaxSize;
+      frameSize = fMaxSize;
+    } else {
+      numTruncatedBytes = 0;
+    }
 
     fTo[0] = fCurrentFrame.hdr0 >> 24;
     fTo[1] = fCurrentFrame.hdr0 >> 16;
     fTo[2] = fCurrentFrame.hdr0 >> 8;
     fTo[3] = fCurrentFrame.hdr0;
     getBytes(&fTo[4], frameSize-4);
+    skipBytes(numTruncatedBytes);
     
     return frameSize;
   } catch (int /*e*/) {
@@ -323,14 +324,15 @@ void AC3AudioStreamParser::readAndSaveAFrame() {
 
 void AC3AudioStreamParser
 ::afterGettingSavedFrame(void* clientData, unsigned frameSize,
-			 struct timeval presentationTime) {
+			 unsigned /*numTruncatedBytes*/,
+			 struct timeval /*presentationTime*/,
+			 unsigned /*durationInMicroseconds*/) {
   AC3AudioStreamParser* parser = (AC3AudioStreamParser*)clientData;
-  parser->afterGettingSavedFrame1(frameSize, presentationTime);
+  parser->afterGettingSavedFrame1(frameSize);
 }
 
 void AC3AudioStreamParser
-::afterGettingSavedFrame1(unsigned frameSize,
-			  struct timeval /*presentationTime*/) {
+::afterGettingSavedFrame1(unsigned frameSize) {
   fSavedFrameSize = frameSize;
   fSavedFrameFlag = ~0;
 }

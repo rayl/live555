@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Qualcomm "PureVoice" (aka. "QCELP") Audio RTP Sources
 // Implementation
 
@@ -74,9 +74,10 @@ private:
   virtual ~QCELPDeinterleaver();
 
   static void afterGettingFrame(void* clientData, unsigned frameSize,
-                                struct timeval presentationTime);
-  void afterGettingFrame1(unsigned frameSize,
-			  struct timeval presentationTime);
+				unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+				unsigned durationInMicroseconds);
+  void afterGettingFrame1(unsigned frameSize, struct timeval presentationTime); 
 
 private:
   // Redefined virtual functions:
@@ -281,7 +282,7 @@ public:
 			    unsigned short packetSeqNum,
 			    struct timeval presentationTime);
   Boolean retrieveFrame(unsigned char* to, unsigned maxSize,
-			unsigned& resultFrameSize,
+			unsigned& resultFrameSize, unsigned& resultNumTruncatedBytes,
 			struct timeval& resultPresentationTime);
 
   unsigned char* inputBuffer() { return fInputBuffer; }
@@ -330,12 +331,17 @@ QCELPDeinterleaver::~QCELPDeinterleaver() {
   delete fDeinterleavingBuffer;
 }
 
+static unsigned const uSecsPerFrame = 20000; // 20 ms
+
 void QCELPDeinterleaver::doGetNextFrame() {
   // First, try getting a frame from the deinterleaving buffer:
-  if (fDeinterleavingBuffer
-      ->retrieveFrame(fTo, fMaxSize, fFrameSize, fPresentationTime)) {
+  if (fDeinterleavingBuffer->retrieveFrame(fTo, fMaxSize,
+					   fFrameSize, fNumTruncatedBytes,
+					   fPresentationTime)) {
     // Success!
     fNeedAFrame = False;
+
+    fDurationInMicroseconds = uSecsPerFrame;
 
     // Call our own 'after getting' function.  Because we're not a 'leaf'
     // source, we can call this directly, without risking
@@ -356,7 +362,9 @@ void QCELPDeinterleaver::doGetNextFrame() {
 
 void QCELPDeinterleaver
 ::afterGettingFrame(void* clientData, unsigned frameSize,
-		    struct timeval presentationTime){
+		    unsigned /*numTruncatedBytes*/,
+		    struct timeval presentationTime,
+		    unsigned /*durationInMicroseconds*/) {
   QCELPDeinterleaver* deinterleaver = (QCELPDeinterleaver*)clientData;
   deinterleaver->afterGettingFrame1(frameSize, presentationTime);
 }
@@ -389,8 +397,6 @@ QCELPDeinterleavingBuffer::QCELPDeinterleavingBuffer()
 QCELPDeinterleavingBuffer::~QCELPDeinterleavingBuffer() {
   delete[] fInputBuffer;
 }
-
-static unsigned const uSecsPerFrame = 20000; // 20 ms
 
 void QCELPDeinterleavingBuffer
 ::deliverIncomingFrame(unsigned frameSize,
@@ -452,7 +458,7 @@ void QCELPDeinterleavingBuffer
 
 Boolean QCELPDeinterleavingBuffer
 ::retrieveFrame(unsigned char* to, unsigned maxSize,
-		unsigned& resultFrameSize,
+		unsigned& resultFrameSize, unsigned& resultNumTruncatedBytes,
 		struct timeval& resultPresentationTime) {
   if (fNextOutgoingBin >= fOutgoingBinMax) return False; // none left
 
@@ -482,7 +488,13 @@ Boolean QCELPDeinterleavingBuffer
 
   fLastRetrievedPresentationTime = resultPresentationTime;
 
-  resultFrameSize = fromSize > maxSize ? maxSize : fromSize;
+  if (fromSize > maxSize) {
+    resultNumTruncatedBytes = fromSize - maxSize;
+    resultFrameSize = maxSize;
+  } else {
+    resultNumTruncatedBytes = 0;
+    resultFrameSize = fromSize;
+  }
   memmove(to, fromPtr, resultFrameSize);
 
   ++fNextOutgoingBin;

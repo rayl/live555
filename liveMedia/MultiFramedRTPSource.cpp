@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // RTP source for a common kind of payload format: Those that pack multiple,
 // complete codec frames (as many as possible) into each RTP packet.
 // Implementation
@@ -150,7 +150,7 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 
       // The packet is usable. Deliver all or part of it to our caller:
       unsigned frameSize;
-      nextPacket->use(fTo, fMaxSize, frameSize,
+      nextPacket->use(fTo, fMaxSize, frameSize, fNumTruncatedBytes,
 		      fCurPacketRTPSeqNum, fCurPacketRTPTimestamp,
 		      fPresentationTime,
 		      fCurPacketHasBeenSynchronizedUsingRTCP,
@@ -162,11 +162,12 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 	fReorderingBuffer->releaseUsedPacket(nextPacket);
       }
 
-      if (frameSize >= fMaxSize || fCurrentPacketCompletesFrame) {
+      if (fCurrentPacketCompletesFrame || fNumTruncatedBytes > 0) {
 	// We have all the data that the client wants.
-	if (frameSize >= fMaxSize && frameSize > 1000) {
+	if (fNumTruncatedBytes > 0) {
 	  envir() << "MultiFramedRTPSource::doGetNextFrame1(): The total received frame size exceeds the client's buffer size ("
-		  << fSavedMaxSize << ").  Trailing data will be dropped!\n";
+		  << fSavedMaxSize << ").  "
+		  << fNumTruncatedBytes << " bytes of trailing data will be dropped!\n";
 	}
 	// Call our own 'after getting' function.  Because we're preceded
 	// by a network read, we can call this directly, without risking
@@ -340,7 +341,7 @@ void BufferedPacket::removePadding(unsigned numBytes) {
 }
 
 void BufferedPacket::use(unsigned char* to, unsigned toSize,
-			 unsigned& bytesUsed, 
+			 unsigned& bytesUsed, unsigned& bytesTruncated,
 			 unsigned short& rtpSeqNo, unsigned& rtpTimestamp,
 			 struct timeval& presentationTime,
 			 Boolean& hasBeenSyncedUsingRTCP,
@@ -348,8 +349,13 @@ void BufferedPacket::use(unsigned char* to, unsigned toSize,
   unsigned char* origFramePtr = &fBuf[fHead];
   unsigned char* newFramePtr = origFramePtr; //may change in the call below
   unsigned frameSize = nextEnclosedFrameSize(newFramePtr, fTail - fHead);
-  if (frameSize > toSize) frameSize = toSize;
-  bytesUsed = frameSize;
+  if (frameSize > toSize) {
+    bytesTruncated = frameSize - toSize;
+    bytesUsed = toSize;
+  } else {
+    bytesTruncated = 0;
+    bytesUsed = frameSize;
+  }
 
   memmove(to, newFramePtr, bytesUsed);
   fHead += (newFramePtr - origFramePtr) + frameSize;

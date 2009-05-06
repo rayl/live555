@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A file source that is a plain byte stream (rather than frames)
 // Implementation
 
@@ -100,6 +100,7 @@ void ByteStreamFileSource::doGetNextFrame() {
 
     // Remember the play time of this data:
     fLastPlayTime = (fPlayTimePerFrame*fFrameSize)/fPreferredFrameSize;
+    fDurationInMicroseconds = fLastPlayTime;
   } else {
     // We don't know a specific play time duration for this data,
     // so just record the current time as being the 'presentation time':
@@ -109,8 +110,4 @@ void ByteStreamFileSource::doGetNextFrame() {
   // Switch to another task, and inform the reader that he has data:
   nextTask() = envir().taskScheduler().scheduleDelayedTask(0,
 				(TaskFunc*)FramedSource::afterGetting, this);
-}
-
-float ByteStreamFileSource::getPlayTime(unsigned numFrames) const {
-  return (float)(numFrames*(fPlayTimePerFrame/1000000.0));
 }

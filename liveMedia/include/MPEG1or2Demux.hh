@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Demultiplexer for a MPEG 1 or 2 Program Stream
 // C++ header
 
@@ -38,14 +38,11 @@ public:
   MPEG1or2DemuxedElementaryStream* newAudioStream();
   MPEG1or2DemuxedElementaryStream* newVideoStream();
 
-  typedef void (afterGettingFunc)(void* clientData, unsigned frameSize,
-                                  struct timeval presentationTime);
-  typedef void (onCloseFunc)(void* clientData);
   void getNextFrame(unsigned char streamIdTag,
 		    unsigned char* to, unsigned maxSize,
-		    afterGettingFunc* afterGettingFunc,
+		    FramedSource::afterGettingFunc* afterGettingFunc,
 		    void* afterGettingClientData,
-		    onCloseFunc* onCloseFunc,
+		    FramedSource::onCloseFunc* onCloseFunc,
 		    void* onCloseClientData);
       // similar to FramedSource::getNextFrame(), except that it also
       // takes a stream id tag as parameter.
@@ -68,9 +65,9 @@ private:
 
   void registerReadInterest(unsigned char streamIdTag,
 			    unsigned char* to, unsigned maxSize,
-			    afterGettingFunc* afterGettingFunc,
+			    FramedSource::afterGettingFunc* afterGettingFunc,
 			    void* afterGettingClientData,
-			    onCloseFunc* onCloseFunc,
+			    FramedSource::onCloseFunc* onCloseFunc,
 			    void* onCloseClientData);
 
   static void continueReadProcessing(void* clientData,
@@ -87,9 +84,9 @@ private:
   typedef struct OutputDescriptor {
     // input parameters
     unsigned char* to; unsigned maxSize;
-    afterGettingFunc* fAfterGettingFunc;
+    FramedSource::afterGettingFunc* fAfterGettingFunc;
     void* afterGettingClientData;
-    onCloseFunc* fOnCloseFunc;
+    FramedSource::onCloseFunc* fOnCloseFunc;
     void* onCloseClientData;
 
     // output parameters

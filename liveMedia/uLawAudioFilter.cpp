@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Filters for converting between raw PCM audio and uLaw
 // Implementation
 
@@ -55,9 +55,12 @@ void uLawFromPCMAudioSource::doGetNextFrame() {
 
 void uLawFromPCMAudioSource
 ::afterGettingFrame(void* clientData, unsigned frameSize,
-		    struct timeval presentationTime) {
+		    unsigned numTruncatedBytes,
+		    struct timeval presentationTime,
+		    unsigned durationInMicroseconds) {
   uLawFromPCMAudioSource* source = (uLawFromPCMAudioSource*)clientData;
-  source->afterGettingFrame1(frameSize, presentationTime);
+  source->afterGettingFrame1(frameSize, numTruncatedBytes,
+			     presentationTime, durationInMicroseconds);
 }
 
 #define BIAS 0x84   // the add-in bias for 16 bit samples
@@ -95,8 +98,9 @@ static unsigned char uLawFrom16BitLinear(short sample) {
 }
 
 void uLawFromPCMAudioSource
-::afterGettingFrame1(unsigned frameSize,
-		    struct timeval presentationTime) {
+::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
+		     struct timeval presentationTime,
+		     unsigned durationInMicroseconds) {
   // Translate raw 16-bit PCM samples (in the input buffer)
   // into uLaw samples (in the output buffer).
   // Note: The input samples are assumed to be in host byte order.
@@ -108,7 +112,9 @@ void uLawFromPCMAudioSource
 
   // Complete delivery to the client:
   fFrameSize = numSamples;
+  fNumTruncatedBytes = numTruncatedBytes;
   fPresentationTime = presentationTime;
+  fDurationInMicroseconds = durationInMicroseconds;
   afterGetting(this);
 }
 
@@ -148,9 +154,12 @@ void PCMFromuLawAudioSource::doGetNextFrame() {
 
 void PCMFromuLawAudioSource
 ::afterGettingFrame(void* clientData, unsigned frameSize,
-		    struct timeval presentationTime) {
+		    unsigned numTruncatedBytes,
+		    struct timeval presentationTime,
+		    unsigned durationInMicroseconds) {
   PCMFromuLawAudioSource* source = (PCMFromuLawAudioSource*)clientData;
-  source->afterGettingFrame1(frameSize, presentationTime);
+  source->afterGettingFrame1(frameSize, numTruncatedBytes,
+			     presentationTime, durationInMicroseconds);
 }
 
 static short linear16FromuLaw(unsigned char uLawByte) {
@@ -167,8 +176,9 @@ static short linear16FromuLaw(unsigned char uLawByte) {
 }
 
 void PCMFromuLawAudioSource
-::afterGettingFrame1(unsigned frameSize,
-		    struct timeval presentationTime) {
+::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
+		     struct timeval presentationTime,
+		     unsigned durationInMicroseconds) {
   // Translate uLaw samples (in the input buffer)
   // into 16-bit PCM samples (in the output buffer), in host order.
   unsigned numSamples = frameSize;
@@ -179,7 +189,9 @@ void PCMFromuLawAudioSource
 
   // Complete delivery to the client:
   fFrameSize = numSamples*2;
+  fNumTruncatedBytes = numTruncatedBytes;
   fPresentationTime = presentationTime;
+  fDurationInMicroseconds = durationInMicroseconds;
   afterGetting(this);
 }
 
@@ -209,15 +221,20 @@ void NetworkFromHostOrder16::doGetNextFrame() {
 
 void NetworkFromHostOrder16
 ::afterGettingFrame(void* clientData, unsigned frameSize,
-		    struct timeval presentationTime) {
+		    unsigned numTruncatedBytes,
+		    struct timeval presentationTime,
+		    unsigned durationInMicroseconds) {
   NetworkFromHostOrder16* source = (NetworkFromHostOrder16*)clientData;
-  source->afterGettingFrame1(frameSize, presentationTime);
+  source->afterGettingFrame1(frameSize, numTruncatedBytes,
+			     presentationTime, durationInMicroseconds);
 }
 
 void NetworkFromHostOrder16
-::afterGettingFrame1(unsigned frameSize, struct timeval presentationTime) {
+::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
+		     struct timeval presentationTime,
+		     unsigned durationInMicroseconds) {
   // Translate the 16-bit values that we have just read from host
-  // to network order (in-place):
+  // to network order (in-place)
   unsigned numValues = frameSize/2;
   short* value = (short*)fTo;
   for (unsigned i = 0; i < numValues; ++i) {
@@ -226,7 +243,9 @@ void NetworkFromHostOrder16
 
   // Complete delivery to the client:
   fFrameSize = numValues*2;
+  fNumTruncatedBytes = numTruncatedBytes;
   fPresentationTime = presentationTime;
+  fDurationInMicroseconds = durationInMicroseconds;
   afterGetting(this);
 }
 
@@ -256,13 +275,18 @@ void HostFromNetworkOrder16::doGetNextFrame() {
 
 void HostFromNetworkOrder16
 ::afterGettingFrame(void* clientData, unsigned frameSize,
-		    struct timeval presentationTime) {
+		    unsigned numTruncatedBytes,
+		    struct timeval presentationTime,
+		    unsigned durationInMicroseconds) {
   HostFromNetworkOrder16* source = (HostFromNetworkOrder16*)clientData;
-  source->afterGettingFrame1(frameSize, presentationTime);
+  source->afterGettingFrame1(frameSize, numTruncatedBytes,
+			     presentationTime, durationInMicroseconds);
 }
 
 void HostFromNetworkOrder16
-::afterGettingFrame1(unsigned frameSize, struct timeval presentationTime) {
+::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
+		     struct timeval presentationTime,
+		     unsigned durationInMicroseconds) {
   // Translate the 16-bit values that we have just read from network
   // to host order (in-place):
   unsigned numValues = frameSize/2;
@@ -273,6 +297,8 @@ void HostFromNetworkOrder16
 
   // Complete delivery to the client:
   fFrameSize = numValues*2;
+  fNumTruncatedBytes = numTruncatedBytes;
   fPresentationTime = presentationTime;
+  fDurationInMicroseconds = durationInMicroseconds;
   afterGetting(this);
 }

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Demultiplexer for a MPEG 1 or 2 Program Stream
 // Implementation
 
@@ -104,9 +104,9 @@ MPEG1or2DemuxedElementaryStream* MPEG1or2Demux::newVideoStream() {
 
 void MPEG1or2Demux::registerReadInterest(unsigned char streamIdTag,
 				     unsigned char* to, unsigned maxSize,
-				     afterGettingFunc* afterGettingFunc,
+				     FramedSource::afterGettingFunc* afterGettingFunc,
 				     void* afterGettingClientData,
-				     onCloseFunc* onCloseFunc,
+				     FramedSource::onCloseFunc* onCloseFunc,
 				     void* onCloseClientData) {
   struct OutputDescriptor& out = fOutput[streamIdTag];
     
@@ -152,7 +152,9 @@ void MPEG1or2Demux::continueReadProcessing() {
       // source, we can call this directly, without risking infinite recursion.
       if (newOut.fAfterGettingFunc != NULL) {
 	(*newOut.fAfterGettingFunc)(newOut.afterGettingClientData,
-				    newOut.frameSize, newOut.presentationTime);
+				    newOut.frameSize, 0 /* numTruncatedBytes */,
+				    newOut.presentationTime,
+				    0 /* durationInMicroseconds ?????#####*/);
       --fNumPendingReads;
       }
     } else {
@@ -168,9 +170,9 @@ void MPEG1or2Demux::continueReadProcessing() {
 
 void MPEG1or2Demux::getNextFrame(unsigned char streamIdTag,
 			     unsigned char* to, unsigned maxSize,
-			     afterGettingFunc* afterGettingFunc,
+			     FramedSource::afterGettingFunc* afterGettingFunc,
 			     void* afterGettingClientData,
-			     onCloseFunc* onCloseFunc,
+			     FramedSource::onCloseFunc* onCloseFunc,
 			     void* onCloseClientData) {
   // Begin by saving the parameters of the specified stream id:
   registerReadInterest(streamIdTag, to, maxSize,
@@ -199,7 +201,7 @@ void MPEG1or2Demux::handleClosure(void* clientData) {
   // (etc.) before we start calling any of them, in case one of them
   // ends up deleting this.
   struct {
-    onCloseFunc* fOnCloseFunc;
+    FramedSource::onCloseFunc* fOnCloseFunc;
     void* onCloseClientData;
   } savedPending[256];
   unsigned i, numPending = 0;

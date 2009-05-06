@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A sink that generates a QuickTime file from a composite media session
 // C++ header
 
@@ -54,7 +54,9 @@ private:
 
   Boolean continuePlaying();
   static void afterGettingFrame(void* clientData, unsigned frameSize,
-				struct timeval presentationTime);
+				unsigned numTruncatedBytes,
+				struct timeval presentationTime,
+				unsigned durationInMicroseconds);
   static void onSourceClosure(void* clientData);
   void onSourceClosure1();
   static void onRTCPBye(void* clientData);

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Transcoder for ADUized MP3 frames
 // Implementation
 
@@ -64,14 +64,21 @@ void MP3ADUTranscoder::doGetNextFrame() {
 
 void MP3ADUTranscoder::afterGettingFrame(void* clientData,
 					 unsigned numBytesRead,
-					 struct timeval presentationTime) {
+					 unsigned numTruncatedBytes,
+					 struct timeval presentationTime,
+					 unsigned durationInMicroseconds) {
   MP3ADUTranscoder* transcoder = (MP3ADUTranscoder*)clientData;
-  transcoder->afterGettingFrame1(numBytesRead, presentationTime);
+  transcoder->afterGettingFrame1(numBytesRead, numTruncatedBytes,
+				 presentationTime, durationInMicroseconds);
 }
 
 void MP3ADUTranscoder::afterGettingFrame1(unsigned numBytesRead,
-					 struct timeval presentationTime) {
+					  unsigned numTruncatedBytes,
+					  struct timeval presentationTime,
+					  unsigned durationInMicroseconds) {
+  fNumTruncatedBytes = numTruncatedBytes; // but can we handle this being >0? #####
   fPresentationTime = presentationTime;
+  fDurationInMicroseconds = durationInMicroseconds;
   fFrameSize = TranscodeMP3ADU(fOrigADU, numBytesRead, fOutBitrate,
 			    fTo, fMaxSize, fAvailableBytesForBackpointer);
   if (fFrameSize == 0) { // internal error - bad ADU data?

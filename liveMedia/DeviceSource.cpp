@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A template for a MediaSource encapsulating an audio/video input device
 // Implementation
 
@@ -33,10 +33,6 @@ DeviceSource::DeviceSource(UsageEnvironment& env,
 }
 
 DeviceSource::~DeviceSource() {
-}
-
-float DeviceSource::getPlayTime(unsigned numFrames) const {
-  return 0.0; // Replace this with the actual playing time, in seconds
 }
 
 void DeviceSource::doGetNextFrame() {
@@ -64,13 +60,19 @@ void DeviceSource::deliverFrame() {
   // This would be called when new frame data is available from the device.
   // This function should deliver the next frame of data from the device,
   // using the following parameters (class members):
-  // fTo: The frame data is copied here
-  // fMaxSize: This is the maximum number of bytes that can be copied
-  //     (If the actual frame is larger than this, then it should
-  //      be truncated.)
-  // fFrameSize: The resulting frame size is copied here 
-  // fPresentationTime: The frame's relative presentation time
-  //     (seconds, microseconds) is copied here
+  // 'in' parameters:
+  //     fTo: The frame data is copied to this address.
+  //     fMaxSize: This is the maximum number of bytes that can be copied
+  //         (If the actual frame is larger than this, then it should
+  //          be truncated, and "fNumTruncatedBytes" set accordingly.)
+  // 'out' parameters:
+  //     fFrameSize: Should be set to the delivered frame size (<= fMaxSize).
+  //     fNumTruncatedBytes: Should be set iff the delivered frame would have been
+  //         bigger than "fMaxSize", in which case it's set to the number of bytes
+  //         that have been omitted.
+  //     fPresentationTime: Should be set to the frame's presentation time
+  //         (seconds, microseconds).
+  //     fDurationInMicroseconds: Should be set to the frame's duration, if known.
 
   // Deliver the data here:
 

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A source that consists of multiple byte-stream files, read sequentially
 // Implementation
 
@@ -95,11 +95,15 @@ void ByteStreamMultiFileSource::doGetNextFrame() {
 
 void ByteStreamMultiFileSource
   ::afterGettingFrame(void* clientData,
-		      unsigned frameSize, struct timeval presentationTime) {
+		      unsigned frameSize, unsigned numTruncatedBytes,
+		      struct timeval presentationTime,
+		      unsigned durationInMicroseconds) {
   ByteStreamMultiFileSource* source
     = (ByteStreamMultiFileSource*)clientData;
   source->fFrameSize = frameSize;
+  source->fNumTruncatedBytes = numTruncatedBytes;
   source->fPresentationTime = presentationTime;
+  source->fDurationInMicroseconds = durationInMicroseconds;
   FramedSource::afterGetting(source);
 }
 
@@ -121,11 +125,3 @@ void ByteStreamMultiFileSource::onSourceClosure1() {
   // Try reading again:
   doGetNextFrame();
 }
-
-float ByteStreamMultiFileSource::getPlayTime(unsigned numFrames) const {
-  // Because the constituent sources are not created up-front, we can't
-  // just add up their individual play times.
-  // So, instead, just return 0.0
-  return 0.0;
-}
-

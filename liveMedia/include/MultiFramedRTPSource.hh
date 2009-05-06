@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // RTP source for a common kind of payload format: Those which pack multiple,
 // complete codec frames (as many as possible) into each RTP packet.
 // C++ header
@@ -92,7 +92,8 @@ public:
 			Boolean rtpMarkerBit, struct timeval timeReceived);
   void skip(unsigned numBytes); // used to skip over an initial header
   void removePadding(unsigned numBytes); // used to remove trailing bytes
-  void use(unsigned char* to, unsigned toSize, unsigned& bytesUsed,
+  void use(unsigned char* to, unsigned toSize,
+	   unsigned& bytesUsed, unsigned& bytesTruncated,
 	   unsigned short& rtpSeqNo, unsigned& rtpTimestamp,
 	   struct timeval& presentationTime,
 	   Boolean& hasBeenSyncedUsingRTCP, Boolean& rtpMarkerBit);

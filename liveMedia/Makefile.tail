@@ -76,7 +76,7 @@ ByteStreamMultiFileSource.$(CPP):	include/ByteStreamMultiFileSource.hh
 include/ByteStreamMultiFileSource.hh:	include/ByteStreamFileSource.hh
 BasicUDPSource.$(CPP):		include/BasicUDPSource.hh
 include/BasicUDPSource.hh:	include/FramedSource.hh
-DeviceSource.$(CPP):	include/DeviceSource.hh include/FramedSource.hh
+DeviceSource.$(CPP):	include/DeviceSource.hh
 include/DeviceSource.hh:	include/FramedSource.hh
 AudioInputDevice.$(CPP):	include/AudioInputDevice.hh
 include/AudioInputDevice.hh:	include/FramedSource.hh

@@ -156,10 +156,6 @@ void WindowsAudioInputDevice::doGetNextFrame() {
 	audioReadyPoller1();
 }
 
-float WindowsAudioInputDevice::getPlayTime(unsigned numFrames) const {
-  return (float)numFrames/fSamplingFrequency;
-}
-
 void WindowsAudioInputDevice::doStopGettingFrames() {
   // Turn off the audio poller:
   envir().taskScheduler().unscheduleDelayedTask(nextTask()); nextTask() = NULL;
@@ -289,6 +285,7 @@ void WindowsAudioInputDevice::onceAudioIsReady() {
 		handleClosure(this);
 		return;
 	}
+	fDurationInMicroseconds = 1000000/fSamplingFrequency;
 
 	// Call our own 'after getting' function.  Because we sometimes get here
     // after returning from a delay, we can call this directly, without risking

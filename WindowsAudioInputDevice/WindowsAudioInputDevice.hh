@@ -41,7 +41,6 @@ protected:
 private:
   // redefined virtual functions:
   virtual void doGetNextFrame();
-  virtual float getPlayTime(unsigned numFrames) const;
   virtual void doStopGettingFrames();
   virtual Boolean setInputPort(int portIndex);
   virtual double getAverageLevel() const;

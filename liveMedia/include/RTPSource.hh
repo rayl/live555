@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // RTP Sources
 // C++ header
 
@@ -84,7 +84,6 @@ private:
   // redefined virtual functions:
   virtual Boolean isRTPSource() const;
   virtual void getAttributes() const;
-  virtual float getPlayTime(unsigned numFrames) const;
 
 private:
   unsigned char fRTPPayloadFormat;

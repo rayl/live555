@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Framed Sources
 // C++ header
 
@@ -34,13 +34,29 @@ public:
 			      FramedSource*& resultSource);
 
   typedef void (afterGettingFunc)(void* clientData, unsigned frameSize,
-				  struct timeval presentationTime);
+				  unsigned numTruncatedBytes,
+				  struct timeval presentationTime,
+				  unsigned durationInMicroseconds);
   typedef void (onCloseFunc)(void* clientData);
   void getNextFrame(unsigned char* to, unsigned maxSize,
 		    afterGettingFunc* afterGettingFunc,
 		    void* afterGettingClientData,
 		    onCloseFunc* onCloseFunc,
 		    void* onCloseClientData);
+  // ##### The following is for backwards-compatibility; remove it eventually:
+#define BACKWARDS_COMPATIBLE_WITH_OLD_AFTER_GETTING_FUNC
+#ifdef BACKWARDS_COMPATIBLE_WITH_OLD_AFTER_GETTING_FUNC
+  typedef void (bwCompatAfterGettingFunc)(void* clientData, unsigned frameSize,
+					  struct timeval presentationTime);
+  void getNextFrame(unsigned char* to, unsigned maxSize,
+		    bwCompatAfterGettingFunc* afterGettingFunc,
+		    void* afterGettingClientData,
+		    onCloseFunc* onCloseFunc,
+		    void* onCloseClientData);
+  bwCompatAfterGettingFunc* fSavedBWCompatAfterGettingFunc;
+  void* fSavedBWCompatAfterGettingClientData;
+#endif
+  // ##### End of code for backwards-compatibility.
  
   static void handleClosure(void* clientData);
       // This should be called (on ourself) if the source is discovered
@@ -51,7 +67,6 @@ public:
   virtual unsigned maxFrameSize() const;
       // size of the largest possible frame that we may serve, or 0
       // if no such maximum is known (default)
-  virtual float getPlayTime(unsigned numFrames) const = 0;
 
   virtual void doGetNextFrame() = 0;
       // called by getNextFrame()
@@ -76,7 +91,9 @@ protected:
   unsigned char* fTo; // in
   unsigned fMaxSize; // in
   unsigned fFrameSize; // out
+  unsigned fNumTruncatedBytes; // out
   struct timeval fPresentationTime; // out
+  unsigned fDurationInMicroseconds; // out
 
 private:
   // redefined virtual functions:

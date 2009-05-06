@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // RTP sink for a common kind of payload format: Those which pack multiple,
 // complete codec frames (as many as possible) into each RTP packet.
 // Implementation
@@ -162,9 +162,10 @@ void MultiFramedRTPSink::packFrame() {
     // Use this frame before reading a new one from the source
     unsigned frameSize = fOutBuf->overflowDataSize();
     struct timeval presentationTime = fOutBuf->overflowPresentationTime();
+    unsigned durationInMicroseconds = fOutBuf->overflowDurationInMicroseconds();
     fOutBuf->useOverflowData();
 
-    afterGettingFrame1(frameSize, presentationTime);
+    afterGettingFrame1(frameSize, 0, presentationTime, durationInMicroseconds);
   } else {
     // Normal case: we need to read a new frame from the source
     if (fSource == NULL) return;
@@ -173,21 +174,30 @@ void MultiFramedRTPSink::packFrame() {
   }
 }
 
-void MultiFramedRTPSink::afterGettingFrame(void* clientData,
-				   unsigned numBytesRead,
-				   struct timeval presentationTime) {
+void MultiFramedRTPSink
+::afterGettingFrame(void* clientData, unsigned numBytesRead,
+		    unsigned numTruncatedBytes,
+		    struct timeval presentationTime,
+		    unsigned durationInMicroseconds) {
   MultiFramedRTPSink* sink = (MultiFramedRTPSink*)clientData;
-  sink->afterGettingFrame1(numBytesRead, presentationTime);
+  sink->afterGettingFrame1(numBytesRead, numTruncatedBytes,
+			   presentationTime, durationInMicroseconds);
 }
 
-void MultiFramedRTPSink::afterGettingFrame1(unsigned frameSize,
-					   struct timeval presentationTime) {
-  if (frameSize >= fOutBuf->totalBytesAvailable()) {
+void MultiFramedRTPSink
+::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
+		     struct timeval presentationTime,
+		     unsigned durationInMicroseconds) {
+  if (numTruncatedBytes > 0) {
+    unsigned const bufferSize = fOutBuf->totalBytesAvailable();
+    unsigned newNumPacketsLimit
+      = (frameSize + numTruncatedBytes + (maxPacketSize-1)) / maxPacketSize;
     envir() << "MultiFramedRTPSink::afterGettingFrame1(): The input frame data was too large for our buffer size ("
-	    << fOutBuf->totalBytesAvailable()
-	    << ").  Trailing data was dropped!  Correct this by increasing \"OutPacketBuffer::numPacketsLimit\" (current value: "
+	    << bufferSize << ").  "
+	    << numTruncatedBytes << " of trailing data was dropped!  Correct this by increasing \"OutPacketBuffer::numPacketsLimit\" to at least "
+	    << newNumPacketsLimit << " (current value: "
 	    << OutPacketBuffer::numPacketsLimit
-	    << ")\n";
+	    << ").\n";
   }
   unsigned curFragmentationOffset = fCurFragmentationOffset;
   unsigned numFrameBytesToUse = frameSize;
@@ -204,7 +214,7 @@ void MultiFramedRTPSink::afterGettingFrame1(unsigned frameSize,
       // Save away this frame for next time:
       numFrameBytesToUse = 0;
       fOutBuf->setOverflowData(fOutBuf->curPacketSize(), frameSize,
-			       presentationTime);
+			       presentationTime, durationInMicroseconds);
     }
   }
   fPreviousFrameEndedFragmentation = False;
@@ -228,7 +238,8 @@ void MultiFramedRTPSink::afterGettingFrame1(unsigned frameSize,
 	numFrameBytesToUse = 0;
       }
       fOutBuf->setOverflowData(fOutBuf->curPacketSize() + numFrameBytesToUse,
-			       overflowBytes, presentationTime);
+			       overflowBytes, presentationTime,
+			       durationInMicroseconds);
     } else if (fCurFragmentationOffset > 0) {
       // This is the last fragment of a frame that was fragmented over
       // more than one packet.  Do any special handling for this case:
@@ -250,6 +261,16 @@ void MultiFramedRTPSink::afterGettingFrame1(unsigned frameSize,
 
     fOutBuf->increment(numFrameBytesToUse);
     ++fNumFramesUsedSoFar;
+
+    // Update the time at which the next packet should be sent, based
+    // on the duration of the frame that we just packed into it.
+    // However, if this frame has overflow data remaining, then don't
+    // count its duration yet.
+    if (overflowBytes == 0) {
+      fNextSendTime.tv_usec += durationInMicroseconds;
+      fNextSendTime.tv_sec += fNextSendTime.tv_usec/1000000;
+      fNextSendTime.tv_usec %= 1000000;
+    }
 
     // Send our packet now if (i) it's already at our preferred size, or
     // (ii) (heuristic) another frame of the same size as the one we just
@@ -316,22 +337,6 @@ void MultiFramedRTPSink::sendPacketIfNecessary() {
     // We have more frames left to send.  Figure out when the next frame
     // is due to start playing, then make sure that we wait this long before
     // sending the next packet.
-    unsigned numFinishedFramesInPacket = fNumFramesUsedSoFar;
-    if (fCurFragmentationOffset > 0) {
-      // The last frame in the packet is incomplete, so don't count it
-      --numFinishedFramesInPacket;
-    }
-    float timeToNextPacket = fSource == NULL ? (float)(0.0)
-                     : fSource->getPlayTime(numFinishedFramesInPacket);
-
-    unsigned secs = (unsigned)timeToNextPacket;
-    unsigned usecs = (unsigned)((timeToNextPacket-secs)*1000000.0);
-        // we don't round up here, to avoid creeping delays
-    fNextSendTime.tv_usec += usecs;
-    fNextSendTime.tv_sec += secs + fNextSendTime.tv_usec/1000000;
-    fNextSendTime.tv_usec %= 1000000;
-
-    // Figure out how long we have until this time occurs:
     struct timeval timeNow;
     gettimeofday(&timeNow, &Idunno);
     int uSecondsToGo;

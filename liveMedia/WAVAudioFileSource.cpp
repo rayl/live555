@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A WAV audio file source
 // Implementation
 
@@ -172,7 +172,6 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
   unsigned samplesPerFrame = desiredSamplesPerFrame < maxSamplesPerFrame
     ? desiredSamplesPerFrame : maxSamplesPerFrame;
   fPreferredFrameSize = (samplesPerFrame*fNumChannels*fBitsPerSample)/8;
-  fPlayTimePerFrame = samplesPerFrame/(double)fSamplingFrequency;
 }
 
 WAVAudioFileSource::~WAVAudioFileSource() {
@@ -200,7 +199,7 @@ void WAVAudioFileSource::doGetNextFrame() {
   unsigned bytesToRead = fMaxSize - fMaxSize%bytesPerSample;
   fFrameSize = fread(fTo, 1, bytesToRead, fFid);
 
-  // Set the 'presentation time':
+  // Set the 'presentation time' and 'duration' of this frame:
   if (fPresentationTime.tv_sec == 0 && fPresentationTime.tv_usec == 0) {
     // This is the first frame, so use the current time:
     gettimeofday(&fPresentationTime, &Idunno);
@@ -212,7 +211,7 @@ void WAVAudioFileSource::doGetNextFrame() {
   }
 
   // Remember the play time of this data:
-  fLastPlayTime
+  fDurationInMicroseconds = fLastPlayTime
     = (unsigned)((fPlayTimePerSample*fFrameSize)/bytesPerSample);
 
   // Switch to another task, and inform the reader that he has data:
@@ -229,10 +228,6 @@ void WAVAudioFileSource::doGetNextFrame() {
   nextTask() = envir().taskScheduler().scheduleDelayedTask(0,
 			(TaskFunc*)FramedSource::afterGetting, this);
 #endif
-}
-
-float WAVAudioFileSource::getPlayTime(unsigned numFrames) const {
-  return (float)(numFrames*fPlayTimePerFrame);
 }
 
 Boolean WAVAudioFileSource::setInputPort(int /*portIndex*/) {

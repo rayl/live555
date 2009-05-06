@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Framed Filters
 // Implementation
 
@@ -42,10 +42,6 @@ char const* FramedFilter::MIMEtype() const {
 
 void FramedFilter::getAttributes() const {
   fInputSource->getAttributes();
-}
-
-float FramedFilter::getPlayTime(unsigned numFrames) const {
-  return fInputSource->getPlayTime(numFrames);
 }
 
 void FramedFilter::doStopGettingFrames() {

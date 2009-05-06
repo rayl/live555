@@ -1,0 +1,156 @@
+/**********
+This library is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the
+Free Software Foundation; either version 2.1 of the License, or (at your
+option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
+
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+**********/
+// "liveMedia"
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// A filter that breaks up an MPEG video elementary stream into
+//   headers and frames
+// Implementation
+
+#include "MPEGVideoStreamParser.hh"
+#include <GroupsockHelper.hh>
+
+////////// TimeCode implementation //////////
+
+TimeCode::TimeCode()
+  : days(0), hours(0), minutes(0), seconds(0), pictures(0) {
+}
+
+TimeCode::~TimeCode() {
+}
+
+int TimeCode::operator==(TimeCode const& arg2) {
+  return pictures == arg2.pictures && seconds == arg2.seconds
+    && minutes == arg2.minutes && hours == arg2.hours && days == arg2.days;
+}
+
+
+////////// MPEGVideoStreamFramer implementation //////////
+
+#ifdef BSD
+static struct timezone Idunno;
+#else
+static int Idunno;
+#endif
+
+MPEGVideoStreamFramer::MPEGVideoStreamFramer(UsageEnvironment& env,
+					     FramedSource* inputSource)
+  : FramedFilter(env, inputSource),
+    fFrameRate(0.0) /* until we learn otherwise */,
+    fPictureCount(0), fPictureEndMarker(False),
+    fPicturesAdjustment(0), fPictureTimeBase(0.0), fTcSecsBase(0),
+    fHaveSeenFirstTimeCode(False) {
+  // Use the current wallclock time as the base 'presentation time':
+  gettimeofday(&fPresentationTimeBase, &Idunno);
+}
+
+MPEGVideoStreamFramer::~MPEGVideoStreamFramer() {
+  delete fParser;
+}
+
+void MPEGVideoStreamFramer
+::computePresentationTime(unsigned numAdditionalPictures) {
+  // Computes "fPresentationTime" from the most recent GOP's
+  // time_code, along with the "numAdditionalPictures" parameter:
+  TimeCode& tc = fCurGOPTimeCode;
+
+  double pictureTime = fFrameRate == 0.0 ? 0.0
+    : (tc.pictures + fPicturesAdjustment + numAdditionalPictures)/fFrameRate
+    - fPictureTimeBase;
+  unsigned pictureSeconds = (unsigned)pictureTime;
+  double pictureFractionOfSecond = pictureTime - (double)pictureSeconds;
+
+  unsigned tcSecs
+    = (((tc.days*24)+tc.hours)*60+tc.minutes)*60+tc.seconds - fTcSecsBase;
+  fPresentationTime = fPresentationTimeBase;
+  fPresentationTime.tv_sec += tcSecs + pictureSeconds;
+  fPresentationTime.tv_usec += (long)(pictureFractionOfSecond*1000000.0);
+  if (fPresentationTime.tv_usec >= 1000000) {
+    fPresentationTime.tv_usec -= 1000000;
+    ++fPresentationTime.tv_sec;
+  }
+#ifdef DEBUG_COMPUTE_PRESENTATION_TIME
+  fprintf(stderr, "MPEGVideoStreamFramer::computePresentationTime(%d) -> %u.%06d\n", numAdditionalPictures, fPresentationTime.tv_sec, fPresentationTime.tv_usec);
+#endif
+}
+
+void MPEGVideoStreamFramer
+::setTimeCode(unsigned hours, unsigned minutes, unsigned seconds,
+	      unsigned pictures, unsigned picturesSinceLastGOP) {
+  TimeCode& tc = fCurGOPTimeCode; // abbrev
+  unsigned days = tc.days;
+  if (hours < tc.hours) {
+    // Assume that the 'day' has wrapped around:
+    ++days;
+  }
+  tc.days = days;
+  tc.hours = hours;
+  tc.minutes = minutes;
+  tc.seconds = seconds;
+  tc.pictures = pictures;
+  if (!fHaveSeenFirstTimeCode) {
+    fPictureTimeBase = fFrameRate == 0.0 ? 0.0 : tc.pictures/fFrameRate;
+    fTcSecsBase = (((tc.days*24)+tc.hours)*60+tc.minutes)*60+tc.seconds;
+    fHaveSeenFirstTimeCode = True;
+  } else if (fCurGOPTimeCode == fPrevGOPTimeCode) {
+    // The time code has not changed since last time.  Adjust for this:
+    fPicturesAdjustment += picturesSinceLastGOP;
+  } else {
+    // Normal case: The time code changed since last time.
+    fPrevGOPTimeCode = tc;
+    fPicturesAdjustment = 0;
+  }
+}
+
+void MPEGVideoStreamFramer::doGetNextFrame() {
+  fParser->registerReadInterest(fTo, fMaxSize);
+  continueReadProcessing();
+}
+
+float MPEGVideoStreamFramer::getPlayTime(unsigned /*numFrames*/) const {
+  // OK, this is going to be a bit of a hack, because the actual play time
+  // for us is going to be based not on "numFrames", but instead on how
+  // many *pictures* have been completed since the last call to this
+  // function.  (I.e., it's a hack because we're making an assumption about
+  // *why* this member function is being called.)
+  double result = fFrameRate == 0.0 ? 0.0 : fPictureCount/fFrameRate;
+  ((MPEGVideoStreamFramer*)this)->fPictureCount = 0; // told you it's a hack
+  return (float)result;
+}
+
+void MPEGVideoStreamFramer::continueReadProcessing(void* clientData,
+						   unsigned char* /*ptr*/,
+						   unsigned /*size*/) {
+  MPEGVideoStreamFramer* framer = (MPEGVideoStreamFramer*)clientData;
+  framer->continueReadProcessing();
+}
+
+void MPEGVideoStreamFramer::continueReadProcessing() {
+  unsigned acquiredFrameSize = fParser->parse();
+  if (acquiredFrameSize > 0) {
+    // We were able to acquire a frame from the input.
+    // It has already been copied to the reader's space.
+    fFrameSize = acquiredFrameSize;
+    
+    // Call our own 'after getting' function.  Because we're not a 'leaf'
+    // source, we can call this directly, without risking infinite recursion.
+    afterGetting(this);
+  } else {
+    // We were unable to parse a complete frame from the input, because:
+    // - we had to read more data from the source stream, or
+    // - the source stream has ended.
+  }
+}
+

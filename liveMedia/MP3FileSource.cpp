@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // MP3 File Sources
 // Implementation
 
@@ -115,7 +115,7 @@ Boolean MP3FileSource::doGetNextFrame1() {
     fHaveJustInitialized = False;
   }
   
-  if (!fStreamState->readFrame(fTo, fMaxSize, fFrameSize)) {
+  if (!fStreamState->readFrame(fTo, fMaxSize, fFrameSize, fDurationInMicroseconds)) {
     char tmp[200];
     sprintf(tmp,
 	    "Insufficient buffer size %d for reading MPEG audio frame (needed %d)\n",
@@ -127,11 +127,6 @@ Boolean MP3FileSource::doGetNextFrame1() {
 
   return True;
 }
-
-float MP3FileSource::getPlayTime(unsigned numFrames) const {
-  return fStreamState->getPlayTime(numFrames);
-}
-
 
 void MP3FileSource::assignStream(FILE* fid, unsigned fileSize) {
   fStreamState->assignStream(fid, fileSize);

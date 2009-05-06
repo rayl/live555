@@ -1,0 +1,164 @@
+/**********
+This library is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the
+Free Software Foundation; either version 2.1 of the License, or (at your
+option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
+
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+**********/
+// "liveMedia"
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// File sinks
+// Implementation
+
+#if defined(__WIN32__) || defined(_WIN32)
+#include <io.h>
+#include <fcntl.h>
+#endif
+#include "FileSink.hh"
+#include "GroupsockHelper.hh"
+
+////////// FileSink //////////
+
+FileSink::FileSink(UsageEnvironment& env, FILE* fid, unsigned bufferSize,
+		   char const* perFrameFileNamePrefix) 
+  : MediaSink(env), fOutFid(fid), fBufferSize(bufferSize) {
+  fBuffer = new unsigned char[bufferSize];
+  if (perFrameFileNamePrefix != NULL) {
+    fPerFrameFileNamePrefix = strDup(perFrameFileNamePrefix);
+    fPerFrameFileNameBuffer = new char[strlen(perFrameFileNamePrefix) + 100];
+  } else {
+    fPerFrameFileNamePrefix = NULL;
+    fPerFrameFileNameBuffer = NULL;
+  }
+}
+
+FileSink::~FileSink() {
+  delete[] fPerFrameFileNameBuffer;
+  delete[] fPerFrameFileNamePrefix; 
+  delete[] fBuffer;
+  if (fOutFid != NULL) fclose(fOutFid);
+}
+
+FileSink* FileSink::createNew(UsageEnvironment& env, char const* fileName,
+			      unsigned bufferSize, Boolean oneFilePerFrame) {
+  FileSink* newSink = NULL;
+
+  do {
+    FILE* fid;
+    char const* perFrameFileNamePrefix;
+    if (oneFilePerFrame) {
+      // Create the fid for each frame
+      fid = NULL;
+      perFrameFileNamePrefix = fileName;
+    } else {
+      // Normal case: create the fid once
+      fid = openFileByName(env, fileName);
+      if (fid == NULL) break;
+      perFrameFileNamePrefix = NULL;
+    }
+
+    newSink = new FileSink(env, fid, bufferSize, perFrameFileNamePrefix);
+    if (newSink == NULL) break;
+
+    return newSink;
+  } while (0);
+
+  delete newSink;
+  return NULL;
+}
+
+FILE* FileSink::openFileByName(UsageEnvironment& env,
+			       char const* fileName) {
+  FILE* fid;
+    
+  // Check for special case 'file names': "stdout" and "stderr"
+  if (strcmp(fileName, "stdout") == 0) {
+    fid = stdout;
+#if defined(__WIN32__) || defined(_WIN32)
+    _setmode(_fileno(stdout), _O_BINARY);	// convert to binary mode
+#endif
+  } else if (strcmp(fileName, "stderr") == 0) {
+    fid = stderr;
+#if defined(__WIN32__) || defined(_WIN32)
+    _setmode(_fileno(stderr), _O_BINARY);	// convert to binary mode
+#endif
+  } else {
+    fid = fopen(fileName, "wb");
+  }
+
+  if (fid == NULL) {
+    env.setResultMsg("unable to open file \"", fileName, "\"");
+  }
+
+  return fid;
+}
+
+Boolean FileSink::continuePlaying() {
+  if (fSource == NULL) return False;
+
+  fSource->getNextFrame(fBuffer, fBufferSize,
+			afterGettingFrame, this,
+			onSourceClosure, this);
+
+  return True;
+}
+
+void FileSink::afterGettingFrame(void* clientData, unsigned frameSize,
+				 struct timeval presentationTime) {
+  FileSink* sink = (FileSink*)clientData;
+  sink->afterGettingFrame1(frameSize, presentationTime);
+} 
+
+void FileSink::addData(unsigned char* data, unsigned dataSize,
+		       struct timeval presentationTime) {
+  if (fPerFrameFileNameBuffer != NULL) {
+    // Special case: Open a new file on-the-fly for this frame
+    sprintf(fPerFrameFileNameBuffer, "%s-%lu.%06lu", fPerFrameFileNamePrefix,
+	    presentationTime.tv_sec, presentationTime.tv_usec);
+    fOutFid = openFileByName(envir(), fPerFrameFileNameBuffer);
+  }
+
+  // Write to our file:
+#ifdef TEST_LOSS
+  static unsigned const framesPerPacket = 10;
+  static unsigned const frameCount = 0;
+  static Boolean const packetIsLost;
+  if ((frameCount++)%framesPerPacket == 0) {
+    packetIsLost = (our_random()%10 == 0); // simulate 10% packet loss #####
+  }
+
+  if (!packetIsLost)
+#endif
+  if (fOutFid != NULL) {
+    fwrite(data, dataSize, 1, fOutFid);
+  }
+}
+
+void FileSink::afterGettingFrame1(unsigned frameSize,
+				  struct timeval presentationTime) {
+  addData(fBuffer, frameSize, presentationTime);
+
+  if (fOutFid == NULL || fflush(fOutFid) == EOF) {
+    // The output file has closed.  Handle this the same way as if the
+    // input source had closed:
+    onSourceClosure(this);
+
+    stopPlaying();
+    return;
+  }
+ 
+  if (fPerFrameFileNameBuffer != NULL) {
+    if (fOutFid != NULL) { fclose(fOutFid); fOutFid = NULL; }
+  }
+
+  // Then try getting the next frame:
+  continuePlaying();
+}

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A class encapsulating the state of a MP3 stream
 // Implementation
 
@@ -87,8 +87,10 @@ unsigned MP3StreamState::filePlayTime() const {
     // size of the current frame:
     numFramesInFile = fFileSize/(4 + fCurrentFrame.frameSize);
   }
-  float playTime = getPlayTime(numFramesInFile);
-  return (unsigned)(playTime + 0.5); // rounds to nearest integer
+
+  struct timeval const pt = currentFramePlayTime();
+  float fpt = numFramesInFile*(pt.tv_sec + pt.tv_usec/(float)MILLION);
+  return (unsigned)(fpt + 0.5); // rounds to nearest integer
 }
 
 unsigned MP3StreamState::findNextHeader(struct timeval& presentationTime) {
@@ -107,7 +109,8 @@ unsigned MP3StreamState::findNextHeader(struct timeval& presentationTime) {
 }
 
 Boolean MP3StreamState::readFrame(unsigned char* outBuf, unsigned outBufSize,
-				  unsigned& resultFrameSize) {
+				  unsigned& resultFrameSize,
+				  unsigned& resultDurationInMicroseconds) {
   /* We assume that "mp3FindNextHeader()" has already been called */
 
   resultFrameSize = 4 + fr().frameSize;
@@ -133,6 +136,9 @@ Boolean MP3StreamState::readFrame(unsigned char* outBuf, unsigned outBufSize,
     memmove(outBuf, fr().frameBytes, resultFrameSize-4);
   }
 
+  struct timeval const pt = currentFramePlayTime();
+  resultDurationInMicroseconds = pt.tv_sec*MILLION + pt.tv_usec;
+
   return True;
 }
 
@@ -149,13 +155,6 @@ void MP3StreamState::getAttributes(char* buffer, unsigned bufferSize) const {
 	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().layer, fr().samplingFreq, fr().isStereo,
 	  filePlayTime(), fIsVBR);
 #endif
-}
-
-float MP3StreamState::getPlayTime(unsigned numFrames) const {
-  struct timeval const pt = currentFramePlayTime();
-  float fpt = pt.tv_sec + pt.tv_usec/(float)MILLION;
-
-  return numFrames*fpt;
 }
 
 void MP3StreamState::writeGetCmd(char const* hostName,

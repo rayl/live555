@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Media Sinks
 // Implementation
 
@@ -180,12 +180,15 @@ void OutPacketBuffer::skipBytes(unsigned numBytes) {
   increment(numBytes);
 }
 
-void OutPacketBuffer::setOverflowData(unsigned overflowDataOffset,
-				      unsigned overflowDataSize,
-				      struct timeval const& presentationTime) {
+void OutPacketBuffer
+::setOverflowData(unsigned overflowDataOffset,
+		  unsigned overflowDataSize,
+		  struct timeval const& presentationTime,
+		  unsigned durationInMicroseconds) {
   fOverflowDataOffset = overflowDataOffset;
   fOverflowDataSize = overflowDataSize;
   fOverflowPresentationTime = presentationTime;
+  fOverflowDurationInMicroseconds = durationInMicroseconds;
 }
 
 void OutPacketBuffer::useOverflowData() {

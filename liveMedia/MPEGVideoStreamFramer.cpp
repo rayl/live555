@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A filter that breaks up an MPEG video elementary stream into
 //   headers and frames
 // Implementation
@@ -119,17 +119,6 @@ void MPEGVideoStreamFramer::doGetNextFrame() {
   continueReadProcessing();
 }
 
-float MPEGVideoStreamFramer::getPlayTime(unsigned /*numFrames*/) const {
-  // OK, this is going to be a bit of a hack, because the actual play time
-  // for us is going to be based not on "numFrames", but instead on how
-  // many *pictures* have been completed since the last call to this
-  // function.  (I.e., it's a hack because we're making an assumption about
-  // *why* this member function is being called.)
-  double result = fFrameRate == 0.0 ? 0.0 : fPictureCount/fFrameRate;
-  ((MPEGVideoStreamFramer*)this)->fPictureCount = 0; // told you it's a hack
-  return (float)result;
-}
-
 void MPEGVideoStreamFramer::continueReadProcessing(void* clientData,
 						   unsigned char* /*ptr*/,
 						   unsigned /*size*/) {
@@ -144,6 +133,12 @@ void MPEGVideoStreamFramer::continueReadProcessing() {
     // It has already been copied to the reader's space.
     fFrameSize = acquiredFrameSize;
     
+    // "fPresentationTime" should have already been computed.
+    // Compute "fDurationInMicroseconds" now:
+    fDurationInMicroseconds
+      = fFrameRate == 0.0 ? 0 : (unsigned)((fPictureCount*1000000)/fFrameRate);
+    fPictureCount = 0;
+
     // Call our own 'after getting' function.  Because we're not a 'leaf'
     // source, we can call this directly, without risking infinite recursion.
     afterGetting(this);

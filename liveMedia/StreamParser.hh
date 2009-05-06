@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Abstract class for parsing a byte stream
 // C++ header
 
@@ -109,7 +109,9 @@ private:
   void ensureValidBytes1(unsigned numBytesNeeded);
 
   static void afterGettingBytes(void* clientData, unsigned numBytesRead,
-				struct timeval presentationTime);
+				unsigned numTruncatedBytes,
+				struct timeval presentationTime,
+				unsigned durationInMicroseconds);
 
 private:
   FramedSource* fInputSource; // should be a byte-stream source??

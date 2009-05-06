@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Media Sinks
 // C++ header
 
@@ -102,10 +102,13 @@ public:
     return numBytes > fMax;
   }
 
-  void setOverflowData(unsigned overflowDataOffset, unsigned overflowDataSize,
-		       struct timeval const& presentationTime);
-  unsigned overflowDataSize() {return fOverflowDataSize;}
-  struct timeval overflowPresentationTime() {return fOverflowPresentationTime;}
+  void setOverflowData(unsigned overflowDataOffset,
+		       unsigned overflowDataSize,
+		       struct timeval const& presentationTime,
+		       unsigned durationInMicroseconds);
+  unsigned overflowDataSize() const {return fOverflowDataSize;}
+  struct timeval overflowPresentationTime() const {return fOverflowPresentationTime;}
+  unsigned overflowDurationInMicroseconds() const {return fOverflowDurationInMicroseconds;}
   Boolean haveOverflowData() const {return fOverflowDataSize > 0;}
   void useOverflowData();
 
@@ -120,6 +123,7 @@ private:
 
   unsigned fOverflowDataOffset, fOverflowDataSize;
   struct timeval fOverflowPresentationTime;
+  unsigned fOverflowDurationInMicroseconds;
 };
 
 #endif

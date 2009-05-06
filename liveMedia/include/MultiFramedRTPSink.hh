@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // RTP sink for a common kind of payload format: Those which pack multiple,
 // complete codec frames (as many as possible) into each RTP packet.
 // C++ header
@@ -79,10 +79,12 @@ private:
   friend void sendNext(void*);
 
   static void afterGettingFrame(void* clientData,
-				unsigned numBytesRead,
-				struct timeval presentationTime);
-  void afterGettingFrame1(unsigned numBytesRead,
-			 struct timeval presentationTime);
+				unsigned numBytesRead, unsigned numTruncatedBytes,
+				struct timeval presentationTime,
+				unsigned durationInMicroseconds);
+  void afterGettingFrame1(unsigned numBytesRead, unsigned numTruncatedBytes,
+			  struct timeval presentationTime,
+			  unsigned durationInMicroseconds);
   Boolean isTooBigForAPacket(unsigned numBytes) const;
 
   static void ourHandleClosure(void* clientData);

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // A WAV audio file source
 // C++ header
 
@@ -39,7 +39,6 @@ protected:
 private:
   // redefined virtual functions:
   virtual void doGetNextFrame();
-  virtual float getPlayTime(unsigned numFrames) const;
   virtual Boolean setInputPort(int portIndex);
   virtual double getAverageLevel() const;
 
@@ -47,7 +46,6 @@ private:
   FILE* fFid;
   double fPlayTimePerSample; // useconds
   unsigned fPreferredFrameSize;
-  double fPlayTimePerFrame; // seconds
   unsigned fLastPlayTime; // useconds
 };
 

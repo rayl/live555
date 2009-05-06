@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
 // Framed Sources
 // Implementation
 
@@ -67,6 +67,8 @@ void FramedSource::getNextFrame(unsigned char* to, unsigned maxSize,
 
   fTo = to;
   fMaxSize = maxSize;
+  fNumTruncatedBytes = 0; // by default; could be changed by doGetNextFrame()
+  fDurationInMicroseconds = 0; // by default; could be changed by doGetNextFrame()
   fAfterGettingFunc = afterGettingFunc;
   fAfterGettingClientData = afterGettingClientData;
   fOnCloseFunc = onCloseFunc;
@@ -75,6 +77,33 @@ void FramedSource::getNextFrame(unsigned char* to, unsigned maxSize,
 
   doGetNextFrame();
 }
+// ##### The following is for backwards-compatibility; remove it eventually:
+#ifdef BACKWARDS_COMPATIBLE_WITH_OLD_AFTER_GETTING_FUNC
+static void bwCompatHackAfterGetting(void* clientData, unsigned frameSize,
+				     unsigned /*numTruncatedBytes*/,
+				     struct timeval presentationTime,
+				     unsigned /*durationInMicroseconds*/) {
+  FramedSource* source = (FramedSource*)clientData;
+  FramedSource::bwCompatAfterGettingFunc* clientAfterGettingFunc
+    = source->fSavedBWCompatAfterGettingFunc;
+  void* afterGettingClientData = source->fSavedBWCompatAfterGettingClientData;
+  if (clientAfterGettingFunc != NULL) {
+    (*clientAfterGettingFunc)(afterGettingClientData, frameSize, presentationTime);
+  }
+}
+void FramedSource::getNextFrame(unsigned char* to, unsigned maxSize,
+				bwCompatAfterGettingFunc* afterGettingFunc,
+				void* afterGettingClientData,
+				onCloseFunc* onCloseFunc,
+				void* onCloseClientData) {
+  fSavedBWCompatAfterGettingFunc = afterGettingFunc;
+  fSavedBWCompatAfterGettingClientData = afterGettingClientData;
+  // Call the regular (new) "getNextFrame()":
+  getNextFrame(to, maxSize, bwCompatHackAfterGetting, this,
+	       onCloseFunc, onCloseClientData);
+}
+#endif
+// ##### End of code for backwards-compatibility.
 
 void FramedSource::afterGetting(FramedSource* source) {
   source->fIsCurrentlyAwaitingData = False;
@@ -84,8 +113,9 @@ void FramedSource::afterGetting(FramedSource* source) {
 
   if (source->fAfterGettingFunc != NULL) {
     (*(source->fAfterGettingFunc))(source->fAfterGettingClientData,
-				   source->fFrameSize,
-				   source->fPresentationTime);
+				   source->fFrameSize, source->fNumTruncatedBytes,
+				   source->fPresentationTime,
+				   source->fDurationInMicroseconds);
   }
 }
 
