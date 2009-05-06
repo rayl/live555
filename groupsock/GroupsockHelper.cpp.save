@@ -21,6 +21,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupsockHelper.hh"
 
 #if defined(__WIN32__) || defined(_WIN32)
+#ifdef _WIN32_WCE
+#include <afxwin.h>
+#include <wcealt.h>
+#define ctime wce_ctime
+#endif
 #include <time.h>
 extern "C" int initializeWinsockIfNecessary();
 #else
@@ -682,27 +687,19 @@ netAddressBits chooseRandomIPv4SSMAddress(UsageEnvironment& env) {
 }
 
 char const* timestampString() {
-  struct timeval tvNow;
-  gettimeofday(&tvNow, NULL);
-  
-#if !defined(_WIN32_WCE)
-  static char timeString[9]; // holds hh:mm:ss plus trailing '\0'
-  char const* ctimeResult = ctime((time_t*)&tvNow.tv_sec);
-  char const* from = &ctimeResult[11];
-  int i;
-  for (i = 0; i < 8; ++i) {
-    timeString[i] = from[i];
-  }
-  timeString[i] = '\0';
-#else
-  // WinCE apparently doesn't have "ctime()", so instead, construct
-  // a timestamp string just using the integer and fractional parts
-  // of "tvNow":
-  static char timeString[50];
-  sprintf(timeString, "%lu.%06ld", tvNow.tv_sec, tvNow.tv_usec);
-#endif
-  
-  return (char const*)&timeString;
+	struct timeval tvNow;
+	gettimeofday(&tvNow, NULL);
+
+	static char timeString[9]; // holds hh:mm:ss plus trailing '\0'
+	char const* ctimeResult = ctime((time_t*)&tvNow.tv_sec);
+	char const* from = &ctimeResult[11];
+	int i;
+	for (i = 0; i < 8; ++i) {
+		timeString[i] = from[i];
+	}
+	timeString[i] = '\0';
+
+	return (char const*)&timeString;
 }
 
 #if (defined(__WIN32__) || defined(_WIN32)) && !defined(IMN_PIM)
