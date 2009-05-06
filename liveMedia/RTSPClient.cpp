@@ -21,8 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPClient.hh"
 #include "GroupsockHelper.hh"
 #ifdef SUPPORT_REAL_RTSP
-#include "../RealRTSP/include/RealChallengeResponse.hh"
-#include "../RealRTSP/include/RealRDTSource.hh"
+#include "../RealRTSP/include/RealRTSP.hh"
 #endif
 #include "our_md5.h"
 #include <stdlib.h>
@@ -156,19 +155,10 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
       "CSeq: %d\r\n"
       "Accept: application/sdp\r\n"
 #ifdef SUPPORT_REAL_RTSP
-      // Simulate a RealNetworks client
-      // (RealNetworks' servers sometimes behave differently if they
-      //  think the client is one of theirs.):
-      "Bandwidth: 10485800\r\n"
-      "GUID: 00000000-0000-0000-0000-000000000000\r\n"
-      "RegionData: 0\r\n"
-      "ClientID: Linux_2.4_6.0.9.1235_play32_RN01_EN_586\r\n"
-      "SupportsMaximumASMBandwidth: 1\r\n"
-      "Language: en-US\r\n"
-      "Require: com.real.retain-entity-for-setup\r\n"
+      REAL_DESCRIBE_HEADERS
 #endif
       "%s"
-      "%s"
+     "%s"
       "\r\n";
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(url)
@@ -399,16 +389,7 @@ char* RTSPClient::sendOptionsCmd(char const* url) {
       "OPTIONS * RTSP/1.0\r\n"
       "CSeq: %d\r\n"
 #ifdef SUPPORT_REAL_RTSP
-      // Simulate a RealNetworks client
-      // (RealNetworks' servers sometimes behave differently if they
-      //  think the client is one of theirs.):
-      "User-Agent: RealMedia Player Version 6.0.9.1235 (linux-2.0-libc6-i386-gcc2.95)\r\n"
-      "ClientChallenge: 9e26d33f2984236010ef6253fb1887f7\r\n"
-      "PlayerStarttime: [28/03/2003:22:50:23 00:00]\r\n"
-      "CompanyID: KnKV4M4I/B2FjJ1TToLycw==\r\n"
-      "GUID: 00000000-0000-0000-0000-000000000000\r\n"
-      "RegionData: 0\r\n"
-      "ClientID: Linux_2.4_6.0.9.1235_play32_RN01_EN_586\r\n"
+      REAL_OPTIONS_HEADERS
 #endif
       "%s"
       "\r\n";
@@ -685,32 +666,65 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       sessionStr = "";
     }
 
+    char* transportStr = NULL;
 #ifdef SUPPORT_REAL_RTSP
-    char realBuf[200];
-    if (fRealChallengeStr != NULL) {
+    if (isRealNetworksSession()) {
+      // For RealNetworks streams, use a special "Transport:" header, and
+      // also add a 'challenge response'.
       char challenge2[64];
       char checksum[34];
-      real_calc_response_and_checksum(challenge2, checksum, fRealChallengeStr);
-      sprintf(realBuf, "RealChallenge2: %s, sd=%s\r\n", challenge2, checksum);
-    } else {
-      realBuf[0] = '\0';
+      RealCalculateChallengeResponse(fRealChallengeStr, challenge2, checksum);
+
+      char const* transportFmt =
+	"Transport: x-pn-tng/tcp;mode=play,rtp/avp/unicast;mode=play\r\n"
+	"RealChallenge2: %s, sd=%s\r\n";
+      unsigned transportSize = strlen(transportFmt)
+	+ sizeof challenge2 + sizeof checksum;
+      transportStr = new char[transportSize];
+      sprintf(transportStr, transportFmt, challenge2, checksum);
+
+      // Also, tell the RDT source to use the RTSP TCP socket:
+      RealRDTSource* rdtSource = (RealRDTSource*)(subsession.readSource());
+      rdtSource->setInputSocket(fSocketNum);
+    }
+#endif
+    if (transportStr == NULL) {
+      // Use a standard "Transport:" header.
+      char const* transportTypeStr;
+      char const* modeStr = streamOutgoing ? ";mode=receive" : "";
+          // Note: I think the above is nonstandard, but DSS wants it this way
+      char const* portTypeStr;
+      unsigned short rtpNumber, rtcpNumber;
+      if (streamUsingTCP) { // streaming over the RTSP connection
+	transportTypeStr = "/TCP;unicast";
+	portTypeStr = ";interleaved";
+	rtpNumber = fTCPStreamIdCount++;
+	rtcpNumber = fTCPStreamIdCount++;
+      } else { // normal RTP streaming      
+	unsigned connectionAddress = subsession.connectionEndpointAddress();
+	transportTypeStr
+	  = IsMulticastAddress(connectionAddress) ? ";multicast" : ";unicast";
+	portTypeStr = ";client_port";
+	rtpNumber = subsession.clientPortNum();
+	if (rtpNumber == 0) {
+	  envir().setResultMsg("Client port number unknown\n");
+	  break;
+	}
+	rtcpNumber = rtpNumber + 1;
+      }
+      char const* transportFmt = "Transport: RTP/AVP%s%s%s=%d-%d\r\n";
+      unsigned transportSize = strlen(transportFmt)
+	+ strlen(transportTypeStr) + strlen(modeStr) + strlen(portTypeStr) + 2*5 /* max port len */;
+      transportStr = new char[transportSize];
+      sprintf(transportStr, transportFmt,
+	      transportTypeStr, modeStr, portTypeStr, rtpNumber, rtcpNumber);
     }
 
-    // Tell the RDT source to use the RTSP TCP socket:
-    // ##### This assumes that the source is RDT; fix this later for other sources #####@@@@@
-    RealRDTSource* rdtSource = (RealRDTSource*)(subsession.readSource());
-    rdtSource->setInputSocket(fSocketNum);
-#endif
     // (Later implement more, as specified in the RTSP spec, sec D.1 #####)
     char* const cmdFmt =
       "SETUP %s%s%s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
-#ifdef SUPPORT_REAL_RTSP
       "%s"
-      "Transport: x-pn-tng/tcp;mode=play,rtp/avp/unicast;mode=play\r\n"
-#else
-      "Transport: RTP/AVP%s%s%s=%d-%d\r\n"
-#endif
       "%s"
       "%s"
       "%s"
@@ -719,33 +733,10 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     char const *prefix, *separator, *suffix;
     constructSubsessionURL(subsession, prefix, separator, suffix);
 
-    char const* transportTypeString;
-    char const* modeString = streamOutgoing ? ";mode=receive" : "";
-       // Note: I think the above is nonstandard, but DSS wants it this way
-    char const* portTypeString;
-    unsigned short rtpNumber, rtcpNumber;
-    if (streamUsingTCP) { // streaming over the RTSP connection
-      transportTypeString = "/TCP;unicast";
-      portTypeString = ";interleaved";
-      rtpNumber = fTCPStreamIdCount++;
-      rtcpNumber = fTCPStreamIdCount++;
-    } else { // normal RTP streaming      
-      unsigned connectionAddress = subsession.connectionEndpointAddress();
-      transportTypeString
-	= IsMulticastAddress(connectionAddress)	? ";multicast" : ";unicast";
-      portTypeString = ";client_port";
-      rtpNumber = subsession.clientPortNum();
-      if (rtpNumber == 0) {
-	envir().setResultMsg("Client port number unknown\n");
-	break;
-      }
-      rtcpNumber = rtpNumber + 1;
-    }
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(prefix) + strlen(separator) + strlen(suffix)
       + 20 /* max int len */
-      + strlen(transportTypeString) + strlen(modeString)
-          + strlen(portTypeString) + 2*5 /* max port len */
+      + strlen(transportStr)
       + strlen(sessionStr)
       + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize;
@@ -753,19 +744,15 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     sprintf(cmd, cmdFmt,
 	    prefix, separator, suffix,
 	    ++fCSeq,
-#ifdef SUPPORT_REAL_RTSP
-	    realBuf,
-#else
-	    transportTypeString, modeString, portTypeString,
-	        rtpNumber, rtcpNumber,
-#endif
+	    transportStr,
 	    sessionStr,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
     delete[] authenticatorStr;
     if (sessionStr[0] != '\0') delete[] sessionStr;
+    delete[] transportStr;
 
-    // And then sent it:
+    // And then send it:
     if (!sendRequest(cmd)) {
       envir().setResultErrMsg("SETUP send() failed: ");
       break;
@@ -854,9 +841,12 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 
 Boolean RTSPClient::playMediaSession(MediaSession& session) {
 #ifdef SUPPORT_REAL_RTSP
-  // Set the "Subscribe" parameter before proceeding:
-  setMediaSessionParameter(session, "Subscribe", "stream=0;rule=8,stream=0;rule=9");
-  //#####@@@@@  stream=0;rule=0,stream=0;rule=1
+  if (isRealNetworksSession()) {
+    // This is a RealNetworks stream; set the "Subscribe" parameter before proceeding:
+    char* streamRuleString = RealGetSubscribeRuleString(&session);
+    setMediaSessionParameter(session, "Subscribe", streamRuleString);
+    delete[] streamRuleString;
+  }
 #endif
   char* cmd = NULL;
   do {

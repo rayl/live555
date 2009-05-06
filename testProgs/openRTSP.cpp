@@ -44,6 +44,10 @@ char* getSDPDescriptionFromURL(Medium* client, char const* url,
 
   extern unsigned statusCode;
   statusCode = rtspClient->describeStatus();
+#ifdef SUPPORT_REAL_RTSP
+  extern Boolean isRealNetworksSession;
+  isRealNetworksSession = rtspClient->isRealNetworksSession();
+#endif
   return result;
 }
 

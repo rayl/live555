@@ -21,7 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "BasicUsageEnvironment.hh"
 #include "GroupsockHelper.hh"
 #ifdef SUPPORT_REAL_RTSP
-#include "../RealRTSP/include/RealRMFF.hh"
+#include "../RealRTSP/include/RealRTSP.hh"
 #endif
 
 #if defined(__WIN32__) || defined(_WIN32)
@@ -90,6 +90,9 @@ Boolean generateHintTracks = False;
 char* destRTSPURL = NULL;
 unsigned qosMeasurementIntervalMS = 0; // 0 means: Don't output QOS data
 unsigned statusCode = 0;
+#ifdef SUPPORT_REAL_RTSP
+Boolean isRealNetworksSession = False; // by default
+#endif
 
 #ifdef BSD
 static struct timezone Idunno;
@@ -537,6 +540,45 @@ int main(int argc, char** argv) {
       }
 
       qtOut->startPlaying(sessionAfterPlaying, NULL);
+#ifdef SUPPORT_REAL_RTSP
+    } else if (isRealNetworksSession) {
+      // For RealNetworks' sessions, we create a single output file,
+      // named "output.rm".
+      char outFileName[1000];
+      if (singleMedium == NULL) {
+	snprintf(outFileName, sizeof outFileName, "%soutput.rm", fileNamePrefix);
+      } else {
+	// output to 'stdout' as normal, even though we actually output all media
+	sprintf(outFileName, "stdout");
+      }
+      FileSink* fileSink = FileSink::createNew(*env, outFileName,
+					       fileSinkBufferSize, oneFilePerFrame);
+
+      // The output file needs to begin with a special 'RMFF' header,
+      // in order for it to be usable.  Write this header first:
+      unsigned headerSize;
+      unsigned char* headerData = RealGenerateRMFFHeader(session, headerSize);
+      struct timeval timeNow;
+      gettimeofday(&timeNow, &Idunno);
+      fileSink->addData(headerData, headerSize, timeNow);
+      delete[] headerData;
+
+      // Start playing the output file from the first subsession.
+      // (Hack: Because all subsessions' data is actually multiplexed on the
+      // single RTSP TCP connection, playing from one subsession is sufficient.)
+      iter.reset();
+      madeProgress = False;
+      while ((subsession = iter.next()) != NULL) {
+	if (subsession->readSource() == NULL) continue; // was not initiated
+
+	  fileSink->startPlaying(*(subsession->readSource()),
+					 subsessionAfterPlaying,
+					 subsession);
+	  madeProgress = True;
+	  break; // play from one subsession only
+      }
+      if (!madeProgress) shutdown();
+#endif
     } else if (destRTSPURL != NULL) {
       // Announce the session into a (separate) RTSP server,
       // and create one or more "RTPTranslator"s to tie the source
@@ -605,20 +647,6 @@ int main(int argc, char** argv) {
 	    gettimeofday(&timeNow, &Idunno);
 	    fileSink->addData(configData, configLen, timeNow);
 	    delete[] configData;
-#ifdef SUPPORT_REAL_RTSP
-	  } else if (strcmp(subsession->codecName(), "X-PN-REALAUDIO") == 0 ||
-		     strcmp(subsession->codecName(), "X-PN-REALVIDEO") == 0) {
-	    // For RealNetworks' special streams, the output file needs to begin
-	    // with a special header, in order for it to be usable.
-	    // Write this header first:
-	    unsigned headerSize;
-	    unsigned char* headerData
-	      = RealGenerateRMFFHeader(session, subsession, headerSize);
-	    struct timeval timeNow;
-	    gettimeofday(&timeNow, &Idunno);
-	    fileSink->addData(headerData, headerSize, timeNow);
-	    delete[] headerData;
-#endif
 	  }
 
 	  subsession->sink->startPlaying(*(subsession->readSource()),

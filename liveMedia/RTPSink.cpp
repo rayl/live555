@@ -242,7 +242,7 @@ unsigned RTPTransmissionStats::roundTripDelay() const {
 
   int rawResult = lastReceivedTimeNTP - fLastSRTime - fDiffSR_RRTime;
   if (rawResult < 0) {
-    // This can happen if there's clock skew between the sender and receiver,
+    // This can happen if there's clock drift between the sender and receiver,
     // and if the round-trip time was very small.
     rawResult = 0;
   }

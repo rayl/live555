@@ -6,17 +6,18 @@
 #include "MPEG2TransportStreamFramer.hh"
 
 #define TRANSPORT_PACKET_SIZE 188
-#define NEW_DURATION_WEIGHT 0.9
+#define NEW_DURATION_WEIGHT 0.05
   // How much weight to give to the latest duration measurement (must be <= 1)
 
 ////////// PIDStatus //////////
 
 class PIDStatus {
 public:
-  PIDStatus() : lastClock(0.0), lastPacketNum(0) {}
+  PIDStatus() : lastClock(0.0), lastPacketNum(0), hasJustStarted(True) {}
 
   double lastClock;
   unsigned lastPacketNum;
+  Boolean hasJustStarted;
 };
 
 
@@ -125,9 +126,17 @@ void MPEG2TransportStreamFramer::updateTSPacketDurationEstimate(unsigned char* p
     // We've seen this PID's PCR before; update our per-packet duration estimate:
     double durationPerPacket
       = (clock - pidStatus->lastClock)/(fTSPacketCount - pidStatus->lastPacketNum);
-    fTSPacketDurationEstimate
-      = durationPerPacket*NEW_DURATION_WEIGHT
-      + fTSPacketDurationEstimate*(1-NEW_DURATION_WEIGHT);
+    if (pidStatus->hasJustStarted) {
+      fTSPacketDurationEstimate = durationPerPacket;
+      pidStatus->hasJustStarted = False;
+    } else {
+      fTSPacketDurationEstimate
+	= durationPerPacket*NEW_DURATION_WEIGHT
+	+ fTSPacketDurationEstimate*(1-NEW_DURATION_WEIGHT);
+    }
+#ifdef DEBUG_PCR
+    fprintf(stderr, "PCR 0x%08x+%d == %f => this duration %f, new estimate %f\n", pcrBaseHigh, pkt[10]>>7, clock, durationPerPacket, fTSPacketDurationEstimate);
+#endif
   }
 
   pidStatus->lastClock = clock;
