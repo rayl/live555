@@ -18,25 +18,25 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // MPEG-1 or MPEG-2 Audio RTP Sources
 // C++ header
 
-#ifndef _MPEG_AUDIO_RTP_SOURCE_HH
-#define _MPEG_AUDIO_RTP_SOURCE_HH
+#ifndef _MPEG_1OR2_AUDIO_RTP_SOURCE_HH
+#define _MPEG_1OR2_AUDIO_RTP_SOURCE_HH
 
 #ifndef _MULTI_FRAMED_RTP_SOURCE_HH
 #include "MultiFramedRTPSource.hh"
 #endif
 
-class MPEGAudioRTPSource: public MultiFramedRTPSource {
+class MPEG1or2AudioRTPSource: public MultiFramedRTPSource {
 public:
-  static MPEGAudioRTPSource*
+  static MPEG1or2AudioRTPSource*
   createNew(UsageEnvironment& env, Groupsock* RTPgs,
 	    unsigned char rtpPayloadFormat = 14,
 	    unsigned rtpTimestampFrequency = 90000);
 
 protected:
-  virtual ~MPEGAudioRTPSource();
+  virtual ~MPEG1or2AudioRTPSource();
 
 private:
-  MPEGAudioRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
+  MPEG1or2AudioRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 		     unsigned char rtpPayloadFormat,
 		     unsigned rtpTimestampFrequency);
       // called only by createNew()

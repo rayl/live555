@@ -18,21 +18,21 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // RTP sink for MPEG audio (RFC 2250)
 // Implementation
 
-#include "MPEGAudioRTPSink.hh"
+#include "MPEG1or2AudioRTPSink.hh"
 
-MPEGAudioRTPSink::MPEGAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
+MPEG1or2AudioRTPSink::MPEG1or2AudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
   : AudioRTPSink(env, RTPgs, 14, 90000, "MPA") {
 }
 
-MPEGAudioRTPSink::~MPEGAudioRTPSink() {
+MPEG1or2AudioRTPSink::~MPEG1or2AudioRTPSink() {
 }
 
-MPEGAudioRTPSink*
-MPEGAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
-  return new MPEGAudioRTPSink(env, RTPgs);
+MPEG1or2AudioRTPSink*
+MPEG1or2AudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
+  return new MPEG1or2AudioRTPSink(env, RTPgs);
 }
 
-void MPEGAudioRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
+void MPEG1or2AudioRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 					      unsigned char* frameStart,
 					      unsigned numBytesInFrame,
 					      struct timeval frameTimestamp,
@@ -56,7 +56,7 @@ void MPEGAudioRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 					     numRemainingBytes);
 }
 
-unsigned MPEGAudioRTPSink::specialHeaderSize() const {
+unsigned MPEG1or2AudioRTPSink::specialHeaderSize() const {
   // There's a 4 byte special audio header:
   return 4;
 }

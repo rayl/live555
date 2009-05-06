@@ -18,18 +18,18 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // MPEG-1 or MPEG-2 Audio RTP Sources
 // Implementation
 
-#include "MPEGAudioRTPSource.hh"
+#include "MPEG1or2AudioRTPSource.hh"
 
-MPEGAudioRTPSource*
-MPEGAudioRTPSource::createNew(UsageEnvironment& env,
+MPEG1or2AudioRTPSource*
+MPEG1or2AudioRTPSource::createNew(UsageEnvironment& env,
 			      Groupsock* RTPgs,
 			      unsigned char rtpPayloadFormat,
 			      unsigned rtpTimestampFrequency) {
-  return new MPEGAudioRTPSource(env, RTPgs, rtpPayloadFormat,
+  return new MPEG1or2AudioRTPSource(env, RTPgs, rtpPayloadFormat,
 				rtpTimestampFrequency);
 }
 
-MPEGAudioRTPSource::MPEGAudioRTPSource(UsageEnvironment& env,
+MPEG1or2AudioRTPSource::MPEG1or2AudioRTPSource(UsageEnvironment& env,
 				       Groupsock* rtpGS,
 				       unsigned char rtpPayloadFormat,
 				       unsigned rtpTimestampFrequency)
@@ -37,10 +37,10 @@ MPEGAudioRTPSource::MPEGAudioRTPSource(UsageEnvironment& env,
 			 rtpPayloadFormat, rtpTimestampFrequency) {
 }
 
-MPEGAudioRTPSource::~MPEGAudioRTPSource() {
+MPEG1or2AudioRTPSource::~MPEG1or2AudioRTPSource() {
 }
 
-Boolean MPEGAudioRTPSource
+Boolean MPEG1or2AudioRTPSource
 ::processSpecialHeader(unsigned char* headerStart, unsigned packetSize,
 		       Boolean /*rtpMarkerBit*/,
                        unsigned& resultSpecialHeaderSize) {
@@ -59,7 +59,7 @@ Boolean MPEGAudioRTPSource
   return True;
 }    
 
-char const* MPEGAudioRTPSource::MIMEtype() const {
+char const* MPEG1or2AudioRTPSource::MIMEtype() const {
   return "audio/mpeg";
 }
 

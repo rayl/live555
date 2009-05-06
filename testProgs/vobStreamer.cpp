@@ -42,7 +42,7 @@ char const** curInputFileName;
 Boolean haveReadOneFile = False;
 
 UsageEnvironment* env;
-MPEGDemux* mpegDemux;
+MPEG1or2Demux* mpegDemux;
 AC3AudioStreamFramer* audioSource = NULL;
 FramedSource* videoSource = NULL;
 RTPSink* audioSink = NULL;
@@ -181,7 +181,7 @@ int main(int argc, char const** argv) {
     rtpGroupsockVideo->multicastSendOnly(); // because we're a SSM source
     
     // Create a 'MPEG Video RTP' sink from the RTP 'groupsock':
-    videoSink = MPEGVideoRTPSink::createNew(*env, rtpGroupsockVideo);
+    videoSink = MPEG1or2VideoRTPSink::createNew(*env, rtpGroupsockVideo);
     
     // Create (and start) a 'RTCP instance' for this RTP sink:
     rtcpGroupsockVideo
@@ -281,7 +281,7 @@ void play() {
   
   // We must demultiplex Audio and Video Elementary Streams
   // from the input source:
-  mpegDemux = MPEGDemux::createNew(*env, fileSource);
+  mpegDemux = MPEG1or2Demux::createNew(*env, fileSource);
   if (mediaToStream&VOB_AUDIO) {
     FramedSource* audioES = mpegDemux->newElementaryStream(0xBD);
       // Because, in a VOB file, the AC3 audio has stream id 0xBD
@@ -292,7 +292,7 @@ void play() {
     FramedSource* videoES = mpegDemux->newVideoStream();
 
     videoSource
-      = MPEGVideoStreamFramer::createNew(*env, videoES, iFramesOnly);
+      = MPEG1or2VideoStreamFramer::createNew(*env, videoES, iFramesOnly);
   }
 
   // Finally, start playing each sink.

@@ -18,17 +18,17 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // MPEG-1 or MPEG-2 Video RTP Sources
 // Implementation
 
-#include "MPEGVideoRTPSource.hh"
+#include "MPEG1or2VideoRTPSource.hh"
 
-MPEGVideoRTPSource*
-MPEGVideoRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
+MPEG1or2VideoRTPSource*
+MPEG1or2VideoRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 			      unsigned char rtpPayloadFormat,
 			      unsigned rtpTimestampFrequency) {
-  return new MPEGVideoRTPSource(env, RTPgs, rtpPayloadFormat,
+  return new MPEG1or2VideoRTPSource(env, RTPgs, rtpPayloadFormat,
 				rtpTimestampFrequency);
 }
 
-MPEGVideoRTPSource::MPEGVideoRTPSource(UsageEnvironment& env,
+MPEG1or2VideoRTPSource::MPEG1or2VideoRTPSource(UsageEnvironment& env,
 				       Groupsock* RTPgs,
 				       unsigned char rtpPayloadFormat,
 				       unsigned rtpTimestampFrequency)
@@ -36,10 +36,10 @@ MPEGVideoRTPSource::MPEGVideoRTPSource(UsageEnvironment& env,
 			 rtpPayloadFormat, rtpTimestampFrequency){
 }
 
-MPEGVideoRTPSource::~MPEGVideoRTPSource() {
+MPEG1or2VideoRTPSource::~MPEG1or2VideoRTPSource() {
 }
 
-Boolean MPEGVideoRTPSource
+Boolean MPEG1or2VideoRTPSource
 ::processSpecialHeader(unsigned char* headerStart, unsigned packetSize,
 		       Boolean /*rtpMarkerBit*/,
 		       unsigned& resultSpecialHeaderSize) {
@@ -59,7 +59,7 @@ Boolean MPEGVideoRTPSource
   return True;
 }    
 
-Boolean MPEGVideoRTPSource
+Boolean MPEG1or2VideoRTPSource
 ::packetIsUsableInJitterCalculation(unsigned char* packet,
 				    unsigned packetSize) {
   // There's a 4-byte video-specific header
@@ -77,7 +77,7 @@ Boolean MPEGVideoRTPSource
   }
 }    
 
-char const* MPEGVideoRTPSource::MIMEtype() const {
+char const* MPEG1or2VideoRTPSource::MIMEtype() const {
   return "video/mpeg";
 }
 

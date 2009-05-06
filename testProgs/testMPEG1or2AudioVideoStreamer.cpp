@@ -14,17 +14,24 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // Copyright (c) 1996-2001, Live Networks, Inc.  All rights reserved
-// A test program that reads a MPEG Video Elementary Stream file,
-// and streams it using RTP
+// A test program that reads a MPEG Program Stream file,
+// splits it into Audio and Video Elementary Streams,
+// and streams both using RTP
 // main program
 
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 #include "GroupsockHelper.hh"
 
-// Uncomment the following if the input file is a MPEG Program Stream
-// rather than a MPEG Video Elementary Stream
-//#define SOURCE_IS_PROGRAM_STREAM 1
+UsageEnvironment* env;
+char const* inputFileName = "test.mpg";
+MPEG1or2Demux* mpegDemux;
+FramedSource* audioSource;
+FramedSource* videoSource;
+RTPSink* audioSink;
+RTPSink* videoSink;
+
+void play(); // forward
 
 // To stream using "source-specific multicast" (SSM), uncomment the following:
 //#define USE_SSM 1
@@ -42,16 +49,6 @@ Boolean const isSSM = False;
 // change the following "False" to "True":
 Boolean iFramesOnly = False;
 
-UsageEnvironment* env;
-char const* inputFileName = "test.mpg";
-#ifdef SOURCE_IS_PROGRAM_STREAM
-MPEGDemux* mpegDemux;
-#endif
-MediaSource* videoSource;
-RTPSink* videoSink;
-
-void play(); // forward
-
 int main(int argc, char** argv) {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
@@ -68,41 +65,60 @@ int main(int argc, char** argv) {
   // of the (single) destination.  (You may also need to make a similar
   // change to the receiver program.)
 #endif
-  const unsigned short rtpPortNum = 8888;
-  const unsigned short rtcpPortNum = rtpPortNum+1;
+  const unsigned short rtpPortNumAudio = 6666;
+  const unsigned short rtcpPortNumAudio = rtpPortNumAudio+1;
+  const unsigned short rtpPortNumVideo = 8888;
+  const unsigned short rtcpPortNumVideo = rtpPortNumVideo+1;
   const unsigned char ttl = 7; // low, in case routers don't admin scope
 
   struct in_addr destinationAddress;
   destinationAddress.s_addr = our_inet_addr(destinationAddressStr);
-  const Port rtpPort(rtpPortNum);
-  const Port rtcpPort(rtcpPortNum);
+  const Port rtpPortAudio(rtpPortNumAudio);
+  const Port rtcpPortAudio(rtcpPortNumAudio);
+  const Port rtpPortVideo(rtpPortNumVideo);
+  const Port rtcpPortVideo(rtcpPortNumVideo);
 
-  Groupsock rtpGroupsock(*env, destinationAddress, rtpPort, ttl);
-  Groupsock rtcpGroupsock(*env, destinationAddress, rtcpPort, ttl);
+  Groupsock rtpGroupsockAudio(*env, destinationAddress, rtpPortAudio, ttl);
+  Groupsock rtcpGroupsockAudio(*env, destinationAddress, rtcpPortAudio, ttl);
+  Groupsock rtpGroupsockVideo(*env, destinationAddress, rtpPortVideo, ttl);
+  Groupsock rtcpGroupsockVideo(*env, destinationAddress, rtcpPortVideo, ttl);
 #ifdef USE_SSM
-  rtpGroupsock.multicastSendOnly();
-  rtcpGroupsock.multicastSendOnly();
+  rtpGroupsockAudio.multicastSendOnly();
+  rtcpGroupsockAudio.multicastSendOnly();
+  rtpGroupsockVideo.multicastSendOnly();
+  rtcpGroupsockVideo.multicastSendOnly();
 #endif
 
-  // Create a 'MPEG Video RTP' sink from the RTP 'groupsock':
-  videoSink = MPEGVideoRTPSink::createNew(*env, &rtpGroupsock);
+  // Create a 'MPEG Audio RTP' sink from the RTP 'groupsock':
+  audioSink = MPEG1or2AudioRTPSink::createNew(*env, &rtpGroupsockAudio);
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
-  const unsigned totalSessionBandwidth = 4500; // in kbps; for RTCP b/w share
+  const unsigned totalSessionBandwidthAudio = 160; // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
   CNAME[maxCNAMElen] = '\0'; // just in case
-  RTCPInstance::createNew(*env, &rtcpGroupsock,
-			  totalSessionBandwidth, CNAME,
+  RTCPInstance::createNew(*env, &rtcpGroupsockAudio,
+			  totalSessionBandwidthAudio, CNAME,
+			  audioSink, NULL /* we're a server */, isSSM);
+  // Note: This starts RTCP running automatically
+
+  // Create a 'MPEG Video RTP' sink from the RTP 'groupsock':
+  videoSink = MPEG1or2VideoRTPSink::createNew(*env, &rtpGroupsockVideo);
+
+  // Create (and start) a 'RTCP instance' for this RTP sink:
+  const unsigned totalSessionBandwidthVideo = 4500; // in kbps; for RTCP b/w share
+  RTCPInstance::createNew(*env, &rtcpGroupsockVideo,
+			  totalSessionBandwidthVideo, CNAME,
 			  videoSink, NULL /* we're a server */, isSSM);
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER
   PassiveServerMediaSession* serverMediaSession
     = PassiveServerMediaSession::createNew(*env, inputFileName,
-		   "Session streamed by \"testMPEGVideoStreamer\"",
+		   "Session streamed by \"testMPEG1or2AudioVideoStreamer\"",
 					   isSSM);
+  serverMediaSession->addSubsession(*audioSink);
   serverMediaSession->addSubsession(*videoSink);
   RTSPServer* rtspServer
     = RTSPServer::createNew(*env, *serverMediaSession);
@@ -128,15 +144,26 @@ int main(int argc, char** argv) {
   return 0; // only to prevent compiler warning
 }
 
-void afterPlaying(void* /*clientData*/) {
+void afterPlaying(void* clientData) {
+  // One of the sinks has ended playing.
+  // Check whether any of the sources have a pending read.  If so,
+  // wait until its sink ends playing also:
+  if (audioSource->isCurrentlyAwaitingData()
+      || videoSource->isCurrentlyAwaitingData()) return;
+  
+  // Now that both sinks have ended, close both input sources,
+  // and start playing again:
   *env << "...done reading from file\n";
 
+  audioSink->stopPlaying();
+  videoSink->stopPlaying();
+      // ensures that both are shut down
+  Medium::close(audioSource);
   Medium::close(videoSource);
-#ifdef SOURCE_IS_PROGRAM_STREAM
   Medium::close(mpegDemux);
-#endif
-  // Note that this also closes the input file that this source read from.
+  // Note: This also closes the input file that this source read from.
 
+  // Start playing once again:
   play();
 }
 
@@ -150,21 +177,22 @@ void play() {
     exit(1);
   }
   
-  FramedSource* videoES;
-#ifdef SOURCE_IS_PROGRAM_STREAM
-  // We must demultiplex a Video Elementary Stream from the input source:
-  mpegDemux = MPEGDemux::createNew(*env, fileSource);
-  videoES = mpegDemux->newVideoStream();
-#else
-  // The input source is assumed to already be a Video Elementary Stream:
-  videoES = fileSource;
-#endif
+  // We must demultiplex Audio and Video Elementary Streams
+  // from the input source:
+  mpegDemux = MPEG1or2Demux::createNew(*env, fileSource);
+  FramedSource* audioES = mpegDemux->newAudioStream();
+  FramedSource* videoES = mpegDemux->newVideoStream();
 
-  // Create a framer for the Video Elementary Stream:
+  // Create a framer for each Elementary Stream:
+  audioSource
+    = MPEG1or2AudioStreamFramer::createNew(*env, audioES);
   videoSource
-    = MPEGVideoStreamFramer::createNew(*env, videoES, iFramesOnly);
+    = MPEG1or2VideoStreamFramer::createNew(*env, videoES, iFramesOnly);
 
-  // Finally, start playing:
+  // Finally, start playing each sink.
+  // (Start playing video first, to ensure that any video sequence header
+  // at the start of the file gets read.)
   *env << "Beginning to read from file...\n";
   videoSink->startPlaying(*videoSource, afterPlaying, videoSink);
+  audioSink->startPlaying(*audioSource, afterPlaying, audioSink);
 }

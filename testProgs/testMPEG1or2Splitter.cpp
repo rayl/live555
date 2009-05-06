@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // Copyright (c) 1996-2001, Live Networks, Inc.  All rights reserved
-// A test program that splits a MPEG Program Stream file into
+// A test program that splits a MPEG-1 or 2 Program Stream file into
 // video and audio output files.
 // main program
 
@@ -31,7 +31,7 @@ void afterPlaying(void* clientData); // forward
 // A structure to hold the state of the current session.
 // It is used in the "afterPlaying()" function to clean up the session.
 struct sessionState_t {
-  MPEGDemux* baseDemultiplexor;
+  MPEG1or2Demux* baseDemultiplexor;
   MediaSource* videoSource;
   MediaSource* audioSource;
   FileSink* videoSink;
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   }
   
   // Create a MPEG demultiplexor that reads from that source.
-  sessionState.baseDemultiplexor = MPEGDemux::createNew(*env, inputSource);
+  sessionState.baseDemultiplexor = MPEG1or2Demux::createNew(*env, inputSource);
 
   // Create, from this, our own sources (video and audio):
   sessionState.videoSource = sessionState.baseDemultiplexor->newVideoStream();

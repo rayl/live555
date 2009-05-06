@@ -97,7 +97,7 @@ void addNewRTPStream(UsageEnvironment& env,
     = new Groupsock(env, sessionAddress, rtcpPort, ttl);
   
   // Create the data source: a "MPEG Audio RTP source"
-  RTPSource* rtpSource = MPEGAudioRTPSource::createNew(env, rtpGroupsock);
+  RTPSource* rtpSource = MPEG1or2AudioRTPSource::createNew(env, rtpGroupsock);
 
   // Create (and start) a 'RTCP instance' for the RTP source:
   const unsigned maxCNAMElen = 100;

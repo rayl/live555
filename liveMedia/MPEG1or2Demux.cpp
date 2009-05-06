@@ -18,8 +18,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Demultiplexer for a MPEG 1 or 2 Program Stream
 // Implementation
 
-#include "MPEGDemux.hh"
-#include "MPEGDemuxedElementaryStream.hh"
+#include "MPEG1or2Demux.hh"
+#include "MPEG1or2DemuxedElementaryStream.hh"
 #include "StreamParser.hh"
 #include <stdlib.h>
 
@@ -34,7 +34,7 @@ enum MPEGParseState {
 
 class MPEGProgramStreamParser: public StreamParser {
 public:
-  MPEGProgramStreamParser(MPEGDemux* usingSource, FramedSource* inputSource);
+  MPEGProgramStreamParser(MPEG1or2Demux* usingSource, FramedSource* inputSource);
   virtual ~MPEGProgramStreamParser();
 
 public:
@@ -53,15 +53,15 @@ private:
   // for PES packet header parsing
 
 private:
-  MPEGDemux* fUsingSource;
+  MPEG1or2Demux* fUsingSource;
   MPEGParseState fCurrentParseState;
   unsigned char fMPEGversion;   
 };
 
 
-////////// MPEGDemux implementation //////////
+////////// MPEG1or2Demux implementation //////////
 
-MPEGDemux::MPEGDemux(UsageEnvironment& env,
+MPEG1or2Demux::MPEG1or2Demux(UsageEnvironment& env,
 		     FramedSource* inputSource)
   : Medium(env), fInputSource(inputSource),
     fNextAudioStreamNumber(0), fNextVideoStreamNumber(0),
@@ -73,36 +73,36 @@ MPEGDemux::MPEGDemux(UsageEnvironment& env,
   } 
 }
 
-MPEGDemux::~MPEGDemux() {
+MPEG1or2Demux::~MPEG1or2Demux() {
   delete fParser;
   Medium::close(fInputSource);
 }
 
-MPEGDemux* MPEGDemux::createNew(UsageEnvironment& env,
+MPEG1or2Demux* MPEG1or2Demux::createNew(UsageEnvironment& env,
 				FramedSource* inputSource) {
   // Need to add source type checking here???  #####
 
-  return new MPEGDemux(env, inputSource);
+  return new MPEG1or2Demux(env, inputSource);
 }
 
-MPEGDemuxedElementaryStream*
-MPEGDemux::newElementaryStream(unsigned char streamIdTag) {
-  return new MPEGDemuxedElementaryStream(envir(), streamIdTag, *this);
+MPEG1or2DemuxedElementaryStream*
+MPEG1or2Demux::newElementaryStream(unsigned char streamIdTag) {
+  return new MPEG1or2DemuxedElementaryStream(envir(), streamIdTag, *this);
 }
 
-MPEGDemuxedElementaryStream* MPEGDemux::newAudioStream() {
+MPEG1or2DemuxedElementaryStream* MPEG1or2Demux::newAudioStream() {
   unsigned char newAudioStreamTag = 0xC0 | (fNextAudioStreamNumber++&~0xE0);
       // MPEG audio stream tags are 110x xxxx (binary)
   return newElementaryStream(newAudioStreamTag);
 }
 
-MPEGDemuxedElementaryStream* MPEGDemux::newVideoStream() {
+MPEG1or2DemuxedElementaryStream* MPEG1or2Demux::newVideoStream() {
   unsigned char newVideoStreamTag = 0xE0 | (fNextVideoStreamNumber++&~0xF0);
       // MPEG video stream tags are 1110 xxxx (binary)
   return newElementaryStream(newVideoStreamTag);
 }
 
-void MPEGDemux::registerReadInterest(unsigned char streamIdTag,
+void MPEG1or2Demux::registerReadInterest(unsigned char streamIdTag,
 				     unsigned char* to, unsigned maxSize,
 				     afterGettingFunc* afterGettingFunc,
 				     void* afterGettingClientData,
@@ -112,7 +112,7 @@ void MPEGDemux::registerReadInterest(unsigned char streamIdTag,
     
   // Make sure this stream is not already being read:
   if (out.isCurrentlyAwaitingData) {
-    envir() << "MPEGDemux::registerReadInterest(): attempt to read stream id "
+    envir() << "MPEG1or2Demux::registerReadInterest(): attempt to read stream id "
 	    << (void*)streamIdTag << " more than once!\n";
     exit(1);
   }
@@ -129,14 +129,14 @@ void MPEGDemux::registerReadInterest(unsigned char streamIdTag,
   ++fNumPendingReads;
 }
 
-void MPEGDemux::continueReadProcessing(void* clientData,
+void MPEG1or2Demux::continueReadProcessing(void* clientData,
 				       unsigned char* /*ptr*/,
 				       unsigned /*size*/) {
-  MPEGDemux* demux = (MPEGDemux*)clientData;
+  MPEG1or2Demux* demux = (MPEG1or2Demux*)clientData;
   demux->continueReadProcessing();
 }
 
-void MPEGDemux::continueReadProcessing() {
+void MPEG1or2Demux::continueReadProcessing() {
   while (fNumPendingReads > 0) {
     unsigned char acquiredStreamIdTag = fParser->parse();
 
@@ -166,7 +166,7 @@ void MPEGDemux::continueReadProcessing() {
   }
 }
 
-void MPEGDemux::getNextFrame(unsigned char streamIdTag,
+void MPEG1or2Demux::getNextFrame(unsigned char streamIdTag,
 			     unsigned char* to, unsigned maxSize,
 			     afterGettingFunc* afterGettingFunc,
 			     void* afterGettingClientData,
@@ -184,13 +184,13 @@ void MPEGDemux::getNextFrame(unsigned char streamIdTag,
   } // otherwise the continued read processing has already been taken care of
 }
 
-void MPEGDemux::stopGettingFrames(unsigned char streamIdTag) {
+void MPEG1or2Demux::stopGettingFrames(unsigned char streamIdTag) {
     struct OutputDescriptor& out = fOutput[streamIdTag];
     out.isCurrentlyActive = out.isCurrentlyAwaitingData = False;
 }
 
-void MPEGDemux::handleClosure(void* clientData) {
-  MPEGDemux* demux = (MPEGDemux*)clientData;
+void MPEG1or2Demux::handleClosure(void* clientData) {
+  MPEG1or2Demux* demux = (MPEG1or2Demux*)clientData;
 
   demux->fNumPendingReads = 0;
 
@@ -223,10 +223,10 @@ void MPEGDemux::handleClosure(void* clientData) {
 
 #include <string.h>
 
-MPEGProgramStreamParser::MPEGProgramStreamParser(MPEGDemux* usingSource,
+MPEGProgramStreamParser::MPEGProgramStreamParser(MPEG1or2Demux* usingSource,
 						 FramedSource* inputSource)
-  : StreamParser(inputSource, MPEGDemux::handleClosure, usingSource,
-		 &MPEGDemux::continueReadProcessing, usingSource),
+  : StreamParser(inputSource, MPEG1or2Demux::handleClosure, usingSource,
+		 &MPEG1or2Demux::continueReadProcessing, usingSource),
   fUsingSource(usingSource), fCurrentParseState(PARSING_PACK_HEADER) {
 }
 
@@ -583,7 +583,7 @@ unsigned char MPEGProgramStreamParser::parsePESPacket() {
 
     // Check whether our using source is interested in this stream type.
     // If so, deliver the frame to him:
-    MPEGDemux::OutputDescriptor_t& out = fUsingSource->fOutput[stream_id]; 
+    MPEG1or2Demux::OutputDescriptor_t& out = fUsingSource->fOutput[stream_id]; 
     if (out.isCurrentlyAwaitingData) {
       unsigned numBytesToCopy;
       if (PES_packet_length > out.maxSize) {

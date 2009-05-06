@@ -18,19 +18,19 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A HTTP Sink specifically for MPEG Video
 // Implementation
 
-#include "MPEGVideoHTTPSink.hh"
+#include "MPEG1or2VideoHTTPSink.hh"
 
-////////// MPEGVideoHTTPSink //////////
+////////// MPEG1or2VideoHTTPSink //////////
 
-MPEGVideoHTTPSink* MPEGVideoHTTPSink::createNew(UsageEnvironment& env, Port ourPort) {
+MPEG1or2VideoHTTPSink* MPEG1or2VideoHTTPSink::createNew(UsageEnvironment& env, Port ourPort) {
   int ourSocket = -1;
-  MPEGVideoHTTPSink* newSink = NULL;
+  MPEG1or2VideoHTTPSink* newSink = NULL;
 
   do {
     int ourSocket = setUpOurSocket(env, ourPort);
     if (ourSocket == -1) break;
 
-    MPEGVideoHTTPSink* newSink = new MPEGVideoHTTPSink(env, ourSocket);
+    MPEG1or2VideoHTTPSink* newSink = new MPEG1or2VideoHTTPSink(env, ourSocket);
     if (newSink == NULL) break;
     
     appendPortNum(env, ourPort);
@@ -43,16 +43,16 @@ MPEGVideoHTTPSink* MPEGVideoHTTPSink::createNew(UsageEnvironment& env, Port ourP
   return NULL;
 }
 
-MPEGVideoHTTPSink::MPEGVideoHTTPSink(UsageEnvironment& env, int ourSocket)
+MPEG1or2VideoHTTPSink::MPEG1or2VideoHTTPSink(UsageEnvironment& env, int ourSocket)
   : HTTPSink(env, ourSocket), fHaveSeenFirstVSH(False) {
 }
 
-MPEGVideoHTTPSink::~MPEGVideoHTTPSink() {
+MPEG1or2VideoHTTPSink::~MPEG1or2VideoHTTPSink() {
 }
 
 #define VIDEO_SEQUENCE_HEADER_START_CODE 0x000001B3
 
-Boolean MPEGVideoHTTPSink::isUseableFrame(unsigned char* framePtr,
+Boolean MPEG1or2VideoHTTPSink::isUseableFrame(unsigned char* framePtr,
 					  unsigned frameSize) {
   // Some clients get confused if the data we give them does not start
   // with a 'video_sequence_header', so we ignore any frames that precede

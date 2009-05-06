@@ -605,7 +605,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
           // Note that fReadSource will differ from fRTPSource in this case
     } else if (strcmp(fCodecName, "MPA") == 0) { // MPEG-1 or 2 audio
       fReadSource = fRTPSource
-	= MPEGAudioRTPSource::createNew(env(), fRTPSocket,
+	= MPEG1or2AudioRTPSource::createNew(env(), fRTPSocket,
 					fRTPPayloadFormat,
 					fRTPTimestampFrequency);
     } else if (strcmp(fCodecName, "MPA-ROBUST") == 0) { // robust MP3 audio
@@ -657,7 +657,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 					   fIndexdeltalength);
     } else if (strcmp(fCodecName, "MPV") == 0) { // MPEG-1 or 2 video
       fReadSource = fRTPSource
-	= MPEGVideoRTPSource::createNew(env(), fRTPSocket,
+	= MPEG1or2VideoRTPSource::createNew(env(), fRTPSocket,
 					fRTPPayloadFormat,
 					fRTPTimestampFrequency);
     } else if (strcmp(fCodecName, "H261") == 0) { // H.261

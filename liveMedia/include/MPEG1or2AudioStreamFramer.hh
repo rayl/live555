@@ -18,22 +18,22 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A filter that breaks up an MPEG (1,2) audio elementary stream into frames
 // C++ header
 
-#ifndef _MPEG_AUDIO_STREAM_FRAMER_HH
-#define _MPEG_AUDIO_STREAM_FRAMER_HH
+#ifndef _MPEG_1OR2_AUDIO_STREAM_FRAMER_HH
+#define _MPEG_1OR2_AUDIO_STREAM_FRAMER_HH
 
 #ifndef _FRAMED_FILTER_HH
 #include "FramedFilter.hh"
 #endif
 
-class MPEGAudioStreamFramer: public FramedFilter {
+class MPEG1or2AudioStreamFramer: public FramedFilter {
 public:
-  static MPEGAudioStreamFramer*
+  static MPEG1or2AudioStreamFramer*
   createNew(UsageEnvironment& env, FramedSource* inputSource);
 
 private:
-  MPEGAudioStreamFramer(UsageEnvironment& env, FramedSource* inputSource);
+  MPEG1or2AudioStreamFramer(UsageEnvironment& env, FramedSource* inputSource);
       // called only by createNew()
-  virtual ~MPEGAudioStreamFramer();
+  virtual ~MPEG1or2AudioStreamFramer();
 
   static void continueReadProcessing(void* clientData,
 				     unsigned char* ptr, unsigned size);
@@ -51,8 +51,8 @@ private:
   struct timeval fNextFramePresentationTime;
 
 private: // parsing state
-  class MPEGAudioStreamParser* fParser;
-  friend class MPEGAudioStreamParser; // hack
+  class MPEG1or2AudioStreamParser* fParser;
+  friend class MPEG1or2AudioStreamParser; // hack
 };
 
 #endif

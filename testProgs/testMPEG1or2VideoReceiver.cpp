@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 #endif
   
   // Create the data source: a "MPEG Video RTP source"
-  sessionState.source = MPEGVideoRTPSource::createNew(*env, &rtpGroupsock);
+  sessionState.source = MPEG1or2VideoRTPSource::createNew(*env, &rtpGroupsock);
 
   // Create (and start) a 'RTCP instance' for the RTP source:
   const unsigned totalSessionBandwidth = 160; // in kbps; for RTCP b/w share

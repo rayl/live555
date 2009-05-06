@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
   RTPSource* rtpSource;
 #ifndef STREAM_USING_ADUS
   // Create the data source: a "MPEG Audio RTP source"
-  rtpSource = MPEGAudioRTPSource::createNew(*env, &rtpGroupsock);
+  rtpSource = MPEG1or2AudioRTPSource::createNew(*env, &rtpGroupsock);
 #else
   // Create the data source: a "MP3 *ADU* RTP source"
   unsigned char rtpPayloadFormat = 96; // a dynamic payload type

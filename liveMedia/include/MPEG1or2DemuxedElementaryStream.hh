@@ -18,19 +18,19 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A MPEG 1 or 2 Elementary Stream, demultiplexed from a Program Stream
 // C++ header
 
-#ifndef _MPEG_DEMUXED_ELEMENTARY_STREAM_HH
-#define _MPEG_DEMUXED_ELEMENTARY_STREAM_HH
+#ifndef _MPEG_1OR2_DEMUXED_ELEMENTARY_STREAM_HH
+#define _MPEG_1OR2_DEMUXED_ELEMENTARY_STREAM_HH
 
-#ifndef _MPEG_DEMUX_HH
-#include "MPEGDemux.hh"
+#ifndef _MPEG_1OR2_DEMUX_HH
+#include "MPEG1or2Demux.hh"
 #endif
 
-class MPEGDemuxedElementaryStream: public FramedSource {
-private: // We are created only by a MPEGDemux (a friend)
-  MPEGDemuxedElementaryStream(UsageEnvironment& env,
+class MPEG1or2DemuxedElementaryStream: public FramedSource {
+private: // We are created only by a MPEG1or2Demux (a friend)
+  MPEG1or2DemuxedElementaryStream(UsageEnvironment& env,
 			      unsigned char streamIdTag,
-			      MPEGDemux& sourceDemux);
-  virtual ~MPEGDemuxedElementaryStream();
+			      MPEG1or2Demux& sourceDemux);
+  virtual ~MPEG1or2DemuxedElementaryStream();
 
 private:
   // redefined virtual functions:
@@ -46,10 +46,10 @@ private:
 
 private:
   unsigned char fOurStreamIdTag;
-  MPEGDemux& fOurSourceDemux;
+  MPEG1or2Demux& fOurSourceDemux;
   char const* fMIMEtype;
 
-  friend class MPEGDemux;
+  friend class MPEG1or2Demux;
 };
 
 #endif

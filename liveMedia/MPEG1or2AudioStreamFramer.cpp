@@ -18,18 +18,18 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A filter that breaks up an MPEG (1,2) audio elementary stream into frames
 // Implementation
 
-#include "MPEGAudioStreamFramer.hh"
+#include "MPEG1or2AudioStreamFramer.hh"
 #include "StreamParser.hh"
 #include "MP3Internals.hh"
 #include <GroupsockHelper.hh>
 
-////////// MPEGAudioStreamParser definition //////////
+////////// MPEG1or2AudioStreamParser definition //////////
 
-class MPEGAudioStreamParser: public StreamParser {
+class MPEG1or2AudioStreamParser: public StreamParser {
 public:
-  MPEGAudioStreamParser(MPEGAudioStreamFramer* usingSource,
+  MPEG1or2AudioStreamParser(MPEG1or2AudioStreamFramer* usingSource,
 			FramedSource* inputSource);
-  virtual ~MPEGAudioStreamParser();
+  virtual ~MPEG1or2AudioStreamParser();
 
 public:
   unsigned parse();
@@ -48,7 +48,7 @@ private:
 };
 
 
-////////// MPEGAudioStreamFramer implementation //////////
+////////// MPEG1or2AudioStreamFramer implementation //////////
 
 #ifdef BSD
 static struct timezone Idunno;
@@ -56,27 +56,27 @@ static struct timezone Idunno;
 static int Idunno;
 #endif
 
-MPEGAudioStreamFramer::MPEGAudioStreamFramer(UsageEnvironment& env,
+MPEG1or2AudioStreamFramer::MPEG1or2AudioStreamFramer(UsageEnvironment& env,
 					     FramedSource* inputSource)
   : FramedFilter(env, inputSource) {
   // Use the current wallclock time as the initial 'presentation time':
   gettimeofday(&fNextFramePresentationTime, &Idunno);
 
-  fParser = new MPEGAudioStreamParser(this, inputSource);
+  fParser = new MPEG1or2AudioStreamParser(this, inputSource);
 }
 
-MPEGAudioStreamFramer::~MPEGAudioStreamFramer() {
+MPEG1or2AudioStreamFramer::~MPEG1or2AudioStreamFramer() {
   delete fParser;
 }
 
-MPEGAudioStreamFramer*
-MPEGAudioStreamFramer::createNew(UsageEnvironment& env,
+MPEG1or2AudioStreamFramer*
+MPEG1or2AudioStreamFramer::createNew(UsageEnvironment& env,
 				 FramedSource* inputSource) {
   // Need to add source type checking here???  #####
-  return new MPEGAudioStreamFramer(env, inputSource);
+  return new MPEG1or2AudioStreamFramer(env, inputSource);
 }
 
-void MPEGAudioStreamFramer::doGetNextFrame() {
+void MPEG1or2AudioStreamFramer::doGetNextFrame() {
   fParser->registerReadInterest(fTo, fMaxSize);
   continueReadProcessing();
 }
@@ -85,7 +85,7 @@ void MPEGAudioStreamFramer::doGetNextFrame() {
 
 static unsigned const numSamplesByLayer[4] = {0, 384, 1152, 1152};
 
-struct timeval MPEGAudioStreamFramer::currentFramePlayTime() const {
+struct timeval MPEG1or2AudioStreamFramer::currentFramePlayTime() const {
   MP3FrameParams const& fr = fParser->currentFrame();
   unsigned const numSamples = numSamplesByLayer[fr.layer];
   unsigned const freq = fr.samplingFreq*(1 + fr.isMPEG2);
@@ -100,7 +100,7 @@ struct timeval MPEGAudioStreamFramer::currentFramePlayTime() const {
   return result;
 }
 
-float MPEGAudioStreamFramer::getPlayTime(unsigned numFrames) const {
+float MPEG1or2AudioStreamFramer::getPlayTime(unsigned numFrames) const {
   // Note: This won't work properly for VBR streams #####
   struct timeval const pt = currentFramePlayTime();
   float fpt = pt.tv_sec + pt.tv_usec/(float)MILLION;
@@ -108,14 +108,14 @@ float MPEGAudioStreamFramer::getPlayTime(unsigned numFrames) const {
   return numFrames*fpt;
 }
 
-void MPEGAudioStreamFramer::continueReadProcessing(void* clientData,
+void MPEG1or2AudioStreamFramer::continueReadProcessing(void* clientData,
 						   unsigned char* /*ptr*/,
 						   unsigned /*size*/) {
-  MPEGAudioStreamFramer* framer = (MPEGAudioStreamFramer*)clientData;
+  MPEG1or2AudioStreamFramer* framer = (MPEG1or2AudioStreamFramer*)clientData;
   framer->continueReadProcessing();
 }
 
-void MPEGAudioStreamFramer::continueReadProcessing() {
+void MPEG1or2AudioStreamFramer::continueReadProcessing() {
   unsigned acquiredFrameSize = fParser->parse();
   if (acquiredFrameSize > 0) {
     // We were able to acquire a frame from the input.
@@ -143,25 +143,25 @@ void MPEGAudioStreamFramer::continueReadProcessing() {
 }
 
 
-////////// MPEGAudioStreamParser implementation //////////
+////////// MPEG1or2AudioStreamParser implementation //////////
 
-MPEGAudioStreamParser
-::MPEGAudioStreamParser(MPEGAudioStreamFramer* usingSource,
+MPEG1or2AudioStreamParser
+::MPEG1or2AudioStreamParser(MPEG1or2AudioStreamFramer* usingSource,
 			FramedSource* inputSource)
   : StreamParser(inputSource, FramedSource::handleClosure, usingSource,
-		 &MPEGAudioStreamFramer::continueReadProcessing, usingSource) {
+		 &MPEG1or2AudioStreamFramer::continueReadProcessing, usingSource) {
 }
 
-MPEGAudioStreamParser::~MPEGAudioStreamParser() {
+MPEG1or2AudioStreamParser::~MPEG1or2AudioStreamParser() {
 }
 
-void MPEGAudioStreamParser::registerReadInterest(unsigned char* to,
+void MPEG1or2AudioStreamParser::registerReadInterest(unsigned char* to,
 						 unsigned maxSize) {
   fTo = to;
   fMaxSize = maxSize;
 }
 
-unsigned MPEGAudioStreamParser::parse() {
+unsigned MPEG1or2AudioStreamParser::parse() {
   try {
     saveParserState();
     
@@ -181,7 +181,7 @@ unsigned MPEGAudioStreamParser::parse() {
     return frameSize;
   } catch (int /*e*/) {
 #ifdef DEBUG
-    fprintf(stderr, "MPEGAudioStreamParser::parse() EXCEPTION\n");
+    fprintf(stderr, "MPEG1or2AudioStreamParser::parse() EXCEPTION\n");
 #endif
     return 0;  // the parsing got interrupted
   }

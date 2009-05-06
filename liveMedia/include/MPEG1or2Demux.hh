@@ -18,25 +18,25 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Demultiplexer for a MPEG 1 or 2 Program Stream
 // C++ header
 
-#ifndef _MPEG_DEMUX_HH
-#define _MPEG_DEMUX_HH
+#ifndef _MPEG_1OR2_DEMUX_HH
+#define _MPEG_1OR2_DEMUX_HH
 
 #ifndef _FRAMED_SOURCE_HH
 #include "FramedSource.hh"
 #endif
 
-class MPEGDemuxedElementaryStream; // forward
+class MPEG1or2DemuxedElementaryStream; // forward
 
-class MPEGDemux: public Medium {
+class MPEG1or2Demux: public Medium {
 public:
-  static MPEGDemux* createNew(UsageEnvironment& env,
+  static MPEG1or2Demux* createNew(UsageEnvironment& env,
 			      FramedSource* inputSource);
 
-  MPEGDemuxedElementaryStream* newElementaryStream(unsigned char streamIdTag);
+  MPEG1or2DemuxedElementaryStream* newElementaryStream(unsigned char streamIdTag);
 
   // Specialized versions of the above for audio and video:
-  MPEGDemuxedElementaryStream* newAudioStream();
-  MPEGDemuxedElementaryStream* newVideoStream();
+  MPEG1or2DemuxedElementaryStream* newAudioStream();
+  MPEG1or2DemuxedElementaryStream* newVideoStream();
 
   typedef void (afterGettingFunc)(void* clientData, unsigned frameSize,
                                   struct timeval presentationTime);
@@ -61,10 +61,10 @@ public:
   FramedSource* inputSource() const { return fInputSource; }
 
 private:
-  MPEGDemux(UsageEnvironment& env,
+  MPEG1or2Demux(UsageEnvironment& env,
 	    FramedSource* inputSource);
       // called only by createNew()
-  virtual ~MPEGDemux();
+  virtual ~MPEG1or2Demux();
 
   void registerReadInterest(unsigned char streamIdTag,
 			    unsigned char* to, unsigned maxSize,

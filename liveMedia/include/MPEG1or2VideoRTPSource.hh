@@ -18,25 +18,25 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // MPEG-1 or MPEG-2 Video RTP Sources
 // C++ header
 
-#ifndef _MPEG_VIDEO_RTP_SOURCE_HH
-#define _MPEG_VIDEO_RTP_SOURCE_HH
+#ifndef _MPEG_1OR2_VIDEO_RTP_SOURCE_HH
+#define _MPEG_1OR2_VIDEO_RTP_SOURCE_HH
 
 #ifndef _MULTI_FRAMED_RTP_SOURCE_HH
 #include "MultiFramedRTPSource.hh"
 #endif
 
-class MPEGVideoRTPSource: public MultiFramedRTPSource {
+class MPEG1or2VideoRTPSource: public MultiFramedRTPSource {
 public:
-  static MPEGVideoRTPSource*
+  static MPEG1or2VideoRTPSource*
   createNew(UsageEnvironment& env, Groupsock* RTPgs,
 	    unsigned char rtpPayloadFormat = 32,
 	    unsigned rtpPayloadFrequency = 90000);
 
 protected:
-  virtual ~MPEGVideoRTPSource();
+  virtual ~MPEG1or2VideoRTPSource();
 
 private:
-  MPEGVideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
+  MPEG1or2VideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 		     unsigned char rtpPayloadFormat,
 		     unsigned rtpTimestampFrequency);
       // called only by createNew()

@@ -11,10 +11,10 @@ all:	$(ALL)
 	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS) $<
 
 MP3_SOURCE_OBJS = MP3FileSource.$(OBJ) MP3HTTPSource.$(OBJ) MP3Transcoder.$(OBJ) MP3ADU.$(OBJ) MP3ADUdescriptor.$(OBJ) MP3ADUinterleaving.$(OBJ) MP3ADUTranscoder.$(OBJ) MP3StreamState.$(OBJ) MP3Internals.$(OBJ) MP3InternalsHuffman.$(OBJ) MP3InternalsHuffmanTable.$(OBJ) MP3ADURTPSource.$(OBJ)
-MPEG_SOURCE_OBJS = MPEGDemux.$(OBJ) MPEGDemuxedElementaryStream.$(OBJ) MPEGVideoStreamFramer.$(OBJ) MPEGAudioStreamFramer.$(OBJ) MPEGAudioRTPSource.$(OBJ) MPEG4LATMAudioRTPSource.$(OBJ) MPEG4ESVideoRTPSource.$(OBJ) MPEG4GenericRTPSource.$(OBJ) $(MP3_SOURCE_OBJS) MPEGVideoRTPSource.$(OBJ)
+MPEG_SOURCE_OBJS = MPEG1or2Demux.$(OBJ) MPEG1or2DemuxedElementaryStream.$(OBJ) MPEGVideoStreamFramer.$(OBJ) MPEG1or2VideoStreamFramer.$(OBJ) MPEG1or2AudioStreamFramer.$(OBJ) MPEG1or2AudioRTPSource.$(OBJ) MPEG4LATMAudioRTPSource.$(OBJ) MPEG4ESVideoRTPSource.$(OBJ) MPEG4GenericRTPSource.$(OBJ) $(MP3_SOURCE_OBJS) MPEG1or2VideoRTPSource.$(OBJ)
 AC3_SOURCE_OBJS = AC3AudioStreamFramer.$(OBJ) AC3AudioRTPSource.$(OBJ)
 MP3_SINK_OBJS = MP3ADURTPSink.$(OBJ)
-MPEG_SINK_OBJS = MPEGAudioRTPSink.$(OBJ) $(MP3_SINK_OBJS) MPEGVideoRTPSink.$(OBJ) MPEGVideoHTTPSink.$(OBJ) MPEG4GenericRTPSink.$(OBJ)
+MPEG_SINK_OBJS = MPEG1or2AudioRTPSink.$(OBJ) $(MP3_SINK_OBJS) MPEG1or2VideoRTPSink.$(OBJ) MPEG1or2VideoHTTPSink.$(OBJ) MPEG4GenericRTPSink.$(OBJ)
 AC3_SINK_OBJS = AC3AudioRTPSink.$(OBJ)
 
 MISC_SOURCE_OBJS = MediaSource.$(OBJ) FramedSource.$(OBJ) FramedFileSource.$(OBJ) FramedFilter.$(OBJ) ByteStreamFileSource.$(OBJ) ByteStreamMultiFileSource.$(OBJ) BasicUDPSource.$(OBJ) DeviceSource.$(OBJ) AudioInputDevice.$(OBJ) WAVAudioFileSource.$(OBJ) $(MPEG_SOURCE_OBJS) $(AC3_SOURCE_OBJS) JPEGVideoSource.$(OBJ)
@@ -82,17 +82,19 @@ AudioInputDevice.$(CPP):	include/AudioInputDevice.hh
 include/AudioInputDevice.hh:	include/FramedSource.hh
 WAVAudioFileSource.$(CPP):	include/WAVAudioFileSource.hh
 include/WAVAudioFileSource.hh:	include/AudioInputDevice.hh
-MPEGDemux.$(CPP):	include/MPEGDemux.hh include/MPEGDemuxedElementaryStream.hh StreamParser.hh
-include/MPEGDemux.hh:		include/FramedSource.hh
-include/MPEGDemuxedElementaryStream.hh:	include/MPEGDemux.hh
+MPEG1or2Demux.$(CPP):	include/MPEG1or2Demux.hh include/MPEG1or2DemuxedElementaryStream.hh StreamParser.hh
+include/MPEG1or2Demux.hh:		include/FramedSource.hh
+include/MPEG1or2DemuxedElementaryStream.hh:	include/MPEG1or2Demux.hh
 StreamParser.hh:	include/FramedSource.hh
-MPEGDemuxedElementaryStream.$(CPP):	include/MPEGDemuxedElementaryStream.hh
-MPEGVideoStreamFramer.$(CPP):	include/MPEGVideoStreamFramer.hh StreamParser.hh
+MPEG1or2DemuxedElementaryStream.$(CPP):	include/MPEG1or2DemuxedElementaryStream.hh
+MPEGVideoStreamFramer.$(CPP):	include/MPEGVideoStreamFramer.hh
 include/MPEGVideoStreamFramer.hh:	include/FramedFilter.hh
-MPEGAudioStreamFramer.$(CPP):	include/MPEGAudioStreamFramer.hh StreamParser.hh MP3Internals.hh
-include/MPEGAudioStreamFramer.hh:	include/FramedFilter.hh
-MPEGAudioRTPSource.$(CPP):	include/MPEGAudioRTPSource.hh
-include/MPEGAudioRTPSource.hh:	include/MultiFramedRTPSource.hh
+MPEG1or2VideoStreamFramer.$(CPP):	include/MPEG1or2VideoStreamFramer.hh StreamParser.hh
+include/MPEG1or2VideoStreamFramer.hh:	include/MPEGVideoStreamFramer.hh
+MPEG1or2AudioStreamFramer.$(CPP):	include/MPEG1or2AudioStreamFramer.hh StreamParser.hh MP3Internals.hh
+include/MPEG1or2AudioStreamFramer.hh:	include/FramedFilter.hh
+MPEG1or2AudioRTPSource.$(CPP):	include/MPEG1or2AudioRTPSource.hh
+include/MPEG1or2AudioRTPSource.hh:	include/MultiFramedRTPSource.hh
 MPEG4LATMAudioRTPSource.$(CPP):	include/MPEG4LATMAudioRTPSource.hh
 include/MPEG4LATMAudioRTPSource.hh:	include/MultiFramedRTPSource.hh
 MPEG4ESVideoRTPSource.$(CPP):	include/MPEG4ESVideoRTPSource.hh
@@ -121,8 +123,8 @@ MP3InternalsHuffman.$(CPP):	MP3InternalsHuffman.hh
 MP3InternalsHuffmanTable.$(CPP):	MP3InternalsHuffman.hh
 MP3ADURTPSource.$(CPP):	include/MP3ADURTPSource.hh MP3ADUdescriptor.hh
 include/MP3ADURTPSource.hh:	include/MultiFramedRTPSource.hh
-MPEGVideoRTPSource.$(CPP):	include/MPEGVideoRTPSource.hh
-include/MPEGVideoRTPSource.hh:	include/MultiFramedRTPSource.hh
+MPEG1or2VideoRTPSource.$(CPP):	include/MPEG1or2VideoRTPSource.hh
+include/MPEG1or2VideoRTPSource.hh:	include/MultiFramedRTPSource.hh
 AC3AudioStreamFramer.$(CPP):	include/AC3AudioStreamFramer.hh StreamParser.hh
 include/AC3AudioStreamFramer.hh:	include/FramedFilter.hh
 AC3AudioRTPSource.$(CPP):	include/AC3AudioRTPSource.hh
@@ -144,14 +146,14 @@ include/AudioRTPSink.hh:	include/MultiFramedRTPSink.hh
 VideoRTPSink.$(CPP):		include/VideoRTPSink.hh
 include/VideoRTPSink.hh:	include/MultiFramedRTPSink.hh
 RTPInterface.$(CPP):		include/RTPInterface.hh
-MPEGAudioRTPSink.$(CPP):	include/MPEGAudioRTPSink.hh
-include/MPEGAudioRTPSink.hh:	include/AudioRTPSink.hh
+MPEG1or2AudioRTPSink.$(CPP):	include/MPEG1or2AudioRTPSink.hh
+include/MPEG1or2AudioRTPSink.hh:	include/AudioRTPSink.hh
 MP3ADURTPSink.$(CPP):	include/MP3ADURTPSink.hh
 include/MP3ADURTPSink.hh:	include/AudioRTPSink.hh
-MPEGVideoRTPSink.$(CPP):	include/MPEGVideoRTPSink.hh include/MPEGVideoStreamFramer.hh
-include/MPEGVideoRTPSink.hh:	include/VideoRTPSink.hh
-MPEGVideoHTTPSink.$(CPP):	include/MPEGVideoHTTPSink.hh
-include/MPEGVideoHTTPSink.hh:	include/HTTPSink.hh
+MPEG1or2VideoRTPSink.$(CPP):	include/MPEG1or2VideoRTPSink.hh include/MPEG1or2VideoStreamFramer.hh
+include/MPEG1or2VideoRTPSink.hh:	include/VideoRTPSink.hh
+MPEG1or2VideoHTTPSink.$(CPP):	include/MPEG1or2VideoHTTPSink.hh
+include/MPEG1or2VideoHTTPSink.hh:	include/HTTPSink.hh
 MPEG4GenericRTPSink.$(CPP):	include/MPEG4GenericRTPSink.hh
 include/MPEG4GenericRTPSink.hh:	include/MultiFramedRTPSink.hh
 AC3AudioRTPSink.$(CPP):	include/AC3AudioRTPSink.hh
@@ -190,7 +192,7 @@ StreamParser.$(CPP):	StreamParser.hh
 our_md5.$(C):		our_md5.h
 our_md5hl.$(C):		our_md5.h
 
-include/liveMedia.hh: include/MPEGAudioRTPSink.hh include/MP3ADURTPSink.hh include/MPEGVideoRTPSink.hh include/FileSink.hh include/MPEGVideoHTTPSink.hh include/GSMAudioRTPSink.hh include/H263plusVideoRTPSink.hh include/JPEGVideoRTPSink.hh include/SimpleRTPSink.hh include/uLawAudioFilter.hh include/ByteStreamFileSource.hh include/BasicUDPSource.hh include/SimpleRTPSource.hh include/MPEGAudioRTPSource.hh include/MPEG4LATMAudioRTPSource.hh include/MPEG4ESVideoRTPSource.hh include/MPEG4GenericRTPSource.hh include/MP3ADURTPSource.hh include/QCELPAudioRTPSource.hh include/JPEGVideoRTPSource.hh include/MPEGVideoRTPSource.hh include/H261VideoRTPSource.hh include/H263plusVideoRTPSource.hh include/MP3HTTPSource.hh include/MP3ADU.hh include/MP3ADUinterleaving.hh include/MP3Transcoder.hh include/MPEGDemuxedElementaryStream.hh include/MPEGAudioStreamFramer.hh include/MPEGVideoStreamFramer.hh include/AC3AudioStreamFramer.hh include/AC3AudioRTPSource.hh include/AC3AudioRTPSink.hh include/MPEG4GenericRTPSink.hh include/DeviceSource.hh include/AudioInputDevice.hh include/WAVAudioFileSource.hh include/PrioritizedRTPStreamSelector.hh include/RTSPServer.hh include/RTSPClient.hh include/SIPClient.hh include/QuickTimeFileSink.hh include/QuickTimeGenericRTPSource.hh include/PassiveServerMediaSession.hh
+include/liveMedia.hh: include/MPEG1or2AudioRTPSink.hh include/MP3ADURTPSink.hh include/MPEG1or2VideoRTPSink.hh include/FileSink.hh include/MPEG1or2VideoHTTPSink.hh include/GSMAudioRTPSink.hh include/H263plusVideoRTPSink.hh include/JPEGVideoRTPSink.hh include/SimpleRTPSink.hh include/uLawAudioFilter.hh include/ByteStreamFileSource.hh include/BasicUDPSource.hh include/SimpleRTPSource.hh include/MPEG1or2AudioRTPSource.hh include/MPEG4LATMAudioRTPSource.hh include/MPEG4ESVideoRTPSource.hh include/MPEG4GenericRTPSource.hh include/MP3ADURTPSource.hh include/QCELPAudioRTPSource.hh include/JPEGVideoRTPSource.hh include/MPEG1or2VideoRTPSource.hh include/H261VideoRTPSource.hh include/H263plusVideoRTPSource.hh include/MP3HTTPSource.hh include/MP3ADU.hh include/MP3ADUinterleaving.hh include/MP3Transcoder.hh include/MPEG1or2DemuxedElementaryStream.hh include/MPEG1or2AudioStreamFramer.hh include/MPEG1or2VideoStreamFramer.hh include/AC3AudioStreamFramer.hh include/AC3AudioRTPSource.hh include/AC3AudioRTPSink.hh include/MPEG4GenericRTPSink.hh include/DeviceSource.hh include/AudioInputDevice.hh include/WAVAudioFileSource.hh include/PrioritizedRTPStreamSelector.hh include/RTSPServer.hh include/RTSPClient.hh include/SIPClient.hh include/QuickTimeFileSink.hh include/QuickTimeGenericRTPSource.hh include/PassiveServerMediaSession.hh
 
 clean:
 	-rm -rf *.$(OBJ) $(ALL) core *.core *~ include/*~

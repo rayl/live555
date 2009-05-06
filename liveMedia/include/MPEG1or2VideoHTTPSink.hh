@@ -18,22 +18,22 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A HTTP Sink specifically for MPEG Video
 // C++ header
 
-#ifndef _MPEG_VIDEO_HTTP_SINK_HH
-#define _MPEG_VIDEO_HTTP_SINK_HH
+#ifndef _MPEG_1OR2_VIDEO_HTTP_SINK_HH
+#define _MPEG_1OR2_VIDEO_HTTP_SINK_HH
 
 #ifndef _HTTP_SINK_HH
 #include "HTTPSink.hh"
 #endif
 
-class MPEGVideoHTTPSink: public HTTPSink {
+class MPEG1or2VideoHTTPSink: public HTTPSink {
 public:
-  static MPEGVideoHTTPSink* createNew(UsageEnvironment& env, Port ourPort);
+  static MPEG1or2VideoHTTPSink* createNew(UsageEnvironment& env, Port ourPort);
   // if ourPort.num() == 0, we'll choose (& return) port
 
 protected:
-  MPEGVideoHTTPSink(UsageEnvironment& env, int ourSocket);
+  MPEG1or2VideoHTTPSink(UsageEnvironment& env, int ourSocket);
       // called only by createNew()
-  virtual ~MPEGVideoHTTPSink();
+  virtual ~MPEG1or2VideoHTTPSink();
 
 private: // redefined virtual functions:
   virtual Boolean isUseableFrame(unsigned char* framePtr, unsigned frameSize);

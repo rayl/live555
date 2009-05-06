@@ -18,28 +18,28 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // RTP sink for MPEG video (RFC 2250)
 // Implementation
 
-#include "MPEGVideoRTPSink.hh"
-#include "MPEGVideoStreamFramer.hh" // hack #####
+#include "MPEG1or2VideoRTPSink.hh"
+#include "MPEG1or2VideoStreamFramer.hh" // hack #####
 
-MPEGVideoRTPSink::MPEGVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
+MPEG1or2VideoRTPSink::MPEG1or2VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs)
   : VideoRTPSink(env, RTPgs, 32, 90000, "MPV") {
   fPictureState.temporal_reference = 0;
   fPictureState.picture_coding_type = fPictureState.vector_code_bits = 0;
 }
 
-MPEGVideoRTPSink::~MPEGVideoRTPSink() {
+MPEG1or2VideoRTPSink::~MPEG1or2VideoRTPSink() {
 }
 
-MPEGVideoRTPSink*
-MPEGVideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
-  return new MPEGVideoRTPSink(env, RTPgs);
+MPEG1or2VideoRTPSink*
+MPEG1or2VideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs) {
+  return new MPEG1or2VideoRTPSink(env, RTPgs);
 }
 
-Boolean MPEGVideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
-  return source.isMPEGVideoStreamFramer();
+Boolean MPEG1or2VideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
+  return source.isMPEG1or2VideoStreamFramer();
 }
 
-Boolean MPEGVideoRTPSink
+Boolean MPEG1or2VideoRTPSink
 ::frameCanAppearAfterPacketStart(unsigned char const* frameStart,
 				 unsigned numBytesInFrame) const {
   // A frame can appear at other than the first position in a packet
@@ -50,7 +50,7 @@ Boolean MPEGVideoRTPSink
 #define VIDEO_SEQUENCE_HEADER_START_CODE 0x000001B3
 #define PICTURE_START_CODE               0x00000100
 
-void MPEGVideoRTPSink
+void MPEG1or2VideoRTPSink
 ::doSpecialFrameHandling(unsigned fragmentationOffset,
 			 unsigned char* frameStart,
 			 unsigned numBytesInFrame,
@@ -102,7 +102,7 @@ void MPEGVideoRTPSink
       thisFrameIsASlice = True;
 
       if (fragmentationOffset > 0) { // sanity check
-	envir() << "Warning: MPEGVideoRTPSink::doSpecialFrameHandling saw slice start code "
+	envir() << "Warning: MPEG1or2VideoRTPSink::doSpecialFrameHandling saw slice start code "
 		<< (void*)startCode
 		<< ", but also fragmentationOffset "
 		<< fragmentationOffset << "\n";
@@ -116,7 +116,7 @@ void MPEGVideoRTPSink
     thisFrameIsASlice = True;
 
     if (fragmentationOffset == 0) { // sanity check
-      envir() << "Warning: MPEGVideoRTPSink::doSpecialFrameHandling saw strange first 4 bytes "
+      envir() << "Warning: MPEG1or2VideoRTPSink::doSpecialFrameHandling saw strange first 4 bytes "
 	      << (void*)startCode << ", but we're not a fragment\n";
     }
   }
@@ -151,21 +151,21 @@ void MPEGVideoRTPSink
 
   // Set the RTP 'M' (marker) bit iff this frame ends (i.e., is the last
   // slice of) a picture (and there are no fragments remaining).
-  // This relies on the source being a "MPEGVideoStreamFramer",
+  // This relies on the source being a "MPEG1or2VideoStreamFramer",
   // and so is a hack.  Eventually, we need a more general mechanism
   // for accessing per-frame meta-data like this.
-  MPEGVideoStreamFramer* framerSource = (MPEGVideoStreamFramer*)fSource;
-  if (framerSource != NULL && framerSource->fPictureEndMarker
+  MPEG1or2VideoStreamFramer* framerSource = (MPEG1or2VideoStreamFramer*)fSource;
+  if (framerSource != NULL && framerSource->pictureEndMarker()
       && numRemainingBytes == 0) {
     setMarkerBit();
-    framerSource->fPictureEndMarker = False;
+    framerSource->pictureEndMarker() = False;
   }
 
   fPreviousFrameWasSlice = thisFrameIsASlice;
 }
 
 
-unsigned MPEGVideoRTPSink::specialHeaderSize() const {
+unsigned MPEG1or2VideoRTPSink::specialHeaderSize() const {
   // There's a 4 byte special audio header:
   return 4;
 }

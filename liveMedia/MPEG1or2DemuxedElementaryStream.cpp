@@ -18,13 +18,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A MPEG 1 or 2 Elementary Stream, demultiplexed from a Program Stream
 // Implementation
 
-#include "MPEGDemuxedElementaryStream.hh"
+#include "MPEG1or2DemuxedElementaryStream.hh"
 
-////////// MPEGDemuxedElementaryStream //////////
+////////// MPEG1or2DemuxedElementaryStream //////////
 
-MPEGDemuxedElementaryStream::
-MPEGDemuxedElementaryStream(UsageEnvironment& env, unsigned char streamIdTag,
-			    MPEGDemux& sourceDemux)
+MPEG1or2DemuxedElementaryStream::
+MPEG1or2DemuxedElementaryStream(UsageEnvironment& env, unsigned char streamIdTag,
+			    MPEG1or2Demux& sourceDemux)
   : FramedSource(env),
     fOurStreamIdTag(streamIdTag), fOurSourceDemux(sourceDemux) {
   // Set our MIME type string for known media types:
@@ -37,38 +37,38 @@ MPEGDemuxedElementaryStream(UsageEnvironment& env, unsigned char streamIdTag,
   }
 }
 
-MPEGDemuxedElementaryStream::~MPEGDemuxedElementaryStream() {
+MPEG1or2DemuxedElementaryStream::~MPEG1or2DemuxedElementaryStream() {
 }
 
-void MPEGDemuxedElementaryStream::doGetNextFrame() {
+void MPEG1or2DemuxedElementaryStream::doGetNextFrame() {
   fOurSourceDemux.getNextFrame(fOurStreamIdTag, fTo, fMaxSize,
 			       afterGettingFrame, this,
 			       handleClosure, this);
 }
 
-void MPEGDemuxedElementaryStream::doStopGettingFrames() {
+void MPEG1or2DemuxedElementaryStream::doStopGettingFrames() {
   fOurSourceDemux.stopGettingFrames(fOurStreamIdTag);
 }
 
-char const* MPEGDemuxedElementaryStream::MIMEtype() const {
+char const* MPEG1or2DemuxedElementaryStream::MIMEtype() const {
   return fMIMEtype;
 }
 
-unsigned MPEGDemuxedElementaryStream::maxFrameSize() const {
+unsigned MPEG1or2DemuxedElementaryStream::maxFrameSize() const {
   return 10000;
   // This is a hack, which might break for some MPEG sources, because
   // the MPEG spec allows for PES packets as large as ~65536 bytes. #####
 }
 
-float MPEGDemuxedElementaryStream::getPlayTime(unsigned numFrames) const {
+float MPEG1or2DemuxedElementaryStream::getPlayTime(unsigned numFrames) const {
   return fOurSourceDemux.inputSource()->getPlayTime(numFrames);
 }
 
-void MPEGDemuxedElementaryStream
+void MPEG1or2DemuxedElementaryStream
 ::afterGettingFrame(void* clientData,
 		    unsigned frameSize, struct timeval presentationTime) {
-  MPEGDemuxedElementaryStream* stream
-    = (MPEGDemuxedElementaryStream*)clientData;
+  MPEG1or2DemuxedElementaryStream* stream
+    = (MPEG1or2DemuxedElementaryStream*)clientData;
   stream->fFrameSize = frameSize;
   stream->fPresentationTime = presentationTime;
   FramedSource::afterGetting(stream);

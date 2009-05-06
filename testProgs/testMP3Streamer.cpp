@@ -145,7 +145,7 @@ void play() {
 			       rtpPayloadFormat);
 #else
   sessionState.sink
-    = MPEGAudioRTPSink::createNew(*env, sessionState.rtpGroupsock);
+    = MPEG1or2AudioRTPSink::createNew(*env, sessionState.rtpGroupsock);
 #endif
   
   // Create (and start) a 'RTCP instance' for this RTP sink:
