@@ -2089,8 +2089,6 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
   Boolean foundServerPortNum = False;
   Boolean foundChannelIds = False;
   unsigned rtpCid, rtcpCid;
-  Boolean isMulticast = True; // by default
-  char* foundDestinationStr = NULL;
 
   // First, check for "Transport:"
   if (_strncasecmp(line, "Transport: ", 11) != 0) return False;
@@ -2109,11 +2107,6 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
       rtpChannelId = (unsigned char)rtpCid;
       rtcpChannelId = (unsigned char)rtcpCid;
       foundChannelIds = True;
-    } else if (strcmp(field, "unicast") == 0) {
-      isMulticast = False;
-    } else if (_strncasecmp(field, "destination=", 12) == 0) {
-      delete[] foundDestinationStr;
-      foundDestinationStr = strDup(field+12);
     }
 
     fields += strlen(field);
@@ -2121,15 +2114,6 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
     if (fields[0] == '\0') break;
   }
   delete[] field;
-
-  // If we're multicast, and have a "destination=" (multicast) address, then use this
-  // as the 'server' address (because some weird servers don't specify the multicast
-  // address earlier, in the "DESCRIBE" response's SDP:
-  if (isMulticast && foundDestinationStr != NULL) {
-    delete[] foundServerAddressStr;
-    serverAddressStr = foundDestinationStr;
-  }
-  delete[] foundDestinationStr;
 
   if (foundServerPortNum || foundChannelIds) {
     serverAddressStr = foundServerAddressStr;

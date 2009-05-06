@@ -206,7 +206,8 @@ Boolean MPEG1or2Demux::useSavedData(u_int8_t streamIdTag,
 
   out.isCurrentlyActive = True;
   if (afterGettingFunc != NULL) {
-    struct timeval presentationTime; // value? #####
+    struct timeval presentationTime;
+    presentationTime.tv_sec = 0; presentationTime.tv_usec = 0; // should fix #####
     (*afterGettingFunc)(afterGettingClientData, totNumBytesCopied,
 			0 /* numTruncatedBytes */, presentationTime,
 			0 /* durationInMicroseconds ?????#####*/);
