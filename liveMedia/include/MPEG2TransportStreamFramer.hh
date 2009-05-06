@@ -66,6 +66,7 @@ private:
   unsigned long fTSPacketCount;
   double fTSPacketDurationEstimate;
   HashTable* fPIDStatusTable;
+  unsigned long fTSPCRCount;
 };
 
 #endif

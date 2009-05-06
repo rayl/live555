@@ -24,7 +24,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPCommon.hh"
 #include <GroupsockHelper.hh>
 
+#include <string.h>
 #if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
+#define snprintf _snprintf
 #else
 #include <signal.h>
 #define USE_SIGNALS 1
