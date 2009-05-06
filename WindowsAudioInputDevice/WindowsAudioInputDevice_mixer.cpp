@@ -25,6 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class AudioInputPort {
 public:
   int tag;
+  DWORD dwComponentType;
   char name[MIXER_LONG_NAME_CHARS];
 };
 
@@ -313,13 +314,18 @@ void Mixer::getPortsInfo() {
     mlc.dwSource = i;
     mixerGetLineInfo((HMIXEROBJ)hMixer, &mlc, MIXER_GETLINEINFOF_SOURCE/*|MIXER_OBJECTF_HMIXER*/);
     ports[i].tag = mlc.dwLineID;
+	ports[i].dwComponentType = mlc.dwComponentType;
     strncpy(ports[i].name, mlc.szName, MIXER_LONG_NAME_CHARS);
   }
   
-  // A cute hack borrowed from the "rat" code: Make the microphone the first port in the list:
+  // Make the microphone the first port in the list:
   for (i = 1; i < numPorts; ++i) {
+#ifdef OLD_MICROPHONE_TESTING_CODE
     if (_strnicmp("mic", ports[i].name, 3) == 0 ||
 	_strnicmp("mik", ports[i].name, 3) == 0) {
+#else
+	if (ports[i].dwComponentType == MIXERLINE_COMPONENTTYPE_SRC_MICROPHONE) {
+#endif
       AudioInputPort tmp = ports[0];
       ports[0] = ports[i];
       ports[i] = tmp;

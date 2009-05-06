@@ -76,21 +76,34 @@ RTPSink::~RTPSink() {
   delete[] (char*)fRTPPayloadFormatName;
 }
 
-unsigned RTPSink::convertToRTPTimestamp(struct timeval timestamp) const {
-  unsigned rtpTimestamp = fTimestampBase;
-  rtpTimestamp += (fTimestampFrequency*timestamp.tv_sec);
-  rtpTimestamp += (unsigned)
-    ((2.0*fTimestampFrequency*timestamp.tv_usec + 1000000.0)/2000000);
-       // note: rounding
+u_int32_t RTPSink::convertToRTPTimestamp(struct timeval tv, Boolean isFirstTime) {
+  if (isFirstTime) {
+    // Make the first timestamp the same as the current "fTimestampBase", so that
+    // timestamps begin with the value we promised when this "RTPSink" was created:
+    u_int32_t rtpTimestampIncrement = timevalToTimestamp(tv);
+    fTimestampBase -= rtpTimestampIncrement;
+  }
+
+  return convertToRTPTimestamp(tv);
+}
+
+u_int32_t RTPSink::convertToRTPTimestamp(struct timeval tv) const {
+  u_int32_t const rtpTimestamp = fTimestampBase + timevalToTimestamp(tv);
 
 #ifdef DEBUG_TIMESTAMPS
-  fprintf(stderr, "timestamp base: %u, presentationTime: %u.%06u,\n\tRTP timestamp: 0x%08x\n",
-	  fTimestampBase, timestamp.tv_sec,
-	  timestamp.tv_usec, rtpTimestamp);
+  fprintf(stderr, "fTimestampBase: 0x%08x, tv: %lu.%06ld\n\t=> RTP timestamp: 0x%08x\n",
+	  fTimestampBase, tv.tv_sec, tv.tv_usec, rtpTimestamp);
   fflush(stderr);
 #endif
 
   return rtpTimestamp;
+}
+
+u_int32_t RTPSink::timevalToTimestamp(struct timeval tv) const {
+  u_int32_t timestamp = (fTimestampFrequency*tv.tv_sec);
+  timestamp += (unsigned)((2.0*fTimestampFrequency*tv.tv_usec + 1000000.0)/2000000);
+       // note: rounding
+  return timestamp;
 }
 
 void RTPSink::getTotalBitrate(unsigned& outNumBytes,

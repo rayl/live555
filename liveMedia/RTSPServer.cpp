@@ -68,15 +68,27 @@ Boolean RTSPServer::lookupByName(UsageEnvironment& env,
   return True;
 }
 
-void RTSPServer
-::addServerMediaSession(ServerMediaSession* serverMediaSession) {
+void RTSPServer::addServerMediaSession(ServerMediaSession* serverMediaSession) {
+  if (serverMediaSession == NULL) return;
+
   char const* sessionName = serverMediaSession->streamName();
   if (sessionName == NULL) sessionName = "";
   ServerMediaSession* existingSession
     = (ServerMediaSession*)
     (fServerMediaSessions->Add(sessionName,
 			       (void*)serverMediaSession));
-  delete existingSession; // if any
+  removeServerMediaSession(existingSession); // if any
+}
+
+void RTSPServer::removeServerMediaSession(ServerMediaSession* serverMediaSession) {
+  if (serverMediaSession == NULL) return;
+
+  fServerMediaSessions->Remove(serverMediaSession->streamName());
+  if (serverMediaSession->referenceCount() == 0) {
+    delete serverMediaSession;
+  } else {
+    serverMediaSession->deleteWhenUnreferenced() = True;
+  }
 }
 
 char* RTSPServer
@@ -163,12 +175,12 @@ RTSPServer::~RTSPServer() {
 
   ::_close(fServerSocket);
 
-  // Delete all server media sessions:
+  // Remove all server media sessions (they'll get deleted when they're finished):
   while (1) {
-    ServerMediaSession* namedSession
+    ServerMediaSession* serverMediaSession
       = (ServerMediaSession*)fServerMediaSessions->RemoveNext();
-    if (namedSession == NULL) break;
-    delete namedSession;
+    if (serverMediaSession == NULL) break;
+    removeServerMediaSession(serverMediaSession);
   }
 
   // Finally, delete the session table itself:
@@ -221,8 +233,7 @@ RTSPServer::RTSPClientSession
     fSessionIsActive(True), fNumStreamStates(0), fStreamStates(NULL) {
   // Arrange to handle incoming requests:
   envir().taskScheduler().turnOnBackgroundReadHandling(fClientSocket,
-     (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler,
-						   this);
+     (TaskScheduler::BackgroundHandlerProc*)&incomingRequestHandler, this);
 }
 
 RTSPServer::RTSPClientSession::~RTSPClientSession() {
@@ -232,6 +243,14 @@ RTSPServer::RTSPClientSession::~RTSPClientSession() {
   ::_close(fClientSocket);
 
   reclaimStreamStates();
+
+  if (fOurServerMediaSession != NULL) {
+    fOurServerMediaSession->decrementReferenceCount();
+    if (fOurServerMediaSession->referenceCount() == 0
+	&& fOurServerMediaSession->deleteWhenUnreferenced()) {
+      fOurServer.removeServerMediaSession(fOurServerMediaSession);
+    }
+  }
 }
 
 void RTSPServer::RTSPClientSession::reclaimStreamStates() {
@@ -274,6 +293,7 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
       return;
     }
 #ifdef DEBUG
+    ptr[bytesRead] = '\0';
     fprintf(stderr, "RTSPClientSession[%p]::incomingRequestHandler1() read %d bytes:%s\n", this, bytesRead, ptr);
 #endif
 
@@ -523,6 +543,8 @@ void RTSPServer::RTSPClientSession
       return;
     }
 
+    fOurServerMediaSession->incrementReferenceCount();
+
     // Set up our array of states for this session's subsessions (tracks):
     reclaimStreamStates();
     ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
@@ -697,9 +719,7 @@ void RTSPServer::RTSPClientSession
     "%s" // comma separator, if needed 
     "url=%s/%s"
     ";seq=%d"
-#ifdef INCLUDE_RTPINFO_RTPTIME
     ";rtptime=%d";
-#endif
   ;
   unsigned rtpInfoFmtSize = strlen(rtpInfoFmt);
   char* rtpInfo = strDup("RTP-Info: ");
@@ -720,19 +740,15 @@ void RTSPServer::RTSPClientSession
 	+ 1
 	+ rtspURLSize + strlen(urlSuffix)
 	+ 5 /*max unsigned short len*/
-#ifdef INCLUDE_RTPINFO_RTPTIME
 	+ 10 /*max unsigned (32-bit) len*/
-#endif
 	+ 2 /*allows for trailing \r\n at final end of string*/; 
       rtpInfo = new char[rtpInfoSize];
       sprintf(rtpInfo, rtpInfoFmt,
 	      prevRTPInfo,
 	      numRTPInfoItems++ == 0 ? "" : ",",
 	      rtspURL, urlSuffix,
-	      rtpSeqNum
-#ifdef INCLUDE_RTPINFO_RTPTIME
-	      ,rtpTimestamp
-#endif
+	      rtpSeqNum,
+	      rtpTimestamp
 );
       delete[] prevRTPInfo;
     }

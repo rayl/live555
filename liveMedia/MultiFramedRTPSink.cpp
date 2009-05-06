@@ -85,7 +85,8 @@ void MultiFramedRTPSink::setMarkerBit() {
 
 void MultiFramedRTPSink::setTimestamp(struct timeval timestamp) {
   // First, convert the timestamp to a 32-bit RTP timestamp:
-  fCurrentTimestamp = convertToRTPTimestamp(timestamp);
+  fCurrentTimestamp
+    = convertToRTPTimestamp(timestamp, isFirstPacket() && isFirstFrameInPacket());
 
   // Then, insert it into the RTP packet:
   fOutBuf->insertWord(fCurrentTimestamp, fTimestampPosition);

@@ -42,6 +42,7 @@ public:
 				       Boolean isSSM = False,
 				       char const* miscSDPLines = NULL);
 			       
+  virtual ~ServerMediaSession();
 
   static Boolean lookupByName(UsageEnvironment& env,
                               char const* mediumName,
@@ -52,9 +53,12 @@ public:
 
   char const* streamName() const { return fStreamName; }
 
-  virtual ~ServerMediaSession();
-
   Boolean addSubsession(ServerMediaSubsession* subsession);
+
+  unsigned referenceCount() const { return fReferenceCount; }
+  void incrementReferenceCount() { ++fReferenceCount; }
+  void decrementReferenceCount() { if (fReferenceCount > 0) --fReferenceCount; }
+  Boolean& deleteWhenUnreferenced() { return fDeleteWhenUnreferenced; }
 
 private:
   ServerMediaSession(UsageEnvironment& env, char const* streamName,
@@ -79,6 +83,8 @@ private:
   char* fDescriptionSDPString;
   char* fMiscSDPLines;
   struct timeval fCreationTime;
+  unsigned fReferenceCount;
+  Boolean fDeleteWhenUnreferenced;
 };
 
 

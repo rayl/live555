@@ -24,8 +24,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 UsageEnvironment* env;
 
 // To make the second and subsequent client for each stream reuse the same
-// input stream as the first client (rather than playing the file from the start
-// for each client), change the following "False" to "True":
+// input stream as the first client (rather than playing the file from the
+// start for each client), change the following "False" to "True":
 Boolean reuseFirstSource = False;
 
 // To stream *only* MPEG-1 or 2 video "I" frames

@@ -66,7 +66,8 @@ ServerMediaSession::ServerMediaSession(UsageEnvironment& env,
 				       char const* description,
 				       Boolean isSSM, char const* miscSDPLines)
   : Medium(env), fIsSSM(isSSM), fSubsessionsHead(NULL),
-    fSubsessionsTail(NULL), fSubsessionCounter(0) {
+    fSubsessionsTail(NULL), fSubsessionCounter(0),
+    fReferenceCount(0), fDeleteWhenUnreferenced(False) {
   fStreamName = strDup(streamName == NULL ? "" : streamName);
   fInfoSDPString = strDup(info == NULL ? libNameStr : info);
   fDescriptionSDPString

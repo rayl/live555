@@ -38,7 +38,8 @@ public:
   // used by RTCP:
   unsigned SSRC() const {return fSSRC;}
      // later need a means of changing the SSRC if there's a collision #####
-  unsigned convertToRTPTimestamp(struct timeval timestamp) const;
+  u_int32_t convertToRTPTimestamp(struct timeval tv, Boolean isFirstTime);
+  u_int32_t convertToRTPTimestamp(struct timeval tv) const;
   unsigned packetCount() const {return fPacketCount;}
   unsigned octetCount() const {return fOctetCount;}
 
@@ -101,6 +102,9 @@ protected:
 private:
   // redefined virtual functions:
   virtual Boolean isRTPSink() const;
+
+private:
+  u_int32_t timevalToTimestamp(struct timeval tv) const;
 
 private:
   unsigned fSSRC, fTimestampBase, fTimestampFrequency;
