@@ -130,7 +130,13 @@ private:
                                   _atom(frma);
                                   _atom(Fclp);
                                   _atom(Hclp);
+                          _atom(mp4a);
+//                            _atom(wave);
+//                                _atom(frma);
+                                  _atom(esds);
+                                  _atom(srcq);
                           _atom(h263);
+                          _atom(mp4v);
                           _atom(rtp);
                               _atom(tims);
                       _atom(stts);

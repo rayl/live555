@@ -594,8 +594,8 @@ Boolean SubsessionIOState::setQTstate() {
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_Qclp;
 	fQTSamplesPerFrame = 160;
       } else if (strcmp(fOurSubsession.codecName(), "MPEG4-GENERIC") == 0) {
-	fQTAudioDataType = "mp4a";
-	fQTBytesPerFrame = 1;//#####@@@@@ NEED TO FIX
+	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_mp4a;
+	fQTSamplesPerFrame = 1024;//???#####
       } else {
 	envir() << noCodecWarning1 << "Audio" << noCodecWarning2
 		<< fOurSubsession.codecName() << noCodecWarning3;
@@ -614,6 +614,10 @@ Boolean SubsessionIOState::setQTstate() {
       } else if (strcmp(fOurSubsession.codecName(), "H263-1998") == 0 ||
 		 strcmp(fOurSubsession.codecName(), "H263-2000") == 0) {
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_h263;
+	fQTTimeScale = 600;
+	fQTTimeUnitsPerSample = fQTTimeScale/fOurSink.fMovieFPS;
+      } else if (strcmp(fOurSubsession.codecName(), "MP4V-ES") == 0) {
+	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_mp4v;
 	fQTTimeScale = 600;
 	fQTTimeUnitsPerSample = fQTTimeScale/fOurSink.fMovieFPS;
       } else {
@@ -1531,7 +1535,8 @@ unsigned QuickTimeFileSink::addAtom_soundMediaGeneral() {
     = (unsigned short)(fCurrentIOState->fOurSubsession.numChannels());
   size += addHalfWord(numChannels); // Number of channels
   size += addHalfWord(0x0010); // Sample size
-  size += addWord(0x00000000); // Compression ID+Packet size
+  //  size += addWord(0x00000000); // Compression ID+Packet size
+  size += addWord(0xfffe0000); // Compression ID+Packet size #####
 
   unsigned const timeScale = fCurrentIOState->fQTTimeScale;
   unsigned const timeUnitsPerSample
@@ -1547,7 +1552,7 @@ addAtomEnd;
 unsigned QuickTimeFileSink::addAtom_Qclp() {
   // The beginning of this atom looks just like a general Sound Media atom,
   // except with a version field of 1:
-  unsigned initFilePosn = ftell(fOutFid); \
+  unsigned initFilePosn = ftell(fOutFid);
   fCurrentIOState->fQTAudioDataType = "Qclp";
   fCurrentIOState->fQTSoundSampleVersion = 1;
   unsigned size = addAtom_soundMediaGeneral();
@@ -1555,8 +1560,8 @@ unsigned QuickTimeFileSink::addAtom_Qclp() {
   // Next, add the four fields that are particular to version 1:
   // (Later, parameterize these #####)
   size += addWord(0x000000a0); // samples per packet
-  size += addWord(fCurrentIOState->fQTBytesPerFrame); // bytes per packet
-  size += addWord(fCurrentIOState->fQTBytesPerFrame); // bytes per frame
+  size += addWord(0x00000000); // ???
+  size += addWord(0x00000000); // ???
   size += addWord(0x00000002); // bytes per sample (uncompressed)
 
   // Other special fields are in a 'wave' atom that follows:
@@ -1565,21 +1570,35 @@ addAtomEnd;
 
 addAtom(wave);
   size += addAtom_frma();
-  size += addWord(0x00000014); // ???
-  size += add4ByteString("Qclp"); // ???
-  if (fCurrentIOState->fQTBytesPerFrame == 35) {
-    size += addAtom_Fclp(); // full-rate QCELP
-  } else {
-    size += addAtom_Hclp(); // half-rate QCELP
-  } // what about other QCELP 'rates'??? #####
-  size += addWord(0x00000008); // ???
-  size += addWord(0x00000000); // ???
-  size += addWord(0x00000000); // ???
-  size += addWord(0x00000008); // ???
+  if (strcmp(fCurrentIOState->fQTAudioDataType, "Qclp") == 0) {
+    size += addWord(0x00000014); // ???
+    size += add4ByteString("Qclp"); // ???
+    if (fCurrentIOState->fQTBytesPerFrame == 35) {
+      size += addAtom_Fclp(); // full-rate QCELP
+    } else {
+      size += addAtom_Hclp(); // half-rate QCELP
+    } // what about other QCELP 'rates'??? #####
+    size += addWord(0x00000008); // ???
+    size += addWord(0x00000000); // ???
+    size += addWord(0x00000000); // ???
+    size += addWord(0x00000008); // ???
+  } else if (strcmp(fCurrentIOState->fQTAudioDataType, "mp4a") == 0) {
+    size += addWord(0x0000000c); // ???
+    size += add4ByteString("mp4a"); // ???
+    size += addWord(0x00000000); // ???
+    size += addAtom_esds(); // ESDescriptor ??? #####
+    size += addAtom_srcq(); // ??? #####
+    size += addWord(0x00000008); // ???
+    size += addWord(0x00000000); // ???
+    size += addWord(0x00000000); // ???
+    size += addWord(0x00030014); // ???
+    size += addWord(0x00000000); // ???
+    size += addWord(0x20780015); // ???
+  }
 addAtomEnd;
 
 addAtom(frma);
-  size += add4ByteString("Qclp"); // ???
+  size += add4ByteString(fCurrentIOState->fQTAudioDataType); // ???
 addAtomEnd;
 
 addAtom(Fclp);
@@ -1588,6 +1607,47 @@ addAtomEnd;
 
 addAtom(Hclp);
  size += addWord(0x00000000); // ???
+addAtomEnd;
+
+unsigned QuickTimeFileSink::addAtom_mp4a() {
+  // The beginning of this atom looks just like a general Sound Media atom,
+  // except with a version field of 1:
+  unsigned initFilePosn = ftell(fOutFid);
+  fCurrentIOState->fQTAudioDataType = "mp4a";
+  fCurrentIOState->fQTSoundSampleVersion = 1;
+  unsigned size = addAtom_soundMediaGeneral();
+
+  // Next, add the four fields that are particular to version 1:
+  // (Later, parameterize these #####)
+  size += addWord(fCurrentIOState->fQTSamplesPerFrame); // samples per packet
+  size += addWord(0x00000001); // ???
+  size += addWord(0x00000002); // ???
+  size += addWord(0x00000002); // bytes per sample (uncompressed)
+
+  // Other special fields are in a 'wave' atom that follows:
+  size += addAtom_wave();
+addAtomEnd;
+
+addAtom(esds);
+  //#####
+  size += addWord(0x00000000); // ???
+  size += addWord(0x03808080); // ???
+  size += addWord(0x22000000); // ???
+  size += addWord(0x04808080); // ???
+  size += addWord(0x14401500); // ???
+  size += addWord(0x18000001); // ???
+  size += addWord(0xf4000001); // ???
+  size += addWord(0xf4000580); // ???
+  size += addWord(0x80800212); // ???
+  size += addWord(0x10068080); // ???
+  size += addByte(0x80); size += addByte(0x01); size += addByte(0x02); // ???
+  //#####
+addAtomEnd;
+
+addAtom(srcq);
+  //#####
+  size += addWord(0x00000040); // ???
+  //#####
 addAtomEnd;
 
 addAtom(h263);
@@ -1606,10 +1666,54 @@ addAtom(h263);
   size += addWord(0x00000000); // Data size
   size += addWord(0x00010548); // Frame count+Compressor name (start)
     // "H.263"
-  size += addWord(0x2e323633); // Frame count+Compressor name (cont)
+  size += addWord(0x2e323633); // Compressor name (continued)
   size += addZeroWords(6); // Compressor name (continued - zero)
   size += addWord(0x00000018); // Compressor name (final)+Depth
   size += addHalfWord(0xffff); // Color table id
+addAtomEnd;
+
+addAtom(mp4v);
+// General sample description fields:
+  size += addWord(0x00000000); // Reserved
+  size += addWord(0x00000001); // Reserved+Data reference index
+// Video sample description fields:
+  size += addWord(0x00020001); // Version+Revision level
+  size += add4ByteString("appl"); // Vendor
+  size += addWord(0x00000200); // Temporal quality
+  size += addWord(0x00000400); // Spatial quality
+  unsigned const widthAndHeight = (fMovieWidth<<16)|fMovieHeight;
+  size += addWord(widthAndHeight); // Width+height
+  size += addWord(0x00480000); // Horizontal resolution
+  size += addWord(0x00480000); // Vertical resolution
+  size += addWord(0x00000000); // Data size
+  size += addWord(0x00010c4d); // Frame count+Compressor name (start)
+    // "MPEG-4 Video"
+  size += addWord(0x5045472d); // Compressor name (continued)
+  size += addWord(0x34205669); // Compressor name (continued)
+  size += addWord(0x64656f00); // Compressor name (continued)
+  size += addZeroWords(4); // Compressor name (continued - zero)
+  size += addWord(0x00000018); // Compressor name (final)+Depth
+  //#####  size += addHalfWord(0xffff); // Color table id
+  size += addWord(0xffff0000); // ???
+  size += addWord(0x00456573); // ???
+  size += addWord(0x64730000); // ???
+  size += addWord(0x00000337); // ???
+  size += addWord(0x00001f04); // ???
+  size += addWord(0x2f201104); // ???
+  size += addWord(0xfd46000d); // ???
+  size += addWord(0x4e10000d); // ???
+  size += addWord(0x4e100520); // ???
+  size += addWord(0x000001b0); // ???
+  size += addWord(0xf3000001); // ???
+  size += addWord(0xb50ee040); // ???
+  size += addWord(0xc0cf0000); // ???
+  size += addWord(0x01000000); // ???
+  size += addWord(0x01200084); // ???
+  size += addWord(0x40fa2850); // ???
+  size += addWord(0x20f0a31f); // ???
+  size += addWord(0x06010200); // ???
+  size += addByte(0); size += addByte(0); size += addByte(0); // ???
+  //#####
 addAtomEnd;
 
 unsigned QuickTimeFileSink::addAtom_rtp() {

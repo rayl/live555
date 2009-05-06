@@ -852,6 +852,22 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
   return False;
 }
 
+static char* createRangeString(float start, float end) {
+  char buf[100];
+  if (start < 0) {
+    // We're resuming from a PAUSE; there's no "Range:" header at all
+    buf[0] = '\0';
+  } else if (end < 0) {
+    // There's no end time:
+    sprintf(buf, "Range: npt=%.3f-\r\n", start);
+  } else {
+    // There's both a start and an end time; include them both in the "Range:" hdr
+    sprintf(buf, "Range: npt=%.3f-%.3f\r\n", start, end);
+  }
+
+  return strDup(buf);
+}
+      
 Boolean RTSPClient::playMediaSession(MediaSession& session,
 				     float start, float end) {
 #ifdef SUPPORT_REAL_RTSP
@@ -875,25 +891,23 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
     // First, construct an authenticator string:
     char* authenticatorStr
       = createAuthenticatorString(fCurrentAuthenticator, "PLAY", fBaseURL);
+    // And then a "Range:" string:
+    char* rangeStr = createRangeString(start, end);
 
     char* const cmdFmt =
       "PLAY %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
-      "Range: npt=%s-%s\r\n"
+      "%s"
       "%s"
       "%s"
       "\r\n";
 
-    char startStr[30], endStr[30];
-    sprintf(startStr, "%.3f", start); sprintf(endStr, "%.3f", end);
-    if (end == -1) endStr[0] = '\0';
-      
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(fBaseURL)
       + 20 /* max int len */
       + strlen(fLastSessionId)
-      + strlen(startStr) + strlen(endStr)
+      + strlen(rangeStr)
       + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize;
     cmd = new char[cmdSize];
@@ -901,9 +915,10 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
 	    fBaseURL,
 	    ++fCSeq,
 	    fLastSessionId,
-	    startStr, endStr,
+	    rangeStr,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
+    delete[] rangeStr;
     delete[] authenticatorStr;
 
     if (!sendRequest(cmd)) {
@@ -955,20 +970,18 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
     // First, construct an authenticator string:
     char* authenticatorStr
       = createAuthenticatorString(fCurrentAuthenticator, "PLAY", fBaseURL);
+    // And then a "Range:" string:
+    char* rangeStr = createRangeString(start, end);
 
     char* const cmdFmt =
       "PLAY %s%s%s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
-      "Range: npt=%s-%s\r\n"
+      "%s"
       "%s"
       "%s"
       "\r\n";
 
-    char startStr[30], endStr[30];
-    sprintf(startStr, "%.3f", start); sprintf(endStr, "%.3f", end);
-    if (end == -1) endStr[0] = '\0';
-      
     char const *prefix, *separator, *suffix;
     constructSubsessionURL(subsession, prefix, separator, suffix);
     if (hackForDSS) {
@@ -983,7 +996,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
       + strlen(prefix) + strlen(separator) + strlen(suffix)
       + 20 /* max int len */
       + strlen(subsession.sessionId)
-      + strlen(startStr) + strlen(endStr)
+      + strlen(rangeStr)
       + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize;
     cmd = new char[cmdSize];
@@ -991,9 +1004,10 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
 	    prefix, separator, suffix,
 	    ++fCSeq,
 	    subsession.sessionId,
-	    startStr, endStr,
+	    rangeStr,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
+    delete[] rangeStr;
     delete[] authenticatorStr;
 
     if (!sendRequest(cmd)) {
@@ -1065,7 +1079,6 @@ Boolean RTSPClient::pauseMediaSession(MediaSession& session) {
       "PAUSE %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
-      "Range: npt=0-\r\n"
       "%s"
       "%s"
       "\r\n";
