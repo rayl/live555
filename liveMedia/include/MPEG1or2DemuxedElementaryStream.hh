@@ -31,6 +31,8 @@ public:
 
   unsigned char mpegVersion() const { return fMPEGversion; }
 
+  MPEG1or2Demux& sourceDemux() const { return fOurSourceDemux; }
+
 private: // We are created only by a MPEG1or2Demux (a friend)
   MPEG1or2DemuxedElementaryStream(UsageEnvironment& env,
 			      u_int8_t streamIdTag,

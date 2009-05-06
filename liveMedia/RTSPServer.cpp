@@ -31,6 +31,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 #include <time.h> // for "strftime()" and "gmtime()"
 
+// Leave the following commented out for now, because - for some still-unknown
+// reason - including a "rtptime=" field in the "RTPInfo:" header confuses
+// QuickTime Player, when we seek within a stream.
+//#define RTPINFO_INCLUDE_RTPTIME 1
+
 ////////// RTSPServer //////////
 
 RTSPServer*
@@ -839,7 +844,7 @@ void RTSPServer::RTSPClientSession
     "url=%s/%s"
     ";seq=%d"
 #ifdef RTPINFO_INCLUDE_RTPTIME
-    ";rtptime=%d"
+    ";rtptime=%u"
 #endif
     ;
   unsigned rtpInfoFmtSize = strlen(rtpInfoFmt);

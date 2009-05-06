@@ -35,8 +35,8 @@ public:
   static Boolean lookupByName(UsageEnvironment& env, char const* sourceName,
 			      RTPSource*& resultSource);
 
-  unsigned short curPacketRTPSeqNum() const { return fCurPacketRTPSeqNum; }
-  unsigned curPacketRTPTimestamp() const { return fCurPacketRTPTimestamp; }
+  u_int16_t curPacketRTPSeqNum() const { return fCurPacketRTPSeqNum; }
+  u_int32_t curPacketRTPTimestamp() const { return fCurPacketRTPTimestamp; }
   Boolean curPacketMarkerBit() const { return fCurPacketMarkerBit; }
 
   unsigned char rtpPayloadFormat() const { return fRTPPayloadFormat; }
@@ -48,7 +48,7 @@ public:
   virtual void setPacketReorderingThresholdTime(unsigned uSeconds) = 0;
 
   // used by RTCP:
-  unsigned SSRC() const { return fSSRC; }
+  u_int32_t SSRC() const { return fSSRC; }
       // Note: This is *our* SSRC, not the SSRC in incoming RTP packets.
      // later need a means of changing the SSRC if there's a collision #####
 
@@ -58,7 +58,7 @@ public:
     return *fReceptionStatsDB;
   }
 
-  unsigned lastReceivedSSRC() const { return fLastReceivedSSRC; }
+  u_int32_t lastReceivedSSRC() const { return fLastReceivedSSRC; }
   // Note: This is the SSRC in the most recently received RTP packet; not *our* SSRC
 
   void setStreamSocket(int sockNum, unsigned char streamChannelId) {
@@ -74,17 +74,17 @@ public:
 
 protected:
   RTPSource(UsageEnvironment& env, Groupsock* RTPgs,
-	    unsigned char rtpPayloadFormat, unsigned rtpTimestampFrequency);
+	    unsigned char rtpPayloadFormat, u_int32_t rtpTimestampFrequency);
       // abstract base class
   virtual ~RTPSource();
 
 protected:
   RTPInterface fRTPInterface;
-  unsigned short fCurPacketRTPSeqNum;
-  unsigned fCurPacketRTPTimestamp;
+  u_int16_t fCurPacketRTPSeqNum;
+  u_int32_t fCurPacketRTPTimestamp;
   Boolean fCurPacketMarkerBit;
   Boolean fCurPacketHasBeenSynchronizedUsingRTCP;
-  unsigned fLastReceivedSSRC;
+  u_int32_t fLastReceivedSSRC;
 
 private:
   // redefined virtual functions:
@@ -94,7 +94,7 @@ private:
 private:
   unsigned char fRTPPayloadFormat;
   unsigned fTimestampFrequency;
-  unsigned fSSRC;
+  u_int32_t fSSRC;
 
   RTPReceptionStatsDB* fReceptionStatsDB;
 };
@@ -126,8 +126,8 @@ public:
   };
 
   // The following is called whenever a RTP packet is received: 
-  void noteIncomingPacket(unsigned SSRC, unsigned short seqNum,
-			  unsigned rtpTimestamp,
+  void noteIncomingPacket(u_int32_t SSRC, u_int16_t seqNum,
+			  u_int32_t rtpTimestamp,
 			  unsigned timestampFrequency,
 			  Boolean useForJitterCalculation,
 			  struct timeval& resultPresentationTime,
@@ -135,12 +135,12 @@ public:
 			  unsigned packetSize /* payload only */);
 
   // The following is called whenever a RTCP SR packet is received: 
-  void noteIncomingSR(unsigned SSRC,
-		      unsigned ntpTimestampMSW, unsigned ntpTimestampLSW,
-		      unsigned rtpTimestamp);
+  void noteIncomingSR(u_int32_t SSRC,
+		      u_int32_t ntpTimestampMSW, u_int32_t ntpTimestampLSW,
+		      u_int32_t rtpTimestamp);
 
   // The following is called when a RTCP BYE packet is received:
-  void removeRecord(unsigned SSRC);
+  void removeRecord(u_int32_t SSRC);
 
 private: // constructor and destructor, called only by RTPSource:
   friend class RTPSource;
@@ -148,8 +148,8 @@ private: // constructor and destructor, called only by RTPSource:
   virtual ~RTPReceptionStatsDB();
 
 private:
-  RTPReceptionStats* lookup(unsigned SSRC) const;
-  void add(unsigned SSRC, RTPReceptionStats* stats);
+  RTPReceptionStats* lookup(u_int32_t SSRC) const;
+  void add(u_int32_t SSRC, RTPReceptionStats* stats);
 
 private:
   friend class Iterator;
@@ -161,7 +161,7 @@ private:
 
 class RTPReceptionStats {
 public:
-  unsigned SSRC() const { return fSSRC; }
+  u_int32_t SSRC() const { return fSSRC; }
   unsigned numPacketsReceivedSinceLastReset() const {
     return fNumPacketsReceivedSinceLastReset;
   }
@@ -197,29 +197,28 @@ public:
 private:
   // called only by RTPReceptionStatsDB:
   friend class RTPReceptionStatsDB;
-  RTPReceptionStats(RTPSource& rtpSource, unsigned SSRC,
-		    unsigned short initialSeqNum);
-  RTPReceptionStats(RTPSource& rtpSource, unsigned SSRC);
+  RTPReceptionStats(RTPSource& rtpSource, u_int32_t SSRC,
+		    u_int16_t initialSeqNum);
+  RTPReceptionStats(RTPSource& rtpSource, u_int32_t SSRC);
   virtual ~RTPReceptionStats();
 
-  void noteIncomingPacket(unsigned short seqNum,
-			  unsigned rtpTimestamp,
+  void noteIncomingPacket(u_int16_t seqNum, u_int32_t rtpTimestamp,
 			  unsigned timestampFrequency,
 			  Boolean useForJitterCalculation,
 			  struct timeval& resultPresentationTime,
 			  Boolean& resultHasBeenSyncedUsingRTCP,
 			  unsigned packetSize /* payload only */);
-  void noteIncomingSR(unsigned ntpTimestampMSW, unsigned ntpTimestampLSW,
-		      unsigned rtpTimestamp);
-  void init(unsigned SSRC);
-  void initSeqNum(unsigned short initialSeqNum);
+  void noteIncomingSR(u_int32_t ntpTimestampMSW, u_int32_t ntpTimestampLSW,
+		      u_int32_t rtpTimestamp);
+  void init(u_int32_t SSRC);
+  void initSeqNum(u_int16_t initialSeqNum);
   void reset();
       // resets periodic stats (called each time they're used to
       // generate a reception report)
 
 private:
   RTPSource& fOurRTPSource;
-  unsigned fSSRC;
+  u_int32_t fSSRC;
   unsigned fNumPacketsReceivedSinceLastReset;
   unsigned fTotNumPacketsReceived;
   u_int32_t fTotBytesReceived_hi, fTotBytesReceived_lo;
@@ -228,7 +227,7 @@ private:
   unsigned fLastResetExtSeqNumReceived;
   unsigned fHighestExtSeqNumReceived;
   int fLastTransit; // used in the jitter calculation
-  unsigned fPreviousPacketRTPTimestamp;
+  u_int32_t fPreviousPacketRTPTimestamp;
   double fJitter;
   // The following are recorded whenever we receive a RTCP SR for this SSRC:
   unsigned fLastReceivedSR_NTPmsw; // NTP timestamp (from SR), most-signif
@@ -240,12 +239,12 @@ private:
 
   // Used to convert from RTP timestamp to 'wall clock' time:
   Boolean fHasBeenSynchronized;
-  unsigned fSyncTimestamp;
+  u_int32_t fSyncTimestamp;
   struct timeval fSyncTime;
 };
 
 
-Boolean seqNumLT(unsigned short s1, unsigned short s2);
+Boolean seqNumLT(u_int16_t s1, u_int16_t s2);
   // a 'less-than' on 16-bit sequence numbers
 
 #endif

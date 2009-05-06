@@ -56,14 +56,14 @@ FramedSource* MPEG1or2DemuxedServerMediaSubsession
 
     if ((fStreamIdTag&0xF0) == 0xC0 /*MPEG audio*/) {
       estBitrate = 128; // kbps, estimate
-      return MPEG1or2AudioStreamFramer::createNew(fOurDemux.envir(), es);
+      return MPEG1or2AudioStreamFramer::createNew(envir(), es);
     } else if ((fStreamIdTag&0xF0) == 0xE0 /*video*/) {
       estBitrate = 500; // kbps, estimate
-      return MPEG1or2VideoStreamFramer::createNew(fOurDemux.envir(), es,
+      return MPEG1or2VideoStreamFramer::createNew(envir(), es,
 						  fIFramesOnly, fVSHPeriod);
     } else if (fStreamIdTag == 0xBD /*AC-3 audio*/) {
       estBitrate = 192; // kbps, estimate
-      return AC3AudioStreamFramer::createNew(fOurDemux.envir(), es);
+      return AC3AudioStreamFramer::createNew(envir(), es);
     } else { // unknown stream type
       break;
     }
@@ -93,10 +93,13 @@ RTPSink* MPEG1or2DemuxedServerMediaSubsession
 }
 
 void MPEG1or2DemuxedServerMediaSubsession
-::seekStreamSource(FramedSource* /*inputSource*/, float /*seekNPT*/) {
-  //#####@@@@@
+::seekStreamSource(FramedSource* inputSource, float seekNPT) {
+  // "inputSource" is a filter; its input source is the original elem stream source:
+  MPEG1or2DemuxedElementaryStream* elemStreamSource
+    = (MPEG1or2DemuxedElementaryStream*)(((FramedFilter*)inputSource)->inputSource());
+  elemStreamSource->sourceDemux().seekWithinSource(seekNPT);
 }
 
 float MPEG1or2DemuxedServerMediaSubsession::duration() const {
-  return 0.0;//#####@@@@@
+  return fOurDemux.fileDuration();
 }

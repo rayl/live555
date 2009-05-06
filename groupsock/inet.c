@@ -439,6 +439,15 @@ our_random()
 }
 #endif
 
+u_int32_t our_random32() {
+  // Return a 32-bit random number.
+  // Because "our_random()" returns a 31-bit random number, we call it a second
+  // time, to generate the high bit:
+  long random1 = our_random();
+  long random2 = our_random();
+  return (u_int32_t)((random2<<31) | random1);
+}
+
 #ifdef USE_OUR_BZERO
 #ifndef __bzero
 void

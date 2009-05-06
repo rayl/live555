@@ -63,6 +63,8 @@ public:
 
   FramedSource* inputSource() const { return fInputSource; }
 
+  void seekWithinSource(float seekNPT);
+
   class SCR {
   public:
     SCR();

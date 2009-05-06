@@ -312,6 +312,10 @@ void MPEG1or2Demux::handleClosure(void* clientData) {
   }
 }
 
+void MPEG1or2Demux::seekWithinSource(float /*seekNPT*/) {
+  // TO COMPLETE //#####@@@@@
+}
+
 ////////// MPEGProgramStreamParser implementation //////////
 
 #include <string.h>

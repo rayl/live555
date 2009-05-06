@@ -97,5 +97,6 @@ extern "C" char* our_inet_ntoa(struct in_addr);
 extern "C" struct hostent* our_gethostbyname(char* name);
 extern "C" void our_srandom(int x);
 extern "C" long our_random();
+extern "C" u_int32_t our_random32(); // because "our_random()" returns a 31-bit number
 
 #endif

@@ -50,13 +50,13 @@ Boolean RTPSource::isRTPSource() const {
 
 RTPSource::RTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 		     unsigned char rtpPayloadFormat,
-		     unsigned rtpTimestampFrequency)
+		     u_int32_t rtpTimestampFrequency)
   : FramedSource(env),
     fRTPInterface(this, RTPgs),
     fCurPacketHasBeenSynchronizedUsingRTCP(False),
     fRTPPayloadFormat(rtpPayloadFormat),
     fTimestampFrequency(rtpTimestampFrequency),
-    fSSRC((unsigned)our_random()) {
+    fSSRC(our_random32()) {
   fReceptionStatsDB = new RTPReceptionStatsDB(*this);
 }
 
@@ -99,8 +99,8 @@ RTPReceptionStatsDB::~RTPReceptionStatsDB() {
 }
 
 void RTPReceptionStatsDB
-::noteIncomingPacket(unsigned SSRC, unsigned short seqNum,
-		     unsigned rtpTimestamp, unsigned timestampFrequency,
+::noteIncomingPacket(u_int32_t SSRC, u_int16_t seqNum,
+		     u_int32_t rtpTimestamp, unsigned timestampFrequency,
 		     Boolean useForJitterCalculation,
 		     struct timeval& resultPresentationTime,
 		     Boolean& resultHasBeenSyncedUsingRTCP,
@@ -126,9 +126,9 @@ void RTPReceptionStatsDB
 }
 
 void RTPReceptionStatsDB
-::noteIncomingSR(unsigned SSRC,
-		 unsigned ntpTimestampMSW, unsigned ntpTimestampLSW,
-		 unsigned rtpTimestamp) {
+::noteIncomingSR(u_int32_t SSRC,
+		 u_int32_t ntpTimestampMSW, u_int32_t ntpTimestampLSW,
+		 u_int32_t rtpTimestamp) {
   RTPReceptionStats* stats = lookup(SSRC);
   if (stats == NULL) {
     // This is the first time we've heard of this SSRC.
@@ -141,7 +141,7 @@ void RTPReceptionStatsDB
   stats->noteIncomingSR(ntpTimestampMSW, ntpTimestampLSW, rtpTimestamp);
 }
 
-void RTPReceptionStatsDB::removeRecord(unsigned SSRC) {
+void RTPReceptionStatsDB::removeRecord(u_int32_t SSRC) {
   long SSRC_long = (long)SSRC;
   fTable->Remove((char const*)SSRC_long);
 }
@@ -170,26 +170,26 @@ RTPReceptionStatsDB::Iterator::next(Boolean includeInactiveSources) {
   return stats;
 }
 
-RTPReceptionStats* RTPReceptionStatsDB::lookup(unsigned SSRC) const {
+RTPReceptionStats* RTPReceptionStatsDB::lookup(u_int32_t SSRC) const {
   long SSRC_long = (long)SSRC;
   return (RTPReceptionStats*)(fTable->Lookup((char const*)SSRC_long));
 }
 
-void RTPReceptionStatsDB::add(unsigned SSRC, RTPReceptionStats* stats) {
+void RTPReceptionStatsDB::add(u_int32_t SSRC, RTPReceptionStats* stats) {
   long SSRC_long = (long)SSRC;
   fTable->Add((char const*)SSRC_long, stats);
 }
 
 ////////// RTPReceptionStats //////////
 
-RTPReceptionStats::RTPReceptionStats(RTPSource& rtpSource, unsigned SSRC,
-				     unsigned short initialSeqNum)
+RTPReceptionStats::RTPReceptionStats(RTPSource& rtpSource, u_int32_t SSRC,
+				     u_int16_t initialSeqNum)
   : fOurRTPSource(rtpSource) {
   initSeqNum(initialSeqNum);
   init(SSRC);
 }
 
-RTPReceptionStats::RTPReceptionStats(RTPSource& rtpSource, unsigned SSRC)
+RTPReceptionStats::RTPReceptionStats(RTPSource& rtpSource, u_int32_t SSRC)
   : fOurRTPSource(rtpSource) {
   init(SSRC);
 }
@@ -197,7 +197,7 @@ RTPReceptionStats::RTPReceptionStats(RTPSource& rtpSource, unsigned SSRC)
 RTPReceptionStats::~RTPReceptionStats() {
 }
 
-void RTPReceptionStats::init(unsigned SSRC) {
+void RTPReceptionStats::init(u_int32_t SSRC) {
   fSSRC = SSRC;
   fTotNumPacketsReceived = 0;
   fTotBytesReceived_hi = fTotBytesReceived_lo = 0;
@@ -216,7 +216,7 @@ void RTPReceptionStats::init(unsigned SSRC) {
   reset();
 }
 
-void RTPReceptionStats::initSeqNum(unsigned short initialSeqNum) {
+void RTPReceptionStats::initSeqNum(u_int16_t initialSeqNum) {
     fBaseExtSeqNumReceived = initialSeqNum-1;
     fHighestExtSeqNumReceived = initialSeqNum;
     fHaveSeenInitialSequenceNumber = True;
@@ -227,7 +227,7 @@ void RTPReceptionStats::initSeqNum(unsigned short initialSeqNum) {
 #endif
 
 void RTPReceptionStats
-::noteIncomingPacket(unsigned short seqNum, unsigned rtpTimestamp,
+::noteIncomingPacket(u_int16_t seqNum, u_int32_t rtpTimestamp,
 		     unsigned timestampFrequency,
 		     Boolean useForJitterCalculation,
 		     struct timeval& resultPresentationTime,
@@ -248,7 +248,7 @@ void RTPReceptionStats
   unsigned oldSeqNum = (fHighestExtSeqNumReceived&0xFFFF);
   unsigned seqNumDifference = (unsigned)((int)seqNum-(int)oldSeqNum);
   if (seqNumDifference >= 0x8000
-      && seqNumLT((unsigned short)oldSeqNum, seqNum)) {
+      && seqNumLT((u_int16_t)oldSeqNum, seqNum)) {
     // sequence number wrapped around => start a new cycle:
     seqNumCycle += 0x10000;
   }
@@ -349,9 +349,9 @@ void RTPReceptionStats
   fPreviousPacketRTPTimestamp = rtpTimestamp;
 }
 
-void RTPReceptionStats::noteIncomingSR(unsigned ntpTimestampMSW,
-				       unsigned ntpTimestampLSW,
-				       unsigned rtpTimestamp) {
+void RTPReceptionStats::noteIncomingSR(u_int32_t ntpTimestampMSW,
+				       u_int32_t ntpTimestampLSW,
+				       u_int32_t rtpTimestamp) {
   fLastReceivedSR_NTPmsw = ntpTimestampMSW;
   fLastReceivedSR_NTPlsw = ntpTimestampLSW;
 
@@ -379,7 +379,7 @@ void RTPReceptionStats::reset() {
   fLastResetExtSeqNumReceived = fHighestExtSeqNumReceived;
 }
 
-Boolean seqNumLT(unsigned short s1, unsigned short s2) {
+Boolean seqNumLT(u_int16_t s1, u_int16_t s2) {
   // a 'less-than' on 16-bit sequence numbers
   int diff = s2-s1;
   if (diff > 0) {

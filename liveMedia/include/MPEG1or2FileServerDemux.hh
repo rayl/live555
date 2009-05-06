@@ -40,6 +40,8 @@ public:
 			  if one doesn't already appear in the stream */);
   ServerMediaSubsession* newAC3AudioServerMediaSubsession(); // AC-3 audio (from VOB)
 
+  float fileDuration() const { return fFileDuration; }
+
 private:
   MPEG1or2FileServerDemux(UsageEnvironment& env, char const* fileName,
 			  Boolean reuseFirstSource);
@@ -53,6 +55,7 @@ private:
 
 private:
   char const* fFileName;
+  float fFileDuration;
   Boolean fReuseFirstSource;
   MPEG1or2Demux* fSession0Demux;
   MPEG1or2Demux* fLastCreatedDemux;

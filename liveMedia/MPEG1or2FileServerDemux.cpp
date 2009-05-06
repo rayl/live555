@@ -35,6 +35,7 @@ MPEG1or2FileServerDemux
     fReuseFirstSource(reuseFirstSource),
     fSession0Demux(NULL), fLastCreatedDemux(NULL), fLastClientSessionId(~0) {
   fFileName = strDup(fileName);
+  fFileDuration = 0.0;//#####@@@@@
 }
 
 MPEG1or2FileServerDemux::~MPEG1or2FileServerDemux() {
