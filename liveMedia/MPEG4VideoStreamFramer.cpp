@@ -75,8 +75,9 @@ private:
   u_int32_t vop_time_increment_resolution;
   unsigned fNumVTIRBits;
       // # of bits needed to count to "vop_time_increment_resolution"
+  u_int8_t fixed_vop_rate;
   unsigned fixed_vop_time_increment; // used if 'fixed_vop_rate' is set
-  unsigned fSecondsSinceLastGOV, fTotalTicksSinceLastGOV, fPrevNewTotalTicks; 
+  unsigned fSecondsSinceLastTimeCode, fTotalTicksSinceLastTimeCode, fPrevNewTotalTicks; 
   unsigned fPrevPictureCountDelta;
 };
 
@@ -147,8 +148,8 @@ MPEG4VideoStreamParser
   : MPEGVideoStreamParser(usingSource, inputSource),
     fCurrentParseState(PARSING_VISUAL_OBJECT_SEQUENCE),
     vop_time_increment_resolution(0), fNumVTIRBits(0),
-    fixed_vop_time_increment(0),
-    fSecondsSinceLastGOV(0), fTotalTicksSinceLastGOV(0),
+    fixed_vop_rate(0), fixed_vop_time_increment(0),
+    fSecondsSinceLastTimeCode(0), fTotalTicksSinceLastTimeCode(0),
     fPrevNewTotalTicks(0), fPrevPictureCountDelta(1) {
 }
 
@@ -242,7 +243,7 @@ unsigned MPEG4VideoStreamParser
   setParseState(PARSING_VISUAL_OBJECT);
 
   // Compute this frame's presentation time:
-  usingSource()->computePresentationTime(fTotalTicksSinceLastGOV);
+  usingSource()->computePresentationTime(fTotalTicksSinceLastTimeCode);
 
   // This header forms part of the 'configuration' information:
   usingSource()->appendToNewConfig(fStartOfFrame, curFrameSize());
@@ -296,7 +297,7 @@ unsigned MPEG4VideoStreamParser::parseVisualObject() {
   setParseState(PARSING_VIDEO_OBJECT_LAYER);
 
   // Compute this frame's presentation time:
-  usingSource()->computePresentationTime(fTotalTicksSinceLastGOV);
+  usingSource()->computePresentationTime(fTotalTicksSinceLastTimeCode);
 
   // This header forms part of the 'configuration' information:
   usingSource()->appendToNewConfig(fStartOfFrame, curFrameSize());
@@ -378,7 +379,6 @@ void MPEG4VideoStreamParser::analyzeVOLHeader() {
       break;
     }
 
-    u_int8_t fixed_vop_rate;
     if (!getNextFrameBit(fixed_vop_rate)) break;
     if (fixed_vop_rate) {
       // Get the following "fixed_vop_time_increment":
@@ -433,7 +433,7 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectLayer() {
 		: PARSING_VIDEO_OBJECT_PLANE);
 
   // Compute this frame's presentation time:
-  usingSource()->computePresentationTime(fTotalTicksSinceLastGOV);
+  usingSource()->computePresentationTime(fTotalTicksSinceLastTimeCode);
 
   // This header ends the 'configuration' information:
   usingSource()->appendToNewConfig(fStartOfFrame, curFrameSize());
@@ -472,13 +472,15 @@ unsigned MPEG4VideoStreamParser::parseGroupOfVideoObjectPlane() {
   }
   
   // Compute this frame's presentation time:
-  usingSource()->computePresentationTime(fTotalTicksSinceLastGOV);
+  usingSource()->computePresentationTime(fTotalTicksSinceLastTimeCode);
 
   // Record the time code:
   usingSource()->setTimeCode(time_code_hours, time_code_minutes,
-                             time_code_seconds, 0,
-			     fTotalTicksSinceLastGOV);
-  fSecondsSinceLastGOV = fTotalTicksSinceLastGOV = 0;
+                             time_code_seconds, 0, 0);
+    // Note: Because the GOV header can appear anywhere (not just at a 1s point), we
+    // don't pass "fTotalTicksSinceLastTimeCode" as the "picturesSinceLastGOP" parameter.
+  fSecondsSinceLastTimeCode = 0;
+  if (fixed_vop_rate) fTotalTicksSinceLastTimeCode = 0;
 
   setParseState(PARSING_VIDEO_OBJECT_PLANE);
 
@@ -494,9 +496,7 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
 
   // Get the "vop_coding_type" from the next byte:
   u_int8_t nextByte = get1Byte(); saveByte(nextByte);
-#ifdef DEBUG
   u_int8_t vop_coding_type = nextByte>>6;
-#endif
 
   // Next, get the "modulo_time_base" by counting the '1' bits that follow.
   // We look at the next 32-bits only.  This should be enough in most cases.
@@ -542,14 +542,14 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
     // This is a 'fixed_vop_rate' stream.  Use 'fixed_vop_time_increment':
     usingSource()->fPictureCount += fixed_vop_time_increment;
     if (vop_time_increment > 0 || modulo_time_base > 0) {
-      fTotalTicksSinceLastGOV += fixed_vop_time_increment;
-      // Note: "fSecondsSinceLastGOV" and "fPrevNewTotalTicks" are not used.
+      fTotalTicksSinceLastTimeCode += fixed_vop_time_increment;
+      // Note: "fSecondsSinceLastTimeCode" and "fPrevNewTotalTicks" are not used.
     }
   } else {
     // Use 'vop_time_increment':
-    fSecondsSinceLastGOV += modulo_time_base;
     unsigned newTotalTicks
-      = fSecondsSinceLastGOV*vop_time_increment_resolution + vop_time_increment;
+      = (fSecondsSinceLastTimeCode + modulo_time_base)*vop_time_increment_resolution
+      + vop_time_increment;
     if (newTotalTicks == fPrevNewTotalTicks && fPrevNewTotalTicks > 0) {
       // This is apparently a buggy MPEG-4 video stream, because
       // "vop_time_increment" did not change.  Overcome this error,
@@ -557,10 +557,12 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
 #ifdef DEBUG
       fprintf(stderr, "Buggy MPEG-4 video stream: \"vop_time_increment\" did not change!\n");
 #endif
+      // The following assumes that we don't have 'B' frames.  If we do, then TARFU!
       usingSource()->fPictureCount += vop_time_increment;
-      fTotalTicksSinceLastGOV += vop_time_increment;
+      fTotalTicksSinceLastTimeCode += vop_time_increment;
+      fSecondsSinceLastTimeCode += modulo_time_base;
     } else {
-      if (newTotalTicks < fPrevNewTotalTicks
+      if (newTotalTicks < fPrevNewTotalTicks && vop_coding_type != 2/*B*/
 	  && modulo_time_base == 0 && vop_time_increment == 0) {
 	// This is another kind of buggy MPEG-4 video stream, in which
 	// "vop_time_increment" wraps around, but without
@@ -569,16 +571,19 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
 #ifdef DEBUG
 	fprintf(stderr, "Buggy MPEG-4 video stream: \"vop_time_increment\" wrapped around, but without \"modulo_time_base\" changing!\n");
 #endif
-	++fSecondsSinceLastGOV;
+	++fSecondsSinceLastTimeCode;
 	newTotalTicks += vop_time_increment_resolution;
       }
       fPrevNewTotalTicks = newTotalTicks;
-      unsigned pictureCountDelta = newTotalTicks - fTotalTicksSinceLastGOV;
-      if (pictureCountDelta == 0) pictureCountDelta = fPrevPictureCountDelta;
+      int pictureCountDelta = newTotalTicks - fTotalTicksSinceLastTimeCode;
+      if (pictureCountDelta <= 0) pictureCountDelta = fPrevPictureCountDelta;
           // ensures that the picture count always increases
       usingSource()->fPictureCount += pictureCountDelta;
       fPrevPictureCountDelta = pictureCountDelta;
-      fTotalTicksSinceLastGOV = newTotalTicks;
+      fTotalTicksSinceLastTimeCode = newTotalTicks;
+      if (vop_coding_type != 2/*B*/) {
+	fSecondsSinceLastTimeCode += modulo_time_base;
+      }
     }
   }
   
@@ -611,7 +616,7 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
   }
 
   // Compute this frame's presentation time:
-  usingSource()->computePresentationTime(fTotalTicksSinceLastGOV);
+  usingSource()->computePresentationTime(fTotalTicksSinceLastTimeCode);
 
   return curFrameSize();
 }
