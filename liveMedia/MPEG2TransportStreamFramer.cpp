@@ -45,6 +45,7 @@ MPEG2TransportStreamFramer::~MPEG2TransportStreamFramer() {
 
 void MPEG2TransportStreamFramer::doGetNextFrame() {
   // Read directly from our input source into our client's buffer:
+  fFrameSize = 0;
   fInputSource->getNextFrame(fTo, fMaxSize,
 			     afterGettingFrame, this,
 			     FramedSource::handleClosure, this);
@@ -59,17 +60,39 @@ void MPEG2TransportStreamFramer
   framer->afterGettingFrame1(frameSize, presentationTime);
 }
 
+#define TRANSPORT_SYNC_BYTE 0x47
+
 void MPEG2TransportStreamFramer::afterGettingFrame1(unsigned frameSize,
 						    struct timeval presentationTime) {
-  unsigned const numTSPackets = frameSize/TRANSPORT_PACKET_SIZE;
-  frameSize = numTSPackets*TRANSPORT_PACKET_SIZE; // an integral # of TS packets
-  if (frameSize == 0) {
+  fFrameSize += frameSize;
+  unsigned const numTSPackets = fFrameSize/TRANSPORT_PACKET_SIZE;
+  fFrameSize = numTSPackets*TRANSPORT_PACKET_SIZE; // an integral # of TS packets
+  if (fFrameSize == 0) {
     // We didn't read a complete TS packet; assume that the input source has closed.
     handleClosure(this);
     return;
   }
 
-  fFrameSize = frameSize;
+  // Make sure the data begins with a sync byte:
+  unsigned syncBytePosition;
+  for (syncBytePosition = 0; syncBytePosition < fFrameSize; ++syncBytePosition) {
+    if (fTo[syncBytePosition] == TRANSPORT_SYNC_BYTE) break;
+  }
+  if (syncBytePosition == fFrameSize) {
+    envir() << "No Transport Stream sync byte in data.";
+    handleClosure(this);
+    return;
+  } else if (syncBytePosition > 0) {
+    // There's a sync byte, but not at the start of the data.  Move the good data
+    // to the start of the buffer, then read more to fill it up again:
+    memmove(fTo, &fTo[syncBytePosition], fFrameSize - syncBytePosition);
+    fFrameSize -= syncBytePosition;
+    fInputSource->getNextFrame(&fTo[fFrameSize], syncBytePosition,
+			       afterGettingFrame, this,
+			       FramedSource::handleClosure, this);
+    return;
+  } // else normal case: the data begins with a sync byte
+
   fPresentationTime = presentationTime;
 
   // Scan through the TS packets that we read, and update our estimate of
@@ -87,7 +110,7 @@ void MPEG2TransportStreamFramer::afterGettingFrame1(unsigned frameSize,
 
 void MPEG2TransportStreamFramer::updateTSPacketDurationEstimate(unsigned char* pkt) {
   // Sanity check: Make sure we start with the sync byte:
-  if (pkt[0] != 0x47) {
+  if (pkt[0] != TRANSPORT_SYNC_BYTE) {
     envir() << "Missing sync byte!\n";
     return;
   }
