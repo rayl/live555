@@ -61,6 +61,7 @@ private:
   virtual void setPacketReorderingThresholdTime(unsigned uSeconds);
 
 private:
+  void reset();
   void doGetNextFrame1();
 
   static void networkReadHandler(MultiFramedRTPSource* source, int /*mask*/);

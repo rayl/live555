@@ -59,15 +59,20 @@ MultiFramedRTPSource
 		       unsigned char rtpPayloadFormat,
 		       unsigned rtpTimestampFrequency,
 		       BufferedPacketFactory* packetFactory)
-  : RTPSource(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency),
-    fCurrentPacketBeginsFrame(True/*by default*/),
-    fCurrentPacketCompletesFrame(True/*by default*/),
-    fAreDoingNetworkReads(False), fNeedDelivery(False),
-    fPacketLossInFragmentedFrame(False) {
+  : RTPSource(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency) {
+  reset();
   fReorderingBuffer = new ReorderingPacketBuffer(packetFactory);
 
   // Try to use a big receive buffer for RTP:
   increaseReceiveBufferTo(env, RTPgs->socketNum(), 50*1024);
+}
+
+void MultiFramedRTPSource::reset() {
+  fCurrentPacketBeginsFrame = True; // by default
+  fCurrentPacketCompletesFrame = True; // by default
+  fAreDoingNetworkReads = False;
+  fNeedDelivery = False;
+  fPacketLossInFragmentedFrame = False;
 }
 
 MultiFramedRTPSource::~MultiFramedRTPSource() {
@@ -93,7 +98,7 @@ Boolean MultiFramedRTPSource
 void MultiFramedRTPSource::doStopGettingFrames() {
   fRTPInterface.stopNetworkReading();
   fReorderingBuffer->reset();
-  fAreDoingNetworkReads = False;
+  reset();
 }
 
 void MultiFramedRTPSource::doGetNextFrame() {
