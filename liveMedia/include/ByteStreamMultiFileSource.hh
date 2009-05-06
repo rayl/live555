@@ -28,11 +28,16 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class ByteStreamMultiFileSource: public FramedSource {
 public:
   static ByteStreamMultiFileSource*
-      createNew(UsageEnvironment& env, char const** fileNameArray);
+  createNew(UsageEnvironment& env, char const** fileNameArray,
+	    unsigned preferredFrameSize = 0, unsigned playTimePerFrame = 0);
   // A 'filename' of NULL indicates the end of the array
 
+  Boolean haveStartedNewFile() const { return fHaveStartedNewFile; }
+  // True iff the most recently delivered frame was the first from a newly-opened file
+
 protected:
-  ByteStreamMultiFileSource(UsageEnvironment& env, char const** fileNameArray);
+  ByteStreamMultiFileSource(UsageEnvironment& env, char const** fileNameArray,
+			    unsigned preferredFrameSize, unsigned playTimePerFrame);
 	// called only by createNew()
 
   virtual ~ByteStreamMultiFileSource();
@@ -50,8 +55,11 @@ private:
 				unsigned durationInMicroseconds);
 
 private:
+  unsigned fPreferredFrameSize;
+  unsigned fPlayTimePerFrame;
   unsigned fNumSources;
   unsigned fCurrentlyReadSourceNumber;
+  Boolean fHaveStartedNewFile;
   char const** fFileNameArray;
   ByteStreamFileSource** fSourceArray;
 };

@@ -53,7 +53,7 @@ protected:
 
   virtual ~SimpleRTPSink();
 
-private: // redefined virtual functions
+protected: // redefined virtual functions
   virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
                                       unsigned char* frameStart,
                                       unsigned numBytesInFrame,

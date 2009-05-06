@@ -21,10 +21,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "ByteStreamMultiFileSource.hh"
 
 ByteStreamMultiFileSource
-::ByteStreamMultiFileSource(UsageEnvironment& env,
-			    char const** fileNameArray)
+::ByteStreamMultiFileSource(UsageEnvironment& env, char const** fileNameArray,
+			    unsigned preferredFrameSize, unsigned playTimePerFrame)
   : FramedSource(env),
-    fCurrentlyReadSourceNumber(0) {
+    fPreferredFrameSize(preferredFrameSize), fPlayTimePerFrame(playTimePerFrame),
+    fCurrentlyReadSourceNumber(0), fHaveStartedNewFile(False) {
     // Begin by counting the number of sources:
     for (fNumSources = 0; ; ++fNumSources) {
       if (fileNameArray[fNumSources] == NULL) break;
@@ -61,9 +62,11 @@ ByteStreamMultiFileSource::~ByteStreamMultiFileSource() {
 }
 
 ByteStreamMultiFileSource* ByteStreamMultiFileSource
-::createNew(UsageEnvironment& env, char const** fileNameArray) {
+::createNew(UsageEnvironment& env, char const** fileNameArray,
+	    unsigned preferredFrameSize, unsigned playTimePerFrame) {
   ByteStreamMultiFileSource* newSource
-    = new ByteStreamMultiFileSource(env, fileNameArray);
+    = new ByteStreamMultiFileSource(env, fileNameArray,
+				    preferredFrameSize, playTimePerFrame);
 
   return newSource;
 }
@@ -73,13 +76,16 @@ void ByteStreamMultiFileSource::doGetNextFrame() {
     // First, check whether we've run out of sources:
     if (fCurrentlyReadSourceNumber >= fNumSources) break;
 
+    fHaveStartedNewFile = False;
     ByteStreamFileSource*& source
       = fSourceArray[fCurrentlyReadSourceNumber];
     if (source == NULL) {
       // The current source hasn't been created yet.  Do this now:
       source = ByteStreamFileSource::createNew(envir(),
-			     fFileNameArray[fCurrentlyReadSourceNumber]);
+		       fFileNameArray[fCurrentlyReadSourceNumber],
+		       fPreferredFrameSize, fPlayTimePerFrame);
       if (source == NULL) break;
+      fHaveStartedNewFile = True;
     }      
 
     // (Attempt to) read from the current source.

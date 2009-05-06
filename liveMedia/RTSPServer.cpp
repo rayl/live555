@@ -503,7 +503,8 @@ void RTSPServer::RTSPClientSession
     return;
   }
   ServerMediaSubsession* subsession;
-  if (strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0) {
+  if (urlSuffix[0] != '\0' &&
+      strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0) {
     // Non-aggregated operation.
     // Look up the media subsession whose track id is "urlSuffix":
     ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
@@ -518,8 +519,8 @@ void RTSPServer::RTSPClientSession
     // Aggregated operation
     subsession = NULL;
   } else { // the request doesn't match a known stream and/or track at all!
-      handleCmd_notFound(cseq);
-      return;
+    handleCmd_notFound(cseq);
+    return;
   }
 
   if (strcmp(cmdName, "TEARDOWN") == 0) {
@@ -596,14 +597,30 @@ RTSPServer::RTSPClientSession
   resultCmdName[i] = '\0';
   if (!parseSucceeded) return False;
       
-  // Look for the URL suffix (between "/" and " RTSP/"):
+  // Skip over the prefix of any "rtsp://" URL that follows:
+  unsigned j = i+1;
+  while (j < reqStrSize && reqStr[j] == ' ') ++j; // skip over any additional spaces
+  for (j = i+1; j < reqStrSize-8; ++j) {
+    if ((reqStr[j] == 'r' || reqStr[j] == 'R')
+	&& (reqStr[j+1] == 't' || reqStr[j+1] == 'T')
+	&& (reqStr[j+2] == 's' || reqStr[j+2] == 'S')
+	&& (reqStr[j+3] == 'p' || reqStr[j+3] == 'P')
+	&& reqStr[j+4] == ':' && reqStr[j+5] == '/' && reqStr[j+6] == '/') {
+      j += 7;
+      while (j < reqStrSize && reqStr[j] != '/' && reqStr[j] != ' ') ++j;
+      i = j;
+      break;
+    }
+  }
+
+  // Look for the URL suffix (before the following "RTSP/"):
   parseSucceeded = False;
-  for (unsigned k = i+1; k < reqStrSize-6; ++k) {
-    if (reqStr[k] == ' ' && reqStr[k+1] == 'R' && reqStr[k+2] == 'T' &&
-	reqStr[k+3] == 'S' && reqStr[k+4] == 'P' && reqStr[k+5] == '/') {
-      while (reqStr[k] == ' ') --k; // skip over all spaces
+  for (unsigned k = i+1; k < reqStrSize-5; ++k) {
+    if (reqStr[k] == 'R' && reqStr[k+1] == 'T' &&
+	reqStr[k+2] == 'S' && reqStr[k+3] == 'P' && reqStr[k+4] == '/') {
+      while (--k >= i && reqStr[k] == ' ') {} // go back over all spaces before "RTSP/"
       unsigned k1 = k;
-      while (reqStr[k1] != '/' && reqStr[k1] != ' ') --k1;
+      while (k1 > i && reqStr[k1] != '/' && reqStr[k1] != ' ') --k1;
       // the URL suffix comes from [k1+1,k]
 
       // Copy "resultURLSuffix":
@@ -614,7 +631,7 @@ RTSPServer::RTSPClientSession
 
       // Also look for the URL 'pre-suffix' before this:
       unsigned k3 = --k1;
-      while (k3 > 0 && reqStr[k3] != '/' && reqStr[k3] != ' ') --k3;
+      while (k3 > i && reqStr[k3] != '/' && reqStr[k3] != ' ') --k3;
       // the URL pre-suffix comes from [k3+1,k1]
 
       // Copy "resultURLPreSuffix":
@@ -632,7 +649,7 @@ RTSPServer::RTSPClientSession
 
   // Look for "CSeq: ", then read everything up to the next \r as 'CSeq':
   parseSucceeded = False;
-  for (unsigned j = i; j < reqStrSize-6; ++j) {
+  for (j = i; j < reqStrSize-6; ++j) {
     if (reqStr[j] == 'C' && reqStr[j+1] == 'S' && reqStr[j+2] == 'e' &&
 	reqStr[j+3] == 'q' && reqStr[j+4] == ':' && reqStr[j+5] == ' ') {
       j += 6;
