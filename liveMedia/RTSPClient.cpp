@@ -1446,16 +1446,18 @@ Boolean RTSPClient::setMediaSessionParameter(MediaSession& /*session*/,
       "Session: %s\r\n"
       "%s"
       "%s"
-      "%s: %s\r\n"
-      "\r\n";
+      "Content-length: %d\r\n\r\n"
+      "%s: %s\r\n";
 
+    unsigned parameterNameLen = strlen(parameterName); 
+    unsigned parameterValueLen = strlen(parameterValue); 
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(fBaseURL)
       + 20 /* max int len */
       + strlen(fLastSessionId)
       + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize
-      + strlen(parameterName) + strlen(parameterValue);
+      + parameterNameLen + parameterValueLen;
     cmd = new char[cmdSize];
     sprintf(cmd, cmdFmt,
 	    fBaseURL,
@@ -1463,6 +1465,7 @@ Boolean RTSPClient::setMediaSessionParameter(MediaSession& /*session*/,
 	    fLastSessionId,
 	    authenticatorStr,
 	    fUserAgentHeaderStr,
+	    parameterNameLen + parameterValueLen + 2, // the "+ 2" is for the \r\n after the parameter "name: value"
 	    parameterName, parameterValue);
     delete[] authenticatorStr;
 
@@ -1509,16 +1512,16 @@ Boolean RTSPClient::getMediaSessionParameter(MediaSession& /*session*/,
 	"%s"
 	"Content-type: text/parameters\r\n"
 	"Content-length: %d\r\n\r\n"
-	"%s\r\n"
-	"\r\n";
+	"%s\r\n";
       
+      unsigned parameterNameLen = strlen(parameterName); 
       unsigned cmdSize = strlen(cmdFmt)
 	+ strlen(fBaseURL)
 	+ 20 /* max int len */
 	+ strlen(fLastSessionId)
 	+ strlen(authenticatorStr)
 	+ fUserAgentHeaderStrSize
-	+ strlen(parameterName);
+	+ parameterNameLen;
       cmd = new char[cmdSize];
       sprintf(cmd, cmdFmt,
 	      fBaseURL,
@@ -1526,7 +1529,7 @@ Boolean RTSPClient::getMediaSessionParameter(MediaSession& /*session*/,
 	      fLastSessionId,
 	      authenticatorStr,
 	      fUserAgentHeaderStr,
-	      strlen(parameterName)+2,
+	      parameterNameLen + 2, // the "+ 2" is for the \r\n after the parameter name
 	      parameterName);
     } else {
       char* const cmdFmt =

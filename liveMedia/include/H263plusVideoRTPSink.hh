@@ -15,7 +15,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2007 Live Networks, Inc.  All rights reserved.
-// RTP sink for H.263+ video (RFC 2429)
+// RTP sink for H.263+ video (RFC 4629)
 // C++ header
 
 #ifndef _H263_PLUS_VIDEO_RTP_SINK_HH

@@ -63,8 +63,9 @@ Boolean clientStartPlayingSession(Medium* client,
   extern double initialSeekTime, duration, scale;
   double endTime = initialSeekTime;
   if (scale > 0) {
-    endTime = initialSeekTime + duration;
-  } else if (scale < 0) {
+    if (duration <= 0) endTime = -1.0f;
+    else endTime = initialSeekTime + duration;
+  } else {
     endTime = initialSeekTime - duration;
     if (endTime < 0) endTime = 0.0f;
   }
