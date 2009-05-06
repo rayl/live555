@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "QuickTimeFileSink.hh"
 #include "QuickTimeGenericRTPSource.hh"
 #include "GroupsockHelper.hh"
+#include "H263plusVideoRTPSource.hh"
 #if defined(__WIN32__) || defined(_WIN32)
 #include <io.h>
 #include <fcntl.h>
@@ -149,7 +150,10 @@ private:
     struct timeval presentationTime;
     unsigned startSampleNumber;
     unsigned rtpHeader;
-    unsigned rtpTimestamp;
+    unsigned char numSpecialHeaders; // used when our RTP source is H.263+
+    unsigned specialHeaderBytesLength; // ditto
+    unsigned char specialHeaderBytes[SPECIAL_HEADER_BUFFER_SIZE]; // ditto
+    unsigned packetSizes[256];
   } fPrevFrameHintState;
 };
 
@@ -711,7 +715,6 @@ void SubsessionIOState::afterGettingFrame(unsigned packetDataSize,
     }
   }
 
-  // fprintf(stderr, "Received %d bytes -> %d, first 4 0x%08x, complete %d\n", packetDataSize, fBuffer->bytesInUse(), ntohl(*(unsigned*)(fBuffer->dataStart())), haveCompleteFrame);//#####@@@@@
   if (haveCompleteFrame) {
     useFrame(*fBuffer);
     if (fOurSink.fPacketLossCompensate) {
@@ -751,16 +754,19 @@ void SubsessionIOState::useFrame(SubsessionBuffer& buffer) {
 void SubsessionIOState::useFrameForHinting(unsigned frameSize,
 					   struct timeval presentationTime,
 					   unsigned startSampleNumber) {
-  // ##### For now, assume that each frame has just a single RTP packet.
+  // Normally, assume that each frame has just a single RTP packet.
   // This simplifies the hinting code, even though it might not be
   // true in practice.  (Instead of multiple RTP packets, we'll get
   // a single, large RTP packet that may get fragmented at the IP level.)
+  // However, if the source is H.263+, then we need to break the frame
+  // back into separate RTP packets, because we want to reuse the special
+  // header bytes that were at the start of each of the RTP packets.
+  Boolean hack263 = strcmp(fOurSubsession.codecName(), "H263-1998") == 0;
 
   // If there has been a previous frame, then output a 'hint sample' for it.
   // (We use the current frame's presentation time to compute the previous
   // hint sample's duration.)
   RTPSource* const rs = fOurSubsession.rtpSource(); // abbrev 
-  unsigned rtpTimestamp = rs->curPacketRTPTimestamp();
   struct timeval const& ppt = fPrevFrameHintState.presentationTime; //abbrev
   if (ppt.tv_sec != 0 || ppt.tv_usec != 0) {
     double duration = (presentationTime.tv_sec - ppt.tv_sec)
@@ -768,54 +774,98 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
     if (duration < 0.0) duration = 0.0;
     unsigned hintSampleDuration
       = (unsigned)((2*duration*fQTTimeScale+1)/2); // round
-
     unsigned const hintSampleDestFileOffset = ftell(fOurSink.fOutFid);
-    unsigned numDTEntries = 1;
-    unsigned dataFrameSize = fPrevFrameHintState.frameSize;
-    unsigned sampleNumber = fPrevFrameHintState.startSampleNumber;
+
+    unsigned short numPTEntries = 1; // normal case
+    unsigned char* immediateDataPtr = NULL;
+    unsigned immediateDataBytesRemaining = 0;
+    if (hack263) { // special case
+      numPTEntries = fPrevFrameHintState.numSpecialHeaders;
+      immediateDataPtr = fPrevFrameHintState.specialHeaderBytes;
+      immediateDataBytesRemaining
+	= fPrevFrameHintState.specialHeaderBytesLength;
+    }
+    unsigned hintSampleSize
+      = fOurSink.addHalfWord(numPTEntries);// Entry count
+    hintSampleSize += fOurSink.addHalfWord(0x0000); // Reserved
+
     unsigned offsetWithinSample = 0;
+    for (unsigned i = 0; i < numPTEntries; ++i) {
+      // Output a Packet Table entry (representing a single RTP packet):
+      unsigned short numDTEntries = 1;
+      unsigned rtpHeader = fPrevFrameHintState.rtpHeader;
+      unsigned dataFrameSize = fPrevFrameHintState.frameSize;
+      unsigned sampleNumber = fPrevFrameHintState.startSampleNumber;
 
-    // H.263+ sessions are treated especially.  The first two bytes
-    // are replaced with 0x0400 ##### 
-    Boolean hack263 = strcmp(fOurSubsession.codecName(), "H263-1998") == 0;
-    if (hack263) {
-      ++numDTEntries;
-      dataFrameSize -= 2;
-      offsetWithinSample += 2;
+      unsigned char immediateDataLen = 0;
+      if (hack263) {
+	++numDTEntries; // to include a Data Table entry for the special hdr
+	if (immediateDataBytesRemaining > 0) {
+	  immediateDataLen = *immediateDataPtr++;
+	  --immediateDataBytesRemaining;
+	  if (immediateDataLen > immediateDataBytesRemaining) {
+	    // shouldn't happen (length byte was bad)
+	    immediateDataLen = immediateDataBytesRemaining;
+	  }
+	}
+	dataFrameSize
+	  = fPrevFrameHintState.packetSizes[i] - immediateDataLen;
+
+	Boolean PbitSet
+	  = immediateDataLen >= 1 && (immediateDataPtr[0]&0x4) != 0;
+	if (PbitSet) {
+	  offsetWithinSample += 2; // to omit the two leading 0 bytes
+	}
+
+	if (i+1 < numPTEntries) {
+	  // This is not the last RTP packet, so clear the marker bit:
+	  rtpHeader &=~ (1<<23);
+	}
+      }
+
+      // Output the Packet Table:
+      hintSampleSize += fOurSink.addWord(0); // Relative transmission time
+      unsigned seqNumBehind = numPTEntries - 1 - i;
+      hintSampleSize += fOurSink.addWord(rtpHeader - seqNumBehind);
+          // RTP header info + RTP sequence number (modified by packet #)
+      hintSampleSize += fOurSink.addHalfWord(0x0000); // Flags
+      hintSampleSize += fOurSink.addHalfWord(numDTEntries); // Entry count
+
+      // Output the Data Table:
+      if (hack263) {
+	//   use the "Immediate Data" format (1):
+	hintSampleSize += fOurSink.addByte(1); // Source
+	unsigned char len = immediateDataLen > 14 ? 14 : immediateDataLen;
+	hintSampleSize += fOurSink.addByte(len); // Length
+	unsigned char j;
+	for (j = 0; j < len; ++j) {
+	  hintSampleSize += fOurSink.addByte(immediateDataPtr[j]); // Data
+	}
+	for (j = len; j < 14; ++j) {
+	  hintSampleSize += fOurSink.addByte(0); // Data (padding)
+	}
+
+	immediateDataPtr += immediateDataLen;
+	immediateDataBytesRemaining -= immediateDataLen;
+      }
+      //   use the "Sample Data" format (2):
+      hintSampleSize += fOurSink.addByte(2); // Source
+      hintSampleSize += fOurSink.addByte(0); // Track ref index
+      hintSampleSize += fOurSink.addHalfWord(dataFrameSize); // Length
+      hintSampleSize += fOurSink.addWord(sampleNumber); // Sample number
+      hintSampleSize += fOurSink.addWord(offsetWithinSample); // Offset
+      // Get "bytes|samples per compression block" from the hinted track:
+      unsigned short const bytesPerCompressionBlock
+	= fTrackHintedByUs->fQTBytesPerFrame;
+      unsigned short const samplesPerCompressionBlock
+	= fTrackHintedByUs->fQTSamplesPerFrame;
+      hintSampleSize += fOurSink.addHalfWord(bytesPerCompressionBlock);
+      hintSampleSize += fOurSink.addHalfWord(samplesPerCompressionBlock);
+
+      offsetWithinSample += dataFrameSize;// for the next iteration (if any)
     }
 
-    unsigned hintSampleSize 
-      = fOurSink.addWord(0x00010000);// Entry count + Reserved
-
-    // Packet Table:
-    hintSampleSize += fOurSink.addWord(0x00000000); // Relative trans. time
-    hintSampleSize += fOurSink.addWord(fPrevFrameHintState.rtpHeader);
-      // RTP header info + RTP sequence number
-    hintSampleSize += fOurSink.addWord(numDTEntries); // Flags + Entry count
-    // How to deal with extra headers in RTP packet??? #####
-
-    // Data Table:
-    if (hack263) {
-      //   use the "Immediate Data" format (1):
-      hintSampleSize += fOurSink.addByte(1); // Source
-      hintSampleSize += fOurSink.addByte(2); // Length
-      hintSampleSize += fOurSink.addHalfWord(0x0400); // Data
-      hintSampleSize += fOurSink.addZeroWords(3); // Data (padding)
-    }
-    //   use the "Sample Data" format (2):
-    hintSampleSize += fOurSink.addByte(2); // Source
-    hintSampleSize += fOurSink.addByte(0); // Track ref index
-    hintSampleSize += fOurSink.addHalfWord(dataFrameSize); // Length
-    hintSampleSize += fOurSink.addWord(sampleNumber); // Sample number
-    hintSampleSize += fOurSink.addWord(offsetWithinSample); // Offset
-    // Get "bytes|samples per compression block" from the hinted track:
-    unsigned short const bytesPerCompressionBlock
-      = fTrackHintedByUs->fQTBytesPerFrame;
-    unsigned short const samplesPerCompressionBlock
-      = fTrackHintedByUs->fQTSamplesPerFrame;
-    hintSampleSize += fOurSink.addHalfWord(bytesPerCompressionBlock);
-    hintSampleSize += fOurSink.addHalfWord(samplesPerCompressionBlock);
-
+    // Make note of this completed hint sample frame:
     fQTTotNumSamples += useFrame1(hintSampleSize, ppt, hintSampleDuration,
 				  hintSampleDestFileOffset);
   }
@@ -828,7 +878,20 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
     = rs->curPacketMarkerBit()<<23
     | (rs->rtpPayloadFormat()&0x7F)<<16
     | rs->curPacketRTPSeqNum();
-  fPrevFrameHintState.rtpTimestamp = rtpTimestamp;
+  if (hack263) {
+      H263plusVideoRTPSource* rs_263 = (H263plusVideoRTPSource*)rs;
+      fPrevFrameHintState.numSpecialHeaders = rs_263->fNumSpecialHeaders;
+      fPrevFrameHintState.specialHeaderBytesLength
+	= rs_263->fSpecialHeaderBytesLength;
+      unsigned i;
+      for (i = 0; i < rs_263->fSpecialHeaderBytesLength; ++i) {
+	fPrevFrameHintState.specialHeaderBytes[i]
+	  = rs_263->fSpecialHeaderBytes[i];
+      }
+      for (i = 0; i < rs_263->fNumSpecialHeaders; ++i) {
+	fPrevFrameHintState.packetSizes[i] = rs_263->fPacketSizes[i];
+      }
+  }
 }
 
 unsigned SubsessionIOState::useFrame1(unsigned sourceDataSize,

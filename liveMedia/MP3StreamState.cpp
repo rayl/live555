@@ -141,15 +141,15 @@ Boolean MP3StreamState::readFrame(unsigned char* outBuf, unsigned outBufSize,
 
 void MP3StreamState::getAttributes(char* buffer, unsigned bufferSize) const {
   char const* formatStr
-    = "bandwidth %d MPEGnumber %d MPEGlayer 3 samplingFrequency %d isStereo %d playTime %d";
+    = "bandwidth %d MPEGnumber %d MPEGlayer %d samplingFrequency %d isStereo %d playTime %d";
 #if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
   /* snprintf() isn't defined, so just use sprintf() - ugh! */
   sprintf(buffer, formatStr,
-	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().samplingFreq, fr().isStereo,
+	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().layer, fr().samplingFreq, fr().isStereo,
 	  filePlayTime());
 #else
   snprintf(buffer, bufferSize, formatStr,
-	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().samplingFreq, fr().isStereo,
+	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().layer, fr().samplingFreq, fr().isStereo,
 	  filePlayTime());
 #endif
 }
@@ -224,7 +224,7 @@ Boolean MP3StreamState::findNextFrame() {
     if (   (fr().hdr & 0xffe00000) != 0xffe00000
 	|| (fr().hdr & 0x00000C00) == 0x00000C00/* 'stream error' test below */
 	|| (fr().hdr & 0x0000F000) == 0 /* 'free format' test below */
-        || (fr().hdr & 0x00060000) != 0x00020000 /* test for layer 3 */
+//#####   || (fr().hdr & 0x00060000) != 0x00020000 /* test for layer 3 */
        ) {
       /* RSF: Do the following test even if we're not at the
 	 start of the file, in case we have two or more
@@ -322,12 +322,14 @@ Boolean MP3StreamState::findNextFrame() {
       return False;
     }
     
+#ifdef MP3_ONLY
     if (fr().layer != 3) {
 #ifdef DEBUG_ERRORS
       fprintf(stderr, "MPEG layer %d is not supported!\n", fr().layer);
 #endif
       return False;
     }
+#endif
   }
   
   if ((l = readFromStream(fr().frameBytes, fr().frameSize))

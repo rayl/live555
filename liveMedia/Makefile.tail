@@ -141,7 +141,7 @@ include/MediaSession.hh:	include/RTCP.hh
 ServerMediaSession.$(CPP):	include/ServerMediaSession.hh
 PassiveServerMediaSession.$(CPP):	include/PassiveServerMediaSession.hh
 include/PassiveServerMediaSession.hh:	include/ServerMediaSession.hh
-QuickTimeFileSink.$(CPP):	include/QuickTimeFileSink.hh
+QuickTimeFileSink.$(CPP):	include/QuickTimeFileSink.hh include/H263plusVideoRTPSource.hh
 include/QuickTimeFileSink.hh:	include/MediaSession.hh
 QuickTimeGenericRTPSource.$(CPP):	include/QuickTimeGenericRTPSource.hh
 include/QuickTimeGenericRTPSource.hh:	include/MultiFramedRTPSource.hh
