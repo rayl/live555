@@ -531,24 +531,24 @@ void SubsessionIOState::setFinalQTstate() {
   duration = fQTDuration/(double)fQTTimeScale;
 
   if (fOurSink.fSyncStreams) {
-    //        fprintf(stderr, "old duration (time scale %d): %f\n", fQTTimeScale, duration);//#####@@@@@
+    //            fprintf(stderr, "Old duration (time scale %d): %f\n", fQTTimeScale, duration);//#####@@@@@
     // In this case, compute fQTDuration differently: using the
     // presentation timestamps in the chunks (because we will be
     // using an edit list to keep the stream synchronized).
     if (fHeadChunk == 0) return;
     struct timeval const& startTime = fOurSink.fFirstDataTime;
     struct timeval const& endTime = fTailChunk->fPresentationTime;
-    //fprintf(stderr, "start %u.%06d, end %u.%06d\n", startTime.tv_sec, startTime.tv_usec, endTime.tv_sec, endTime.tv_usec);//#####@@@@@
+    //    fprintf(stderr, "start %u.%06d, end %u.%06d\n", startTime.tv_sec, startTime.tv_usec, endTime.tv_sec, endTime.tv_usec);//#####@@@@@
     duration = (endTime.tv_sec - startTime.tv_sec)
       + (endTime.tv_usec - startTime.tv_usec)/1000000.0;
-    //fprintf(stderr, "New duration: %f\n", duration);//#####@@@@@
+    //    fprintf(stderr, "New duration: %f\n", duration);//#####@@@@@
 
     // Add on the duration of the last chunk:
     unsigned lastChunkDuration
       = fTailChunk->fNumFrames*fQTSamplesPerFrame*fQTTimeUnitsPerSample;
     duration += lastChunkDuration/(double)fQTTimeScale;
     fQTDuration = (unsigned)(duration*fQTTimeScale);
-    //        fprintf(stderr, "+ last chunk duration (%d frames, %d samples/frame, %d units/sample) %d => %f, %d\n", fTailChunk->fNumFrames, fQTSamplesPerFrame, fQTTimeUnitsPerSample, lastChunkDuration, duration, fQTDuration);//#####@@@@@
+    //            fprintf(stderr, "+ last chunk duration (%d frames, %d samples/frame, %d units/sample) %d => %f, %d\n", fTailChunk->fNumFrames, fQTSamplesPerFrame, fQTTimeUnitsPerSample, lastChunkDuration, duration, fQTDuration);//#####@@@@@
   }
 
   if (duration > fOurSink.fMaxTrackDuration) {
@@ -704,7 +704,7 @@ Boolean SubsessionIOState::syncOK(struct timeval presentationTime) {
 	// But now we are
 	fSyncTime = presentationTime;
 	++s.fNumSyncedSubsessions;
-	//		fprintf(stderr, "subsession %d (%d): sync time %u.%06d\n", s.fNumSyncedSubsessions, fQTTimeScale, fSyncTime.tv_sec, fSyncTime.tv_usec);fflush(stderr);//#####@@@@@
+	//fprintf(stderr, "subsession %d (%d): sync time %u.%06d\n", s.fNumSyncedSubsessions, fQTTimeScale, fSyncTime.tv_sec, fSyncTime.tv_usec);fflush(stderr);//#####@@@@@
 
 	if (timevalGE(fSyncTime, s.fNewestSyncTime)) {
 	  s.fNewestSyncTime = fSyncTime;

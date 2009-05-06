@@ -618,24 +618,40 @@ void signalHandlerShutdown(int /*sig*/) {
 void checkForPacketArrival(void* clientData) {
   if (!notifyOnPacketArrival) return; // we're not checking 
 
-  // Check each subsession to see whether it's received data packets:
+  // Check each subsession, to see whether it has received data packets:
+  Boolean someSubsessionsHaveReceivedDataPackets = False;
+  Boolean allSubsessionsHaveReceivedDataPackets = True;
+  Boolean allSubsessionsHaveBeenSynced = True;
   MediaSubsessionIterator iter(*session);
   MediaSubsession* subsession;
   while ((subsession = iter.next()) != NULL) {
     RTPSource* src = subsession->rtpSource();
-    if (src != NULL
-	&& src->receptionStatsDB().numActiveSourcesSinceLastReset() > 0) {
-      // A data packet has arrived
-      struct timeval timeNow;
-      gettimeofday(&timeNow, &Idunno);
-      fprintf(stderr, "Data packets have begun arriving [%ld%03ld]\007\n",
-	      timeNow.tv_sec, timeNow.tv_usec/1000);
-      notifyOnPacketArrival = False;
-      break;
+    if (src == NULL) continue;
+    if (src->receptionStatsDB().numActiveSourcesSinceLastReset() > 0) {
+      // At least one data packet has arrived
+      someSubsessionsHaveReceivedDataPackets = True;
+    } else {
+      allSubsessionsHaveReceivedDataPackets = False;
+    }
+    if (!src->hasBeenSynchronizedUsingRTCP()) {
+      // At least one subsession remains unsynchronized:
+      allSubsessionsHaveBeenSynced = False;
     }
   }
 
-  // Reschedule this check again, after a delay:
+  if ((!syncStreams && someSubsessionsHaveReceivedDataPackets) ||
+      (syncStreams && allSubsessionsHaveReceivedDataPackets
+       && allSubsessionsHaveBeenSynced)) {
+    // Notify the user:
+    struct timeval timeNow;
+    gettimeofday(&timeNow, &Idunno);
+    fprintf(stderr, "%sata packets have begun arriving [%ld%03ld]\007\n",
+	    syncStreams ? "Synchronized d" : "D",
+	    timeNow.tv_sec, timeNow.tv_usec/1000);
+    return;
+  }
+
+  // No luck, so reschedule this check again, after a delay:
   int uSecsToDelay = 100000; // 100 ms
   currentTimerTask
     = env->taskScheduler().scheduleDelayedTask(uSecsToDelay,
