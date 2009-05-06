@@ -111,8 +111,7 @@ public:
   char const* mediumName() const { return fMediumName; }
   char const* codecName() const { return fCodecName; }
   char const* controlPath() const { return fControlPath; }
-  Boolean fmtp_cpresent() const { return fCpresent; }
-  char const* fmtp_config() const { return fConfig; }
+
   int mctSLAPSessionId() const { return fMCT_SLAP_SessionId; }
   unsigned mctSLAPStagger() const { return fMCT_SLAP_Stagger; }
   unsigned short videoWidth() const { return fVideoWidth; }
@@ -144,6 +143,29 @@ public:
   char const* connectionEndpointName() const {
     return fConnectionEndpointName;
   }
+
+  // Various parameters specific to MPEG-4 streams:
+  // (most of these are unnecessary; don't define them unless needed)
+#if 0
+  unsigned fmtp_auxiliarydatasizelength() const { return fAuxiliarydatasizelength; }
+  unsigned fmtp_constantduration() const { return fConstantduration; }
+  unsigned fmtp_constantsize() const { return fConstantsize; }
+  unsigned fmtp_ctsdeltalength() const { return fCtsdeltalength; }
+  unsigned fmtp_de_interleavebuffersize() const { return fDe_interleavebuffersize; }
+  unsigned fmtp_dtsdeltalength() const { return fDtsdeltalength; }
+  unsigned fmtp_indexdeltalength() const { return fIndexdeltalength; }
+  unsigned fmtp_indexlength() const { return fIndexlength; }
+  unsigned fmtp_maxdisplacement() const { return fMaxdisplacement; }
+  unsigned fmtp_objecttype() const { return fObjecttype; }
+  unsigned fmtp_profile_level_id() const { return fProfile_level_id; }
+  unsigned fmtp_sizelength() const { return fSizelength; }
+  unsigned fmtp_streamstateindication() const { return fStreamstateindication; }
+  unsigned fmtp_streamtype() const { return fStreamtype; }
+  Boolean fmtp_cpresent() const { return fCpresent; }
+  Boolean fmtp_randomaccessindication() const { return fRandomaccessindication; }
+  char const* fmtp_mode() const { return fMode; }
+#endif
+  char const* fmtp_config() const { return fConfig; }
 
   // Public fields that external callers can use to keep state.
   // (They are responsible for all storage management on these fields)
@@ -193,8 +215,16 @@ private:
   char* fCodecName;
   unsigned fRTPTimestampFrequency;
   char* fControlPath;
-  Boolean fCpresent;
-  char* fConfig;
+
+  // MPEG-4-specific parameters:
+  unsigned fAuxiliarydatasizelength, fConstantduration, fConstantsize;
+  unsigned fCtsdeltalength, fDe_interleavebuffersize, fDtsdeltalength;
+  unsigned fIndexdeltalength, fIndexlength, fMaxdisplacement, fObjecttype;
+  unsigned fProfile_level_id, fSizelength, fStreamstateindication;
+  unsigned fStreamtype;
+  Boolean fCpresent, fRandomaccessindication;
+  char *fConfig, *fMode;
+
   float fPlayEndTime;
   int fMCT_SLAP_SessionId; // 0 if not part of a MCT SLAP session
   unsigned fMCT_SLAP_Stagger; // seconds (used only if the above is != 0)

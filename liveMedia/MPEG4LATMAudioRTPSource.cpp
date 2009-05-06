@@ -30,7 +30,7 @@ private: // redefined virtual functions
 
 class LATMBufferedPacketFactory: public BufferedPacketFactory {
 private: // redefined virtual functions
-  virtual BufferedPacket* createNew();
+  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
 };
 
 ///////// MPEG4LATMAudioRTPSource implementation ////////
@@ -95,7 +95,8 @@ unsigned LATMBufferedPacket
   return (resultFrameSize <= dataSize) ? resultFrameSize : dataSize;
 }
 
-BufferedPacket* LATMBufferedPacketFactory::createNew() {
+BufferedPacket* LATMBufferedPacketFactory
+::createNew(MultiFramedRTPSource* /*ourSource*/) {
   return new LATMBufferedPacket;
 }
 

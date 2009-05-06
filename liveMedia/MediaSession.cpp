@@ -428,7 +428,14 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fClientPortNum(0), fRTPPayloadFormat(0xFF),
     fSavedSDPLines(NULL), fMediumName(NULL), fCodecName(NULL),
     fRTPTimestampFrequency(0), fControlPath(NULL),
-    fCpresent(False), fConfig(NULL), fPlayEndTime(0.0),
+    fAuxiliarydatasizelength(0), fConstantduration(0), fConstantsize(0),
+    fCtsdeltalength(0), fDe_interleavebuffersize(0), fDtsdeltalength(0),
+    fIndexdeltalength(0), fIndexlength(0), fMaxdisplacement(0),
+    fObjecttype(0), fProfile_level_id(0), fSizelength(0),
+    fStreamstateindication(0), fStreamtype(0),
+    fCpresent(False), fRandomaccessindication(False),
+    fConfig(NULL), fMode(NULL),
+    fPlayEndTime(0.0),
     fMCT_SLAP_SessionId(0), fMCT_SLAP_Stagger(0),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1),
     fRTPSocket(NULL), fRTCPSocket(NULL),
@@ -440,7 +447,7 @@ MediaSubsession::~MediaSubsession() {
 
   delete fConnectionEndpointName;
   delete fSavedSDPLines; delete fMediumName; delete fCodecName;
-  delete fControlPath; delete fConfig;
+  delete fControlPath; delete fConfig; delete fMode;
 
   delete fNext;
 }
@@ -579,7 +586,9 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	= MPEG4GenericRTPSource::createNew(env(), fRTPSocket,
 					   fRTPPayloadFormat,
 					   fRTPTimestampFrequency,
-					   fMediumName);
+					   fMediumName, fMode,
+					   fSizelength, fIndexlength,
+					   fIndexdeltalength);
     } else if (strcmp(fCodecName, "MPV") == 0) { // MPEG-1 or 2 video
       fReadSource = fRTPSource
 	= MPEGVideoRTPSource::createNew(env(), fRTPSocket,
@@ -818,7 +827,7 @@ Boolean MediaSubsession::parseSDPAttribute_range(char const* sdpLine) {
 
 Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
   // Check for a "a=fmtp:" line:
-  // TEMP: We check only for "cpresent=" and "config=" #####
+  // TEMP: We check only for a handful of expected parameter names #####
   // Later: (i) check that payload format number matches; #####
   //        (ii) look for other parameters also (generalize?) #####  
   do {
@@ -827,21 +836,58 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
 
     // The remaining "sdpLine" should be a sequence of
     //     <name>=<value>;
-    // parameter assignments.  Look at each of these:
-    char* valueStr = strdup(sdpLine);
-    while (*sdpLine != '\0' && *sdpLine != '\r' && *sdpLine != '\n') {
-      int cpresent;
-      if (sscanf(sdpLine, " cpresent = %d", &cpresent) == 1) {
-	fCpresent = cpresent != 0;
-      } else if (sscanf(sdpLine, " config = %[^; \t\r\n]", valueStr) == 1) {
+    // parameter assignments.  Look at each of these.
+    // First, convert the line to lower-case, to ease comparison:
+    char* const lineCopy = strdup(sdpLine); char* line = lineCopy;
+    for (char* c = line; *c != '\0'; ++c) *c = tolower(*c);
+    while (*line != '\0' && *line != '\r' && *line != '\n') {
+      unsigned u;
+      char* valueStr = strdup(line);
+      if (sscanf(line, " auxiliarydatasizelength = %u", &u) == 1) {
+	fAuxiliarydatasizelength = u;
+      } else if (sscanf(line, " constantduration = %u", &u) == 1) {
+	fConstantduration = u;
+      } else if (sscanf(line, " constantsize; = %u", &u) == 1) {
+	fConstantsize = u;
+      } else if (sscanf(line, " ctsdeltalength = %u", &u) == 1) {
+	fCtsdeltalength = u;
+      } else if (sscanf(line, " de-interleavebuffersize = %u", &u) == 1) {
+	fDe_interleavebuffersize = u;
+      } else if (sscanf(line, " dtsdeltalength = %u", &u) == 1) {
+	fDtsdeltalength = u;
+      } else if (sscanf(line, " indexdeltalength = %u", &u) == 1) {
+	fIndexdeltalength = u;
+      } else if (sscanf(line, " indexlength = %u", &u) == 1) {
+	fIndexlength = u;
+      } else if (sscanf(line, " maxdisplacement = %u", &u) == 1) {
+	fMaxdisplacement = u;
+      } else if (sscanf(line, " objecttype = %u", &u) == 1) {
+	fObjecttype = u;
+      } else if (sscanf(line, " profile-level-id = %u", &u) == 1) {
+	fProfile_level_id = u;
+      } else if (sscanf(line, " sizelength = %u", &u) == 1) {
+	fSizelength = u;
+      } else if (sscanf(line, " streamstateindication = %u", &u) == 1) {
+	fStreamstateindication = u;
+      } else if (sscanf(line, " streamtype = %u", &u) == 1) {
+	fStreamtype = u;
+      } else if (sscanf(line, " cpresent = %u", &u) == 1) {
+	fCpresent = u != 0;
+      } else if (sscanf(line, " randomaccessindication = %u", &u) == 1) {
+	fRandomaccessindication = u != 0;
+      } else if (sscanf(line, " config = %[^; \t\r\n]", valueStr) == 1) {
 	delete fConfig; fConfig = strdup(valueStr);
+      } else if (sscanf(line, " mode = %[^; \t\r\n]", valueStr) == 1) {
+	delete fMode; fMode = strdup(valueStr);
       }
+      delete valueStr;
 
       // Move to the next parameter assignment string:
-      while (*sdpLine != '\0' && *sdpLine != '\r' && *sdpLine != '\n'
-	     && *sdpLine != ';') ++sdpLine;
-      while (*sdpLine == ';') ++sdpLine;
+      while (*line != '\0' && *line != '\r' && *line != '\n'
+	     && *line != ';') ++line;
+      while (*line == ';') ++line;
     }
+    delete lineCopy;
     return True;
   } while (0);
 

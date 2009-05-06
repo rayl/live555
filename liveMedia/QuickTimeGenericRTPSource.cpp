@@ -43,7 +43,7 @@ public:
   QTGenericBufferedPacketFactory(QuickTimeGenericRTPSource& ourSource);
 
 private: // redefined virtual functions
-  virtual BufferedPacket* createNew();
+  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
 
 private:
   QuickTimeGenericRTPSource& fOurSource;
@@ -276,6 +276,7 @@ QTGenericBufferedPacketFactory
   : fOurSource(ourSource) {
 }
 
-BufferedPacket* QTGenericBufferedPacketFactory::createNew() {
+BufferedPacket* QTGenericBufferedPacketFactory
+::createNew(MultiFramedRTPSource* /*ourSource*/) {
   return new QTGenericBufferedPacket(fOurSource);
 }

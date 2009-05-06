@@ -30,7 +30,7 @@ public:
   ReorderingPacketBuffer(BufferedPacketFactory* packetFactory);
   virtual ~ReorderingPacketBuffer();
 
-  BufferedPacket* getFreePacket();
+  BufferedPacket* getFreePacket(MultiFramedRTPSource* ourSource);
   void storePacket(BufferedPacket* bPacket);
   BufferedPacket* getNextCompletedPacket(Boolean& packetLossPreceded);
   void releaseUsedPacket(BufferedPacket* packet);
@@ -198,7 +198,8 @@ static int Idunno;
 void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
 					      int /*mask*/) {
   // Get a free BufferedPacket descriptor to hold the new network packet:
-  BufferedPacket* bPacket = source->fReorderingBuffer->getFreePacket();
+  BufferedPacket* bPacket
+    = source->fReorderingBuffer->getFreePacket(source);
 
   // Read the network packet, and perform sanity checks on the RTP header:
   Boolean readSuccess = False;
@@ -352,7 +353,8 @@ void BufferedPacket::use(unsigned char* to, unsigned toSize,
   rtpMarkerBit = fRTPMarkerBit;
 }
 
-BufferedPacket* BufferedPacketFactory::createNew() {
+BufferedPacket* BufferedPacketFactory
+::createNew(MultiFramedRTPSource* /*ourSource*/) {
   return new BufferedPacket;
 }
 
@@ -373,12 +375,15 @@ ReorderingPacketBuffer::~ReorderingPacketBuffer() {
   delete fPacketFactory;
 }
 
-BufferedPacket* ReorderingPacketBuffer::getFreePacket() {
+BufferedPacket* ReorderingPacketBuffer
+::getFreePacket(MultiFramedRTPSource* ourSource) {
   if (fSavedPacket == NULL) { // we're being called for the first time
-    fSavedPacket = fPacketFactory->createNew();
+    fSavedPacket = fPacketFactory->createNew(ourSource);
   }
 
-  return fHeadPacket == NULL ? fSavedPacket : fPacketFactory->createNew();
+  return fHeadPacket == NULL
+    ? fSavedPacket
+    : fPacketFactory->createNew(ourSource);
 }
 
 void ReorderingPacketBuffer::storePacket(BufferedPacket* bPacket) {

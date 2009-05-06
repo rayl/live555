@@ -31,7 +31,7 @@ private: // redefined virtual functions
 
 class ADUBufferedPacketFactory: public BufferedPacketFactory {
 private: // redefined virtual functions
-  virtual BufferedPacket* createNew();
+  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
 };
 
 ///////// MP3ADURTPSource implementation ////////
@@ -74,6 +74,7 @@ unsigned ADUBufferedPacket
   return (fullADUSize <= dataSize) ? fullADUSize : dataSize;
 }
 
-BufferedPacket* ADUBufferedPacketFactory::createNew() {
+BufferedPacket* ADUBufferedPacketFactory
+::createNew(MultiFramedRTPSource* /*ourSource*/) {
   return new ADUBufferedPacket;
 }

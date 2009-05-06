@@ -132,7 +132,7 @@ private:
 
 class BufferedPacketFactory {
 public:
-  virtual BufferedPacket* createNew();
+  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
 };
 
 #endif

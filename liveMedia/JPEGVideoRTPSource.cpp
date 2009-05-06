@@ -37,7 +37,7 @@ private:
 
 class JPEGBufferedPacketFactory: public BufferedPacketFactory {
 private: // redefined virtual functions
-  virtual BufferedPacket* createNew();
+  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
 };
 
 ////////// JPEGVideoRTPSource implementation //////////
@@ -301,6 +301,7 @@ void JPEGBufferedPacket::reset() {
   fHead = fTail = offset;
 }
 
-BufferedPacket* JPEGBufferedPacketFactory::createNew() {
+BufferedPacket* JPEGBufferedPacketFactory
+::createNew(MultiFramedRTPSource* /*ourSource*/) {
   return new JPEGBufferedPacket;
 }

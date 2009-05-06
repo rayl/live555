@@ -136,7 +136,7 @@ public:
   QCELPBufferedPacketFactory(RawQCELPRTPSource& ourSource);
 
 private: // redefined virtual functions
-  virtual BufferedPacket* createNew();
+  virtual BufferedPacket* createNew(MultiFramedRTPSource* ourSource);
 
 private:
   RawQCELPRTPSource& fOurSource;
@@ -255,7 +255,8 @@ QCELPBufferedPacketFactory
   : fOurSource(ourSource) {
 }
 
-BufferedPacket* QCELPBufferedPacketFactory::createNew() {
+BufferedPacket* QCELPBufferedPacketFactory
+::createNew(MultiFramedRTPSource* ourSource) {
   return new QCELPBufferedPacket(fOurSource);
 }
 

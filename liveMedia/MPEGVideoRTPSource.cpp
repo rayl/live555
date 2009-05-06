@@ -53,7 +53,7 @@ Boolean MPEGVideoRTPSource
   u_int32_t eBit = header&0x00000800; // end-of-slice
 
   fCurrentPacketBeginsFrame = (sBit|bBit) != 0;
-  fCurrentPacketCompletesFrame = (sBit|eBit) != 0;
+  fCurrentPacketCompletesFrame = ((sBit&~bBit)|eBit) != 0;
 
   resultSpecialHeaderSize = 4;
   return True;

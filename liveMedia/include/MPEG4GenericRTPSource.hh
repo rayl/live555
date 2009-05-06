@@ -31,7 +31,11 @@ public:
   createNew(UsageEnvironment& env, Groupsock* RTPgs,
 	    unsigned char rtpPayloadFormat,
 	    unsigned rtpTimestampFrequency,
-	    char const* mediumName);
+	    char const* mediumName,
+	    char const* mode, unsigned sizeLength, unsigned indexLength,
+	    unsigned indexDeltaLength
+	    // add other parameters later
+	    );
   // mediumName is "audio", "video", or "application"
   // it *cannot* be NULL
 
@@ -42,7 +46,11 @@ private:
   MPEG4GenericRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 			unsigned char rtpPayloadFormat,
 			unsigned rtpTimestampFrequency,
-			char const* mediumName);
+			char const* mediumName,
+			char const* mode,
+			unsigned sizeLength, unsigned indexLength,
+			unsigned indexDeltaLength
+			);
       // called only by createNew()
 
 private:
@@ -55,6 +63,14 @@ private:
 
 private:
   char* fMIMEType;
+
+  char* fMode;
+  unsigned fSizeLength, fIndexLength, fIndexDeltaLength;
+  unsigned fNumAUHeaders; // in the most recently read packet
+  unsigned fNextAUHeader; // index of the next AU Header to read
+  class AUHeader* fAUHeaders;
+
+  friend class MPEG4GenericBufferedPacket;
 };
 
 #endif
