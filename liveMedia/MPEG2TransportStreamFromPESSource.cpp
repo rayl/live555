@@ -31,7 +31,8 @@ MPEG2TransportStreamFromPESSource
 ::MPEG2TransportStreamFromPESSource(UsageEnvironment& env,
 				    MPEG1or2DemuxedElementaryStream* inputSource)
   : MPEG2TransportStreamMultiplexor(env),
-    fInputSource(inputSource), fInputBuffer(NULL) {
+    fInputSource(inputSource) {
+  fInputBuffer = new unsigned char[MAX_PES_PACKET_SIZE];
 }
 
 MPEG2TransportStreamFromPESSource::~MPEG2TransportStreamFromPESSource() {
@@ -43,7 +44,6 @@ void MPEG2TransportStreamFromPESSource::doStopGettingFrames() {
 }
 
 void MPEG2TransportStreamFromPESSource::awaitNewBuffer() {
-  fInputBuffer = new unsigned char[MAX_PES_PACKET_SIZE];
   fInputSource->getNextFrame(fInputBuffer, MAX_PES_PACKET_SIZE,
 			     afterGettingFrame, this,
 			     FramedSource::handleClosure, this);

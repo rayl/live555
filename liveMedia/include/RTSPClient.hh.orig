@@ -201,9 +201,6 @@ private:
   // The following fields are used to implement the non-standard Kasenna protocol:
   Boolean fServerIsKasenna;
   char* fKasennaContentType;
-
-  // The following is used to deal with Microsoft servers' non-standard use of RTSP:
-  Boolean fServerIsMicrosoft;
 };
 
 #endif

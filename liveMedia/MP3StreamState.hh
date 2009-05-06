@@ -62,6 +62,9 @@ public:
 
   void checkForXingHeader(); // hack for Xing VBR files
 
+protected: // private->protected requested by Pierre l'Hussiez
+  unsigned readFromStream(unsigned char* buf, unsigned numChars);
+
 private:
   MP3FrameParams& fr() {return fCurrentFrame;}
   MP3FrameParams const& fr() const {return fCurrentFrame;}
@@ -69,7 +72,6 @@ private:
   struct timeval currentFramePlayTime() const;
 
   Boolean findNextFrame();
-  unsigned readFromStream(unsigned char* buf, unsigned numChars);
 
 private:
   UsageEnvironment& fEnv;
