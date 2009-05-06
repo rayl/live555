@@ -49,6 +49,7 @@ private: // redefined virtual functions:
 
 private:
   Groupsock* fInputGS;
+  Boolean fHaveStartedReading;
 };
 
 #endif

@@ -27,7 +27,7 @@ BasicUDPSource* BasicUDPSource::createNew(UsageEnvironment& env,
 }
 
 BasicUDPSource::BasicUDPSource(UsageEnvironment& env, Groupsock* inputGS)
-  : FramedSource(env), fInputGS(inputGS) {
+  : FramedSource(env), fInputGS(inputGS), fHaveStartedReading(False) {
   // Try to use a large receive buffer (in the OS):
   increaseReceiveBufferTo(env, inputGS->socketNum(), 50*1024);
 }
@@ -37,13 +37,17 @@ BasicUDPSource::~BasicUDPSource(){
 }
 
 void BasicUDPSource::doGetNextFrame() {
-  // Await the next incoming packet:
-  envir().taskScheduler().turnOnBackgroundReadHandling(fInputGS->socketNum(), 
-       (TaskScheduler::BackgroundHandlerProc*)&incomingPacketHandler, this);
+  if (!fHaveStartedReading) {
+    // Await incoming packets:
+    envir().taskScheduler().turnOnBackgroundReadHandling(fInputGS->socketNum(), 
+	 (TaskScheduler::BackgroundHandlerProc*)&incomingPacketHandler, this);
+    fHaveStartedReading = True;
+  }
 }
 
 void BasicUDPSource::doStopGettingFrames() {
   envir().taskScheduler().turnOffBackgroundReadHandling(fInputGS->socketNum());
+  fHaveStartedReading = False;
 }
 
 

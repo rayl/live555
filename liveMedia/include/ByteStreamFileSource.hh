@@ -57,9 +57,13 @@ protected:
 
   virtual ~ByteStreamFileSource();
 
+  static void fileReadableHandler(ByteStreamFileSource* source, int mask);
+  void doReadFromFile();
+
 private:
   // redefined virtual functions:
   virtual void doGetNextFrame();
+  virtual void doStopGettingFrames();
 
 private:
   unsigned fPreferredFrameSize;
@@ -67,6 +71,7 @@ private:
   unsigned fLastPlayTime;
   u_int64_t fFileSize;
   Boolean fDeleteFidOnClose;
+  Boolean fHaveStartedReading;
 };
 
 #endif

@@ -69,6 +69,11 @@ void WAVAudioFileSource::seekToPCMByte(unsigned byteNumber) {
   fseek(fFid, byteNumber, SEEK_SET);
 }
 
+unsigned char WAVAudioFileSource::getAudioFormat() {
+  return fAudioFormat;
+}
+
+
 #define nextc fgetc(fid)
 #define ucEOF ((unsigned char)EOF)
 
@@ -96,7 +101,8 @@ static Boolean skipBytes(FILE* fid, int num) {
 
 WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
   : AudioInputDevice(env, 0, 0, 0, 0)/* set the real parameters later */,
-    fFid(fid), fLastPlayTime(0), fWAVHeaderSize(0), fFileSize(0), fScaleFactor(1) {
+    fFid(fid), fLastPlayTime(0), fWAVHeaderSize(0), fFileSize(0), fScaleFactor(1),
+    fAudioFormat(WA_UNKNOWN) {
   // Check the WAV file header for validity.
   // Note: The following web pages contain info about the WAV format:
   // http://www.technology.niagarac.on.ca/courses/comp630/WavFileFormat.html
@@ -119,8 +125,11 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
     if (!get4Bytes(fid, formatLength)) break;
     unsigned short audioFormat;
     if (!get2Bytes(fid, audioFormat)) break;
-    if (audioFormat != 1) { // not PCM - we can't handle this
-      env.setResultMsg("Audio format is not PCM");
+
+    fAudioFormat = (unsigned char)audioFormat;
+    if (fAudioFormat != WA_PCM && fAudioFormat != WA_PCMA && fAudioFormat != WA_PCMU) { 
+      // not PCM/PCMU/PCMA - we can't handle this
+      env.setResultMsg("Audio format is not PCM/PCMU/PCMA");
       break;
     }
     unsigned short numChannels;
