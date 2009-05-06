@@ -24,10 +24,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "BasicUsageEnvironment.hh"
 #include "GroupsockHelper.hh"
 
-// Use an internal RTSP server:
-#define IMPLEMENT_RTSP_SERVER 1
-// (Note that this RTSP server works for multicast only)
-
 char const* programName;
 // Whether to stream *only* "I" (key) frames
 // (e.g., to reduce network bandwidth):
@@ -47,11 +43,9 @@ AC3AudioStreamFramer* audioSource = NULL;
 FramedSource* videoSource = NULL;
 RTPSink* audioSink = NULL;
 RTPSink* videoSink = NULL;
-#ifdef IMPLEMENT_RTSP_SERVER
 RTSPServer* rtspServer = NULL;
 unsigned short const defaultRTSPServerPortNum = 554;
 unsigned short rtspServerPortNum = defaultRTSPServerPortNum;
-#endif
 
 Groupsock* rtpGroupsockAudio;
 Groupsock* rtcpGroupsockAudio;
@@ -60,9 +54,7 @@ Groupsock* rtcpGroupsockVideo;
 
 void usage() {
   *env << "usage: " << programName << " [-i] [-a|-v] "
-#ifdef IMPLEMENT_RTSP_SERVER
 	  "[-p <RTSP-server-port-number>] "
-#endif
 	  "<VOB-file>...<VOB-file>\n";
   exit(1);
 }
@@ -196,7 +188,6 @@ int main(int argc, char const** argv) {
     // Note: This starts RTCP running automatically
   }
 
-#ifdef IMPLEMENT_RTSP_SERVER
   if (rtspServer == NULL) {
     rtspServer = RTSPServer::createNew(*env, rtspServerPortNum);
     if (rtspServer == NULL) {
@@ -218,7 +209,6 @@ int main(int argc, char const** argv) {
     *env << "Access this stream using the URL:\n\t" << url << "\n";
     delete[] url;
   }
-#endif
 
   // Finally, start the streaming:
   *env << "Beginning streaming...\n";

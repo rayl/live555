@@ -207,6 +207,11 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
   Boolean readSuccess = False;
   do {
     if (!bPacket->fillInData(source->fRTPInterface)) break;
+#ifdef TEST_LOSS
+    setThresholdTime(0);
+       // don't wait for 'lost' packets to arrive out-of-order later
+    if ((our_random()%10) == 0) break; // simulate 10% packet loss
+#endif
     
     // Check for the 12-byte RTP header:
     if (bPacket->dataSize() < 12) break;

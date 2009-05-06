@@ -338,8 +338,8 @@ void RTSPServer::RTSPClientSession
     unsigned sdpDescriptionSize = strlen(sdpDescription);
 
     // Also, generate out RTSP URL, for the "Content-Base:" header
-    // (which isn't strictly necessary, but without it, QuickTime Player gives us
-    // a bad URL in "SETUP" requests).
+    // (which is necessary to ensure that the correct URL gets used in
+    // subsequent "SETUP" requests).
     rtspURL = fOurServer.rtspURL(session);
     unsigned rtspURLSize = strlen(rtspURL); 
 
@@ -349,8 +349,16 @@ void RTSPServer::RTSPClientSession
       break;
     }
   
-    sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nContent-Base: %s/\r\nContent-Type: application/sdp\r\nContent-Length: %d\r\n\r\n%s",
-	    cseq, rtspURL, sdpDescriptionSize, sdpDescription);
+    sprintf((char*)fBuffer,
+	    "RTSP/1.0 200 OK\r\nCSeq: %s\r\n"
+	    "Content-Base: %s/\r\n"
+	    "Content-Type: application/sdp\r\n"
+	    "Content-Length: %d\r\n\r\n"
+	    "%s",
+	    cseq,
+	    rtspURL,
+	    sdpDescriptionSize,
+	    sdpDescription);
   } while (0);
 
   delete[] sdpDescription;

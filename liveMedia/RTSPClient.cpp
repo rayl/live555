@@ -447,6 +447,15 @@ void RTSPClient::constructSubsessionURL(MediaSubsession const& subsession,
 					char const*& suffix) {
   // Figure out what the URL describing "subsession" will look like.
   // The URL is returned in three parts: prefix; separator; suffix
+  //##### NOTE: This code doesn't really do the right thing if "fBaseURL"
+  // doesn't end with a "/", and "subsession.controlPath()" is relative.
+  // The right thing would have been to truncate "fBaseURL" back to the
+  // rightmost "/", and then add "subsession.controlPath()".
+  // In practice, though, each "DESCRIBE" response typically contains
+  // a "Content-Base:" header that consists of "fBaseURL" followed by
+  // a "/", in which case this code ends up giving the correct result.
+  // However, we should really fix this code to do the right thing, and
+  // also check for and use the "Content-Base:" header appropriately. #####
   prefix = fBaseURL;
   if (prefix == NULL) prefix = "";
 
