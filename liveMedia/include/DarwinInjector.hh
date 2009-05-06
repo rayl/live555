@@ -60,6 +60,9 @@ public:
 				   char const* applicationName = NULL,
 				   int verbosityLevel = 0);
 
+  static Boolean lookupByName(UsageEnvironment& env, char const* name,
+			      DarwinInjector*& result);
+
   void addStream(RTPSink* rtpSink, RTCPInstance* rtcpInstance);
 
   Boolean setDestination(char const* remoteRTSPServerNameOrAddress, 
@@ -69,6 +72,9 @@ public:
 			 portNumBits remoteRTSPServerPortNumber = 554,
 			 char const* remoteUserName = "",
 			 char const* remotePassword = "");
+
+private: // redefined virtual functions
+  virtual Boolean isDarwinInjector() const;
 
 private:
   DarwinInjector(UsageEnvironment& env,

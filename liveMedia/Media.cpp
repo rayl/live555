@@ -130,6 +130,10 @@ Boolean Medium::isServerMediaSession() const {
   return False; // default implementation
 }
 
+Boolean Medium::isDarwinInjector() const {
+  return False; // default implementation
+}
+
 ////////// MediaLookupTable //////////
 
 MediaLookupTable::MediaLookupTable()

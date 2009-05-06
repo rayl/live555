@@ -33,8 +33,7 @@ public:
   static RTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554);
       // if ourPort.num() == 0, we'll choose the port number
 
-  static Boolean lookupByName(UsageEnvironment& env,
-			      char const* instanceName,
+  static Boolean lookupByName(UsageEnvironment& env, char const* name,
 			      RTSPServer*& resultServer);
 
   void addServerMediaSession(ServerMediaSession* serverMediaSession);

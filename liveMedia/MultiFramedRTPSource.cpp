@@ -252,6 +252,7 @@ void MultiFramedRTPSource::networkReadHandler(MultiFramedRTPSource* source,
     }
     
     // The rest of the packet is the usable data.  Record and save it:
+    source->fLastReceivedSSRC = rtpSSRC;
     unsigned short rtpSeqNo = (unsigned short)(rtpHdr&0xFFFF);
     Boolean usableInJitterCalculation
       = source->packetIsUsableInJitterCalculation((bPacket->data()),

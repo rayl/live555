@@ -51,6 +51,22 @@ DarwinInjector* DarwinInjector::createNew(UsageEnvironment& env,
   return new DarwinInjector(env, applicationName, verbosityLevel);
 }
 
+Boolean DarwinInjector::lookupByName(UsageEnvironment& env, char const* name,
+				     DarwinInjector*& result) {
+  result = NULL; // unless we succeed
+
+  Medium* medium;
+  if (!Medium::lookupByName(env, name, medium)) return False;
+
+  if (!medium->isDarwinInjector()) {
+    env.setResultMsg(name, " is not a 'Darwin injector'");
+    return False;
+  }
+
+  result = (DarwinInjector*)medium;
+  return True;
+}
+
 DarwinInjector::DarwinInjector(UsageEnvironment& env,
 			       char const* applicationName, int verbosityLevel)
   : Medium(env),
@@ -193,6 +209,10 @@ Boolean DarwinInjector::setDestination(char const* remoteRTSPServerNameOrAddress
   delete[] url; 
   Medium::close(session);
   return success;
+}
+
+Boolean DarwinInjector::isDarwinInjector() const {
+  return True;
 }
 
 

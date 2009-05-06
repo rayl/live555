@@ -48,13 +48,18 @@ public:
   virtual void setPacketReorderingThresholdTime(unsigned uSeconds) = 0;
 
   // used by RTCP:
-  unsigned SSRC() const {return fSSRC;}
+  unsigned SSRC() const { return fSSRC; }
+      // Note: This is *our* SSRC, not the SSRC in incoming RTP packets.
      // later need a means of changing the SSRC if there's a collision #####
+
   unsigned timestampFrequency() const {return fTimestampFrequency;}
 
   RTPReceptionStatsDB& receptionStatsDB() const {
     return *fReceptionStatsDB;
   }
+
+  unsigned lastReceivedSSRC() const { return fLastReceivedSSRC; }
+  // Note: This is the SSRC in the most recently received RTP packet; not *our* SSRC
 
   void setStreamSocket(int sockNum, unsigned char streamChannelId) {
     // hack to allow sending RTP over TCP (RFC 2236, section 10.12)
@@ -79,6 +84,7 @@ protected:
   unsigned fCurPacketRTPTimestamp;
   Boolean fCurPacketMarkerBit;
   Boolean fCurPacketHasBeenSynchronizedUsingRTCP;
+  unsigned fLastReceivedSSRC;
 
 private:
   // redefined virtual functions:
