@@ -19,7 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #ifndef IMN_PIM
 #include "BasicUsageEnvironment.hh"
-#include <iomanip.h>
+#include <stdio.h>
 
 ////////// BasicUsageEnvironment //////////
 
@@ -56,27 +56,27 @@ int BasicUsageEnvironment::getErrno() const {
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(char const* str) {
-	cerr << str;
+	fprintf(stderr, "%s", str);
 	return *this;
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(int i) {
-	cerr << i;
+	fprintf(stderr, "%d", i);
 	return *this;
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(unsigned u) {
-	cerr << u;
+	fprintf(stderr, "%u", u);
 	return *this;
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(double d) {
-	cerr << d;
+	fprintf(stderr, "%f", d);
 	return *this;
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(void* p) {
-	cerr << hex << p;
+	fprintf(stderr, "%p", p);
 	return *this;
 }
 #endif
