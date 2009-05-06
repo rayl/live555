@@ -990,7 +990,7 @@ static char* createScaleString(float scale, float currentScale) {
     // This is the default value; we don't need a "Scale:" header:
     buf[0] = '\0';
   } else {
-    Locale("POSIX", LC_NUMERIC);
+    Locale("C", LC_NUMERIC);
     sprintf(buf, "Scale: %f\r\n", scale);
   }
 
@@ -1004,11 +1004,11 @@ static char* createRangeString(float start, float end) {
     buf[0] = '\0';
   } else if (end < 0) {
     // There's no end time:
-    Locale("POSIX", LC_NUMERIC);
+    Locale("C", LC_NUMERIC);
     sprintf(buf, "Range: npt=%.3f-\r\n", start);
   } else {
     // There's both a start and an end time; include them both in the "Range:" hdr
-    Locale("POSIX", LC_NUMERIC);
+    Locale("C", LC_NUMERIC);
     sprintf(buf, "Range: npt=%.3f-%.3f\r\n", start, end);
   }
 
@@ -2048,7 +2048,9 @@ unsigned RTSPClient::getResponse1(char*& responseBuffer,
   Boolean success = False;
   while (1) {
     unsigned char firstByte;
-    if (readSocket(envir(), fInputSocketNum, &firstByte, 1, fromAddress)
+    struct timeval timeout;
+    timeout.tv_sec = 5; timeout.tv_usec = 0;
+    if (readSocket(envir(), fInputSocketNum, &firstByte, 1, fromAddress, &timeout)
 	!= 1) break;
     if (firstByte != '$') {
       // Normal case: This is the start of a regular response; use it:
@@ -2247,7 +2249,7 @@ Boolean RTSPClient::parseScaleHeader(char const* line, float& scale) {
   if (_strncasecmp(line, "Scale: ", 7) != 0) return False;
   line += 7;
 
-  Locale("POSIX", LC_NUMERIC);
+  Locale("C", LC_NUMERIC);
   return sscanf(line, "%f", &scale) == 1;
 }
 
