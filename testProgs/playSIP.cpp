@@ -79,12 +79,6 @@ Boolean clientSetupSubsession(Medium* client, MediaSubsession* subsession,
   return True;
 }
 
-Boolean clientStartPlayingSubsession(Medium* /*client*/,
-                                     MediaSubsession* /*subsession*/) {
-  // Do nothing; all the work's done by clientStartPlayingSession()
-  return True;
-}
-
 Boolean clientStartPlayingSession(Medium* client,
 				  MediaSession* /*session*/) {
   SIPClient* sipClient = (SIPClient*)client;

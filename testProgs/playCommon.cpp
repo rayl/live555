@@ -487,25 +487,13 @@ void setupStreams() {
 }
 
 void startPlayingStreams() {
-  MediaSubsessionIterator iter(*session);
-  MediaSubsession *subsession;
-  Boolean madeProgress = False;
-  while ((subsession = iter.next()) != NULL) {
-    if (subsession->sessionId == NULL) continue; // no session in progress
-
-    if (!clientStartPlayingSubsession(ourClient, subsession)) {
-      fprintf(stderr, "Failed to start playing \"%s/%s\" subsession: %s\n",
-	      subsession->mediumName(), subsession->codecName(),
-	      env->getResultMsg());
-      shutdown();
-    } else {
-      fprintf(stderr, "Started playing \"%s/%s\" subsession\n",
-	      subsession->mediumName(), subsession->codecName());
-      madeProgress = True;
-    }
+  if (!clientStartPlayingSession(ourClient, session)) {
+    fprintf(stderr, "Failed to start playing session: %s\n",
+	    env->getResultMsg());
+    shutdown();
+  } else {
+    fprintf(stderr, "Started playing session\n");
   }
-  if (!madeProgress) shutdown();
-  if (!clientStartPlayingSession(ourClient, session)) shutdown();
 
   // Figure out how long to delay (if at all) before shutting down, or
   // repeating the playing

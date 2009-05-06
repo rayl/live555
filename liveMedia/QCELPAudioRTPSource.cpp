@@ -21,7 +21,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "QCELPAudioRTPSource.hh"
 #include "MultiFramedRTPSource.hh"
 #include "FramedFilter.hh"
-#include "GroupsockHelper.hh"
 #include <string.h>
 #include <stdlib.h>
 
@@ -150,21 +149,8 @@ RawQCELPRTPSource*
 RawQCELPRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 			     unsigned char rtpPayloadFormat,
 			     unsigned rtpTimestampFrequency) {
-  RawQCELPRTPSource* newSource = NULL;
-
-  do {
-    newSource = new RawQCELPRTPSource(env, RTPgs, rtpPayloadFormat,
-				      rtpTimestampFrequency);
-    if (newSource == NULL) break;
-
-    // Try to use a big receive buffer for RTP:
-    increaseReceiveBufferTo(env, RTPgs->socketNum(), 50*1024);
-
-    return newSource;
-  } while (0);
-
-  delete newSource;
-  return NULL;
+  return new RawQCELPRTPSource(env, RTPgs, rtpPayloadFormat,
+			       rtpTimestampFrequency);
 }
 
 RawQCELPRTPSource::RawQCELPRTPSource(UsageEnvironment& env,

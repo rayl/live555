@@ -322,7 +322,7 @@ void MultiFramedRTPSink::sendPacketIfNecessary() {
 }
 
 // The following is called after each delay between packet sends:
-void MultiFramedRTPSink::sendNext(int firstArg) {
+void MultiFramedRTPSink::sendNext(void* firstArg) {
   MultiFramedRTPSink* sink = (MultiFramedRTPSink*)firstArg;
   sink->buildAndSendPacket(False);
 }

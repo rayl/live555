@@ -19,7 +19,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "MPEG4LATMAudioRTPSource.hh"
-#include "GroupsockHelper.hh"
 
 ////////// LATMBufferedPacket and LATMBufferedPacketFactory //////////
 
@@ -40,21 +39,8 @@ MPEG4LATMAudioRTPSource*
 MPEG4LATMAudioRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 				   unsigned char rtpPayloadFormat,
 				   unsigned rtpTimestampFrequency) {
-  MPEG4LATMAudioRTPSource* newSource = NULL;
-
-  do {
-    newSource = new MPEG4LATMAudioRTPSource(env, RTPgs, rtpPayloadFormat,
-					    rtpTimestampFrequency);
-    if (newSource == NULL) break;
-
-    // Try to use a big receive buffer for RTP:
-    increaseReceiveBufferTo(env, RTPgs->socketNum(), 50*1024);
-
-    return newSource;
-  } while (0);
-
-  delete newSource;
-  return NULL;
+  return new MPEG4LATMAudioRTPSource(env, RTPgs, rtpPayloadFormat,
+				     rtpTimestampFrequency);
 }
 
 MPEG4LATMAudioRTPSource
@@ -195,7 +181,7 @@ parseStreamMuxConfigStr(char const* configStr,
       audioSpecificConfig[i++] = (remainingBit<<7)|((nextByte&0xFE)>>1);
       remainingBit = nextByte&1;
     } while (parseSuccess);
-    if (i != ascSize) break; // part of the remining string was bad
+    if (i != ascSize) break; // part of the remaining string was bad
 
     audioSpecificConfigSize = ascSize;
     return True; // parsing succeeded
@@ -222,3 +208,31 @@ unsigned char* parseStreamMuxConfigStr(char const* configStr,
 
   return audioSpecificConfig;
 }
+
+unsigned char* parseGeneralConfigStr(char const* configStr,
+				     // result parameter:
+				     unsigned& configSize) {
+  unsigned char* config = NULL;
+  do {
+    if (configStr == NULL) break;
+    configSize = (strlen(configStr)+1)/2 + 1;
+
+    config = new unsigned char[configSize];
+    if (config == NULL) break;
+
+    Boolean parseSuccess;
+    unsigned i = 0;
+    do {
+      parseSuccess = getByte(configStr, config[i++]);
+    } while (parseSuccess);
+    if (i != configSize) break;
+        // part of the remaining string was bad
+
+    return config;
+  } while (0);
+
+  configSize = 0;
+  delete config; config = NULL;
+  return NULL;
+}
+

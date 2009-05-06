@@ -41,7 +41,7 @@ public:
   }
 
   Boolean isMember(unsigned ssrc) const {
-    return fTable->Lookup((char*)ssrc) != NULL;
+    return fTable->Lookup((char*)(long)ssrc) != NULL;
   }
 
   Boolean noteMembership(unsigned ssrc, unsigned curTimeCount) {
@@ -52,13 +52,13 @@ public:
     }
 
     // Record the current time, so we can age stale members
-    fTable->Add((char*)ssrc, (void*)curTimeCount);
+    fTable->Add((char*)(long)ssrc, (void*)(long)curTimeCount);
 
     return isNew;
   }
 
   Boolean remove(unsigned ssrc) {
-    Boolean wasPresent = fTable->Remove((char*)ssrc);
+    Boolean wasPresent = fTable->Remove((char*)(long)ssrc);
     if (wasPresent) {
       --fNumMembers;
     }
@@ -85,15 +85,15 @@ void RTCPMemberDatabase::reapOldMembers(unsigned threshold) {
 
     HashTable::Iterator* iter
       = HashTable::Iterator::create(*fTable);
-    unsigned timeCount;
+    unsigned long timeCount;
     char const* key;
-    while ((timeCount = (unsigned)(iter->next(key))) != 0) {
+    while ((timeCount = (unsigned long)(iter->next(key))) != 0) {
 #ifdef DEBUG_PRINT
-      fprintf(stderr, "reap: checking SSRC 0x%x: %d (threshold %d)\n", (unsigned)key, timeCount, threshold);
+      fprintf(stderr, "reap: checking SSRC 0x%x: %d (threshold %d)\n", (unsigned long)key, timeCount, threshold);
 #endif
-      if (timeCount < threshold) { // this SSRC is old
-        unsigned ssrc = (unsigned)key;
-        oldSSRC = ssrc;
+      if (timeCount < (unsigned long)threshold) { // this SSRC is old
+        unsigned long ssrc = (unsigned long)key;
+        oldSSRC = (unsigned)ssrc;
         foundOldMember = True;
       }
     }

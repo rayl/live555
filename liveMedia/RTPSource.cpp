@@ -98,14 +98,13 @@ void RTPReceptionStatsDB
 		     unsigned rtpTimestamp, unsigned timestampFrequency,
 		     Boolean useForJitterCalculation,
 		     struct timeval& resultPresentationTime) {
-  RTPReceptionStats* stats
-    = (RTPReceptionStats*)(fTable->Lookup((char const*)SSRC));
+  RTPReceptionStats* stats = lookup(SSRC);
   if (stats == NULL) {
     // This is the first time we've heard from this SSRC.
     // Create a new record for it:
     stats = new RTPReceptionStats(fOurRTPSource, SSRC, seqNum);
     if (stats == NULL) return;
-    fTable->Add((char const*)SSRC, stats);
+    add(SSRC, stats);
   }
 
   if (stats->numPacketsReceivedSinceLastReset() == 0) {
@@ -121,14 +120,13 @@ void RTPReceptionStatsDB
 ::noteIncomingSR(unsigned SSRC,
 		 unsigned ntpTimestampMSW, unsigned ntpTimestampLSW,
 		 unsigned rtpTimestamp) {
-  RTPReceptionStats* stats
-    = (RTPReceptionStats*)(fTable->Lookup((char const*)SSRC));
+  RTPReceptionStats* stats = lookup(SSRC);
   if (stats == NULL) {
     // This is the first time we've heard of this SSRC.
     // Create a new record for it:
     stats = new RTPReceptionStats(fOurRTPSource, SSRC);
     if (stats == NULL) return;
-    fTable->Add((char const*)SSRC, stats);
+    add(SSRC, stats);
   }
 
   stats->noteIncomingSR(ntpTimestampMSW, ntpTimestampLSW, rtpTimestamp);
@@ -165,6 +163,15 @@ RTPReceptionStats* RTPReceptionStatsDB::Iterator::next() {
   return stats;
 }
 
+RTPReceptionStats* RTPReceptionStatsDB::lookup(unsigned SSRC) const {
+  long SSRC_long = (long)SSRC;
+  return (RTPReceptionStats*)(fTable->Lookup((char const*)SSRC_long));
+}
+
+void RTPReceptionStatsDB::add(unsigned SSRC, RTPReceptionStats* stats) {
+  long SSRC_long = (long)SSRC;
+  fTable->Add((char const*)SSRC_long, stats);
+}
 
 ////////// RTPReceptionStats //////////
 

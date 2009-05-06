@@ -256,10 +256,10 @@ unsigned BasicHashTable::hashIndexFromKey(char const* key) const {
     }
     result &= fMask;
   } else if (fKeyType == ONE_WORD_HASH_KEYS) {
-    result = randomIndex((unsigned)key);
+    result = randomIndex((unsigned long)key);
   } else {
     unsigned* k = (unsigned*)key;
-    unsigned sum = 0;
+    unsigned long sum = 0;
     for (int i = 0; i < fKeyType; ++i) {
       sum += k[i];
     }

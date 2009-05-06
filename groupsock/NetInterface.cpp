@@ -60,21 +60,22 @@ DirectedNetInterfaceSet::~DirectedNetInterfaceSet() {
 }
 
 DirectedNetInterface*
-    DirectedNetInterfaceSet::Add(DirectedNetInterface const* interf) {
-	return (DirectedNetInterface*) fTable->Add((char*)interf, (void*)interf);
+DirectedNetInterfaceSet::Add(DirectedNetInterface const* interf) {
+  return (DirectedNetInterface*) fTable->Add((char*)interf, (void*)interf);
 }
 
-Boolean DirectedNetInterfaceSet::Remove(DirectedNetInterface const* interf) {
-	return fTable->Remove((char*)interf);
+Boolean
+DirectedNetInterfaceSet::Remove(DirectedNetInterface const* interf) {
+  return fTable->Remove((char*)interf);
 }
 
 DirectedNetInterfaceSet::Iterator::
-    Iterator(DirectedNetInterfaceSet& interfaces)
-	: fIter(HashTable::Iterator::create(*(interfaces.fTable))) {
+Iterator(DirectedNetInterfaceSet& interfaces)
+  : fIter(HashTable::Iterator::create(*(interfaces.fTable))) {
 }
 
 DirectedNetInterfaceSet::Iterator::~Iterator() {
-	delete fIter;
+  delete fIter;
 }
 
 DirectedNetInterface* DirectedNetInterfaceSet::Iterator::next() {
@@ -103,36 +104,36 @@ ostream& operator<<(ostream& s, const Socket& sock) {
 ////////// SocketLookupTable //////////
 
 SocketLookupTable::SocketLookupTable()
-	: fTable(HashTable::create(ONE_WORD_HASH_KEYS)) {
+  : fTable(HashTable::create(ONE_WORD_HASH_KEYS)) {
 }
 
 SocketLookupTable::~SocketLookupTable() {
-	delete fTable;
+  delete fTable;
 }
 
 Socket* SocketLookupTable::Fetch(UsageEnvironment& env, Port port,
 				 Boolean& isNew) {
-	isNew = False;
-	Socket* sock;
-	do {
-		sock = (Socket*) fTable->Lookup((char*)(port.num()));
-		if (sock == NULL) { // we need to create one:
-			sock = CreateNew(env, port);
-			if (sock == NULL || sock->socketNum() < 0) break;
-
-			fTable->Add((char*)(port.num()), (void*)sock);
-			isNew = True;
-		}
-
-		return sock;
-	} while (0);
-
-	delete sock;
-	return NULL;
+  isNew = False;
+  Socket* sock;
+  do {
+    sock = (Socket*) fTable->Lookup((char*)(long)(port.num()));
+    if (sock == NULL) { // we need to create one:
+      sock = CreateNew(env, port);
+      if (sock == NULL || sock->socketNum() < 0) break;
+      
+      fTable->Add((char*)(long)(port.num()), (void*)sock);
+      isNew = True;
+    }
+    
+    return sock;
+  } while (0);
+  
+  delete sock;
+  return NULL;
 }
 
 Boolean SocketLookupTable::Remove(Socket const* sock) {
-	return fTable->Remove( (char*)(sock->port().num()) );
+  return fTable->Remove( (char*)(long)(sock->port().num()) );
 }
 
 ////////// NetInterfaceTrafficStats //////////

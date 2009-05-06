@@ -59,7 +59,8 @@ private:
 };
 
 static SocketDescriptor* lookupSocketDescriptor(int sockNum) {
-  return (SocketDescriptor*)(socketHashTable->Lookup((char const*)sockNum));
+  char const* lookupArg = (char const*)(long)sockNum;
+  return (SocketDescriptor*)(socketHashTable->Lookup(lookupArg));
 }
 
 
@@ -106,7 +107,8 @@ void RTPInterface
       = lookupSocketDescriptor(fStreamSocketNum);
     if (socketDescriptor == NULL) {
       socketDescriptor = new SocketDescriptor(envir(), fStreamSocketNum);
-      socketHashTable->Add((char const*)fStreamSocketNum, socketDescriptor);
+      socketHashTable->Add((char const*)(long)fStreamSocketNum,
+			   socketDescriptor);
     }
 
     // Tell it about our subChannel:
@@ -212,7 +214,8 @@ SocketDescriptor::~SocketDescriptor() {
 void SocketDescriptor::registerRTPInterface(unsigned char streamChannelId,
 					    RTPInterface* rtpInterface) {
   Boolean isFirstRegistration = fSubChannelHashTable->IsEmpty();
-  fSubChannelHashTable->Add((char const*)streamChannelId, rtpInterface);
+  fSubChannelHashTable->Add((char const*)(long)streamChannelId,
+			    rtpInterface);
 
   if (isFirstRegistration) {
     // Arrange to handle reads on this TCP socket:
@@ -220,19 +223,19 @@ void SocketDescriptor::registerRTPInterface(unsigned char streamChannelId,
       = (TaskScheduler::BackgroundHandlerProc*)&tcpReadHandler;
     fEnv.taskScheduler().
       turnOnBackgroundReadHandling(fOurSocketNum,
-				   handler, (void*)fOurSocketNum);
+				   handler, (void*)(long)fOurSocketNum);
   }
 }
 
 RTPInterface* SocketDescriptor
 ::lookupRTPInterface(unsigned char streamChannelId) {
-  return (RTPInterface*)(fSubChannelHashTable
-			 ->Lookup((char const*)streamChannelId));
+  char const* lookupArg = (char const*)(long)streamChannelId;
+  return (RTPInterface*)(fSubChannelHashTable->Lookup(lookupArg));
 }
 
 void SocketDescriptor
 ::deregisterRTPInterface(unsigned char streamChannelId) {
-  fSubChannelHashTable->Remove((char const*)streamChannelId);
+  fSubChannelHashTable->Remove((char const*)(long)streamChannelId);
 
   if (fSubChannelHashTable->IsEmpty()) {
     fEnv.taskScheduler().turnOffBackgroundReadHandling(fOurSocketNum);

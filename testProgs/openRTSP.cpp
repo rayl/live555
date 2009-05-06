@@ -44,16 +44,10 @@ Boolean clientSetupSubsession(Medium* client, MediaSubsession* subsession,
 					  False, streamUsingTCP);
 }
 
-Boolean clientStartPlayingSubsession(Medium* client,
-                                     MediaSubsession* subsession) {
+Boolean clientStartPlayingSession(Medium* client,
+				  MediaSession* session) {
   RTSPClient* rtspClient = (RTSPClient*)client;
-  return rtspClient->playMediaSubsession(*subsession);
-}
-
-Boolean clientStartPlayingSession(Medium* /*client*/,
-				  MediaSession* /*session*/) {
-  // Do nothing; all the work's done by clientStartPlayingSubsession()
-  return True;
+  return rtspClient->playMediaSession(*session);
 }
 
 Boolean clientTearDownSubsession(Medium* client,

@@ -83,6 +83,7 @@ RTSPClient::RTSPClient(UsageEnvironment& env,
   fUserAgentHeaderStr = new char[headerSize];
   sprintf(fUserAgentHeaderStr, formatStr,
 	  applicationName, libPrefix, libName, libVersionStr, libSuffix);
+  fUserAgentHeaderStrSize = strlen(fUserAgentHeaderStr);
 }
 
 RTSPClient::~RTSPClient() {
@@ -123,6 +124,7 @@ static char* getLine(char* startOfLine) {
 }
 
 char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
+  char* cmd = NULL;
   do {  
     if (!openConnectionFromURL(url)) break;
 
@@ -134,22 +136,26 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
       = createAuthenticatorString(authenticator, "DESCRIBE", url);
 
     // (Later implement more, as specified in the RTSP spec, sec D.1 #####)
-    char* const cmdFmt = "DESCRIBE %s RTSP/1.0\r\nCSeq: %d\r\nAccept: application/sdp\r\n%s%s\r\n";
-
-    unsigned const writeBufSize = 1000;
-    char writeBuf[writeBufSize];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf()
-    // This is a security risk if "url" can come from an external user
-    sprintf(writeBuf,
-	    cmdFmt, url, ++fCSeq, authenticatorStr, fUserAgentHeaderStr);
-#else
-    snprintf(writeBuf, writeBufSize,
-	     cmdFmt, url, ++fCSeq, authenticatorStr, fUserAgentHeaderStr);
-#endif
+    char* const cmdFmt =
+      "DESCRIBE %s RTSP/1.0\r\n"
+      "CSeq: %d\r\n"
+      "Accept: application/sdp\r\n"
+      "%s"
+      "%s\r\n";
+    unsigned cmdSize = strlen(cmdFmt)
+      + strlen(url)
+      + 20 /* max int len */
+      + strlen(authenticatorStr)
+      + fUserAgentHeaderStrSize;
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
+	    url,
+	    ++fCSeq,
+	    authenticatorStr,
+	    fUserAgentHeaderStr);
     delete authenticatorStr;
 
-    if (!sendRequest(writeBuf)) {
+    if (!sendRequest(cmd)) {
       envir().setResultErrMsg("DESCRIBE send() failed: ");
       break;
     }
@@ -296,9 +302,11 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
       bodyStart[contentLength] = '\0'; // trims any extra data
     }
 
+    delete cmd;
     return strdup(bodyStart);
   } while (0);
 
+  delete cmd;
   return NULL;
 }
 
@@ -336,14 +344,22 @@ char* RTSPClient
 }
 
 Boolean RTSPClient::sendOptionsCmd() {
+  char* cmd = NULL;
   do {
     // Send the OPTIONS command:
-    char* const cmdFmt = "OPTIONS * RTSP/1.0\r\nCSeq: %d\r\n%s\r\n";
-    unsigned const writeBufSize = 100;
-    char writeBuf[writeBufSize];
-    sprintf(writeBuf, cmdFmt, ++fCSeq, fUserAgentHeaderStr);
+    char* const cmdFmt =
+      "OPTIONS * RTSP/1.0\r\n"
+      "CSeq: %d\r\n"
+      "%s\r\n";
+    unsigned cmdSize = strlen(cmdFmt)
+      + 20 /* max int len */
+      + fUserAgentHeaderStrSize;
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
+	    ++fCSeq,
+	    fUserAgentHeaderStr);
 
-    if (!sendRequest(writeBuf)) {
+    if (!sendRequest(cmd)) {
       envir().setResultErrMsg("OPTIONS send() failed: ");
       break;
     }
@@ -359,9 +375,11 @@ Boolean RTSPClient::sendOptionsCmd() {
 
     // For now, don't bother looking at the response #####
 
+    delete cmd;
     return True;
   } while (0);
 
+  delete cmd;
   return False;
 }
 
@@ -398,6 +416,7 @@ void RTSPClient::constructSubsessionURL(MediaSubsession const& subsession,
 Boolean RTSPClient::announceSDPDescription(char const* url,
 					   char const* sdpDescription,
 					   AuthRecord* authenticator) {
+  char* cmd = NULL;
   do {
     if (!openConnectionFromURL(url)) break;
 
@@ -408,27 +427,31 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
     char* authenticatorStr
       = createAuthenticatorString(authenticator, "ANNOUNCE", url);
 
-    char* const cmdFmt = "ANNOUNCE %s RTSP/1.0\r\nCSeq: %d\r\nContent-Type: application/sdp\r\n%sContent-length: %d\r\n\r\n%s";
+    char* const cmdFmt =
+      "ANNOUNCE %s RTSP/1.0\r\n"
+      "CSeq: %d\r\n"
+      "Content-Type: application/sdp\r\n"
+      "%s"
+      "Content-length: %d\r\n\r\n"
+      "%s";
 	    // Note: QTSS hangs if an "ANNOUNCE" contains a "User-Agent:" field (go figure), so don't include one here
     unsigned sdpSize = strlen(sdpDescription);
-    unsigned writeBufSize
-      = strlen(cmdFmt) + strlen(url) + strlen(authenticatorStr) + sdpSize;
-    char* writeBuf = new char[writeBufSize];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf()
-    // This is a security risk if "sdpDescriptor"
-    // can come from an external user
-    sprintf(writeBuf, cmdFmt,
-	    url, ++fCSeq, authenticatorStr, sdpSize,
+    unsigned cmdSize = strlen(cmdFmt)
+      + strlen(url)
+      + 20 /* max int len */
+      + strlen(authenticatorStr)
+      + 20 /* max int len */
+      + sdpSize;
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
+	    url,
+	    ++fCSeq,
+	    authenticatorStr,
+	    sdpSize,
 	    sdpDescription);
-#else
-    snprintf(writeBuf, writeBufSize, cmdFmt,
-	     url, ++fCSeq, authenticatorStr, sdpSize,
-	     sdpDescription);
-#endif
     delete authenticatorStr;
 
-    if (!sendRequest(writeBuf)) {
+    if (!sendRequest(cmd)) {
       envir().setResultErrMsg("ANNOUNCE send() failed: ");
       break;
     }
@@ -477,9 +500,11 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
     }
     // (Later, check "CSeq" too #####)
 
+    delete cmd;
     return True;
   } while (0);
 
+  delete cmd;
   return False;
 }
 
@@ -547,6 +572,7 @@ Boolean RTSPClient
 Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 					 Boolean streamOutgoing,
 					 Boolean streamUsingTCP) {
+  char* cmd = NULL;
   do {
     // Construct the SETUP command:
 
@@ -555,21 +581,24 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       = createAuthenticatorString(fCurrentAuthenticator,
 				  "SETUP", fBaseURL);
 
-    // We normally don't include a "Session:" header in the "SETUP"
-    // request.  However, when sending more than one "SETUP" request
-    // with an authenticator, DSS wants the 2nd and later "SETUP"s
-    // to include a "Session:" header.  This is probably nonstandard,
-    // but it's par for the course for DSS - sigh...
-    char* bogusSessionStr;
-    if (authenticatorStr[0] != '\0' && fLastSessionId != NULL) {
-      bogusSessionStr = new char[20+strlen(fLastSessionId)];
-      sprintf(bogusSessionStr, "Session: %s\r\n", fLastSessionId);
+    // When sending more than one "SETUP" request, include a "Session:"
+    // header in the 2nd and later "SETUP"s.
+    char* sessionStr;
+    if (fLastSessionId != NULL) {
+      sessionStr = new char[20+strlen(fLastSessionId)];
+      sprintf(sessionStr, "Session: %s\r\n", fLastSessionId);
     } else {
-      bogusSessionStr = "";
+      sessionStr = "";
     }
 
     // (Later implement more, as specified in the RTSP spec, sec D.1 #####)
-    char* const cmdFmt = "SETUP %s%s%s RTSP/1.0\r\nCSeq: %d\r\nTransport: RTP/AVP%s%s%s=%d-%d\r\n%s%s%s\r\n";
+    char* const cmdFmt =
+      "SETUP %s%s%s RTSP/1.0\r\n"
+      "CSeq: %d\r\n"
+      "Transport: RTP/AVP%s%s%s=%d-%d\r\n"
+      "%s"
+      "%s"
+      "%s\r\n";
 
     char const *prefix, *separator, *suffix;
     constructSubsessionURL(subsession, prefix, separator, suffix);
@@ -596,27 +625,28 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       }
       rtcpNumber = rtpNumber + 1;
     }
-    unsigned const writeBufSize = 1000;
-    char writeBuf[writeBufSize];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf()
-    // This is a security risk if "prefix" or "suffix" can come from
-    // an external user
-    sprintf(writeBuf, cmdFmt, prefix, separator, suffix,
-	    ++fCSeq, transportTypeString, modeString, portTypeString,
-	    rtpNumber, rtcpNumber, bogusSessionStr, authenticatorStr,
+    unsigned cmdSize = strlen(cmdFmt)
+      + strlen(prefix) + strlen(separator) + strlen(suffix)
+      + 20 /* max int len */
+      + strlen(transportTypeString) + strlen(modeString)
+          + strlen(portTypeString) + 2*5 /* max port len */
+      + strlen(sessionStr)
+      + strlen(authenticatorStr)
+      + fUserAgentHeaderStrSize;
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
+	    prefix, separator, suffix,
+	    ++fCSeq,
+	    transportTypeString, modeString, portTypeString,
+	        rtpNumber, rtcpNumber,
+	    sessionStr,
+	    authenticatorStr,
 	    fUserAgentHeaderStr);
-#else
-    snprintf(writeBuf, writeBufSize, cmdFmt, prefix, separator, suffix,
-	     ++fCSeq, transportTypeString, modeString, portTypeString,
-	     rtpNumber, rtcpNumber, bogusSessionStr, authenticatorStr,
-	     fUserAgentHeaderStr);
-#endif
     delete authenticatorStr;
-    if (bogusSessionStr[0] != '\0') delete bogusSessionStr;
+    if (sessionStr[0] != '\0') delete sessionStr;
 
     // And then sent it:
-    if (!sendRequest(writeBuf)) {
+    if (!sendRequest(cmd)) {
       envir().setResultErrMsg("SETUP send() failed: ");
       break;
     }
@@ -692,17 +722,19 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
       subsession.setDestinations(fServerAddress);
     }
 
+    delete cmd;
     return True;
   } while (0);
 
+  delete cmd;
   return False;
 }
 
-Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
-					Boolean hackForDSS) {
+Boolean RTSPClient::playMediaSession(MediaSession& session) {
+  char* cmd = NULL;
   do {
     // First, make sure that we have a RTSP session in progress
-    if (subsession.sessionId == NULL) {
+    if (fLastSessionId == NULL) {
       envir().setResultMsg("No RTSP session is currently in progress\n");
       break;
     }
@@ -713,35 +745,30 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
     char* authenticatorStr
       = createAuthenticatorString(fCurrentAuthenticator, "PLAY", fBaseURL);
 
-    char* const cmdFmt = "PLAY %s%s%s RTSP/1.0\r\nCSeq: %d\r\nSession: %s\r\nRange: npt=0-\r\n%s%s\r\n";
+    char* const cmdFmt =
+      "PLAY %s RTSP/1.0\r\n"
+      "CSeq: %d\r\n"
+      "Session: %s\r\n"
+      "Range: npt=0-\r\n"
+      "%s"
+      "%s\r\n";
 
-    char const *prefix, *separator, *suffix;
-    constructSubsessionURL(subsession, prefix, separator, suffix);
-    if (hackForDSS) {
-      // When "PLAY" is used to inject RTP packets into a DSS
-      // (violating the RTSP spec, btw; "RECORD" should have been used)
-      // the DSS can crash (or hang) if the '/trackid=...' portion of
-      // the URL is present.
-      separator = suffix = "";
-    }
-
-    unsigned const writeBufSize = 1000;
-    char writeBuf[writeBufSize];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf()
-    // This is a security risk if "prefix" or "suffix" can come from an
-    // external user
-    sprintf(writeBuf, cmdFmt, prefix, separator, suffix,
-	    ++fCSeq, subsession.sessionId, authenticatorStr,
+    unsigned cmdSize = strlen(cmdFmt)
+      + strlen(fBaseURL)
+      + 20 /* max int len */
+      + strlen(fLastSessionId)
+      + strlen(authenticatorStr)
+      + fUserAgentHeaderStrSize;
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
+	    fBaseURL,
+	    ++fCSeq,
+	    fLastSessionId,
+	    authenticatorStr,
 	    fUserAgentHeaderStr);
-#else
-    snprintf(writeBuf, writeBufSize, cmdFmt, prefix, separator, suffix,
-	     ++fCSeq, subsession.sessionId, authenticatorStr,
-	     fUserAgentHeaderStr);
-#endif
     delete authenticatorStr;
 
-    if (!sendRequest(writeBuf)) {
+    if (!sendRequest(cmd)) {
       envir().setResultErrMsg("PLAY send() failed: ");
       break;
     }
@@ -766,13 +793,98 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
     }
     // (Later, check "CSeq" too #####)
 
+    delete cmd;
     return True;
   } while (0);
 
+delete cmd;
+  return False;
+}
+
+Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
+					Boolean hackForDSS) {
+  char* cmd = NULL;
+  do {
+    // First, make sure that we have a RTSP session in progress
+    if (subsession.sessionId == NULL) {
+      envir().setResultMsg("No RTSP session is currently in progress\n");
+      break;
+    }
+
+    // Send the PLAY command:
+
+    // First, construct an authenticator string:
+    char* authenticatorStr
+      = createAuthenticatorString(fCurrentAuthenticator, "PLAY", fBaseURL);
+
+    char* const cmdFmt =
+      "PLAY %s%s%s RTSP/1.0\r\n"
+      "CSeq: %d\r\n"
+      "Session: %s\r\n"
+      "Range: npt=0-\r\n"
+      "%s"
+      "%s\r\n";
+
+    char const *prefix, *separator, *suffix;
+    constructSubsessionURL(subsession, prefix, separator, suffix);
+    if (hackForDSS) {
+      // When "PLAY" is used to inject RTP packets into a DSS
+      // (violating the RTSP spec, btw; "RECORD" should have been used)
+      // the DSS can crash (or hang) if the '/trackid=...' portion of
+      // the URL is present.
+      separator = suffix = "";
+    }
+
+    unsigned cmdSize = strlen(cmdFmt)
+      + strlen(prefix) + strlen(separator) + strlen(suffix)
+      + 20 /* max int len */
+      + strlen(subsession.sessionId)
+      + strlen(authenticatorStr)
+      + fUserAgentHeaderStrSize;
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
+	    prefix, separator, suffix,
+	    ++fCSeq,
+	    subsession.sessionId,
+	    authenticatorStr,
+	    fUserAgentHeaderStr);
+    delete authenticatorStr;
+
+    if (!sendRequest(cmd)) {
+      envir().setResultErrMsg("PLAY send() failed: ");
+      break;
+    }
+
+    // Get the response from the server:
+    unsigned const readBufSize = 10000;
+    char readBuf[readBufSize+1];
+    int bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead < 0) break;
+    if (fVerbosityLevel >= 1) {
+      fprintf(stderr, "Received PLAY response: %s\n", readBuf); fflush(stderr);
+    }
+
+    // Inspect the first line to check whether it's a result code 200
+    char* firstLine = readBuf;
+    /*char* nextLineStart =*/ getLine(firstLine);
+    unsigned responseCode;
+    if (!parseResponseCode(firstLine, responseCode)) break;
+    if (responseCode != 200) {
+      envir().setResultMsg("cannot handle PLAY response: ", firstLine);
+      break;
+    }
+    // (Later, check "CSeq" too #####)
+
+    delete cmd;
+    return True;
+  } while (0);
+
+delete cmd;
   return False;
 }
 
 Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
+  char* cmd = NULL;
   do {
     // First, make sure that we have a RTSP session in progress
     if (subsession.sessionId == NULL) {
@@ -787,28 +899,33 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
       = createAuthenticatorString(fCurrentAuthenticator,
 				  "RECORD", fBaseURL);
 
-    char* const cmdFmt = "RECORD %s%s%s RTSP/1.0\r\nCSeq: %d\r\nSession: %s\r\nRange: npt=0-\r\n%s%s\r\n";
+    char* const cmdFmt =
+      "RECORD %s%s%s RTSP/1.0\r\n"
+      "CSeq: %d\r\n"
+      "Session: %s\r\n"
+      "Range: npt=0-\r\n"
+      "%s"
+      "%s\r\n";
 
     char const *prefix, *separator, *suffix;
     constructSubsessionURL(subsession, prefix, separator, suffix);
 
-    unsigned const writeBufSize = 1000;
-    char writeBuf[writeBufSize];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf()
-    // This is a security risk if "prefix" or "suffix" can come from an
-    // external user
-    sprintf(writeBuf, cmdFmt, prefix, separator, suffix,
-	    ++fCSeq, subsession.sessionId, authenticatorStr,
+    unsigned cmdSize = strlen(cmdFmt)
+      + strlen(prefix) + strlen(separator) + strlen(suffix)
+      + 20 /* max int len */
+      + strlen(subsession.sessionId)
+      + strlen(authenticatorStr)
+      + fUserAgentHeaderStrSize;
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
+	    prefix, separator, suffix,
+	    ++fCSeq,
+	    subsession.sessionId,
+	    authenticatorStr,
 	    fUserAgentHeaderStr);
-#else
-    snprintf(writeBuf, writeBufSize, cmdFmt, prefix, separator, suffix,
-	     ++fCSeq, subsession.sessionId, authenticatorStr,
-	     fUserAgentHeaderStr);
-#endif
     delete authenticatorStr;
 
-    if (!sendRequest(writeBuf)) {
+    if (!sendRequest(cmd)) {
       envir().setResultErrMsg("RECORD send() failed: ");
       break;
     }
@@ -833,13 +950,16 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
     }
     // (Later, check "CSeq" too #####)
 
+    delete cmd;
     return True;
   } while (0);
 
+  delete cmd;
   return False;
 }
 
 Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
+  char* cmd = NULL;
   do {
     // First, make sure that we have a RTSP session in progreee
     if (subsession.sessionId == NULL) {
@@ -854,28 +974,32 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
       = createAuthenticatorString(fCurrentAuthenticator,
 				  "TEARDOWN", fBaseURL);
 
-    char* const cmdFmt = "TEARDOWN %s%s%s RTSP/1.0\r\nCSeq: %d\r\nSession: %s\r\n%s%s\r\n";
+    char* const cmdFmt =
+      "TEARDOWN %s%s%s RTSP/1.0\r\n"
+      "CSeq: %d\r\n"
+      "Session: %s\r\n"
+      "%s"
+      "%s\r\n";
 
     char const *prefix, *separator, *suffix;
     constructSubsessionURL(subsession, prefix, separator, suffix);
 
-    unsigned const writeBufSize = 1000;
-    char writeBuf[writeBufSize];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf()
-    // This is a security risk if "prefix" or "suffix" can come from an
-    // external user
-    sprintf(writeBuf, cmdFmt, prefix, separator, suffix,
-	    ++fCSeq, subsession.sessionId, authenticatorStr,
+    unsigned cmdSize = strlen(cmdFmt)
+      + strlen(prefix) + strlen(separator) + strlen(suffix)
+      + 20 /* max int len */
+      + strlen(subsession.sessionId)
+      + strlen(authenticatorStr)
+      + fUserAgentHeaderStrSize;
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
+	    prefix, separator, suffix,
+	    ++fCSeq,
+	    subsession.sessionId,
+	    authenticatorStr,
 	    fUserAgentHeaderStr);
-#else
-    snprintf(writeBuf, writeBufSize, cmdFmt, prefix, separator, suffix,
-	     ++fCSeq, subsession.sessionId, authenticatorStr,
-	     fUserAgentHeaderStr);
-#endif
     delete authenticatorStr;
 
-    if (!sendRequest(writeBuf)) {
+    if (!sendRequest(cmd)) {
       envir().setResultErrMsg("TEARDOWN send() failed: ");
       break;
     }
@@ -908,9 +1032,11 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
     subsession.sessionId = NULL;
     // we're done with this session
 
+    delete cmd;
     return True;
   } while (0);
 
+  delete cmd;
   return False;
 }
 

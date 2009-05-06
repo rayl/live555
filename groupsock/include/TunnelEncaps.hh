@@ -58,7 +58,7 @@ class TunnelEncapsulationTrailer {
                 { return *(unsigned*)byteOffset(-4); }
 
     private:
-	inline char* byteOffset(unsigned charIndex)
+	inline char* byteOffset(int charIndex)
 		{ return ((char*)this) + charIndex; }
 };
 

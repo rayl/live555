@@ -3,11 +3,6 @@ INCLUDES = -Iinclude -I../UsageEnvironment/include -I../groupsock/include
 # Comment out the following line to produce Makefiles that generate debuggable code:
 NODEBUG=1
 
-# The following definition ensures that we link with "wsock32.lib"
-# rather than "ws2_32.lib".  For some reason, the standard Berkeley
-# socket calls for multicast don't work properly with "ws2_32.lib".
-
-
 # The following definition ensures that we are properly matching
 # the WinSock2 library file with the correct header files.
 # (will link with "ws2_32.lib" and include "winsock2.h" & "Ws2tcpip.h")

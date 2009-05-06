@@ -78,6 +78,9 @@ public:
 			       Boolean streamUsingTCP = False);
       // Issues a RTSP "SETUP" command on "subsession".
       // Returns True iff this command succeeds
+  Boolean playMediaSession(MediaSession& session);
+      // Issues an aggregate RTSP "PLAY" command on "session".
+      // Returns True iff this command succeeds
   Boolean playMediaSubsession(MediaSubsession& subsession,
 			      Boolean hackForDSS = False);
       // Issues a RTSP "PLAY" command on "subsession".
@@ -125,13 +128,14 @@ private:
 private:
   int fVerbosityLevel;
   char* fUserAgentHeaderStr;
+      unsigned fUserAgentHeaderStrSize;
   int fSocketNum;
   unsigned fServerAddress;
   unsigned fCSeq; // sequence number, used in consecutive requests
   char* fBaseURL;
   AuthRecord* fCurrentAuthenticator; // if any
   unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
-  char* fLastSessionId; // used to overcome DSS bogosity
+  char* fLastSessionId;
 };
 
 #endif

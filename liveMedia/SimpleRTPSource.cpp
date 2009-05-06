@@ -21,7 +21,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "SimpleRTPSource.hh"
-#include "GroupsockHelper.hh"
 #include <string.h>
 
 SimpleRTPSource* SimpleRTPSource::createNew(UsageEnvironment& env,
@@ -30,22 +29,9 @@ SimpleRTPSource* SimpleRTPSource::createNew(UsageEnvironment& env,
 					    unsigned rtpTimestampFrequency,
 					    char const* mimeTypeString,
 					    unsigned offset) {
-  SimpleRTPSource* newSource;
-
-  do {
-    newSource = new SimpleRTPSource(env, RTPgs, rtpPayloadFormat,
-				    rtpTimestampFrequency,
-				    mimeTypeString, offset);
-    if (newSource == NULL) break;
-
-    // Try to use a big receive buffer for RTP:
-    increaseReceiveBufferTo(env, RTPgs->socketNum(), 50*1024);
-
-    return newSource;
-  } while (0);
-
-  delete newSource;
-  return NULL;
+  return new SimpleRTPSource(env, RTPgs, rtpPayloadFormat,
+			     rtpTimestampFrequency,
+			     mimeTypeString, offset);
 }
 
 SimpleRTPSource::SimpleRTPSource(UsageEnvironment& env, Groupsock* RTPgs,

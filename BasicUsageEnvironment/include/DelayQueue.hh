@@ -140,7 +140,7 @@ extern EventTime const THE_END_OF_TIME;
 
 class DelayQueueEntry {
 public:
-  int token() {
+  long token() {
     return fToken;
   }
 
@@ -155,8 +155,8 @@ private:
   DelayQueueEntry* fPrev;
   DelayInterval fDeltaTimeRemaining;
 
-  int fToken;
-  static int tokenCounter;
+  long fToken;
+  static long tokenCounter;
 };
 
 ///// DelayQueue /////
@@ -168,9 +168,9 @@ public:
   
   void addEntry(DelayQueueEntry* newEntry); // returns a token for the entry
   void updateEntry(DelayQueueEntry* entry, DelayInterval newDelay);
-  void updateEntry(int tokenToFind, DelayInterval newDelay);
+  void updateEntry(long tokenToFind, DelayInterval newDelay);
   void removeEntry(DelayQueueEntry* entry); // but doesn't delete it
-  DelayQueueEntry* removeEntry(int tokenToFind); // but doesn't delete it
+  DelayQueueEntry* removeEntry(long tokenToFind); // but doesn't delete it
   
   DelayInterval& timeToNextAlarm() {return head()->fDeltaTimeRemaining;}
   void handleAlarm();
@@ -179,7 +179,7 @@ private:
   DelayQueueEntry* head() const {
     return fNext;
   }
-  DelayQueueEntry* findEntryByToken(int token);
+  DelayQueueEntry* findEntryByToken(long token);
   void addEntry1(DelayQueueEntry* newEntry);
   void removeEntry1(DelayQueueEntry* entry);
   

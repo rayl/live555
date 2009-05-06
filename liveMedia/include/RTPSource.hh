@@ -132,6 +132,10 @@ private: // constructor and destructor, called only by RTPSource:
       // True iff a RTCP SR has been received for all known SSRCs
 
 private:
+  RTPReceptionStats* lookup(unsigned SSRC) const;
+  void add(unsigned SSRC, RTPReceptionStats* stats);
+
+private:
   friend class Iterator;
   RTPSource& fOurRTPSource;
   HashTable* fTable;

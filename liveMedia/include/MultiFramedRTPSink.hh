@@ -73,8 +73,8 @@ private:
   void buildAndSendPacket(Boolean isFirstPacket);
   void packFrame();
   void sendPacketIfNecessary();
-  static void sendNext(int firstArg);
-  friend void sendNext(int);
+  static void sendNext(void* firstArg);
+  friend void sendNext(void*);
 
   static void afterGettingFrame(void* clientData,
 				unsigned numBytesRead,

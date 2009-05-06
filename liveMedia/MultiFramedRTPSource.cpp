@@ -62,6 +62,9 @@ MultiFramedRTPSource
     fCurrentPacketCompletesFrame(True/*by default*/),
     fAreDoingNetworkReads(False), fNeedDelivery(False) {
   fReorderingBuffer = new ReorderingPacketBuffer(packetFactory);
+
+  // Try to use a big receive buffer for RTP:
+  increaseReceiveBufferTo(env, RTPgs->socketNum(), 50*1024);
 }
 
 MultiFramedRTPSource::~MultiFramedRTPSource() {

@@ -326,7 +326,7 @@ int Groupsock::outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
 	= (TunnelEncapsulationTrailer*)&data[size];
       TunnelEncapsulationTrailer* trailer;
       
-      Boolean misaligned = ((unsigned)trailerInPacket & 3) != 0;
+      Boolean misaligned = ((unsigned long)trailerInPacket & 3) != 0;
       unsigned trailerOffset;
       unsigned char tunnelCmd;
       if (isSSM()) {
@@ -408,9 +408,9 @@ static Boolean unsetGroupsockBySocket(Groupsock const* groupsock) {
     HashTable* sockets = getSocketTable();
     if (sockets == NULL) break;
     
-    Groupsock* gs = (Groupsock*)sockets->Lookup((char*)sock);
+    Groupsock* gs = (Groupsock*)sockets->Lookup((char*)(long)sock);
     if (gs == NULL || gs != groupsock) break;
-    sockets->Remove((char*)sock);
+    sockets->Remove((char*)(long)sock);
     
     return True;
   } while (0);
@@ -435,7 +435,7 @@ static Boolean setGroupsockBySocket(UsageEnvironment& env, int sock,
     // Make sure we're not replacing an existing Groupsock
     // That shouldn't happen
     Boolean alreadyExists
-      = (sockets->Lookup((char*)sock) != 0);
+      = (sockets->Lookup((char*)(long)sock) != 0);
     if (alreadyExists) {
       char buf[100];
       sprintf(buf,
@@ -445,7 +445,7 @@ static Boolean setGroupsockBySocket(UsageEnvironment& env, int sock,
       break;
     }
     
-    sockets->Add((char*)sock, groupsock);
+    sockets->Add((char*)(long)sock, groupsock);
     return True;
   } while (0);
   
@@ -460,7 +460,7 @@ static Groupsock* getGroupsockBySocket(int sock) {
     HashTable* sockets = getSocketTable();
     if (sockets == NULL) break;
     
-    return (Groupsock*)sockets->Lookup((char*)sock);
+    return (Groupsock*)sockets->Lookup((char*)(long)sock);
   } while (0);
   
   return NULL;

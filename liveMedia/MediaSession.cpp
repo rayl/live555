@@ -305,7 +305,7 @@ unsigned MediaSession::guessRTPTimestampFrequency(char const* mediumName,
   if (strcmp(codecName, "L16") == 0) return 44100;
   if (strcmp(codecName, "MPA") == 0
       || strcmp(codecName, "MPA-ROBUST") == 0
-      || strcmp(codecName, "X-MP3-DRAFT-00") == 0) return 90000;
+      || strcmp(codecName, "X-MP3-DRAFT-00")) return 90000;
 
   // Now, guess default values:
   if (strcmp(mediumName, "video") == 0) return 90000;
@@ -533,7 +533,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 				       fRTPPayloadFormat,
 				       fRTPTimestampFrequency);
           // Note that fReadSource will differ from fRTPSource in this case
-    } else if (strcmp(fCodecName, "MPA") == 0) { // MPEG audio
+    } else if (strcmp(fCodecName, "MPA") == 0) { // MPEG-1 or 2 audio
       fReadSource = fRTPSource
 	= MPEGAudioRTPSource::createNew(env(), fRTPSocket,
 					fRTPPayloadFormat,
@@ -567,7 +567,18 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	= MPEG4LATMAudioRTPSource::createNew(env(), fRTPSocket,
 					     fRTPPayloadFormat,
 					     fRTPTimestampFrequency);
-    } else if (strcmp(fCodecName, "MPV") == 0) { // MPEG video
+    } else if (strcmp(fCodecName, "MP4V-ES") == 0) { // MPEG-4 Elem Str vid
+      fReadSource = fRTPSource
+	= MPEG4ESVideoRTPSource::createNew(env(), fRTPSocket,
+					   fRTPPayloadFormat,
+					   fRTPTimestampFrequency);
+    } else if (strcmp(fCodecName, "MPEG4-GENERIC") == 0) {
+      fReadSource = fRTPSource
+	= MPEG4GenericRTPSource::createNew(env(), fRTPSocket,
+					   fRTPPayloadFormat,
+					   fRTPTimestampFrequency,
+					   fMediumName);
+    } else if (strcmp(fCodecName, "MPV") == 0) { // MPEG-1 or 2 video
       fReadSource = fRTPSource
 	= MPEGVideoRTPSource::createNew(env(), fRTPSocket,
 					fRTPPayloadFormat,
@@ -577,6 +588,11 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	= H263plusVideoRTPSource::createNew(env(), fRTPSocket,
 					    fRTPPayloadFormat,
 					    fRTPTimestampFrequency);
+    } else if (strcmp(fCodecName, "JPEG") == 0) { // motion JPEG
+      fReadSource = fRTPSource
+	= JPEGVideoRTPSource::createNew(env(), fRTPSocket,
+					fRTPPayloadFormat,
+					fRTPTimestampFrequency);
     } else if (strcmp(fCodecName, "X-QT") == 0
 	       || strcmp(fCodecName, "X-QUICKTIME") == 0) {
       // Generic QuickTime streams, as defined in
@@ -794,22 +810,34 @@ Boolean MediaSubsession::parseSDPAttribute_range(char const* sdpLine) {
 
 Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
   // Check for a "a=fmtp:" line:
-  // TEMP: We check only for "a=fmtp:<num>;cpresent=<num>;config=<string>" #####
+  // TEMP: We check only for "cpresent=" and "config=" #####
   // Later: (i) check that payload format number matches; #####
   //        (ii) look for other parameters also (generalize?) #####  
-  Boolean parseSuccess = False;
+  do {
+    if (strncmp(sdpLine, "a=fmtp:", 7) != 0) break; sdpLine += 7;
+    while (isdigit(*sdpLine)) ++sdpLine;
 
-  int cpresent;
-  char* config = strdup(sdpLine); // ensures we have enough space
-  char const* fmtStr = "a=fmtp: %*d cpresent = %d ; config = %s";
-  if (sscanf(sdpLine, fmtStr, &cpresent, config) == 2) {
-    parseSuccess = True;
-    fCpresent = cpresent != 0;
-    delete fConfig; fConfig = strdup(config);
-  }
-  delete config;
+    // The remaining "sdpLine" should be a sequence of
+    //     <name>=<value>;
+    // parameter assignments.  Look at each of these:
+    char* valueStr = strdup(sdpLine);
+    while (*sdpLine != '\0' && *sdpLine != '\r' && *sdpLine != '\n') {
+      int cpresent;
+      if (sscanf(sdpLine, " cpresent = %d", &cpresent) == 1) {
+	fCpresent = cpresent != 0;
+      } else if (sscanf(sdpLine, " config = %[^; \t\r\n]", valueStr) == 1) {
+	delete fConfig; fConfig = strdup(valueStr);
+      }
 
-  return parseSuccess;
+      // Move to the next parameter assignment string:
+      while (*sdpLine != '\0' && *sdpLine != '\r' && *sdpLine != '\n'
+	     && *sdpLine != ';') ++sdpLine;
+      while (*sdpLine == ';') ++sdpLine;
+    }
+    return True;
+  } while (0);
+
+  return False;
 }
 
 Boolean MediaSubsession::parseSDPAttribute_x_mct_slap(char const* sdpLine) {

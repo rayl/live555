@@ -84,8 +84,8 @@ private:
   unsigned hashIndexFromKey(char const* key) const;
     // used to implement many of the routines above
 
-  unsigned randomIndex(unsigned i) const {
-    return (((((long) (i))*1103515245) >> fDownShift) & fMask);
+  unsigned randomIndex(unsigned long i) const {
+    return (((i*1103515245) >> fDownShift) & fMask);
   }
 
 private:

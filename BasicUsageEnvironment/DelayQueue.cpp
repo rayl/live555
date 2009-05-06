@@ -89,7 +89,7 @@ const DelayInterval ETERNITY(INT_MAX, MILLION-1);
 
 ///// DelayQueueEntry /////
 
-int DelayQueueEntry::tokenCounter = 0;
+long DelayQueueEntry::tokenCounter = 0;
 
 DelayQueueEntry::DelayQueueEntry(DelayInterval delay)
   : fDeltaTimeRemaining(delay) {
@@ -127,7 +127,7 @@ void DelayQueue::updateEntry(DelayQueueEntry* entry, DelayInterval newDelay) {
   addEntry1(entry);
 }
 
-void DelayQueue::updateEntry(int tokenToFind, DelayInterval newDelay) {
+void DelayQueue::updateEntry(long tokenToFind, DelayInterval newDelay) {
   ScopedRWLock l(fLock);
   DelayQueueEntry* entry = findEntryByToken(tokenToFind);
   if (entry == NULL) return;
@@ -142,7 +142,7 @@ void DelayQueue::removeEntry(DelayQueueEntry* entry) {
   removeEntry1(entry);
 }
 
-DelayQueueEntry* DelayQueue::removeEntry(int tokenToFind) {
+DelayQueueEntry* DelayQueue::removeEntry(long tokenToFind) {
   ScopedRWLock l(fLock);
   DelayQueueEntry* entry = findEntryByToken(tokenToFind);
   if (entry != NULL) {
@@ -154,7 +154,7 @@ DelayQueueEntry* DelayQueue::removeEntry(int tokenToFind) {
 
 ///// Implementation /////
 
-DelayQueueEntry* DelayQueue::findEntryByToken(int tokenToFind) {
+DelayQueueEntry* DelayQueue::findEntryByToken(long tokenToFind) {
   DelayQueueEntry* cur = head();
   while (cur != this) {
     if (cur->token() == tokenToFind) return cur;

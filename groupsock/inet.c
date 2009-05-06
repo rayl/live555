@@ -61,7 +61,7 @@ struct hostent* our_gethostbyname(name)
 {
 	if (!initializeWinsockIfNecessary()) return NULL;
 
-	return (struct hostent*) gethostbyname((char*)name);
+	return (struct hostent*) gethostbyname(name);
 }
 
 
@@ -101,13 +101,13 @@ our_bcopy(src0, dst0, length)
 		/*
 		 * Copy forward.
 		 */
-		t = (int)src;	/* only need low bits */
-		if ((t | (int)dst) & wmask) {
+		t = (size_t)src;	/* only need low bits */
+		if ((t | (size_t)dst) & wmask) {
 			/*
 			 * Try to align operands.  This cannot be done
 			 * unless the low bits match.
 			 */
-			if ((t ^ (int)dst) & wmask || length < wsize)
+			if ((t ^ (size_t)dst) & wmask || length < wsize)
 				t = length;
 			else
 				t = wsize - (t & wmask);
@@ -129,9 +129,9 @@ our_bcopy(src0, dst0, length)
 		 */
 		src += length;
 		dst += length;
-		t = (int)src;
-		if ((t | (int)dst) & wmask) {
-			if ((t ^ (int)dst) & wmask || length <= wsize)
+		t = (size_t)src;
+		if ((t | (size_t)dst) & wmask) {
+			if ((t ^ (size_t)dst) & wmask || length <= wsize)
 				t = length;
 			else
 				t &= wmask;
@@ -472,6 +472,7 @@ our_random()
 
 
 #ifdef USE_OUR_BZERO
+#ifndef __bzero
 void
 __bzero (to, count)
   char *to;
@@ -482,4 +483,5 @@ __bzero (to, count)
       *to++ = 0;
     }
 }             
+#endif
 #endif

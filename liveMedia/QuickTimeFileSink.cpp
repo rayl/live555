@@ -1278,7 +1278,7 @@ addAtomEnd;
       ++numEdits; \
 } while (0)
 #define addEdit(duration) addEdit1((duration),editTrackPosition)
-#define addEmptyEdit(duration) addEdit1((duration),-1)
+#define addEmptyEdit(duration) addEdit1((duration),(~0))
 
 addAtom(elst);
   size += addWord(0x00000000); // Version + Flags

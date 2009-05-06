@@ -65,7 +65,8 @@ MP3HTTPSource* MP3HTTPSource::createNew(UsageEnvironment& env,
       // HACK HACK HACK #####
       // We couldn't convert the socket to a FILE*; perhaps this is Windoze?
       // Instead, tell the low-level to read it directly as a socket:
-      fid = (FILE*)ourSocket;
+      long ourSocket_long = (long)ourSocket;
+      fid = (FILE*)ourSocket_long;
       streamLength = (unsigned)(-1);
     }
 

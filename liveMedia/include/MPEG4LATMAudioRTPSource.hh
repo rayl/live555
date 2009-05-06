@@ -85,4 +85,10 @@ unsigned char* parseStreamMuxConfigStr(char const* configStr,
     // (or NULL) if the parsing failed, without bothering with the other
     // result parameters.
 
+unsigned char* parseGeneralConfigStr(char const* configStr,
+				     // result parameter:
+				     unsigned& configSize);
+    // A routine that parses an arbitrary config string, returning
+    // the result in binary form.
+
 #endif

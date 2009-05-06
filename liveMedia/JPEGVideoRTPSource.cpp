@@ -22,27 +22,17 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Copyright (c) 1990-2002 Morgan Multimedia  All rights reserved.
 
 #include "JPEGVideoRTPSource.hh"
-#include "GroupsockHelper.hh"
+
+#define BYTE unsigned char
+#define WORD unsigned
+#define DWORD unsigned long
 
 JPEGVideoRTPSource*
 JPEGVideoRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 			      unsigned char rtpPayloadFormat,
 			      unsigned rtpTimestampFrequency) {
-  JPEGVideoRTPSource* newSource = NULL;
-
-  do {
-    newSource = new JPEGVideoRTPSource(env, RTPgs, rtpPayloadFormat,
-				       rtpTimestampFrequency);
-    if (newSource == NULL) break;
-
-    // Try to use a big receive buffer for RTP:
-    increaseReceiveBufferTo(env, RTPgs->socketNum(), 50*1024);
-
-    return newSource;
-  } while (0);
-
-  delete newSource;
-  return NULL;
+  return new JPEGVideoRTPSource(env, RTPgs, rtpPayloadFormat,
+				rtpTimestampFrequency);
 }
 
 JPEGVideoRTPSource::JPEGVideoRTPSource(UsageEnvironment& env,
@@ -51,7 +41,7 @@ JPEGVideoRTPSource::JPEGVideoRTPSource(UsageEnvironment& env,
 				       unsigned rtpTimestampFrequency)
   : MultiFramedRTPSource(env, RTPgs,
 			 rtpPayloadFormat, rtpTimestampFrequency),
-  detected(false),
+  detected(False),
   type(0),
   width(0),
   height(0),
@@ -60,111 +50,109 @@ JPEGVideoRTPSource::JPEGVideoRTPSource(UsageEnvironment& env,
   qtables(NULL),
   qtlen(0),
   hdrlen(0),
-  framesize(0)
-{
+  framesize(0) {
   memset(header, 0, sizeof(header));
   fCurrentPacketCompletesFrame = False;
 }
 
 JPEGVideoRTPSource::~JPEGVideoRTPSource() {
-  if (qtables)
-	  delete [] qtables;
-  qtables = NULL;
+  if (qtables) delete [] qtables;
 }
 
-int MjpegHeader(unsigned char *buf, unsigned type, unsigned w, unsigned h, unsigned char *qtables, unsigned qtlen, unsigned dri)
-{
-	unsigned char *ptr = buf;
+int MjpegHeader(unsigned char *buf, unsigned type, unsigned w, unsigned h,
+		unsigned char *qtables, unsigned qtlen, unsigned dri) {
+  unsigned char *ptr = buf;
 
-	// MARKER_SOI:
-	*ptr++ = 0xFF;
-	*ptr++ = MARKER_SOI;
-
-	// MARKER_APP_FIRST:
-	*ptr++ = 0xFF;
-	*ptr++ = MARKER_APP_FIRST;
-	*ptr++ = 0x00;
-	*ptr++ = 0x10; // size of chunck
-	*ptr++ = 'A';
-	*ptr++ = 'V';
-	*ptr++ = 'I';
-	*ptr++ = '1';
-	*ptr++ = 0x00; // field number : 0=Not field-interleaved, 1=First field, 2=Second field
-	*ptr++ = 0x00;
-
-	*ptr++ = 0x00;
-	*ptr++ = 0x00;
-	*ptr++ = 0x00;
-	*ptr++ = 0x00; // field_size, should be updated later
-
-	*ptr++ = 0x00;
-	*ptr++ = 0x00;
-	*ptr++ = 0x00;
-	*ptr++ = 0x00; // field_size_less_padding, should be updated later 
-
-	// MARKER_DRI:
-	//if (dri)
-	{
-		*ptr++ = 0xFF;
-		*ptr++ = MARKER_DRI;
-		*ptr++ = 0x00;
-		*ptr++ = 0x04; // size of chunck
-		*ptr++ = (BYTE)(dri >> 8);
-		*ptr++ = (BYTE)(dri); // restart interval
-	}
-
-	// MARKER_DQT:
-	*ptr++ = 0xFF;
-	*ptr++ = MARKER_DQT;
-	*ptr++ = 0x00;
-	*ptr++ = 0x84; // size of chunck
-	*ptr++ = 0x00; // precision(0), table id(0)
-	memcpy(ptr, qtables, qtlen / 2);
-	qtables += qtlen / 2;
-	ptr += qtlen / 2;
-	*ptr++ = 0x01; // precision(0), table id(1)
-	memcpy(ptr, qtables, qtlen / 2);
-	qtables += qtlen / 2;
-	ptr += qtlen / 2;
-
-	// MARKER_SOF0:
-	*ptr++ = 0xFF;
-	*ptr++ = MARKER_SOF0;
-	*ptr++ = 0x00;
-	*ptr++ = 0x11; // size of chunck
-	*ptr++ = 0x08; // sample precision
-	*ptr++ = (BYTE)(h >> 8);
-	*ptr++ = (BYTE)(h); // number of lines, multiple of 8
-	*ptr++ = (BYTE)(w >> 8);
-	*ptr++ = (BYTE)(w); // sample per line, multiple of 16
-	*ptr++ = 0x03; // number of components
-	*ptr++ = 0x01; // id of component
-	*ptr++ = type ? 0x22 : 0x21; // sampling ratio (h,v)
-	*ptr++ = 0x00; // quant table id
-	*ptr++ = 0x02; // id of component
-	*ptr++ = 0x11; // sampling ratio (h,v)
-	*ptr++ = 0x01; // quant table id
-	*ptr++ = 0x03; // id of component
-	*ptr++ = 0x11; // sampling ratio (h,v)
-	*ptr++ = 0x01; // quant table id
-
-	// MARKER_SOS:
-	*ptr++ = 0xFF;
-	*ptr++ = MARKER_SOS;
-	*ptr++ = 0x00;
-	*ptr++ = 0x0C; // size of chunck
-	*ptr++ = 0x03; // number of components
-	*ptr++ = 0x01; // id of component
-	*ptr++ = 0x00; // huffman table id (DC, AC)
-	*ptr++ = 0x02; // id of component
-	*ptr++ = 0x11; // huffman table id (DC, AC)
-	*ptr++ = 0x03; // id of component
-	*ptr++ = 0x11; // huffman table id (DC, AC)
-	*ptr++ = 0x00; // start of spectral
-	*ptr++ = 0x3F; // end of spectral
-	*ptr++ = 0x00; // successive approximation bit position (high, low)
-
-	return (ptr - buf);
+  // MARKER_SOI:
+  *ptr++ = 0xFF;
+  *ptr++ = MARKER_SOI;
+  
+  // MARKER_APP_FIRST:
+  *ptr++ = 0xFF;
+  *ptr++ = MARKER_APP_FIRST;
+  *ptr++ = 0x00;
+  *ptr++ = 0x10; // size of chunck
+  *ptr++ = 'A';
+  *ptr++ = 'V';
+  *ptr++ = 'I';
+  *ptr++ = '1';
+  *ptr++ = 0x00;
+  // field number: 0=Not field-interleaved, 1=First field, 2=Second field
+  *ptr++ = 0x00;
+  
+  *ptr++ = 0x00;
+  *ptr++ = 0x00;
+  *ptr++ = 0x00;
+  *ptr++ = 0x00; // field_size, should be updated later
+  
+  *ptr++ = 0x00;
+  *ptr++ = 0x00;
+  *ptr++ = 0x00;
+  *ptr++ = 0x00; // field_size_less_padding, should be updated later 
+  
+  // MARKER_DRI:
+  //if (dri)
+  {
+    *ptr++ = 0xFF;
+    *ptr++ = MARKER_DRI;
+    *ptr++ = 0x00;
+    *ptr++ = 0x04; // size of chunck
+    *ptr++ = (BYTE)(dri >> 8);
+    *ptr++ = (BYTE)(dri); // restart interval
+  }
+  
+  // MARKER_DQT:
+  *ptr++ = 0xFF;
+  *ptr++ = MARKER_DQT;
+  *ptr++ = 0x00;
+  *ptr++ = 0x84; // size of chunck
+  *ptr++ = 0x00; // precision(0), table id(0)
+  memcpy(ptr, qtables, qtlen / 2);
+  qtables += qtlen / 2;
+  ptr += qtlen / 2;
+  *ptr++ = 0x01; // precision(0), table id(1)
+  memcpy(ptr, qtables, qtlen / 2);
+  qtables += qtlen / 2;
+  ptr += qtlen / 2;
+  
+  // MARKER_SOF0:
+  *ptr++ = 0xFF;
+  *ptr++ = MARKER_SOF0;
+  *ptr++ = 0x00;
+  *ptr++ = 0x11; // size of chunck
+  *ptr++ = 0x08; // sample precision
+  *ptr++ = (BYTE)(h >> 8);
+  *ptr++ = (BYTE)(h); // number of lines, multiple of 8
+  *ptr++ = (BYTE)(w >> 8);
+  *ptr++ = (BYTE)(w); // sample per line, multiple of 16
+  *ptr++ = 0x03; // number of components
+  *ptr++ = 0x01; // id of component
+  *ptr++ = type ? 0x22 : 0x21; // sampling ratio (h,v)
+  *ptr++ = 0x00; // quant table id
+  *ptr++ = 0x02; // id of component
+  *ptr++ = 0x11; // sampling ratio (h,v)
+  *ptr++ = 0x01; // quant table id
+  *ptr++ = 0x03; // id of component
+  *ptr++ = 0x11; // sampling ratio (h,v)
+  *ptr++ = 0x01; // quant table id
+  
+  // MARKER_SOS:
+  *ptr++ = 0xFF;
+  *ptr++ = MARKER_SOS;
+  *ptr++ = 0x00;
+  *ptr++ = 0x0C; // size of chunck
+  *ptr++ = 0x03; // number of components
+  *ptr++ = 0x01; // id of component
+  *ptr++ = 0x00; // huffman table id (DC, AC)
+  *ptr++ = 0x02; // id of component
+  *ptr++ = 0x11; // huffman table id (DC, AC)
+  *ptr++ = 0x03; // id of component
+  *ptr++ = 0x11; // huffman table id (DC, AC)
+  *ptr++ = 0x00; // start of spectral
+  *ptr++ = 0x3F; // end of spectral
+  *ptr++ = 0x00; // successive approximation bit position (high, low)
+  
+  return (ptr - buf);
 }
 
 Boolean JPEGVideoRTPSource
@@ -173,95 +161,83 @@ Boolean JPEGVideoRTPSource
 		       unsigned& resultSpecialHeaderSize) {
   // There's at least 8-byte video-specific header
   /*
-			0                   1                   2                   3
-			0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-		   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		   | Type-specific |              Fragment Offset                  |
-		   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		   |      Type     |       Q       |     Width     |     Height    |
-		   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+0                   1                   2                   3
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+| Type-specific |              Fragment Offset                  |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|      Type     |       Q       |     Width     |     Height    |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
   */
   if (packetSize < 8) return False;
 
   resultSpecialHeaderSize = 8;
+  detected = True;
 
   unsigned Offset = (unsigned)((DWORD)headerStart[1] << 16 | (DWORD)headerStart[2] << 8 | (DWORD)headerStart[3]);
   unsigned Type = (unsigned)headerStart[4];
-  unsigned Q = (unsigned)headerStart[5];
-  unsigned Width = (unsigned)headerStart[6] * 8;
-  unsigned Height = (unsigned)headerStart[7] * 8;
-
-  width = Width;
-  height = Height;
-
   type = Type & 1;
+  quality = (unsigned)headerStart[5];
+  width = (unsigned)headerStart[6] * 8;
+  height = (unsigned)headerStart[7] * 8;
 
-  if (Type > 63)
-  {
-	  // Restart Marker header present
-	  /*
-		0                   1                   2                   3
-		0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-	   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	   |       Restart Interval        |F|L|       Restart Count       |
-	   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-	  */
-	  if (packetSize < resultSpecialHeaderSize + 4) 
-		  return False;
+  if (Type > 63) {
+    // Restart Marker header present
+    /*
+0                   1                   2                   3
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|       Restart Interval        |F|L|       Restart Count       |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    */
+    if (packetSize < resultSpecialHeaderSize + 4) return False;
 
-	  unsigned RestartInterval = (unsigned)((WORD)headerStart[resultSpecialHeaderSize] << 8 | (WORD)headerStart[resultSpecialHeaderSize + 1]);
-	  dri = RestartInterval;
-	  resultSpecialHeaderSize += 4;
-
+    unsigned RestartInterval = (unsigned)((WORD)headerStart[resultSpecialHeaderSize] << 8 | (WORD)headerStart[resultSpecialHeaderSize + 1]);
+    dri = RestartInterval;
+    resultSpecialHeaderSize += 4;
   }
 
-  if (Offset == 0)
-  {
-	  framesize = 0;
+  if (Offset == 0) {
+    framesize = 0;
+    
+    if (quality > 127) {
+      // Quantization Table header present
+/*
+0                   1                   2                   3
+0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|      MBZ      |   Precision   |             Length            |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                    Quantization Table Data                    |
+|                              ...                              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+*/
+      if (packetSize < resultSpecialHeaderSize + 4) return False;
 
-	  if (Q > 127)
-	  {
-		  // Quantization Table header present
-		  /*
-			0                   1                   2                   3
-			0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-		   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		   |      MBZ      |   Precision   |             Length            |
-		   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		   |                    Quantization Table Data                    |
-		   |                              ...                              |
-		   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-		  */
-		  if (packetSize < resultSpecialHeaderSize + 4) 
-			  return False;
+      unsigned MBZ = (unsigned)headerStart[resultSpecialHeaderSize];
+      if (MBZ == 0) {
+	// unsigned Precision = (unsigned)headerStart[resultSpecialHeaderSize + 1];
+	unsigned Length = (unsigned)((WORD)headerStart[resultSpecialHeaderSize + 2] << 8 | (WORD)headerStart[resultSpecialHeaderSize + 3]);
 
-		  unsigned MBZ = (unsigned)headerStart[resultSpecialHeaderSize];
-		  if (MBZ == 0)
-		  {
-			  unsigned Precision = (unsigned)headerStart[resultSpecialHeaderSize + 1];
-			  unsigned Length = (unsigned)((WORD)headerStart[resultSpecialHeaderSize + 2] << 8 | (WORD)headerStart[resultSpecialHeaderSize + 3]);
+	//ASSERT(Length == 128);
 
-			  //ASSERT(Length == 128);
+	resultSpecialHeaderSize += 4;
 
-			  resultSpecialHeaderSize += 4;
+	if (packetSize < resultSpecialHeaderSize + Length) return False;
 
-			  if (packetSize < resultSpecialHeaderSize + Length) 
-				  return False;
+	if (qtables) delete [] qtables;
 
-			  if (qtables)
-				  delete [] qtables;
-
-			  qtlen = Length;
-			  qtables = new unsigned char[Length];
-			  memcpy(qtables, &headerStart[resultSpecialHeaderSize], Length);
-
-			  unsigned newhdrlen = MjpegHeader(header, type, width, height, qtables, qtlen, dri);
-			  if (hdrlen != newhdrlen)
-				hdrlen = newhdrlen;
-
-			  resultSpecialHeaderSize += Length;
-		  }
-	  }
+	qtlen = Length;
+	qtables = new unsigned char[Length];
+	memcpy(qtables, &headerStart[resultSpecialHeaderSize], Length);
+	
+	unsigned newhdrlen
+	  = MjpegHeader(header, type, width, height, qtables, qtlen, dri);
+	if (hdrlen != newhdrlen) hdrlen = newhdrlen;
+	
+	resultSpecialHeaderSize += Length;
+      }
+    }
   }
 
   // The RTP "M" (marker) bit indicates the last fragment of a frame:

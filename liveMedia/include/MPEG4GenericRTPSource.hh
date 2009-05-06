@@ -15,41 +15,46 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
-// MPEG-1 or MPEG-2 Video RTP Sources
+// MPEG4-GENERIC ("audio", "video", or "application") RTP stream sources
 // C++ header
 
-#ifndef _MPEG_VIDEO_RTP_SOURCE_HH
-#define _MPEG_VIDEO_RTP_SOURCE_HH
+#ifndef _MPEG4_GENERIC_RTP_SOURCE_HH
+#define _MPEG4_GENERIC_RTP_SOURCE_HH
 
 #ifndef _MULTI_FRAMED_RTP_SOURCE_HH
 #include "MultiFramedRTPSource.hh"
 #endif
 
-class MPEGVideoRTPSource: public MultiFramedRTPSource {
+class MPEG4GenericRTPSource: public MultiFramedRTPSource {
 public:
-  static MPEGVideoRTPSource*
+  static MPEG4GenericRTPSource*
   createNew(UsageEnvironment& env, Groupsock* RTPgs,
-	    unsigned char rtpPayloadFormat = 32,
-	    unsigned rtpPayloadFrequency = 90000);
+	    unsigned char rtpPayloadFormat,
+	    unsigned rtpTimestampFrequency,
+	    char const* mediumName);
+  // mediumName is "audio", "video", or "application"
+  // it *cannot* be NULL
 
 protected:
-  virtual ~MPEGVideoRTPSource();
+  virtual ~MPEG4GenericRTPSource();
 
 private:
-  MPEGVideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
-		     unsigned char rtpPayloadFormat,
-		     unsigned rtpTimestampFrequency);
+  MPEG4GenericRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
+			unsigned char rtpPayloadFormat,
+			unsigned rtpTimestampFrequency,
+			char const* mediumName);
       // called only by createNew()
 
 private:
   // redefined virtual functions:
   virtual Boolean processSpecialHeader(unsigned char* headerStart,
                                        unsigned packetSize,
-				       Boolean rtpMarkerBit,
+                                       Boolean rtpMarkerBit,
                                        unsigned& resultSpecialHeaderSize);
-  virtual Boolean packetIsUsableInJitterCalculation(unsigned char* packet,
-						    unsigned packetSize);
   virtual char const* MIMEtype() const; 
+
+private:
+  char* fMIMEType;
 };
 
 #endif

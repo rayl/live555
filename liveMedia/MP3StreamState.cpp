@@ -38,7 +38,8 @@ MP3StreamState::~MP3StreamState() {
   // Close our open file or socket:
   if (fFid != NULL && fFid != stdin) {
     if (fFidIsReallyASocket) {
-	_close((int)fFid);
+      long fid_long = (long)fFid;
+      _close((int)fid_long);
     } else {
       fclose(fFid);
     }
@@ -164,7 +165,8 @@ void MP3StreamState::writeGetCmd(char const* hostName,
   char* getCmdFmt = "GET %s HTTP/1.1\r\nHost: %s:%d\r\n\r\n";
 
   if (fFidIsReallyASocket) {
-    int sock = (int)fFid;
+    long fid_long = (long)fFid;
+    int sock = (int)fid_long;
     char writeBuf[100];
 #if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
     /* snprintf() isn't defined, so just use sprintf() */
@@ -342,7 +344,8 @@ unsigned MP3StreamState::readFromStream(unsigned char* buf,
 					unsigned numChars) {
   // Hack for doing socket I/O instead of file I/O (e.g., on Windows)
   if (fFidIsReallyASocket) {
-    int sock = (int)fFid;
+    long fid_long = (long)fFid;
+    int sock = (int)fid_long;
     unsigned totBytesRead = 0;
     do {
       int bytesRead

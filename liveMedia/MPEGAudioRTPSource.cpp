@@ -15,32 +15,18 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
-// MPEG Audio RTP Sources
+// MPEG-1 or MPEG-2 Audio RTP Sources
 // Implementation
 
 #include "MPEGAudioRTPSource.hh"
-#include "GroupsockHelper.hh"
 
 MPEGAudioRTPSource*
 MPEGAudioRTPSource::createNew(UsageEnvironment& env,
 			      Groupsock* RTPgs,
 			      unsigned char rtpPayloadFormat,
 			      unsigned rtpTimestampFrequency) {
-  MPEGAudioRTPSource* newSource = NULL;
-
-  do {
-    newSource = new MPEGAudioRTPSource(env, RTPgs, rtpPayloadFormat,
-				       rtpTimestampFrequency);
-    if (newSource == NULL) break;
-
-    // Try to use a big receive buffer for RTP:
-    increaseReceiveBufferTo(env, RTPgs->socketNum(), 50*1024);
-
-    return newSource;
-  } while (0);
-
-  delete newSource;
-  return NULL;
+  return new MPEGAudioRTPSource(env, RTPgs, rtpPayloadFormat,
+				rtpTimestampFrequency);
 }
 
 MPEGAudioRTPSource::MPEGAudioRTPSource(UsageEnvironment& env,

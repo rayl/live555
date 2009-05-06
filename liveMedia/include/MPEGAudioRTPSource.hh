@@ -15,7 +15,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
-// MPEG Audio RTP Sources
+// MPEG-1 or MPEG-2 Audio RTP Sources
 // C++ header
 
 #ifndef _MPEG_AUDIO_RTP_SOURCE_HH

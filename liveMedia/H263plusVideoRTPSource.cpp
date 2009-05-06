@@ -19,27 +19,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "H263plusVideoRTPSource.hh"
-#include "GroupsockHelper.hh"
 
 H263plusVideoRTPSource*
 H263plusVideoRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 				  unsigned char rtpPayloadFormat,
 				  unsigned rtpTimestampFrequency) {
-  H263plusVideoRTPSource* newSource = NULL;
-
-  do {
-    newSource = new H263plusVideoRTPSource(env, RTPgs, rtpPayloadFormat,
-					   rtpTimestampFrequency);
-    if (newSource == NULL) break;
-
-    // Try to use a big receive buffer for RTP:
-    increaseReceiveBufferTo(env, RTPgs->socketNum(), 50*1024);
-
-    return newSource;
-  } while (0);
-
-  delete newSource;
-  return NULL;
+  return new H263plusVideoRTPSource(env, RTPgs, rtpPayloadFormat,
+				    rtpTimestampFrequency);
 }
 
 H263plusVideoRTPSource

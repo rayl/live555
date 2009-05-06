@@ -201,7 +201,7 @@ TaskToken BasicTaskScheduler::scheduleDelayedTask(int microseconds,
 }
 
 void BasicTaskScheduler::unscheduleDelayedTask(TaskToken& prevTask) {
-  DelayQueueEntry* alarmHandler = fDelayQueue.removeEntry((int)prevTask);
+  DelayQueueEntry* alarmHandler = fDelayQueue.removeEntry((long)prevTask);
   delete alarmHandler;
 }
 

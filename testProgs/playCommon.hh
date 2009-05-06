@@ -33,8 +33,6 @@ extern Boolean clientSetupSubsession(Medium* client,
 				     MediaSubsession* subsession,
 				     Boolean streamUsingTCP);
 
-extern Boolean clientStartPlayingSubsession(Medium* client,
-					    MediaSubsession* subsession);
 extern Boolean clientStartPlayingSession(Medium* client,
 					 MediaSession* session);
 
