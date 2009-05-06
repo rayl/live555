@@ -87,7 +87,7 @@ private:
 
   unsigned addWord(unsigned word);
   unsigned addHalfWord(unsigned short halfWord);
-  unsigned QuickTimeFileSink::addByte(unsigned char byte) {
+  unsigned addByte(unsigned char byte) {
     putc(byte, fOutFid);
     return 1;
   }

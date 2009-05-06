@@ -4,30 +4,21 @@
 // Implementation
 
 #include "MPEG2TransportStreamFramer.hh"
-#include <GroupsockHelper.hh> // for "gettimeofday()"
 
 #define TRANSPORT_PACKET_SIZE 188
 #define NEW_DURATION_WEIGHT 0.5
   // How much weight to give to the latest duration measurement (must be <= 1)
-#define TIME_ADJUSTMENT_FACTOR 0.8
-  // A factor by which to adjust the duration estimate to ensure that the overall
-  // packet transmission times remains matched with the PCR times (which will be the
-  // times that we expect receivers to play the incoming packets).
-  // (must be <= 1)
-#define MAX_PLAYOUT_BUFFER_DURATION 0.1 // (seconds)
 
+#define DEBUG_PCR 1 //#####@@@@@
 ////////// PIDStatus //////////
 
 class PIDStatus {
 public:
-  PIDStatus(double _firstClock, double _firstRealTime)
-    : firstClock(_firstClock), lastClock(_firstClock),
-      firstRealTime(_firstRealTime), lastRealTime(_firstRealTime),
-      lastPacketNum(0) {
-  }
+  PIDStatus() : lastClock(0.0), lastPacketNum(0), hasJustStarted(True) {}
 
-  double firstClock, lastClock, firstRealTime, lastRealTime;
+  double lastClock;
   unsigned lastPacketNum;
+  Boolean hasJustStarted;
 };
 
 
@@ -83,6 +74,7 @@ void MPEG2TransportStreamFramer
 
 #define TRANSPORT_SYNC_BYTE 0x47
 
+static unsigned totDuration= 0; //#####@@@@@@
 void MPEG2TransportStreamFramer::afterGettingFrame1(unsigned frameSize,
 						    struct timeval presentationTime) {
   fFrameSize += frameSize;
@@ -118,22 +110,19 @@ void MPEG2TransportStreamFramer::afterGettingFrame1(unsigned frameSize,
 
   // Scan through the TS packets that we read, and update our estimate of
   // the duration of each packet:
-  struct timeval tvNow;
-  gettimeofday(&tvNow, NULL);
-  double timeNow = tvNow.tv_sec + tvNow.tv_usec/1000000.0;
   for (unsigned i = 0; i < numTSPackets; ++i) {
-    updateTSPacketDurationEstimate(&fTo[i*TRANSPORT_PACKET_SIZE], timeNow);
+    updateTSPacketDurationEstimate(&fTo[i*TRANSPORT_PACKET_SIZE]);
   }
 
   fDurationInMicroseconds
     = numTSPackets * (unsigned)(fTSPacketDurationEstimate*1000000);
+  totDuration += fDurationInMicroseconds;//#####@@@@@
 
   // Complete the delivery to our client:
   afterGetting(this);
 }
 
-void MPEG2TransportStreamFramer
-::updateTSPacketDurationEstimate(unsigned char* pkt, double timeNow) {
+void MPEG2TransportStreamFramer::updateTSPacketDurationEstimate(unsigned char* pkt) {
   // Sanity check: Make sure we start with the sync byte:
   if (pkt[0] != TRANSPORT_SYNC_BYTE) {
     envir() << "Missing sync byte!\n";
@@ -165,45 +154,34 @@ void MPEG2TransportStreamFramer
 
   // Check whether we already have a record of a PCR for this PID:
   PIDStatus* pidStatus = (PIDStatus*)(fPIDStatusTable->Lookup((char*)pid));
+  struct timeval timeNow; gettimeofday(&timeNow, NULL);//#####@@@@@@
   if (pidStatus == NULL) {
     // We're seeing this PID's PCR for the first time:
-    pidStatus = new PIDStatus(clock, timeNow);
+    pidStatus = new PIDStatus;
     fPIDStatusTable->Add((char*)pid, pidStatus);
 #ifdef DEBUG_PCR
-    fprintf(stderr, "PID 0x%x, FIRST PCR 0x%08x+%d:%03x == %f @ %f, pkt #%lu\n", pid, pcrBaseHigh, pkt[10]>>7, pcrExt, clock, timeNow, fTSPacketCount);
+    fprintf(stderr, "FIRST PCR 0x%08x+%d:%03x == %f, pkt #%lu\n", pcrBaseHigh, pkt[10]>>7, pcrExt, clock, fTSPacketCount);
 #endif
+    fprintf(stderr, "\ttime %u.%06d\t tot dur %u\n", timeNow.tv_sec, timeNow.tv_usec, totDuration);//#####@@@@@
   } else {
     // We've seen this PID's PCR before; update our per-packet duration estimate:
     double durationPerPacket
       = (clock - pidStatus->lastClock)/(fTSPacketCount - pidStatus->lastPacketNum);
-    if (fTSPacketDurationEstimate == 0.0) { // we've just started
+    if (pidStatus->hasJustStarted) {
       fTSPacketDurationEstimate = durationPerPacket;
+      pidStatus->hasJustStarted = False;
     } else if (discontinuity_indicator == 0 && durationPerPacket >= 0.0) {
       fTSPacketDurationEstimate
 	= durationPerPacket*NEW_DURATION_WEIGHT
 	+ fTSPacketDurationEstimate*(1-NEW_DURATION_WEIGHT);
-
-      // Also adjust the duration estimate to try to ensure that the transmission
-      // rate matches the playout rate:
-      double transmitDuration = timeNow - pidStatus->firstRealTime;
-      double playoutDuration = clock - pidStatus->firstClock;
-      if (transmitDuration > playoutDuration) {
-	fTSPacketDurationEstimate *= TIME_ADJUSTMENT_FACTOR; // reduce estimate
-      } else if (transmitDuration + MAX_PLAYOUT_BUFFER_DURATION < playoutDuration) {
-	fTSPacketDurationEstimate /= TIME_ADJUSTMENT_FACTOR; // increase estimate
-      }
-    } else {
-      // the PCR has a discontinuity from its previous value; don't use it now,
-      // but reset our PCR and real-time values to compensate:
-      pidStatus->firstClock = clock;
-      pidStatus->firstRealTime = timeNow;
     }
+    // else the PCR has a discontinuity from its previous value; don't use it now
 #ifdef DEBUG_PCR
-    fprintf(stderr, "PID 0x%x, PCR 0x%08x+%d:%03x == %f @ %f (diffs %f @ %f), pkt #%lu, discon %d => this duration %f, new estimate %f\n", pid, pcrBaseHigh, pkt[10]>>7, pcrExt, clock, timeNow, clock - pidStatus->firstClock, timeNow - pidStatus->firstRealTime, fTSPacketCount, discontinuity_indicator != 0, durationPerPacket, fTSPacketDurationEstimate);
+    fprintf(stderr, "PCR 0x%08x+%d:%03x == %f, pkt #%lu, discon %d => this duration %f, new estimate %f\n", pcrBaseHigh, pkt[10]>>7, pcrExt, clock, fTSPacketCount, discontinuity_indicator != 0, durationPerPacket, fTSPacketDurationEstimate);
 #endif
+    fprintf(stderr, "\ttime %u.%06d\t tot dur %u\n", timeNow.tv_sec, timeNow.tv_usec, totDuration);//#####@@@@@
   }
 
   pidStatus->lastClock = clock;
-  pidStatus->lastRealTime = timeNow;
   pidStatus->lastPacketNum = fTSPacketCount;
 }

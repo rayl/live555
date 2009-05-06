@@ -381,7 +381,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
     if (fServerIsKasenna && strncmp(bodyStart, "<MediaDescription>", 18) == 0) {
       // Translate from x-rtsp-mh to sdp
       int videoPid, audioPid;
-      unsigned mh_duration;
+      u_int64_t mh_duration;
       char* currentWord = new char[fResponseBufferSize]; // ensures enough space
       delete[] fKasennaContentType;
       fKasennaContentType = new char[fResponseBufferSize]; // ensures enough space
@@ -410,7 +410,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
 	    currentPos += strlen(currentWord) + 1;
 	    sscanf(currentPos, "%s", currentWord);
 	    currentPos += strlen(currentWord) + 1;
-	    sscanf(currentPos, "%d", &mh_duration);
+	    sscanf(currentPos, "%llu", &mh_duration);
 	    currentPos += 3;
           }
 	  
@@ -447,7 +447,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
 	"c=IN IP4 %u.%u.%u.%u\r\n"
 	"t=0 0\r\n"
 	"a=control:*\r\n"
-	"a=range:npt=0-%u\r\n"
+	"a=range:npt=0-%llu\r\n"
 	"m=video 1554 RAW/RAW/UDP 33\r\n"
 	"a=control:trackID=%d\r\n";
       unsigned sdpBufSize = strlen(sdpFmt)
@@ -460,7 +460,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
 	      byte1, byte2, byte3, byte4,
 	      url,
 	      byte1, byte2, byte3, byte4,
-	      (unsigned)(mh_duration/1000000),
+	      mh_duration/1000000,
 	      videoPid);
       
       char* result = strDup(sdpBuf);
