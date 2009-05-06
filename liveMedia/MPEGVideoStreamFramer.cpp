@@ -514,7 +514,7 @@ inline Boolean isSliceStartCode(unsigned fourBytes) {
   if ((fourBytes&0xFFFFFF00) != 0x00000100) return False;
 
   unsigned char lastByte = fourBytes&0xFF;
-  return lastByte <= 0xAF & lastByte >= 1;
+  return lastByte <= 0xAF && lastByte >= 1;
 }
 
 unsigned MPEGVideoStreamParser::parsePictureHeader() {

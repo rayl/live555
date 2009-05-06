@@ -4,8 +4,7 @@ LIB = libBasicUsageEnvironment.$(LIB_SUFFIX)
 ALL = $(LIB)
 all:	$(ALL)
 
-OBJS = BasicUsageEnvironment.$(OBJ) DelayQueue.$(OBJ) Lock.$(OBJ) \
-	BasicHashTable.$(OBJ)
+OBJS = BasicUsageEnvironment.$(OBJ) DelayQueue.$(OBJ) BasicHashTable.$(OBJ)
 
 libBasicUsageEnvironment.$(LIB_SUFFIX): $(OBJS)
 	$(LIBRARY_LINK)$@ $(LIBRARY_LINK_OPTS) \
@@ -20,8 +19,6 @@ libBasicUsageEnvironment.$(LIB_SUFFIX): $(OBJS)
 BasicUsageEnvironment.$(CPP):	include/BasicUsageEnvironment.hh
 include/BasicUsageEnvironment.hh:	include/BasicUsageEnvironment_version.hh
 DelayQueue.$(CPP):		include/DelayQueue.hh
-include/DelayQueue.hh:		include/Lock.hh
-Lock.$(CPP):			include/Lock.hh
 BasicHashTable.$(CPP):		include/BasicHashTable.hh
 
 clean:

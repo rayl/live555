@@ -230,7 +230,7 @@ void BasicTaskScheduler::turnOffBackgroundReadHandling(int socketNum) {
 void BasicTaskScheduler::SingleStep() {
   fd_set readSet = fReadSet; // make a copy for this select() call
   
-  DelayInterval& timeToDelay = fDelayQueue.timeToNextAlarm();
+  DelayInterval const& timeToDelay = fDelayQueue.timeToNextAlarm();
   struct timeval tv_timeToDelay;
   tv_timeToDelay.tv_sec = timeToDelay.seconds();
   tv_timeToDelay.tv_usec = timeToDelay.useconds();

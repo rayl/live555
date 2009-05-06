@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "DelayQueue.hh"
 #include "GroupsockHelper.hh"
 #include <signal.h>
+#include <stdio.h> //#####@@@@@
 
 static const int MILLION = 1000000;
 
@@ -106,74 +107,15 @@ void DelayQueueEntry::handleTimeout() {
 
 DelayQueue::DelayQueue()
   : DelayQueueEntry(ETERNITY) {
+  fLastSyncTime = TimeNow();
 }
 
 DelayQueue::~DelayQueue() {
-  ScopedRWLock l(fLock);
-  while (fNext != this) removeEntry1(fNext);
+  while (fNext != this) removeEntry(fNext);
 }
 
 void DelayQueue::addEntry(DelayQueueEntry* newEntry) {
-  ScopedRWLock l(fLock);
-  addEntry1(newEntry);
-}
-
-void DelayQueue::updateEntry(DelayQueueEntry* entry, DelayInterval newDelay) {
-  if (entry == NULL) return;
-  ScopedRWLock l(fLock);
-  
-  removeEntry1(entry);
-  entry->fDeltaTimeRemaining = newDelay;
-  addEntry1(entry);
-}
-
-void DelayQueue::updateEntry(long tokenToFind, DelayInterval newDelay) {
-  ScopedRWLock l(fLock);
-  DelayQueueEntry* entry = findEntryByToken(tokenToFind);
-  if (entry == NULL) return;
-  
-  removeEntry1(entry);
-  entry->fDeltaTimeRemaining = newDelay;
-  addEntry1(entry);
-}
-
-void DelayQueue::removeEntry(DelayQueueEntry* entry) {
-  ScopedRWLock l(fLock);
-  removeEntry1(entry);
-}
-
-DelayQueueEntry* DelayQueue::removeEntry(long tokenToFind) {
-  ScopedRWLock l(fLock);
-  DelayQueueEntry* entry = findEntryByToken(tokenToFind);
-  if (entry != NULL) {
-    removeEntry1(entry);
-  }
-
-  return entry;
-}
-
-///// Implementation /////
-
-DelayQueueEntry* DelayQueue::findEntryByToken(long tokenToFind) {
-  DelayQueueEntry* cur = head();
-  while (cur != this) {
-    if (cur->token() == tokenToFind) return cur;
-    cur = cur->fNext;
-  }
-
-  return NULL;
-}
-
-void DelayQueue::addEntry1(DelayQueueEntry* newEntry) {
-  EventTime timeNow = TimeNow();
-  if (fLastAlarmTime.seconds() == 0) {
-    // Hack: We're just starting up, so set "fLastAlarmTime" to now:
-    fLastAlarmTime = timeNow;
-  }
-
-  // Adjust for time elapsed since the last alarm:
-  DelayInterval timeSinceLastAlarm = timeNow - fLastAlarmTime;
-  newEntry->fDeltaTimeRemaining += timeSinceLastAlarm;
+  synchronize();
 
   DelayQueueEntry* cur = head();
   while (newEntry->fDeltaTimeRemaining >= cur->fDeltaTimeRemaining) {
@@ -189,7 +131,20 @@ void DelayQueue::addEntry1(DelayQueueEntry* newEntry) {
   cur->fPrev = newEntry->fPrev->fNext = newEntry;
 }
 
-void DelayQueue::removeEntry1(DelayQueueEntry* entry) {
+void DelayQueue::updateEntry(DelayQueueEntry* entry, DelayInterval newDelay) {
+  if (entry == NULL) return;
+  
+  removeEntry(entry);
+  entry->fDeltaTimeRemaining = newDelay;
+  addEntry(entry);
+}
+
+void DelayQueue::updateEntry(long tokenToFind, DelayInterval newDelay) {
+  DelayQueueEntry* entry = findEntryByToken(tokenToFind);
+  updateEntry(entry, newDelay);
+}
+
+void DelayQueue::removeEntry(DelayQueueEntry* entry) {
   if (entry == NULL || entry->fNext == NULL) return;
   
   entry->fNext->fDeltaTimeRemaining += entry->fDeltaTimeRemaining;
@@ -199,34 +154,55 @@ void DelayQueue::removeEntry1(DelayQueueEntry* entry) {
   // in case we should try to remove it again
 }
 
+DelayQueueEntry* DelayQueue::removeEntry(long tokenToFind) {
+  DelayQueueEntry* entry = findEntryByToken(tokenToFind);
+  removeEntry(entry);
+  return entry;
+}
+
+DelayInterval const& DelayQueue::timeToNextAlarm() {
+  if (head()->fDeltaTimeRemaining == ZERO) return ZERO; // a common case
+
+  synchronize();
+  return head()->fDeltaTimeRemaining;
+}
+
 void DelayQueue::handleAlarm() {
-  fLock.rwLock();
-  
-  // Begin by figuring out the exact time that elapsed since the last alarm
+  if (head()->fDeltaTimeRemaining != ZERO) synchronize();
+
+  if (head()->fDeltaTimeRemaining == ZERO) {
+    // This event is due to be handled:
+    DelayQueueEntry* toRemove = head();
+    removeEntry(toRemove); // do this first, in case handler accesses queue
+    
+    toRemove->handleTimeout();
+  }
+}
+
+DelayQueueEntry* DelayQueue::findEntryByToken(long tokenToFind) {
+  DelayQueueEntry* cur = head();
+  while (cur != this) {
+    if (cur->token() == tokenToFind) return cur;
+    cur = cur->fNext;
+  }
+
+  return NULL;
+}
+
+void DelayQueue::synchronize() {
+  // First, figure out hos much time has elapsed since the last sync:
   EventTime timeNow = TimeNow();
-  DelayInterval timeSinceLastAlarm = timeNow - fLastAlarmTime;
-  fLastAlarmTime = timeNow;
+  DelayInterval timeSinceLastSync = timeNow - fLastSyncTime;
+  fLastSyncTime = timeNow;
   
-  // Now adjust the delay queue for any entries that have expired.
-  // Also, handle the first such entry (if any).
+  // Then, adjust the delay queue for any entries whose time is up:
   DelayQueueEntry* curEntry = head();
-  while (timeSinceLastAlarm >= curEntry->fDeltaTimeRemaining) {
-    timeSinceLastAlarm -= curEntry->fDeltaTimeRemaining;
+  while (timeSinceLastSync >= curEntry->fDeltaTimeRemaining) {
+    timeSinceLastSync -= curEntry->fDeltaTimeRemaining;
     curEntry->fDeltaTimeRemaining = ZERO;
     curEntry = curEntry->fNext;
   }
-  curEntry->fDeltaTimeRemaining -= timeSinceLastAlarm;
-  
-  if (head()->fDeltaTimeRemaining == ZERO) {
-    DelayQueueEntry* toRemove = head();
-    removeEntry1(toRemove);
-    
-    fLock.unlock(); // in case timeout handler accesses delay queue
-    toRemove->handleTimeout();
-    fLock.rwLock();
-  }
-
-  fLock.unlock();
+  curEntry->fDeltaTimeRemaining -= timeSinceLastSync;
 }
 
 

@@ -20,9 +20,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _DELAY_QUEUE_HH
 #define _DELAY_QUEUE_HH
 
-#ifndef _LOCK_HH
-#include "Lock.hh"
-#endif
 #ifndef _NET_COMMON_H
 #include "NetCommon.h"
 #endif
@@ -172,19 +169,15 @@ public:
   void removeEntry(DelayQueueEntry* entry); // but doesn't delete it
   DelayQueueEntry* removeEntry(long tokenToFind); // but doesn't delete it
   
-  DelayInterval& timeToNextAlarm() {return head()->fDeltaTimeRemaining;}
+  DelayInterval const& timeToNextAlarm();
   void handleAlarm();
 
 private:
-  DelayQueueEntry* head() const {
-    return fNext;
-  }
+  DelayQueueEntry* head() { return fNext; }
   DelayQueueEntry* findEntryByToken(long token);
-  void addEntry1(DelayQueueEntry* newEntry);
-  void removeEntry1(DelayQueueEntry* entry);
+  void synchronize(); // bring the 'time remaining' fields up-to-date
   
-  EventTime fLastAlarmTime;
-  RWLock fLock; // to protect against concurrent access
+  EventTime fLastSyncTime;
 };
 
 #endif

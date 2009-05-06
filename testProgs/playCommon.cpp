@@ -822,6 +822,8 @@ void printQOSData(int exitCode) {
 	numPacketsExpected = curQOSRecord->totNumPacketsExpected;
       }
       fprintf(stderr, "num_packets_received\t%d\n", numPacketsReceived);
+      fprintf(stderr, "num_packets_lost\t%d\n",
+	      numPacketsExpected - numPacketsReceived);
       
       if (curQOSRecord != NULL) {
 	unsigned secsDiff = curQOSRecord->measurementEndTime.tv_sec
@@ -838,23 +840,32 @@ void printQOSData(int exitCode) {
 	fprintf(stderr, "measurement_sampling_interval_ms\t%d\n",
 		qosMeasurementIntervalMS);
 	
-	fprintf(stderr, "kbits_per_second_min\t%.3f\n",
-		curQOSRecord->kbits_per_second_min);
-	fprintf(stderr, "kbits_per_second_ave\t%.3f\n",
-		measurementTime == 0.0 ? 0.0
-		: 8*curQOSRecord->kBytesTotal/measurementTime);
-	fprintf(stderr, "kbits_per_second_max\t%.3f\n",
-		curQOSRecord->kbits_per_second_max);
+	if (curQOSRecord->kbits_per_second_max == 0) {
+	  // special case: we didn't receive any data:
+	  fprintf(stderr,
+		  "kbits_per_second_min\tunavailable\n"
+		  "kbits_per_second_ave\tunavailable\n"
+		  "kbits_per_second_max\tunavailable\n");
+	} else {
+	  fprintf(stderr, "kbits_per_second_min\t%.3f\n",
+		  curQOSRecord->kbits_per_second_min);
+	  fprintf(stderr, "kbits_per_second_ave\t%.3f\n",
+		  measurementTime == 0.0 ? 0.0
+		  : 8*curQOSRecord->kBytesTotal/measurementTime);
+	  fprintf(stderr, "kbits_per_second_max\t%.3f\n",
+		  curQOSRecord->kbits_per_second_max);
+	}
 	
 	fprintf(stderr, "packet_loss_percentage_min\t%.3f\n",
 		100*curQOSRecord->packet_loss_fraction_min);
-	double packetLossFraction = numPacketsExpected == 0 ? 0.0
+	double packetLossFraction = numPacketsExpected == 0 ? 1.0
 	  : 1.0 - numPacketsReceived/(double)numPacketsExpected;
 	if (packetLossFraction < 0.0) packetLossFraction = 0.0;
 	fprintf(stderr, "packet_loss_percentage_ave\t%.3f\n",
 		100*packetLossFraction);
 	fprintf(stderr, "packet_loss_percentage_max\t%.3f\n",
-		100*curQOSRecord->packet_loss_fraction_max);
+		packetLossFraction == 1.0 ? 100.0
+		: 100*curQOSRecord->packet_loss_fraction_max);
 	
 	RTPReceptionStatsDB::Iterator statsIter(src->receptionStatsDB());
 	// Assume that there's only one SSRC source (usually the case):
@@ -1105,6 +1116,7 @@ Boolean setupDestinationRTSPServer() {
     if (!rtspClientOutgoing->setupMediaSubsession(*destSubsession,
 						  True, True)) break;
     if (!rtspClientOutgoing->playMediaSubsession(*destSubsession,
+						 0.0, -1.0,
 						 True/*hackForDSS*/)) break;
 
     // Next, set up "RTPSink"s for the outgoing packets:
