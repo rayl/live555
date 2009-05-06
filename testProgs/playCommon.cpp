@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
-// Copyright (c) 1996-2003, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2004, Live Networks, Inc.  All rights reserved
 // A common framework, used for the "openRTSP" and "playSIP" applications
 // Implementation
 
@@ -563,9 +563,18 @@ int main(int argc, char** argv) {
 	} else {
 	  sprintf(outFileName, "stdout");
 	}
-	FileSink* fileSink
-	  = FileSink::createNew(*env, outFileName,
-				fileSinkBufferSize, oneFilePerFrame);
+	FileSink* fileSink;
+	if (strcmp(subsession->mediumName(), "audio") == 0 &&
+	    (strcmp(subsession->codecName(), "AMR") == 0 ||
+	     strcmp(subsession->codecName(), "AMR-WB") == 0)) {
+	  // For AMR audio streams, we use a special sink that inserts AMR frame hdrs:
+	  fileSink = AMRAudioFileSink::createNew(*env, outFileName,
+						 fileSinkBufferSize, oneFilePerFrame);
+	} else {
+	  // Normal case:
+	  fileSink = FileSink::createNew(*env, outFileName,
+					 fileSinkBufferSize, oneFilePerFrame);
+	}
 	subsession->sink = fileSink;
 	if (subsession->sink == NULL) {
 	  *env << "Failed to create FileSink for \"" << outFileName
@@ -579,9 +588,9 @@ int main(int argc, char** argv) {
 			<< "\" subsession to 'stdout'\n";
 	  }
 
-	  if (strcmp(subsession->mediumName(), "video") == 0
-	      && strcmp(subsession->codecName(), "MP4V-ES") == 0
-	      && subsession->fmtp_config() != NULL) {
+	  if (strcmp(subsession->mediumName(), "video") == 0 &&
+	      strcmp(subsession->codecName(), "MP4V-ES") == 0 &&
+	      subsession->fmtp_config() != NULL) {
 	    // For MPEG-4 video RTP streams, the 'config' information
 	    // from the SDP description contains useful VOL etc. headers.
 	    // Insert this data at the front of the output file:

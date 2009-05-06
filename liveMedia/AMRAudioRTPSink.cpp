@@ -22,7 +22,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // octet-alignment only; no interleaving; no frame CRC; no robust-sorting.
 
 #include "AMRAudioRTPSink.hh"
-#include "AMRAudioFileSource.hh"
+#include "AMRAudioSource.hh"
 
 AMRAudioRTPSink*
 AMRAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
@@ -53,13 +53,22 @@ Boolean AMRAudioRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
   if (!source.isAMRAudioSource()) return False;
 
   // Also, the source must be wideband iff we asked for this:
-  AMRAudioFileSource& amrSource = (AMRAudioFileSource&)source;
+  AMRAudioSource& amrSource = (AMRAudioSource&)source;
   if ((amrSource.isWideband()^fSourceIsWideband) != 0) return False;
 
   // Also, the source must have the same number of channels that we
   // specified.  (It could, in principle, have more, but we don't
   // support that.)
   if (amrSource.numChannels() != numChannels()) return False;
+
+  // Also, because in our current implementation we output only one
+  // frame in each RTP packet, this means that for multi-channel audio,
+  // each 'frame-block' will be split over multiple RTP packets, which
+  // may violate the spec.  Warn about this:
+  if (amrSource.numChannels() > 1) {
+    envir() << "AMRAudioRTPSink: Warning: Input source has " << amrSource.numChannels()
+	    << " audio channels.  In the current implementation, the multi-frame frame-block will be split over multiple RTP packets\n";
+  }
 
   return True;
 }
@@ -84,7 +93,7 @@ void AMRAudioRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 
   // Set the TOC field for the current frame, based on the "FT" and "Q"
   // values from our source:
-  AMRAudioFileSource* amrSource = (AMRAudioFileSource*)fSource;
+  AMRAudioSource* amrSource = (AMRAudioSource*)fSource;
   u_int8_t toc = amrSource->lastFrameHeader();
   // Clear the "F" bit, because we're the last frame in this packet: #####
   toc &=~ 0x80;

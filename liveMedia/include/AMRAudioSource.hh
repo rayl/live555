@@ -15,34 +15,37 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
-// A source object for AMR audio files (as defined in RFC 3267, section 5)
+// A source object for AMR audio sources
 // C++ header
 
-#ifndef _AMR_AUDIO_FILE_SOURCE_HH
-#define _AMR_AUDIO_FILE_SOURCE_HH
-
 #ifndef _AMR_AUDIO_SOURCE_HH
-#include "AMRAudioSource.hh"
+#define _AMR_AUDIO_SOURCE_HH
+
+#ifndef _FRAMED_SOURCE_HH
+#include "FramedSource.hh"
 #endif
 
-class AMRAudioFileSource: public AMRAudioSource {
+class AMRAudioSource: public FramedSource {
 public:
-  static AMRAudioFileSource* createNew(UsageEnvironment& env,
-				       char const* fileName);
+  Boolean isWideband() const { return fIsWideband; }
+  unsigned numChannels() const { return fNumChannels; }
 
-private:
-  AMRAudioFileSource(UsageEnvironment& env, FILE* fid,
-		     Boolean isWideband, unsigned numChannels);
-	// called only by createNew()
+  u_int8_t lastFrameHeader() const { return fLastFrameHeader; }
+  // The frame header for the most recently read frame (RFC 3267, sec. 5.3)
 
-  virtual ~AMRAudioFileSource();
+protected:
+  AMRAudioSource(UsageEnvironment& env, Boolean isWideband, unsigned numChannels);
+	// virtual base class
+  virtual ~AMRAudioSource();
 
 private:
   // redefined virtual functions:
-  virtual void doGetNextFrame();
+  virtual Boolean isAMRAudioSource() const;
 
-private:
-  FILE* fFid;
+protected:
+  Boolean fIsWideband;
+  unsigned fNumChannels;
+  u_int8_t fLastFrameHeader;
 };
 
 #endif

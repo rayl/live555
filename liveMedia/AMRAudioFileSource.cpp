@@ -102,8 +102,8 @@ AMRAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
 AMRAudioFileSource
 ::AMRAudioFileSource(UsageEnvironment& env, FILE* fid,
 		     Boolean isWideband, unsigned numChannels)
-  : FramedFileSource(env, fid),
-    fIsWideband(isWideband), fNumChannels(numChannels) {
+  : AMRAudioSource(env, isWideband, numChannels),
+    fFid(fid) {
 }
 
 AMRAudioFileSource::~AMRAudioFileSource() {
@@ -118,27 +118,19 @@ static int Idunno;
 
 // The mapping from the "FT" field to frame size.
 // Values of 65535 are invalid.
-// Values of 65534 are currently unknown (because I was too cheap to buy
-// the AMR spec, which defines these).  Please replace these
-// FT_SIZE_UNKNOWN values, if you know what they should be.
 #define FT_INVALID 65535
-#define FT_SIZE_UNKNOWN 65534
 static unsigned short frameSize[16] = {
   12, 13, 15, 17,
   19, 20, 26, 31,
-  5/*???*/, FT_INVALID, FT_INVALID, FT_INVALID,
+  5, FT_INVALID, FT_INVALID, FT_INVALID,
   FT_INVALID, FT_INVALID, FT_INVALID, 0
 };
 static unsigned short frameSizeWideband[16] = {
-  17, 23, FT_SIZE_UNKNOWN, FT_SIZE_UNKNOWN,
-  FT_SIZE_UNKNOWN, FT_SIZE_UNKNOWN, FT_SIZE_UNKNOWN, FT_SIZE_UNKNOWN,
-  FT_SIZE_UNKNOWN, FT_SIZE_UNKNOWN, FT_INVALID, FT_INVALID,
+  17, 23, 32, 36,
+  40, 46, 50, 58,
+  60, 5, FT_INVALID, FT_INVALID,
   FT_INVALID, FT_INVALID, 0, 0
 };
-
-Boolean AMRAudioFileSource::isAMRAudioSource() const {
-  return True;
-}
 
 void AMRAudioFileSource::doGetNextFrame() {
   if (feof(fFid) || ferror(fFid)) {
@@ -164,10 +156,6 @@ void AMRAudioFileSource::doGetNextFrame() {
 	fprintf(stderr, "Invalid FT field %d (from frame header 0x%02x)\n",
 		ft, fLastFrameHeader);
 #endif
-      } else if (fFrameSize == FT_SIZE_UNKNOWN) {
-#ifdef DEBUG
-	fprintf(stderr, "Unknown size for FT value %d.  Please fix this in \"liveMedia/AMRAudioFileSource.cpp\"\n", ft);
-#endif
       } else {
 	// The frame header is OK
 #ifdef DEBUG
@@ -178,7 +166,8 @@ void AMRAudioFileSource::doGetNextFrame() {
     }
   } 
       
-  // Next, read the frame into the buffer provided
+  // Next, read the frame-block into the buffer provided:
+  fFrameSize *= fNumChannels; // because multiple channels make up a frame-block
   if (fFrameSize > fMaxSize) {
     fNumTruncatedBytes = fFrameSize - fMaxSize;
     fFrameSize = fMaxSize;

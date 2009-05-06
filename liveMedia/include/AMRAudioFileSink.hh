@@ -15,34 +15,36 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
-// A source object for AMR audio files (as defined in RFC 3267, section 5)
+// AMR Audio File Sinks
 // C++ header
 
-#ifndef _AMR_AUDIO_FILE_SOURCE_HH
-#define _AMR_AUDIO_FILE_SOURCE_HH
+#ifndef _AMR_AUDIO_FILE_SINK_HH
+#define _AMR_AUDIO_FILE_SINK_HH
 
-#ifndef _AMR_AUDIO_SOURCE_HH
-#include "AMRAudioSource.hh"
+#ifndef _FILE_SINK_HH
+#include "FileSink.hh"
 #endif
 
-class AMRAudioFileSource: public AMRAudioSource {
+class AMRAudioFileSink: public FileSink {
 public:
-  static AMRAudioFileSource* createNew(UsageEnvironment& env,
-				       char const* fileName);
+  static AMRAudioFileSink* createNew(UsageEnvironment& env, char const* fileName,
+				     unsigned bufferSize = 10000,
+				     Boolean oneFilePerFrame = False);
+  // (See "FileSink.hh" for a description of these parameters.)
 
 private:
-  AMRAudioFileSource(UsageEnvironment& env, FILE* fid,
-		     Boolean isWideband, unsigned numChannels);
-	// called only by createNew()
+  AMRAudioFileSink(UsageEnvironment& env, FILE* fid, unsigned bufferSize,
+		   char const* perFrameFileNamePrefix);
+      // called only by createNew()
+  virtual ~AMRAudioFileSink();
 
-  virtual ~AMRAudioFileSource();
+private: // redefined virtual functions:
+  virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
+  virtual void afterGettingFrame1(unsigned frameSize,
+				  struct timeval presentationTime);
 
 private:
-  // redefined virtual functions:
-  virtual void doGetNextFrame();
-
-private:
-  FILE* fFid;
+  Boolean fHaveWrittenHeader;
 };
 
 #endif

@@ -475,10 +475,10 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fRTPTimestampFrequency(0), fControlPath(NULL),
     fSourceFilterAddr(parent.sourceFilterAddr()),
     fAuxiliarydatasizelength(0), fConstantduration(0), fConstantsize(0),
-    fCtsdeltalength(0), fDe_interleavebuffersize(0), fDtsdeltalength(0),
-    fIndexdeltalength(0), fIndexlength(0), fMaxdisplacement(0),
-    fObjecttype(0), fProfile_level_id(0), fSizelength(0),
-    fStreamstateindication(0), fStreamtype(0),
+    fCRC(0), fCtsdeltalength(0), fDe_interleavebuffersize(0), fDtsdeltalength(0),
+    fIndexdeltalength(0), fIndexlength(0), fInterleaving(0), fMaxdisplacement(0),
+    fObjecttype(0), fOctetalign(0), fProfile_level_id(0), fRobustsorting(0),
+    fSizelength(0), fStreamstateindication(0), fStreamtype(0),
     fCpresent(False), fRandomaccessindication(False),
     fConfig(NULL), fMode(NULL),
     fPlayEndTime(0.0),
@@ -583,6 +583,20 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	QCELPAudioRTPSource::createNew(env(), fRTPSocket, fRTPSource,
 				       fRTPPayloadFormat,
 				       fRTPTimestampFrequency);
+          // Note that fReadSource will differ from fRTPSource in this case
+    } else if (strcmp(fCodecName, "AMR") == 0) { // AMR audio (narrowband)
+      fReadSource =
+	AMRAudioRTPSource::createNew(env(), fRTPSocket, fRTPSource,
+				     fRTPPayloadFormat, 0 /*isWideband*/,
+				     fNumChannels, fOctetalign, fInterleaving,
+				     fRobustsorting, fCRC);
+          // Note that fReadSource will differ from fRTPSource in this case
+    } else if (strcmp(fCodecName, "AMR-WB") == 0) { // AMR audio (wideband)
+      fReadSource =
+	AMRAudioRTPSource::createNew(env(), fRTPSocket, fRTPSource,
+				     fRTPPayloadFormat, 1 /*isWideband*/,
+				     fNumChannels, fOctetalign, fInterleaving,
+				     fRobustsorting, fCRC);
           // Note that fReadSource will differ from fRTPSource in this case
     } else if (strcmp(fCodecName, "MPA") == 0) { // MPEG-1 or 2 audio
       fReadSource = fRTPSource
@@ -906,6 +920,8 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
 	fConstantduration = u;
       } else if (sscanf(line, " constantsize; = %u", &u) == 1) {
 	fConstantsize = u;
+      } else if (sscanf(line, " crc = %u", &u) == 1) {
+	fCRC = u;
       } else if (sscanf(line, " ctsdeltalength = %u", &u) == 1) {
 	fCtsdeltalength = u;
       } else if (sscanf(line, " de-interleavebuffersize = %u", &u) == 1) {
@@ -916,12 +932,18 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
 	fIndexdeltalength = u;
       } else if (sscanf(line, " indexlength = %u", &u) == 1) {
 	fIndexlength = u;
+      } else if (sscanf(line, " interleaving = %u", &u) == 1) {
+	fInterleaving = u;
       } else if (sscanf(line, " maxdisplacement = %u", &u) == 1) {
 	fMaxdisplacement = u;
       } else if (sscanf(line, " objecttype = %u", &u) == 1) {
 	fObjecttype = u;
+      } else if (sscanf(line, " octet-align = %u", &u) == 1) {
+	fOctetalign = u;
       } else if (sscanf(line, " profile-level-id = %u", &u) == 1) {
 	fProfile_level_id = u;
+      } else if (sscanf(line, " robust-sorting = %u", &u) == 1) {
+	fRobustsorting = u;
       } else if (sscanf(line, " sizelength = %u", &u) == 1) {
 	fSizelength = u;
       } else if (sscanf(line, " streamstateindication = %u", &u) == 1) {

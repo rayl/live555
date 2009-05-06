@@ -15,34 +15,20 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2004 Live Networks, Inc.  All rights reserved.
-// A source object for AMR audio files (as defined in RFC 3267, section 5)
-// C++ header
+// A source object for AMR audio sources
+// Implementation
 
-#ifndef _AMR_AUDIO_FILE_SOURCE_HH
-#define _AMR_AUDIO_FILE_SOURCE_HH
-
-#ifndef _AMR_AUDIO_SOURCE_HH
 #include "AMRAudioSource.hh"
-#endif
 
-class AMRAudioFileSource: public AMRAudioSource {
-public:
-  static AMRAudioFileSource* createNew(UsageEnvironment& env,
-				       char const* fileName);
+AMRAudioSource::AMRAudioSource(UsageEnvironment& env,
+			       Boolean isWideband, unsigned numChannels)
+  : FramedSource(env),
+    fIsWideband(isWideband), fNumChannels(numChannels), fLastFrameHeader(0) {
+}
 
-private:
-  AMRAudioFileSource(UsageEnvironment& env, FILE* fid,
-		     Boolean isWideband, unsigned numChannels);
-	// called only by createNew()
+AMRAudioSource::~AMRAudioSource() {
+}
 
-  virtual ~AMRAudioFileSource();
-
-private:
-  // redefined virtual functions:
-  virtual void doGetNextFrame();
-
-private:
-  FILE* fFid;
-};
-
-#endif
+Boolean AMRAudioSource::isAMRAudioSource() const {
+  return True;
+}

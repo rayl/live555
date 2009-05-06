@@ -87,7 +87,10 @@ public:
       // Issues a RTSP "PLAY" command on "subsession".
       // Returns True iff this command succeeds
       // (Note: start=-1 means 'resume'; end=-1 means 'play to end')
-  Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession);
+  Boolean pauseMediaSession(MediaSession& session);
+      // Issues an aggregate RTSP "PLAY" command on "session".
+      // Returns True iff this command succeeds
+  Boolean pauseMediaSubsession(MediaSubsession& subsession);
       // Issues a RTSP "PAUSE" command on "subsession".
       // Returns True iff this command succeeds
   Boolean recordMediaSubsession(MediaSubsession& subsession);

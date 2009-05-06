@@ -151,26 +151,29 @@ public:
     return fConnectionEndpointName;
   }
 
-  // Various parameters specific to MPEG-4 streams:
-  // (most of these are unnecessary; don't define them unless needed)
+  // Various parameters set in "a=fmtp:" SDP lines:
   unsigned fmtp_auxiliarydatasizelength() const { return fAuxiliarydatasizelength; }
   unsigned fmtp_constantduration() const { return fConstantduration; }
   unsigned fmtp_constantsize() const { return fConstantsize; }
+  unsigned fmtp_crc() const { return fCRC; }
   unsigned fmtp_ctsdeltalength() const { return fCtsdeltalength; }
   unsigned fmtp_de_interleavebuffersize() const { return fDe_interleavebuffersize; }
   unsigned fmtp_dtsdeltalength() const { return fDtsdeltalength; }
   unsigned fmtp_indexdeltalength() const { return fIndexdeltalength; }
   unsigned fmtp_indexlength() const { return fIndexlength; }
+  unsigned fmtp_interleaving() const { return fInterleaving; }
   unsigned fmtp_maxdisplacement() const { return fMaxdisplacement; }
   unsigned fmtp_objecttype() const { return fObjecttype; }
+  unsigned fmtp_octetalign() const { return fOctetalign; }
   unsigned fmtp_profile_level_id() const { return fProfile_level_id; }
+  unsigned fmtp_robustsorting() const { return fRobustsorting; }
   unsigned fmtp_sizelength() const { return fSizelength; }
   unsigned fmtp_streamstateindication() const { return fStreamstateindication; }
   unsigned fmtp_streamtype() const { return fStreamtype; }
   Boolean fmtp_cpresent() const { return fCpresent; }
   Boolean fmtp_randomaccessindication() const { return fRandomaccessindication; }
-  char const* fmtp_mode() const { return fMode; }
   char const* fmtp_config() const { return fConfig; }
+  char const* fmtp_mode() const { return fMode; }
 
   unsigned connectionEndpointAddress() const;
       // Converts "fConnectionEndpointName" to an address (or 0 if unknown)
@@ -230,12 +233,13 @@ private:
   char* fControlPath;
   struct in_addr fSourceFilterAddr; // used for SSM
 
-  // MPEG-4-specific parameters:
+  // Parameters set by "a=fmtp:" SDP lines:
   unsigned fAuxiliarydatasizelength, fConstantduration, fConstantsize;
-  unsigned fCtsdeltalength, fDe_interleavebuffersize, fDtsdeltalength;
-  unsigned fIndexdeltalength, fIndexlength, fMaxdisplacement, fObjecttype;
-  unsigned fProfile_level_id, fSizelength, fStreamstateindication;
-  unsigned fStreamtype;
+  unsigned fCRC, fCtsdeltalength, fDe_interleavebuffersize, fDtsdeltalength;
+  unsigned fIndexdeltalength, fIndexlength, fInterleaving;
+  unsigned fMaxdisplacement, fObjecttype;
+  unsigned fOctetalign, fProfile_level_id, fRobustsorting;
+  unsigned fSizelength, fStreamstateindication, fStreamtype;
   Boolean fCpresent, fRandomaccessindication;
   char *fConfig, *fMode;
 

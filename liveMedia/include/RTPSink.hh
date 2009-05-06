@@ -161,7 +161,6 @@ public:
   Boolean oldValid() const {return fOldValid;} // Have two RRs been received?
   unsigned packetsReceivedSinceLastRR() const;
   u_int8_t packetLossRatio() const; // as an 8-bit fixed-point number
-  unsigned timeDiffBetweenRR() const;
   int packetsLostBetweenRR() const;
 
 private:
@@ -185,12 +184,7 @@ private:
   struct timeval fTimeReceived;
   Boolean fOldValid;
   unsigned fOldLastPacketNumReceived;
-  u_int8_t fOldPacketLossRatio;
   unsigned fOldTotNumPacketsLost;
-  unsigned fOldJitter; // needed???
-  unsigned fOldLastSRTime;
-  unsigned fOldDiffSR_RRTime;
-  struct timeval fOldTimeReceived;
   Boolean fFirstPacket;
   unsigned fFirstPacketNumReported;
 };

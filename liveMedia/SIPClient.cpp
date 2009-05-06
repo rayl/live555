@@ -493,7 +493,7 @@ unsigned SIPClient::getResponseCode() {
 	  // ##### This is a crock! We should make the parsing more general
 	  if (
 	      // Asterisk #####
-	      sscanf(lineStart, "Proxy-Authenticate: DIGEST realm=\"%[^\"]\", nonce=\"%[^\"]\"",
+	      sscanf(lineStart, "Proxy-Authenticate: Digest realm=\"%[^\"]\", nonce=\"%[^\"]\"",
 		     realm, nonce) == 2 ||
 	      // Cisco ATA #####
 	      sscanf(lineStart, "Proxy-Authenticate: Digest algorithm=MD5,domain=\"%*[^\"]\",nonce=\"%[^\"]\", realm=\"%[^\"]\"",

@@ -203,12 +203,7 @@ void RTPTransmissionStats::noteIncomingRR(unsigned lossStats,
   } else {
     fOldValid = True;
     fOldLastPacketNumReceived = fLastPacketNumReceived;
-    fOldPacketLossRatio = fPacketLossRatio;
     fOldTotNumPacketsLost = fTotNumPacketsLost;
-    fOldJitter = fJitter;
-    fOldLastSRTime = fLastSRTime;
-    fOldDiffSR_RRTime = fDiffSR_RRTime;
-    fOldTimeReceived = fTimeReceived;
   }
   gettimeofday(&fTimeReceived, &Idunno);
 
@@ -257,12 +252,6 @@ u_int8_t RTPTransmissionStats::packetLossRatio() const {
   if (!fOldValid) return 0;
 
   return fPacketLossRatio;
-}
-
-unsigned RTPTransmissionStats::timeDiffBetweenRR() const {
-  if (!fOldValid) return 0;
-
-  return (fLastSRTime + fDiffSR_RRTime) - (fOldLastSRTime + fOldDiffSR_RRTime);
 }
 
 int RTPTransmissionStats::packetsLostBetweenRR() const {

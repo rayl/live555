@@ -187,7 +187,7 @@ Boolean RawQCELPRTPSource
   unsigned char const firstByte = headerStart[0];
   unsigned char const interleaveL = (firstByte&0x38)>>3;
   unsigned char const interleaveN = firstByte&0x07;
-#ifdef DEBUG_PRINT
+#ifdef DEBUG
   fprintf(stderr, "packetSize: %d, interleaveL: %d, interleaveN: %d\n", packetSize, interleaveL, interleaveN);
 #endif
   if (interleaveL > 5 || interleaveN > interleaveL) return False; //invalid
@@ -210,7 +210,7 @@ Boolean RawQCELPRTPSource::hasBeenSynchronizedUsingRTCP() {
   // This ensures that the receiver is currently getting a frame from
   // a packet that was synchronized.
   if (fNumSuccessiveSyncedPackets > (unsigned)(fInterleaveL+1)) {
-    fNumSuccessiveSyncedPackets = fInterleaveL+2; // helps prevent overflow
+    fNumSuccessiveSyncedPackets = fInterleaveL+2; // prevents overflow
     return True;
   }
   return False;
@@ -242,8 +242,8 @@ unsigned QCELPBufferedPacket::
   default: { frameSize = 0; break; }
   }
 
-#ifdef DEBUG_PRINT
-  fprintf(stderr, "nextEnclosedFrameSize(): frameSize: %d, dataSize: %d\n", frameSize, dataSize);
+#ifdef DEBUG
+  fprintf(stderr, "QCELPBufferedPacket::nextEnclosedFrameSize(): frameSize: %d, dataSize: %d\n", frameSize, dataSize);
 #endif
   if (dataSize < frameSize) return 0;
 
@@ -306,7 +306,7 @@ private:
   unsigned char fOutgoingBinMax; // in the outgoing bank
   unsigned char fNextOutgoingBin;
   Boolean fHaveSeenPackets;
-  unsigned short fLastPacketSeqNumForGroup;
+  u_int16_t fLastPacketSeqNumForGroup;
   unsigned char* fInputBuffer;
   struct timeval fLastRetrievedPresentationTime;
 };
@@ -428,8 +428,7 @@ void QCELPDeinterleavingBuffer
       || seqNumLT(fLastPacketSeqNumForGroup, packetSeqNum)) {
     // We've moved to a new interleave group
     fHaveSeenPackets = True;
-    fLastPacketSeqNumForGroup
-      = (packetSeqNum + interleaveL - interleaveN) % 65536;
+    fLastPacketSeqNumForGroup = packetSeqNum + interleaveL - interleaveN;
 
     // Switch the incoming and outgoing banks:
     fIncomingBankId ^= 1;

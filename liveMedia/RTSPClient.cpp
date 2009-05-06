@@ -966,6 +966,77 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
   return False;
 }
 
+Boolean RTSPClient::pauseMediaSession(MediaSession& session) {
+  char* cmd = NULL;
+  do {
+    // First, make sure that we have a RTSP session in progress
+    if (fLastSessionId == NULL) {
+      envir().setResultMsg("No RTSP session is currently in progress\n");
+      break;
+    }
+
+    // Send the PAUSE command:
+
+    // First, construct an authenticator string:
+    char* authenticatorStr
+      = createAuthenticatorString(fCurrentAuthenticator, "PAUSE", fBaseURL);
+
+    char* const cmdFmt =
+      "PAUSE %s RTSP/1.0\r\n"
+      "CSeq: %d\r\n"
+      "Session: %s\r\n"
+      "Range: npt=0-\r\n"
+      "%s"
+      "%s\r\n";
+
+    unsigned cmdSize = strlen(cmdFmt)
+      + strlen(fBaseURL)
+      + 20 /* max int len */
+      + strlen(fLastSessionId)
+      + strlen(authenticatorStr)
+      + fUserAgentHeaderStrSize;
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
+	    fBaseURL,
+	    ++fCSeq,
+	    fLastSessionId,
+	    authenticatorStr,
+	    fUserAgentHeaderStr);
+    delete[] authenticatorStr;
+
+    if (!sendRequest(cmd)) {
+      envir().setResultErrMsg("PAUSE send() failed: ");
+      break;
+    }
+
+    // Get the response from the server:
+    unsigned const readBufSize = 10000;
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
+    int bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead < 0) break;
+    if (fVerbosityLevel >= 1) {
+      envir() << "Received PAUSE response: " << readBuf << "\n";
+    }
+
+    // Inspect the first line to check whether it's a result code 200
+    char* firstLine = readBuf;
+    /*char* nextLineStart =*/ getLine(firstLine);
+    unsigned responseCode;
+    if (!parseResponseCode(firstLine, responseCode)) break;
+    if (responseCode != 200) {
+      envir().setResultMsg("cannot handle PAUSE response: ", firstLine);
+      break;
+    }
+    // (Later, check "CSeq" too #####)
+
+    delete[] cmd;
+    return True;
+  } while (0);
+
+delete[] cmd;
+  return False;
+}
+
 Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession) {
   char* cmd = NULL;
   do {
