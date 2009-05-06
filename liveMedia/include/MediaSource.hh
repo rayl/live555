@@ -41,6 +41,7 @@ public:
   virtual Boolean isMPEG1or2VideoStreamFramer() const;
   virtual Boolean isMPEG4VideoStreamFramer() const;
   virtual Boolean isJPEGVideoSource() const;
+  virtual Boolean isAMRAudioSource() const;
 
 protected:
   MediaSource(UsageEnvironment& env); // abstract base class

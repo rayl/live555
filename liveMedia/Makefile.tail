@@ -17,8 +17,8 @@ MP3_SINK_OBJS = MP3ADURTPSink.$(OBJ)
 MPEG_SINK_OBJS = MPEG1or2AudioRTPSink.$(OBJ) $(MP3_SINK_OBJS) MPEG1or2VideoRTPSink.$(OBJ) MPEG1or2VideoHTTPSink.$(OBJ) MPEG4GenericRTPSink.$(OBJ) MPEG4ESVideoRTPSink.$(OBJ)
 AC3_SINK_OBJS = AC3AudioRTPSink.$(OBJ)
 
-MISC_SOURCE_OBJS = MediaSource.$(OBJ) FramedSource.$(OBJ) FramedFileSource.$(OBJ) FramedFilter.$(OBJ) ByteStreamFileSource.$(OBJ) ByteStreamMultiFileSource.$(OBJ) BasicUDPSource.$(OBJ) DeviceSource.$(OBJ) AudioInputDevice.$(OBJ) WAVAudioFileSource.$(OBJ) $(MPEG_SOURCE_OBJS) $(AC3_SOURCE_OBJS) JPEGVideoSource.$(OBJ)
-MISC_SINK_OBJS = MediaSink.$(OBJ) FileSink.$(OBJ) HTTPSink.$(OBJ) $(MPEG_SINK_OBJS) $(AC3_SINK_OBJS) GSMAudioRTPSink.$(OBJ) H263plusVideoRTPSink.$(OBJ) JPEGVideoRTPSink.$(OBJ) SimpleRTPSink.$(OBJ)
+MISC_SOURCE_OBJS = MediaSource.$(OBJ) FramedSource.$(OBJ) FramedFileSource.$(OBJ) FramedFilter.$(OBJ) ByteStreamFileSource.$(OBJ) ByteStreamMultiFileSource.$(OBJ) BasicUDPSource.$(OBJ) DeviceSource.$(OBJ) AudioInputDevice.$(OBJ) WAVAudioFileSource.$(OBJ) $(MPEG_SOURCE_OBJS) $(AC3_SOURCE_OBJS) JPEGVideoSource.$(OBJ) AMRAudioFileSource.$(OBJ)
+MISC_SINK_OBJS = MediaSink.$(OBJ) FileSink.$(OBJ) HTTPSink.$(OBJ) $(MPEG_SINK_OBJS) $(AC3_SINK_OBJS) GSMAudioRTPSink.$(OBJ) H263plusVideoRTPSink.$(OBJ) JPEGVideoRTPSink.$(OBJ) SimpleRTPSink.$(OBJ) AMRAudioRTPSink.$(OBJ)
 MISC_FILTER_OBJS = uLawAudioFilter.$(OBJ)
 
 RTP_SOURCE_OBJS = RTPSource.$(OBJ) MultiFramedRTPSource.$(OBJ) SimpleRTPSource.$(OBJ) PrioritizedRTPStreamSelector.$(OBJ) H261VideoRTPSource.$(OBJ) H263plusVideoRTPSource.$(OBJ) QCELPAudioRTPSource.$(OBJ) JPEGVideoRTPSource.$(OBJ)
@@ -135,6 +135,8 @@ AC3AudioRTPSource.$(CPP):	include/AC3AudioRTPSource.hh
 include/AC3AudioRTPSource.hh:	include/MultiFramedRTPSource.hh
 JPEGVideoSource.$(CPP):		include/JPEGVideoSource.hh
 include/JPEGVideoSource.hh:	include/FramedSource.hh
+AMRAudioFileSource.$(CPP):	include/AMRAudioFileSource.hh
+include/AMRAudioFileSource.hh:	include/FramedFileSource.hh
 MediaSink.$(CPP):	include/MediaSink.hh
 include/MediaSink.hh:		include/FramedSource.hh
 FileSink.$(CPP):	include/FileSink.hh
@@ -172,6 +174,8 @@ JPEGVideoRTPSink.$(CPP):	include/JPEGVideoRTPSink.hh include/JPEGVideoSource.hh
 include/JPEGVideoRTPSink.hh:	include/VideoRTPSink.hh
 SimpleRTPSink.$(CPP):		include/SimpleRTPSink.hh
 include/SimpleRTPSink.hh:	include/MultiFramedRTPSink.hh
+AMRAudioRTPSink.$(CPP):		include/AMRAudioRTPSink.hh include/AMRAudioFileSource.hh
+include/AMRAudioRTPSink.hh:	include/AudioRTPSink.hh
 uLawAudioFilter.$(CPP):		include/uLawAudioFilter.hh
 include/uLawAudioFilter.hh:	include/FramedFilter.hh
 RTCP.$(CPP):		include/RTCP.hh rtcp_from_spec.h

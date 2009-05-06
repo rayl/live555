@@ -37,7 +37,8 @@ void MPEG1or2AudioRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 					      unsigned numBytesInFrame,
 					      struct timeval frameTimestamp,
 					      unsigned numRemainingBytes) {
-  // If this is the 1st frame in the 1st packet, set the RTP 'M' (marker) bit:
+  // If this is the 1st frame in the 1st packet, set the RTP 'M' (marker)
+  // bit (because this is considered the start of a talk spurt):
   if (isFirstPacket() && isFirstFrameInPacket()) {
     setMarkerBit();
   }

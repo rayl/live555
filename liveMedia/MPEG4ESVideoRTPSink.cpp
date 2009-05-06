@@ -29,6 +29,7 @@ MPEG4ESVideoRTPSink
 }
 
 MPEG4ESVideoRTPSink::~MPEG4ESVideoRTPSink() {
+  delete[] fAuxSDPLine;
 }
 
 MPEG4ESVideoRTPSink*
@@ -117,7 +118,7 @@ char const* MPEG4ESVideoRTPSink::auxSDPLine() {
   }
   sprintf(endPtr, "\r\n");
 	  
-  delete fAuxSDPLine;
+  delete[] fAuxSDPLine;
   fAuxSDPLine = strDup(fmtp);
   delete[] fmtp;
   return fAuxSDPLine;
