@@ -29,9 +29,9 @@ MPEG1or2DemuxedElementaryStream(UsageEnvironment& env, u_int8_t streamIdTag,
     fOurStreamIdTag(streamIdTag), fOurSourceDemux(sourceDemux), fMPEGversion(0) {
   // Set our MIME type string for known media types:
   if ((streamIdTag&0xE0) == 0xC0) {
-    fMIMEtype = "audio/mpeg";
+    fMIMEtype = "audio/MPEG";
   } else if ((streamIdTag&0xF0) == 0xE0) {
-    fMIMEtype = "video/mpeg";
+    fMIMEtype = "video/MPEG";
   } else {
     fMIMEtype = MediaSource::MIMEtype();
   }

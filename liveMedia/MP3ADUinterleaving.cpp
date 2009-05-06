@@ -55,7 +55,7 @@ FramedSource* MP3ADUinterleaverBase::getInputSource(UsageEnvironment& env,
   if (!FramedSource::lookupByName(env, inputSourceName, inputSource))
     return NULL;
   
-  if (strcmp(inputSource->MIMEtype(), "audio/mpa-robust") != 0) {
+  if (strcmp(inputSource->MIMEtype(), "audio/MPA-ROBUST") != 0) {
     env.setResultMsg(inputSourceName, " is not an MP3 ADU source");
     return NULL;
   }

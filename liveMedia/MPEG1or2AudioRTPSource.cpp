@@ -57,6 +57,6 @@ Boolean MPEG1or2AudioRTPSource
 }    
 
 char const* MPEG1or2AudioRTPSource::MIMEtype() const {
-  return "audio/mpeg";
+  return "audio/MPEG";
 }
 

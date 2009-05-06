@@ -123,14 +123,14 @@ ADUFromMP3Source::~ADUFromMP3Source() {
 
 
 char const* ADUFromMP3Source::MIMEtype() const {
-  return "audio/mpa-robust";
+  return "audio/MPA-ROBUST";
 }
 
 ADUFromMP3Source* ADUFromMP3Source::createNew(UsageEnvironment& env,
                                               FramedSource* inputSource,
                                               Boolean includeADUdescriptors) {
   // The source must be a MPEG audio source:
-  if (strcmp(inputSource->MIMEtype(), "audio/mpeg") != 0) {
+  if (strcmp(inputSource->MIMEtype(), "audio/MPEG") != 0) {
     env.setResultMsg(inputSource->name(), " is not an MPEG audio source");
     return NULL;
   }
@@ -269,14 +269,14 @@ MP3FromADUSource::~MP3FromADUSource() {
 }
 
 char const* MP3FromADUSource::MIMEtype() const {
-  return "audio/mpeg";
+  return "audio/MPEG";
 }
 
 MP3FromADUSource* MP3FromADUSource::createNew(UsageEnvironment& env,
 					      FramedSource* inputSource,
 					      Boolean includeADUdescriptors) {
   // The source must be an MP3 ADU source:
-  if (strcmp(inputSource->MIMEtype(), "audio/mpa-robust") != 0) {
+  if (strcmp(inputSource->MIMEtype(), "audio/MPA-ROBUST") != 0) {
     env.setResultMsg(inputSource->name(), " is not an MP3 ADU source");
     return NULL;
   }

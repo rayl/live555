@@ -102,5 +102,5 @@ Boolean H263plusVideoRTPSource
 }
 
 char const* H263plusVideoRTPSource::MIMEtype() const {
-  return "video/h263-1998";
+  return "video/H263-1998";
 }

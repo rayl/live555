@@ -77,6 +77,6 @@ Boolean MPEG1or2VideoRTPSource
 }    
 
 char const* MPEG1or2VideoRTPSource::MIMEtype() const {
-  return "video/mpeg";
+  return "video/MPEG";
 }
 

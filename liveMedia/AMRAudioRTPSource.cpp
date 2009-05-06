@@ -311,7 +311,7 @@ Boolean RawAMRRTPSource
 } 
 
 char const* RawAMRRTPSource::MIMEtype() const {
-  return fIsWideband ? "audio/amr-wb" : "audio/amr";
+  return fIsWideband ? "audio/AMR-WB" : "audio/AMR-WB";
 }
 
 Boolean RawAMRRTPSource::hasBeenSynchronizedUsingRTCP() {

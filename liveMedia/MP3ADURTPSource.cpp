@@ -56,7 +56,7 @@ MP3ADURTPSource::~MP3ADURTPSource() {
 }
 
 char const* MP3ADURTPSource::MIMEtype() const {
-  return "audio/mpa-robust";
+  return "audio/MPA-ROBUST";
 }
 
 ////////// ADUBufferedPacket and ADUBufferredPacketFactory implementation

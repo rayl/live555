@@ -34,7 +34,7 @@ MP3FileSource::~MP3FileSource() {
 }
 
 char const* MP3FileSource::MIMEtype() const {
-  return "audio/mpeg";
+  return "audio/MPEG";
 }
 
 MP3FileSource* MP3FileSource::createNew(UsageEnvironment& env, char const* fileName) {

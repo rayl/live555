@@ -195,7 +195,7 @@ Boolean RawQCELPRTPSource
 } 
 
 char const* RawQCELPRTPSource::MIMEtype() const {
-  return "audio/qcelp";
+  return "audio/QCELP";
 }
 
 Boolean RawQCELPRTPSource::hasBeenSynchronizedUsingRTCP() {

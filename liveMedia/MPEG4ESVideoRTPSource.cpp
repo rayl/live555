@@ -58,5 +58,5 @@ Boolean MPEG4ESVideoRTPSource
 }
 
 char const* MPEG4ESVideoRTPSource::MIMEtype() const {
-  return "video/mp4v-es";
+  return "video/MP4V-ES";
 }

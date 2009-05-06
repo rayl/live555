@@ -74,6 +74,6 @@ Boolean AC3AudioRTPSource
 }    
 
 char const* AC3AudioRTPSource::MIMEtype() const {
-  return "audio/ac3";
+  return "audio/AC3";
 }
 

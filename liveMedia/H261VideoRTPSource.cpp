@@ -63,5 +63,5 @@ Boolean H261VideoRTPSource
 }
 
 char const* H261VideoRTPSource::MIMEtype() const {
-  return "video/h261";
+  return "video/H261";
 }

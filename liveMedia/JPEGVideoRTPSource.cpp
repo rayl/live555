@@ -428,7 +428,7 @@ Boolean JPEGVideoRTPSource
 }    
 
 char const* JPEGVideoRTPSource::MIMEtype() const {
-  return "video/jpeg";
+  return "video/JPEG";
 }
 
 ////////// JPEGBufferedPacket and JPEGBufferedPacketFactory implementation

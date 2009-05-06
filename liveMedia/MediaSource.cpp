@@ -34,7 +34,7 @@ Boolean MediaSource::isSource() const {
 }
 
 char const* MediaSource::MIMEtype() const {
-  return "application/octet-stream"; // default type
+  return "application/OCTET-STREAM"; // default type
 }
 
 Boolean MediaSource::isFramedSource() const {
