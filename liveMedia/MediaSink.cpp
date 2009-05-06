@@ -110,8 +110,9 @@ OutPacketBuffer::OutPacketBuffer(unsigned preferredPacketSize,
 				 unsigned maxPacketSize)
   : fPreferred(preferredPacketSize), fMax(maxPacketSize),
     fLimit(numPacketsLimit*maxPacketSize), fBuf(new unsigned char[fLimit]) {
-      reset();
-      resetOverflowData();
+  resetPacketStart();
+  resetOffset();
+  resetOverflowData();
 }
 
 OutPacketBuffer::~OutPacketBuffer() {
@@ -126,7 +127,7 @@ void OutPacketBuffer::enqueue(unsigned char const* from, unsigned numBytes) {
     numBytes = totalBytesAvailable();
   }
 
-  memmove(curPtr(), from, numBytes);
+  if (curPtr() != from) memmove(curPtr(), from, numBytes);
   increment(numBytes);
 }
 
@@ -137,12 +138,13 @@ void OutPacketBuffer::enqueueWord(unsigned word) {
 
 void OutPacketBuffer::insert(unsigned char const* from, unsigned numBytes,
 			     unsigned toPosition) {
-  if (toPosition + numBytes > fLimit) {
-    if (toPosition > fLimit) return; // we can't do this
-    numBytes = fLimit - toPosition;
+  unsigned realToPosition = fPacketStart + toPosition;
+  if (realToPosition + numBytes > fLimit) {
+    if (realToPosition > fLimit) return; // we can't do this
+    numBytes = fLimit - realToPosition;
   }
 
-  memmove(&fBuf[toPosition], from, numBytes);
+  memmove(&fBuf[realToPosition], from, numBytes);
   if (toPosition + numBytes > fCurOffset) {
     fCurOffset = toPosition + numBytes;
   }
@@ -155,12 +157,13 @@ void OutPacketBuffer::insertWord(unsigned word, unsigned toPosition) {
 
 void OutPacketBuffer::extract(unsigned char* to, unsigned numBytes,
 			      unsigned fromPosition) {
-  if (fromPosition + numBytes > fLimit) { // sanity check
-    if (fromPosition > fLimit) return; // we can't do this
-    numBytes = fLimit - fromPosition;
+  unsigned realFromPosition = fPacketStart + fromPosition;
+  if (realFromPosition + numBytes > fLimit) { // sanity check
+    if (realFromPosition > fLimit) return; // we can't do this
+    numBytes = fLimit - realFromPosition;
   }
 
-  memmove(to, &fBuf[fromPosition], numBytes);
+  memmove(to, &fBuf[realFromPosition], numBytes);
 }
 
 unsigned OutPacketBuffer::extractWord(unsigned fromPosition) {
@@ -186,15 +189,18 @@ void OutPacketBuffer::setOverflowData(unsigned overflowDataOffset,
 }
 
 void OutPacketBuffer::useOverflowData() {
-  enqueue(&fBuf[fOverflowDataOffset], fOverflowDataSize);
+  enqueue(&fBuf[fPacketStart + fOverflowDataOffset], fOverflowDataSize);
   fCurOffset -= fOverflowDataSize; // undoes increment performed by "enqueue"
   resetOverflowData();
 }
 
-void OutPacketBuffer::reset() {
-  fCurOffset = 0;
+void OutPacketBuffer::adjustPacketStart(unsigned numBytes) { 
+  fPacketStart += numBytes;
+  if (fOverflowDataOffset >= numBytes) {
+    fOverflowDataOffset -= numBytes;
+  } else {
+    fOverflowDataOffset = 0;
+    fOverflowDataSize = 0; // an error otherwise
+  }
 }
 
-void OutPacketBuffer::resetOverflowData() {
-  fOverflowDataOffset = fOverflowDataSize = 0;
-}

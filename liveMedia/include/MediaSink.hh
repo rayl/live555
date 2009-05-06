@@ -72,11 +72,12 @@ public:
 
   static unsigned numPacketsLimit;
 
-  unsigned curOffset() const {return fCurOffset;}
-  unsigned char* curPtr() const {return &fBuf[fCurOffset];}
-  unsigned totalBytesAvailable() const {return fLimit - fCurOffset;}
-  unsigned char* packet() const {return fBuf;}
-  unsigned packetSize() const {return fCurOffset;}
+  unsigned char* curPtr() const {return &fBuf[fPacketStart + fCurOffset];}
+  unsigned totalBytesAvailable() const {
+    return fLimit - (fPacketStart + fCurOffset);
+  }
+  unsigned char* packet() const {return &fBuf[fPacketStart];}
+  unsigned curPacketSize() const {return fCurOffset;}
 
   void increment(unsigned numBytes) {fCurOffset += numBytes;}
 
@@ -107,13 +108,13 @@ public:
   Boolean haveOverflowData() const {return fOverflowDataSize > 0;}
   void useOverflowData();
 
-  void reset();
-  void resetOverflowData();
+  void adjustPacketStart(unsigned numBytes);
+  void resetPacketStart() { fPacketStart = 0; }
+  void resetOffset() { fCurOffset = 0; }
+  void resetOverflowData() { fOverflowDataOffset = fOverflowDataSize = 0; }
 
 private:
-
-private:
-  unsigned fCurOffset, fPreferred, fMax, fLimit;
+  unsigned fPacketStart, fCurOffset, fPreferred, fMax, fLimit;
   unsigned char* fBuf;
 
   unsigned fOverflowDataOffset, fOverflowDataSize;

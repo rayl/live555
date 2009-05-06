@@ -478,15 +478,15 @@ void RTCPInstance::sendBuiltPacket() {
 #ifdef DEBUG_PRINT
   fprintf(stderr, "sending RTCP packet\n");
   unsigned char* p = fOutBuf->packet();
-  for (unsigned i = 0; i < fOutBuf->packetSize(); ++i) {
+  for (unsigned i = 0; i < fOutBuf->curPacketSize(); ++i) {
     if (i%4 == 0) fprintf(stderr," ");
     fprintf(stderr, "%02x", p[i]);
   }
   fprintf(stderr, "\n");
 #endif
-  unsigned reportSize = fOutBuf->packetSize();
+  unsigned reportSize = fOutBuf->curPacketSize();
   fRTCPInterface.sendPacket(fOutBuf->packet(), reportSize);
-  fOutBuf->reset();
+  fOutBuf->resetOffset();
 
   fLastSentSize = IP_UDP_HDR_SIZE + reportSize;
   fHaveJustSentPacket = True;
@@ -680,7 +680,7 @@ void RTCPInstance::addSDES() {
   fOutBuf->enqueue(fCNAME.data(), fCNAME.totalSize());
 
   // Add the 'END' item (i.e., a zero byte), plus any more needed to pad:
-  unsigned numPaddingBytesNeeded = 4 - (fOutBuf->packetSize() % 4);
+  unsigned numPaddingBytesNeeded = 4 - (fOutBuf->curPacketSize() % 4);
   unsigned char const zero = '\0';
   while (numPaddingBytesNeeded-- > 0) fOutBuf->enqueue(&zero, 1);
 }
