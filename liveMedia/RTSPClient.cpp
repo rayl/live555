@@ -310,7 +310,20 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 	if (numExtraBytesNeeded > 0) break; // one of the reads failed
       }
 
-      bodyStart[contentLength] = '\0'; // trims any extra data
+      // Remove any '\0' characters from inside the SDP description.
+      // Any such characters would violate the SDP specification, but
+      // some RTSP servers have been known to include them:
+      int from, to = 0;
+      for (from = 0; from < contentLength; ++from) {
+	if (bodyStart[from] != '\0') {
+	  if (to != from) bodyStart[to] = bodyStart[from];
+	  ++to;
+	}
+      }
+      if (from != to && fVerbosityLevel >= 1) {
+	envir() << "Warning: " << from-to << " invalid 'NULL' bytes were found in (and removed from) the SDP description.\n";
+      }
+      bodyStart[to] = '\0'; // trims any extra data
     }
 
     delete[] cmd;
