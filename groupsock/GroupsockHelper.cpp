@@ -21,6 +21,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupsockHelper.hh"
 
 #if defined(__WIN32__) || defined(_WIN32)
+#ifdef _WIN32_WCE
+#include <afxwin.h>
+#include <wcealt.h>
+#define ctime wce_ctime
+#endif
 #include <time.h>
 extern "C" int initializeWinsockIfNecessary();
 #else
