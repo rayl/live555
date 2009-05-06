@@ -409,7 +409,7 @@ Boolean JPEGVideoRTPSource
 
     unsigned hdrlen = computeJPEGHeaderSize(qtlen, dri);
     resultSpecialHeaderSize -= hdrlen; // goes negative
-    headerStart += resultSpecialHeaderSize; // goes backward
+    headerStart += (int)resultSpecialHeaderSize; // goes backward
     createJPEGHeader(headerStart, type, width, height, qtables, qtlen, dri);
   }
 

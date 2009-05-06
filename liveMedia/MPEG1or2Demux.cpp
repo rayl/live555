@@ -373,12 +373,15 @@ void MPEGProgramStreamParser::parsePackHeader() {
   fprintf(stderr, "parsing pack header\n"); fflush(stderr);
 #endif
   unsigned first4Bytes;
-  do {
+  while (1) {
     first4Bytes = test4Bytes();
 
     // We're supposed to have a pack header here, but check also for
     // a system header or a PES packet, just in case:
-    if (first4Bytes == SYSTEM_HEADER_START_CODE) {
+    if (first4Bytes == PACK_START_CODE) {
+      skipBytes(4);
+      break;
+    } else if (first4Bytes == SYSTEM_HEADER_START_CODE) {
 #ifdef DEBUG
       fprintf(stderr, "found system header instead of pack header\n");
 #endif
@@ -391,14 +394,10 @@ void MPEGProgramStreamParser::parsePackHeader() {
       setParseState(PARSING_PES_PACKET);
       return;
     }
-    // Perhaps later check for elementary stream data here as well?? #####
 
     setParseState(PARSING_PACK_HEADER); // ensures we progress over bad data
-    skipBytes(4);
-#ifdef DEBUG
-    fprintf(stderr, (first4Bytes == PACK_START_CODE) ? "found pack\n" : "didn't find pack\n"); fflush(stderr);
-#endif
-  } while (first4Bytes != PACK_START_CODE);
+    skipBytes(1);
+  }
   
   // The size of the pack header differs depending on whether it's
   // MPEG-1 or MPEG-2.  The next byte tells us this: 
