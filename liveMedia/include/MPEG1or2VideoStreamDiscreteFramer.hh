@@ -28,6 +28,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEG1or2VideoStreamFramer.hh"
 #endif
 
+#define VSH_MAX_SIZE 1000
+
 class MPEG1or2VideoStreamDiscreteFramer: public MPEG1or2VideoStreamFramer {
 public:
   static MPEG1or2VideoStreamDiscreteFramer*
@@ -59,6 +61,14 @@ private:
 private:
   struct timeval fLastNonBFramePresentationTime;
   unsigned fLastNonBFrameTemporal_reference;
+
+  // A saved copy of the most recently seen 'video_sequence_header',
+  // in case we need to insert it into the stream periodically:
+  unsigned char fSavedVSHBuffer[VSH_MAX_SIZE];
+  unsigned fSavedVSHSize;
+  double fSavedVSHTimestamp;
+  Boolean fIFramesOnly;
+  double fVSHPeriod;
 };
 
 #endif

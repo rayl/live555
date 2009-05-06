@@ -1703,6 +1703,7 @@ static char* base64Encode(char const* orig) {
     result[4*i+3] = '=';
   }
 
+  result[numResultBytes] = '\0';
   return result;
 }
 

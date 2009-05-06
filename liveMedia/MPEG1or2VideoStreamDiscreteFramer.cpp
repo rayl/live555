@@ -39,7 +39,9 @@ MPEG1or2VideoStreamDiscreteFramer
                                     Boolean iFramesOnly, double vshPeriod)
   : MPEG1or2VideoStreamFramer(env, inputSource, iFramesOnly, vshPeriod,
                               False/*don't create a parser*/),
-    fLastNonBFrameTemporal_reference(0) {
+    fLastNonBFrameTemporal_reference(0),
+    fSavedVSHSize(0), fSavedVSHTimestamp(0.0),
+    fIFramesOnly(iFramesOnly), fVSHPeriod(vshPeriod) {
   fLastNonBFramePresentationTime.tv_sec = 0;
   fLastNonBFramePresentationTime.tv_usec = 0;
 }
@@ -86,6 +88,8 @@ static double const frameRateFromCode[] = {
   0.0           // reserved
 };
 
+#define MILLION 1000000
+
 void MPEG1or2VideoStreamDiscreteFramer
 ::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
                      struct timeval presentationTime,
@@ -100,6 +104,31 @@ void MPEG1or2VideoStreamDiscreteFramer
       if (frameSize >= 8) {
 	u_int8_t frame_rate_code = fTo[7]&0x0F;
 	fFrameRate = frameRateFromCode[frame_rate_code];
+      }
+
+      // Also, save away this Video Sequence Header, in case we need it later:
+      // First, figure out how big it is:
+      unsigned vshSize;
+      for (vshSize = 4; vshSize < frameSize-3; ++vshSize) {
+	if (fTo[vshSize] == 0 && fTo[vshSize+1] == 0 && fTo[vshSize+2] == 1 &&
+	    (fTo[vshSize+3] == 0xB8 || fTo[vshSize+3] == 0x00)) break;
+      }
+      if (vshSize == frameSize-3) vshSize = frameSize; // There was nothing else following it
+      if (vshSize <= sizeof fSavedVSHBuffer) {
+	memmove(fSavedVSHBuffer, fTo, vshSize);
+	fSavedVSHSize = vshSize;
+	fSavedVSHTimestamp
+	  = presentationTime.tv_sec + presentationTime.tv_usec/(double)MILLION;
+      }
+    } else if (nextCode == 0xB8) { // GROUP_START_CODE
+      // If necessary, insert a saved Video Sequence Header in front of this:
+      double pts = presentationTime.tv_sec + presentationTime.tv_usec/(double)MILLION;
+      if (pts > fSavedVSHTimestamp + fVSHPeriod &&
+	  fSavedVSHSize + frameSize <= fMaxSize) {
+	memmove(&fTo[fSavedVSHSize], &fTo[0], frameSize); // make room for the header
+	memmove(&fTo[0], fSavedVSHBuffer, fSavedVSHSize); // insert it
+	frameSize += fSavedVSHSize;
+	fSavedVSHTimestamp = pts;
       }
     }
 
@@ -123,6 +152,12 @@ void MPEG1or2VideoStreamDiscreteFramer
       unsigned short temporal_reference = (fTo[i]<<2)|(fTo[i+1]>>6);
       unsigned char picture_coding_type = (fTo[i+1]&0x38)>>3;
 
+      // If this is not an "I" frame, but we were asked for "I" frames only, then try again:
+      if (fIFramesOnly && picture_coding_type != 1) {
+	doGetNextFrame();
+	return;
+      }
+
       // If this is a "B" frame, then we have to tweak "presentationTime":
       if (picture_coding_type == 3/*B*/
 	  && (fLastNonBFramePresentationTime.tv_usec > 0 ||
@@ -130,7 +165,7 @@ void MPEG1or2VideoStreamDiscreteFramer
 	int trIncrement
             = fLastNonBFrameTemporal_reference - temporal_reference;
 	if (trIncrement < 0) trIncrement += 1024; // field is 10 bits in size
-	unsigned const MILLION = 1000000;
+
 	unsigned usIncrement = fFrameRate == 0.0 ? 0
 	  : (unsigned)((trIncrement*MILLION)/fFrameRate);
 	unsigned secondsToSubtract = usIncrement/MILLION;
@@ -156,7 +191,6 @@ void MPEG1or2VideoStreamDiscreteFramer
 
   // ##### Later:
   // - do "iFramesOnly" if requested
-  // - handle "vshPeriod"
  
   // Complete delivery to the client:
   fFrameSize = frameSize;
