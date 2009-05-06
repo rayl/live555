@@ -619,6 +619,10 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
     setParseState(PARSING_VISUAL_OBJECT_SEQUENCE_SEEN_CODE);
     break;
   }
+  case VISUAL_OBJECT_START_CODE: {
+    setParseState(PARSING_VISUAL_OBJECT);
+    break;
+  }
   case GROUP_VOP_START_CODE: {
     setParseState(PARSING_GROUP_OF_VIDEO_OBJECT_PLANE);
     break;
@@ -628,9 +632,13 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
     break;
   }
   default: {
-    usingSource()->envir() << "MPEG4VideoStreamParser::parseVideoObjectPlane(): Saw unexpected code "
-			   << (void*)next4Bytes << "\n";
-    setParseState(PARSING_VIDEO_OBJECT_PLANE); // the safest way to recover...
+    if (isVideoObjectStartCode(next4Bytes)) {
+      setParseState(PARSING_VIDEO_OBJECT_LAYER);
+    } else {
+      usingSource()->envir() << "MPEG4VideoStreamParser::parseVideoObjectPlane(): Saw unexpected code "
+			     << (void*)next4Bytes << "\n";
+      setParseState(PARSING_VIDEO_OBJECT_PLANE); // the safest way to recover...
+    }
     break;
   }
   }
