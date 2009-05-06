@@ -170,7 +170,7 @@ void play() {
     exit(1);
   }
   ServerMediaSession* sms
-    = ServerMediaSession::createNew(*env, NULL, inputFileName,
+    = ServerMediaSession::createNew(*env, "testStream", inputFileName,
 		"Session streamed by \"testMP3Streamer\"", isSSM);
   sms->addSubsession(PassiveServerMediaSubsession::createNew(*sessionState.sink));
   rtspServer->addServerMediaSession(sms);

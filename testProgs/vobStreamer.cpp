@@ -205,7 +205,7 @@ int main(int argc, char const** argv) {
       exit(1);
     }
     ServerMediaSession* sms
-      = ServerMediaSession::createNew(*env, NULL, *curInputFileName,
+      = ServerMediaSession::createNew(*env, "vobStream", *curInputFileName,
 	     "Session streamed by \"vobStreamer\"", True /*SSM*/);
     if (audioSink != NULL) sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink));
     if (videoSink != NULL) sms->addSubsession(PassiveServerMediaSubsession::createNew(*videoSink));

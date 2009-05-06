@@ -68,17 +68,20 @@ private:
     virtual ~RTSPClientSession();
   private:
     UsageEnvironment& envir() { return fOurServer.envir(); }
+    void reclaimStreamStates();
     static void incomingRequestHandler(void*, int /*mask*/);
     void incomingRequestHandler1();
     void handleCmd_bad(char const* cseq);
     void handleCmd_notSupported(char const* cseq);
+    void handleCmd_notFound(char const* cseq);
     void handleCmd_OPTIONS(char const* cseq);
     void handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix);
-    void handleCmd_subsession(char const* cmdName,
-			      char const* urlSuffix, char const* cseq,
-			      char const* fullRequestStr);
-    void handleCmd_SETUP(ServerMediaSubsession* subsession,
-			 char const* cseq, char const* fullRequestStr);
+    void handleCmd_SETUP(char const* cseq,
+			 char const* urlPreSuffix, char const* urlSuffix,
+			 char const* fullRequestStr);
+    void handleCmd_withinSession(char const* cmdName,
+				 char const* urlPreSuffix, char const* urlSuffix,
+				 char const* cseq);
     void handleCmd_TEARDOWN(ServerMediaSubsession* subsession,
 			    char const* cseq);
     void handleCmd_PLAY(ServerMediaSubsession* subsession,
@@ -88,6 +91,8 @@ private:
     Boolean parseRequestString(char const *reqStr, unsigned reqStrSize,
 			       char *resultCmdName,
 			       unsigned resultCmdNameMaxSize, 
+			       char* resultURLPreSuffix,
+			       unsigned resultURLPreSuffixMaxSize, 
 			       char* resultURLSuffix,
 			       unsigned resultURLSuffixMaxSize, 
 			       char* resultCSeq,

@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
     exit(1);
   }
   ServerMediaSession* sms
-    = ServerMediaSession::createNew(*env, NULL, inputFileName,
+    = ServerMediaSession::createNew(*env, "testStream", inputFileName,
 		   "Session streamed by \"testMPEG1or2AudioVideoStreamer\"",
 					   isSSM);
   sms->addSubsession(PassiveServerMediaSubsession::createNew(*audioSink));

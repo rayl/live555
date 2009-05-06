@@ -131,7 +131,7 @@ void play() {
     exit(1);
   }
   ServerMediaSession* sms
-    = ServerMediaSession::createNew(*env, NULL, "GSM input",
+    = ServerMediaSession::createNew(*env, "testStream", "GSM input",
 		"Session streamed by \"testGSMStreamer\"", isSSM);
   sms->addSubsession(PassiveServerMediaSubsession::createNew(*sessionState.sink));
   rtspServer->addServerMediaSession(sms);

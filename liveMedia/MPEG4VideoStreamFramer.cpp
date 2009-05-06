@@ -36,7 +36,8 @@ enum MPEGParseState {
   PARSING_VISUAL_OBJECT,
   PARSING_VIDEO_OBJECT_LAYER,
   PARSING_GROUP_OF_VIDEO_OBJECT_PLANE,
-  PARSING_VIDEO_OBJECT_PLANE
+  PARSING_VIDEO_OBJECT_PLANE,
+  PARSING_VISUAL_OBJECT_SEQUENCE_END_CODE
 }; 
 
 class MPEG4VideoStreamParser: public MPEGVideoStreamParser {
@@ -59,6 +60,7 @@ private:
   unsigned parseVideoObjectLayer();
   unsigned parseGroupOfVideoObjectPlane();
   unsigned parseVideoObjectPlane();
+  unsigned parseVisualObjectSequenceEndCode();
 
   // These are used for parsing within an already-read frame:
   Boolean getNextFrameBit(u_int8_t& result);
@@ -175,6 +177,9 @@ unsigned MPEG4VideoStreamParser::parse() {
     }
     case PARSING_VIDEO_OBJECT_PLANE: {
       return parseVideoObjectPlane();
+    }
+    case PARSING_VISUAL_OBJECT_SEQUENCE_END_CODE: {
+      return parseVisualObjectSequenceEndCode();
     }
     default: {
       return 0; // shouldn't happen
@@ -554,7 +559,7 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
   usingSource()->fPictureEndMarker = True; // HACK #####
   switch (next4Bytes) {
   case VISUAL_OBJECT_SEQUENCE_END_CODE: {
-    setParseState(PARSING_VISUAL_OBJECT_SEQUENCE);
+    setParseState(PARSING_VISUAL_OBJECT_SEQUENCE_END_CODE);
     break;
   }
   case VISUAL_OBJECT_SEQUENCE_START_CODE: {
@@ -579,6 +584,18 @@ unsigned MPEG4VideoStreamParser::parseVideoObjectPlane() {
 
   // Compute this frame's presentation time:
   usingSource()->computePresentationTime(fTotalTicksSinceLastGOV);
+
+  return curFrameSize();
+}
+
+unsigned MPEG4VideoStreamParser::parseVisualObjectSequenceEndCode() {
+#ifdef DEBUG
+  fprintf(stderr, "parsing VISUAL_OBJECT_SEQUENCE_END_CODE\n");
+#endif
+  // Note that we've already read the VISUAL_OBJECT_SEQUENCE_END_CODE
+  save4Bytes(VISUAL_OBJECT_SEQUENCE_END_CODE);
+
+  setParseState(PARSING_VISUAL_OBJECT_SEQUENCE);
 
   return curFrameSize();
 }

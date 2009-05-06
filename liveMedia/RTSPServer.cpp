@@ -207,12 +207,17 @@ RTSPServer::RTSPClientSession::~RTSPClientSession() {
 
   ::_close(fClientSocket);
 
+  reclaimStreamStates();
+}
+
+void RTSPServer::RTSPClientSession::reclaimStreamStates() {
   for (unsigned i = 0; i < fNumStreamStates; ++i) {
     if (fStreamStates[i].subsession != NULL) {
       fStreamStates[i].subsession->deleteStream(fStreamStates[i].streamToken);
     }
   }
-  delete[] fStreamStates;
+  delete[] fStreamStates; fStreamStates = NULL;
+  fNumStreamStates = 0;
 }
 
 void RTSPServer::RTSPClientSession
@@ -238,25 +243,29 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
   // Parse the request string into command name and 'CSeq',
   // then handle the command:
   char cmdName[PARAM_STRING_MAX];
+  char urlPreSuffix[PARAM_STRING_MAX];
   char urlSuffix[PARAM_STRING_MAX];
   char cseq[PARAM_STRING_MAX];
   if (!parseRequestString((char*)fBuffer, bytesRead,
 			  cmdName, sizeof cmdName,
+			  urlPreSuffix, sizeof urlPreSuffix,
 			  urlSuffix, sizeof urlSuffix,
 			  cseq, sizeof cseq)) {
 #ifdef DEBUG
     fprintf(stderr, "parseRequestString() failed!\n");
 #endif
     handleCmd_bad(cseq);
-  } else if (strcmp(cmdName, "OPTIONS") == 0) {
+  } else
+if (strcmp(cmdName, "OPTIONS") == 0) {
     handleCmd_OPTIONS(cseq);
   } else if (strcmp(cmdName, "DESCRIBE") == 0) {
     handleCmd_DESCRIBE(cseq, urlSuffix);
-  } else if (strcmp(cmdName, "SETUP") == 0
-	     || strcmp(cmdName, "TEARDOWN") == 0
+  } else if (strcmp(cmdName, "SETUP") == 0) {
+    handleCmd_SETUP(cseq, urlPreSuffix, urlSuffix, (char const*)fBuffer);
+  } else if (strcmp(cmdName, "TEARDOWN") == 0
 	     || strcmp(cmdName, "PLAY") == 0
 	     || strcmp(cmdName, "PAUSE") == 0) {
-    handleCmd_subsession(cmdName, urlSuffix, cseq, (char const*)fBuffer);
+    handleCmd_withinSession(cmdName, urlPreSuffix, urlSuffix, cseq);
   } else {
     handleCmd_notSupported(cseq);
   }
@@ -287,6 +296,11 @@ void RTSPServer::RTSPClientSession::handleCmd_notSupported(char const* cseq) {
   fSessionIsActive = False; // triggers deletion of ourself after responding
 }
 
+void RTSPServer::RTSPClientSession::handleCmd_notFound(char const* cseq) {
+  sprintf((char*)fBuffer, "RTSP/1.0 404 Stream Not Found\r\nCSeq: %s\r\n\r\n", cseq);
+  fSessionIsActive = False; // triggers deletion of ourself after responding
+}
+
 void RTSPServer::RTSPClientSession::handleCmd_OPTIONS(char const* cseq) {
   sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nPublic: %s\r\n\r\n",
 	  cseq, allowedCommandNames);
@@ -299,34 +313,20 @@ void RTSPServer::RTSPClientSession
 
   // Begin by looking up the "ServerMediaSession" object for the
   // specified "urlSuffix":
-  fOurServerMediaSession = (ServerMediaSession*)
-    (fOurServer.fServerMediaSessions->Lookup(urlSuffix));
-  if (fOurServerMediaSession == NULL) {
-    sprintf((char*)fBuffer, "RTSP/1.0 404 Stream Not Found\r\nCSeq: %s\r\n\r\n", cseq);
+  ServerMediaSession* session
+    = (ServerMediaSession*)(fOurServer.fServerMediaSessions->Lookup(urlSuffix));
+  if (session == NULL) {
+    handleCmd_notFound(cseq);
     return;
   }
 
   // Then, assemble a SDP description for this session:
-  char* sdpDescription
-    = fOurServerMediaSession->generateSDPDescription();
+  char* sdpDescription = session->generateSDPDescription();
   if (sdpDescription == NULL) {
     // This usually means that a file name that was specified for a
     // "ServerMediaSubsession" does not exist.
     sprintf((char*)fBuffer, "RTSP/1.0 404 File Not Found, Or In Incorrect Format\r\nCSeq: %s\r\n\r\n", cseq);
     return;
-  }
-
-  // Set up our array of states for this client session's streams:
-  ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
-  for (fNumStreamStates = 0; iter.next() != NULL; ++fNumStreamStates) {}
-  delete[] fStreamStates;
-  fStreamStates = new struct streamState[fNumStreamStates];
-  iter.reset();
-  ServerMediaSubsession* subsession;
-  for (unsigned i = 0; i < fNumStreamStates; ++i) {
-    subsession = iter.next();
-    fStreamStates[i].subsession = subsession;
-    fStreamStates[i].streamToken = NULL; // for now; reset by SETUP
   }
 
   unsigned sdpDescriptionSize = strlen(sdpDescription);
@@ -339,28 +339,6 @@ void RTSPServer::RTSPClientSession
   
   sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nContent-Type: application/sdp\r\nContent-Length: %d\r\n\r\n%s",
 	  cseq, sdpDescriptionSize, sdpDescription);
-}
-
-void RTSPServer::RTSPClientSession
-::handleCmd_subsession(char const* cmdName,
-		       char const* urlSuffix, char const* cseq,
-		       char const* fullRequestStr) {
-  // Look up the media subsession whose track id is "urlSuffix":
-  ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
-  ServerMediaSubsession* subsession;
-  while ((subsession = iter.next()) != NULL) {
-    if (strcmp(subsession->trackId(), urlSuffix) == 0) break; // success
-  }
-
-  if (strcmp(cmdName, "SETUP") == 0) {
-    handleCmd_SETUP(subsession, cseq, fullRequestStr);
-  } else if (strcmp(cmdName, "TEARDOWN") == 0) {
-    handleCmd_TEARDOWN(subsession, cseq);
-  } else if (strcmp(cmdName, "PLAY") == 0) {
-    handleCmd_PLAY(subsession, cseq);
-  } else if (strcmp(cmdName, "PAUSE") == 0) {
-    handleCmd_PAUSE(subsession, cseq);
-  }
 }
 
 static void parseTransportHeader(char const* buf,
@@ -382,19 +360,57 @@ static void parseTransportHeader(char const* buf,
 }
 
 void RTSPServer::RTSPClientSession
-::handleCmd_SETUP(ServerMediaSubsession* subsession, char const* cseq,
+::handleCmd_SETUP(char const* cseq,
+		  char const* urlPreSuffix, char const* urlSuffix,
 		  char const* fullRequestStr) {
-  // Figure out which of our streams this is:
+  // "urlPreSuffix" should be the session (stream) name, and
+  // "urlSuffix" should be the subsession (track) name.
+
+  // Check whether we have existing session state, and, if so, whether it's
+  // for the session that's named in "urlPreSuffix".  (Note that we don't
+  // support more than one concurrent session on the same client connection.) #####
+  if (fOurServerMediaSession != NULL
+      && strcmp(urlPreSuffix, fOurServerMediaSession->streamName()) != 0) {
+    fOurServerMediaSession = NULL;
+  }
+  if (fOurServerMediaSession == NULL) {
+    // Set up this session's state.
+
+    // Look up the "ServerMediaSession" object for the specified "urlPreSuffix":
+    fOurServerMediaSession = (ServerMediaSession*)
+      (fOurServer.fServerMediaSessions->Lookup(urlPreSuffix));
+    if (fOurServerMediaSession == NULL) {
+      handleCmd_notFound(cseq);
+      return;
+    }
+
+    // Set up our array of states for this session's subsessions (tracks):
+    reclaimStreamStates();
+    ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
+    for (fNumStreamStates = 0; iter.next() != NULL; ++fNumStreamStates) {}
+    fStreamStates = new struct streamState[fNumStreamStates];
+    iter.reset();
+    ServerMediaSubsession* subsession;
+    for (unsigned i = 0; i < fNumStreamStates; ++i) {
+      subsession = iter.next();
+      fStreamStates[i].subsession = subsession;
+      fStreamStates[i].streamToken = NULL; // for now; reset by SETUP later
+    }
+  }
+
+  // Look up information for the subsession (track) named "urlSuffix":
+  ServerMediaSubsession* subsession;
   unsigned streamNum;
   for (streamNum = 0; streamNum < fNumStreamStates; ++streamNum) {
-    if (fStreamStates[streamNum].subsession == subsession) break;
+    subsession = fStreamStates[streamNum].subsession;
+    if (subsession != NULL && strcmp(urlSuffix, subsession->trackId()) == 0) break;
   }
-  if (subsession == NULL || streamNum >= fNumStreamStates) {
+  if (streamNum >= fNumStreamStates) {
     // The specified track id doesn't exist, so this request fails:
-    sprintf((char*)fBuffer, "RTSP/1.0 404 Not Found\r\nCSeq: %s\r\n\r\n",
-	    cseq);
+    handleCmd_notFound(cseq);
     return;
   }
+  // ASSERT: subsession != NULL
 
   // Look for a "Transport:" header in the request string,
   // to extract client RTP and RTCP ports, if present:
@@ -437,9 +453,63 @@ void RTSPServer::RTSPClientSession
 }
 
 void RTSPServer::RTSPClientSession
+::handleCmd_withinSession(char const* cmdName,
+			  char const* urlPreSuffix, char const* urlSuffix,
+			  char const* cseq) {
+  // This will either be:
+  // - a non-aggregated operation, if "urlPreSuffix" is the session (stream) name and
+  //   "urlSuffix" is the subsession (track) name, or
+  // - a aggregated operation, if "urlSuffix" is the session (stream) name.
+  // First, figure out which of these it is:
+  if (fOurServerMediaSession == NULL) { // There wasn't a previous SETUP!
+    handleCmd_notSupported(cseq);
+    return;
+  }
+  ServerMediaSubsession* subsession;
+  if (strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0) {
+    // Non-aggregated operation.
+    // Look up the media subsession whose track id is "urlSuffix":
+    ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
+    while ((subsession = iter.next()) != NULL) {
+      if (strcmp(subsession->trackId(), urlSuffix) == 0) break; // success
+    }
+    if (subsession == NULL) { // no such track!
+      handleCmd_notFound(cseq);
+      return;
+    }
+  } else if (strcmp(fOurServerMediaSession->streamName(), urlSuffix) == 0) {
+    // Aggregated operation
+    subsession = NULL;
+  } else { // the request doesn't match a known stream and/or track at all!
+      handleCmd_notFound(cseq);
+      return;
+  }
+
+  if (strcmp(cmdName, "TEARDOWN") == 0) {
+    handleCmd_TEARDOWN(subsession, cseq);
+  } else if (strcmp(cmdName, "PLAY") == 0) {
+    handleCmd_PLAY(subsession, cseq);
+  } else if (strcmp(cmdName, "PAUSE") == 0) {
+    handleCmd_PAUSE(subsession, cseq);
+  }
+}
+
+void RTSPServer::RTSPClientSession
+  ::handleCmd_TEARDOWN(ServerMediaSubsession* subsession, char const* cseq) {
+  for (unsigned i = 0; i < fNumStreamStates; ++i) {
+    if (subsession == NULL /* means: aggregated operation */
+	|| subsession == fStreamStates[i].subsession) {
+      fStreamStates[i].subsession->endStream(fStreamStates[i].streamToken);
+    }
+  }
+  sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\n\r\n", cseq);
+  fSessionIsActive = False; // triggers deletion of ourself after responding
+}
+
+void RTSPServer::RTSPClientSession
   ::handleCmd_PLAY(ServerMediaSubsession* subsession, char const* cseq) {
   for (unsigned i = 0; i < fNumStreamStates; ++i) {
-    if (subsession == 0 /* means: aggregate operation */
+    if (subsession == NULL /* means: aggregated operation */
 	|| subsession == fStreamStates[i].subsession) {
       fStreamStates[i].subsession->startStream(fStreamStates[i].streamToken);
     }
@@ -451,7 +521,7 @@ void RTSPServer::RTSPClientSession
 void RTSPServer::RTSPClientSession
   ::handleCmd_PAUSE(ServerMediaSubsession* subsession, char const* cseq) {
   for (unsigned i = 0; i < fNumStreamStates; ++i) {
-    if (subsession == 0 /* means: aggregate operation */
+    if (subsession == NULL /* means: aggregated operation */
 	|| subsession == fStreamStates[i].subsession) {
       fStreamStates[i].subsession->pauseStream(fStreamStates[i].streamToken);
     }
@@ -460,25 +530,14 @@ void RTSPServer::RTSPClientSession
 	  cseq, fOurSessionId);
 }
 
-void RTSPServer::RTSPClientSession
-  ::handleCmd_TEARDOWN(ServerMediaSubsession* subsession,
-		       char const* cseq) {
-  for (unsigned i = 0; i < fNumStreamStates; ++i) {
-    if (subsession == 0 /* means: aggregate operation */
-	|| subsession == fStreamStates[i].subsession) {
-      fStreamStates[i].subsession->endStream(fStreamStates[i].streamToken);
-    }
-  }
-  sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\n\r\n", cseq);
-  fSessionIsActive = False; // triggers deletion of ourself after responding
-}
-
 Boolean
 RTSPServer::RTSPClientSession
   ::parseRequestString(char const* reqStr,
 		       unsigned reqStrSize,
 		       char* resultCmdName,
 		       unsigned resultCmdNameMaxSize,
+		       char* resultURLPreSuffix,
+		       unsigned resultURLPreSuffixMaxSize,
 		       char* resultURLSuffix,
 		       unsigned resultURLSuffixMaxSize,
 		       char* resultCSeq,
@@ -508,14 +567,27 @@ RTSPServer::RTSPClientSession
       while (reqStr[k] == ' ') --k; // skip over all spaces
       unsigned k1 = k;
       while (reqStr[k1] != '/' && reqStr[k1] != ' ') --k1;
-      ++k1; // the URL suffix comes from [k1,k]
-      if (k - k1 +2 > resultURLSuffixMaxSize) return False; // no space
+      // the URL suffix comes from [k1+1,k]
 
-      parseSucceeded = True;
-      unsigned n = 0;
-      while (k1 <= k) resultURLSuffix[n++] = reqStr[k1++];
+      // Copy "resultURLSuffix":
+      if (k - k1 + 1 > resultURLSuffixMaxSize) return False; // there's no room
+      unsigned n = 0, k2 = k1+1;
+      while (k2 <= k) resultURLSuffix[n++] = reqStr[k2++];
       resultURLSuffix[n] = '\0';
-      i = k + 7;
+
+      // Also look for the URL 'pre-suffix' before this:
+      unsigned k3 = --k1;
+      while (k3 > 0 && reqStr[k3] != '/' && reqStr[k3] != ' ') --k3;
+      // the URL pre-suffix comes from [k3+1,k1]
+
+      // Copy "resultURLPreSuffix":
+      if (k1 - k3 + 1 > resultURLPreSuffixMaxSize) return False; // there's no room
+      n = 0; k2 = k3+1;
+      while (k2 <= k1) resultURLPreSuffix[n++] = reqStr[k2++];
+      resultURLPreSuffix[n] = '\0';
+
+      i = k + 7; // to go past " RTSP/"
+      parseSucceeded = True;
       break;
     }
   }

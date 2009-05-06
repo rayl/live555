@@ -181,7 +181,7 @@ void play() {
     exit(1);
   }
   ServerMediaSession* sms
-    = ServerMediaSession::createNew(*env, NULL, inputFileName,
+    = ServerMediaSession::createNew(*env, "testStream", inputFileName,
 	   "Session streamed by \"testWAVAudiotreamer\"", True/*SSM*/);
   sms->addSubsession(PassiveServerMediaSubsession::createNew(*sessionState.sink));
   sessionState.rtspServer->addServerMediaSession(sms);
