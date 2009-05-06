@@ -629,5 +629,7 @@ Boolean SegmentQueue::insertDummyBeforeTail(unsigned backpointer) {
   if (!ZeroOutMP3SideInfo(ptr, oldTailSeg.frameSize,
 			  backpointer)) return False;
 
-  return sqAfterGettingCommon(oldTailSeg, oldTailSeg.frameSize);
+  unsigned dummyNumBytesRead
+    = oldTailSeg.descriptorSize + 4/*header size*/ + oldTailSeg.sideInfoSize;
+  return sqAfterGettingCommon(oldTailSeg, dummyNumBytesRead);
 }

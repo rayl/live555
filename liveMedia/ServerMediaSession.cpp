@@ -204,6 +204,7 @@ char* ServerMediaSession::generateSDPDescription() {
     sourceFilterLine = strDup("");
   }
 
+  char* rangeLine = NULL; // for now
   char* sdp = NULL; // for now
 
   do {
@@ -222,7 +223,6 @@ char* ServerMediaSession::generateSDPDescription() {
 
     // Unless subsessions have differing durations, we also have a "a=range:" line:
     float dur = duration();
-    char* rangeLine;
     if (dur == 0.0) {
       rangeLine = strDup("a=range:npt=0-\r\n");
     } else if (dur > 0.0) {
@@ -283,7 +283,7 @@ char* ServerMediaSession::generateSDPDescription() {
     }
   } while (0);
 
-  delete[] sourceFilterLine; delete[] ourIPAddressStr;
+  delete[] rangeLine; delete[] sourceFilterLine; delete[] ourIPAddressStr;
   return sdp;
 }
 

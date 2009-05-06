@@ -108,7 +108,7 @@ void usage() {
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "")
-       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] [-B <input-socket-buffer-size>] [-m] <url> (or " << progName << " -o [-V] <url>)\n";
+       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] [-B <input-socket-buffer-size>] [-I <input-interface-ip-address>] [-m] <url> (or " << progName << " -o [-V] <url>)\n";
   //##### Add "-R <dest-rtsp-url>" #####
   shutdown();
 }
@@ -169,6 +169,17 @@ int main(int argc, char** argv) {
 
     case 'i': { // output an AVI file (to stdout)
       outputAVIFile = True;
+      break;
+    }
+
+    case 'I': { // specify input interface... 
+      NetAddressList addresses(argv[2]);
+      if (addresses.numAddresses() == 0) {
+	*env << "Failed to find network address for \"" << argv[2] << "\"";
+	break;
+      }
+      ReceivingInterfaceAddr = *(unsigned*)(addresses.firstAddress()->data());
+      ++argv; --argc;
       break;
     }
 

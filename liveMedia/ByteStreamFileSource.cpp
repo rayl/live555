@@ -43,6 +43,14 @@ ByteStreamFileSource::createNew(UsageEnvironment& env, char const* fileName,
   return newSource;
 }
 
+void ByteStreamFileSource::seekToByteAbsolute(unsigned byteNumber) {
+  fseek(fFid, byteNumber, SEEK_SET);
+}
+
+void ByteStreamFileSource::seekToByteRelative(int offset) {
+  fseek(fFid, offset, SEEK_CUR);
+}
+
 ByteStreamFileSource::ByteStreamFileSource(UsageEnvironment& env, FILE* fid,
 					   unsigned preferredFrameSize,
 					   unsigned playTimePerFrame)

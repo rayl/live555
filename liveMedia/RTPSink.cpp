@@ -67,6 +67,7 @@ RTPSink::RTPSink(UsageEnvironment& env,
 }
 
 RTPSink::~RTPSink() {
+  delete fTransmissionStatsDB;
   delete[] (char*)fRTPPayloadFormatName;
 }
 
@@ -189,9 +190,12 @@ void RTPTransmissionStatsDB
 }
 
 void RTPTransmissionStatsDB::removeRecord(u_int32_t SSRC) {
-  long SSRC_long = (long)SSRC;
-  if (fTable->Remove((char const*)SSRC_long)) {
+  RTPTransmissionStats* stats = lookup(SSRC);
+  if (stats != NULL) {
+    long SSRC_long = (long)SSRC;
+    fTable->Remove((char const*)SSRC_long);
     --fNumReceivers;
+    delete stats;
   }
 }
 

@@ -96,7 +96,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
   // Note: Windoze requires binding, even if the port number is 0
 #if defined(__WIN32__) || defined(_WIN32)
 #else
-  if (port.num() != 0) {
+  if (port.num() != 0 || ReceivingInterfaceAddr != INADDR_ANY) {
 #endif
     struct sockaddr_in name;
     name.sin_family = AF_INET;
@@ -173,7 +173,7 @@ int setupStreamSocket(UsageEnvironment& env,
   // Note: Windoze requires binding, even if the port number is 0
 #if defined(__WIN32__) || defined(_WIN32)
 #else
-  if (port.num() != 0) {
+  if (port.num() != 0 || ReceivingInterfaceAddr != INADDR_ANY) {
 #endif
     struct sockaddr_in name;
     name.sin_family = AF_INET;

@@ -142,8 +142,12 @@ void RTPReceptionStatsDB
 }
 
 void RTPReceptionStatsDB::removeRecord(u_int32_t SSRC) {
-  long SSRC_long = (long)SSRC;
-  fTable->Remove((char const*)SSRC_long);
+  RTPReceptionStats* stats = lookup(SSRC);
+  if (stats != NULL) {
+    long SSRC_long = (long)SSRC;
+    fTable->Remove((char const*)SSRC_long);
+    delete stats;
+  }
 }
 
 RTPReceptionStatsDB::Iterator

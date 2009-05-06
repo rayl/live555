@@ -917,7 +917,8 @@ void RTSPServer::RTSPClientSession
 	   rangeHeader,
 	   fOurSessionId,
 	   rtpInfo);
-  delete[] rtpInfo; delete[] rangeHeader; delete[] scaleHeader;
+  delete[] rtpInfo; delete[] rangeHeader;
+  delete[] scaleHeader; delete[] rtspURL;
 }
 
 void RTSPServer::RTSPClientSession

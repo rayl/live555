@@ -88,6 +88,7 @@ void JPEGVideoRTPSink
 
     setSpecialHeaderBytes(quantizationHeader, quantizationHeaderSize,
 			  sizeof mainJPEGHeader /* start position */);
+    delete[] quantizationHeader;
   }
 
   if (numRemainingBytes == 0) {

@@ -110,10 +110,11 @@ MPEG4VideoStreamFramer::MPEG4VideoStreamFramer(UsageEnvironment& env,
 }
 
 MPEG4VideoStreamFramer::~MPEG4VideoStreamFramer() {
+  delete[] fConfigBytes; delete[] fNewConfigBytes;
 }
 
 void MPEG4VideoStreamFramer::startNewConfig() {
-  delete fNewConfigBytes; fNewConfigBytes = NULL;
+  delete[] fNewConfigBytes; fNewConfigBytes = NULL;
   fNumNewConfigBytes = 0;
 }
 
@@ -127,7 +128,7 @@ void MPEG4VideoStreamFramer
   memmove(configNew, fNewConfigBytes, fNumNewConfigBytes);
   memmove(&configNew[fNumNewConfigBytes], newConfigBytes, numNewBytes);
   
-  delete fNewConfigBytes; fNewConfigBytes = configNew;
+  delete[] fNewConfigBytes; fNewConfigBytes = configNew;
   fNumNewConfigBytes += numNewBytes;
 }
 

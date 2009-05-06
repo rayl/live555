@@ -62,4 +62,9 @@ private:
   u_int8_t fLastClientSessionId;
 };
 
+
+// Returns the playing time (i.e., duration), in seconds, of the named
+// MPEG-1 or 2 Program Stream file, or 0.0 if unknown:
+float MPEG1or2ProgramStreamFileDuration(UsageEnvironment& env, char const* fileName);
+
 #endif

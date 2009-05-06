@@ -79,7 +79,7 @@ PassiveServerMediaSubsession::sdpLines(ServerMediaSession& parentSession) {
 	    rangeLine, // a=range:... (if present)
 	    auxSDPLine, // optional extra SDP line
 	    trackId()); // a=control:<track-id>
-    delete[] ipAddressStr; delete[] rtpmapLine;
+    delete[] ipAddressStr; delete[] (char*)rangeLine; delete[] rtpmapLine;
     
     fSDPLines = strDup(sdpLines);
     delete[] sdpLines;

@@ -35,7 +35,7 @@ MPEG1or2FileServerDemux
     fReuseFirstSource(reuseFirstSource),
     fSession0Demux(NULL), fLastCreatedDemux(NULL), fLastClientSessionId(~0) {
   fFileName = strDup(fileName);
-  fFileDuration = 0.0;//#####@@@@@
+  fFileDuration = MPEG1or2ProgramStreamFileDuration(env, fileName);
 }
 
 MPEG1or2FileServerDemux::~MPEG1or2FileServerDemux() {
@@ -104,3 +104,61 @@ MPEG1or2FileServerDemux::newElementaryStream(unsigned clientSessionId,
 
   return demuxToUse->newElementaryStream(streamIdTag);
 }
+
+
+static Boolean getMPEG1or2TimeCode(FramedSource* dataSource,
+				   Boolean returnFirstSeenCode,
+				   float& timeCode); // forward
+
+float MPEG1or2ProgramStreamFileDuration(UsageEnvironment& env, char const* fileName) {
+  //  fprintf(stderr, "#####@@@@@MPEG1or2ProgramStreamFileDuration(%s)\n", fileName);
+  FramedSource* dataSource = NULL;
+  float duration = 0.0; // until we learn otherwise
+
+  do {
+    // Open the input file as a 'byte-stream file source':
+    ByteStreamFileSource* fileSource = ByteStreamFileSource::createNew(env, fileName);
+    if (fileSource == NULL) break;
+    dataSource = fileSource;
+
+    unsigned fileSize = fileSource->fileSize();
+    if (fileSize == 0) break;
+
+    // Create a MPEG demultiplexor that reads from that source.
+    MPEG1or2Demux* baseDemux = MPEG1or2Demux::createNew(env, dataSource);
+    if (baseDemux == NULL) break;
+
+    // Create, from this, a source that returns raw PES packets:
+    dataSource = baseDemux->newRawPESStream();
+
+    // Read the first time code from the file:
+    float firstTimeCode;
+    if (!getMPEG1or2TimeCode(dataSource, True, firstTimeCode)) break;
+
+    
+    // Then, read the last time code from the file.
+    // (Before doing this, seek towards the end of the file, for efficiency.)
+    unsigned const startByteFromEnd = 100000;
+    unsigned newFilePosition
+      = fileSize < startByteFromEnd ? 0 : fileSize - startByteFromEnd;
+    if (newFilePosition > 0) fileSource->seekToByteAbsolute(newFilePosition);
+
+    float lastTimeCode;
+    if (!getMPEG1or2TimeCode(dataSource, False, lastTimeCode)) break;
+
+    // Take the difference between these time codes as being the file duration:
+    float timeCodeDiff = lastTimeCode - firstTimeCode;
+    if (timeCodeDiff < 0) break;
+    duration = timeCodeDiff;
+  } while (0);
+
+  Medium::close(dataSource);
+  return duration;
+}
+
+static Boolean getMPEG1or2TimeCode(FramedSource* /*dataSource*/,
+				   Boolean /*returnFirstSeenCode*/,
+				   float& timeCode) {
+  timeCode = 0.0; return True;//#####@@@@@
+}
+

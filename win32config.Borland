@@ -1,10 +1,16 @@
 # Comment out the following line to produce Makefiles that generate debuggable code:
 NODEBUG=1
 
-# The following definition ensures that we link with "wsock32.lib"
-# rather than "ws2_32.lib".  For some reason, the standard Berkeley
-# socket calls for multicast don't work properly with "ws2_32.lib".
-TARGETOS = WIN95
+# The following definition ensures that we are properly matching
+# the WinSock2 library file with the correct header files.
+# (will link with "ws2_32.lib" and include "winsock2.h" & "Ws2tcpip.h")
+TARGETOS = WINNT
+
+# If for some reason you wish to use WinSock1 instead, uncomment the
+# following two definitions.
+# (will link with "wsock32.lib" and include "winsock.h")
+#TARGETOS = WIN95
+#APPVER = 4.0
 
 #!include    <ntwin32.mak>
 
