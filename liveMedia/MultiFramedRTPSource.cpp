@@ -42,6 +42,7 @@ public:
       fSavedPacketFree = True;
     }
   }
+  Boolean isEmpty() const { return fHeadPacket == NULL; }
 
   void setThresholdTime(unsigned uSeconds) { fThresholdTime = uSeconds; }
 
@@ -186,10 +187,17 @@ void MultiFramedRTPSource::doGetNextFrame1() {
 		<< fSavedMaxSize << ").  "
 		<< fNumTruncatedBytes << " bytes of trailing data will be dropped!\n";
       }
-      // Call our own 'after getting' function.  Because we're preceded
-      // by a network read, we can call this directly, without risking
-      // infinite recursion.
-      afterGetting(this);
+      // Call our own 'after getting' function, so that the downstream object can consume the data:
+      if (fReorderingBuffer->isEmpty()) {
+	// Common case optimization: There are no more queued incoming packets, so this code will not get
+	// executed again without having first returned to the event loop.  Call our 'after getting' function
+	// directly, because there's no risk of a long chain of recursion (and thus stack overflow):
+	afterGetting(this);
+      } else {
+	// Special case: Call our 'after getting' function via the event loop.
+	nextTask() = envir().taskScheduler().scheduleDelayedTask(0,
+								 (TaskFunc*)FramedSource::afterGetting, this);
+      }
     } else {
       // This packet contained fragmented data, and does not complete
       // the data that the client wants.  Keep getting data:

@@ -985,7 +985,8 @@ void RTSPServer::RTSPClientSession
 					       fStreamStates[i].streamToken,
 					       (TaskFunc*)noteClientLiveness,
 					       this,
-					       rtpSeqNum, rtpTimestamp);
+					       rtpSeqNum,
+					       rtpTimestamp);
       const char *urlSuffix = fStreamStates[i].subsession->trackId();
       char* prevRTPInfo = rtpInfo;
       unsigned rtpInfoSize = rtpInfoFmtSize
