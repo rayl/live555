@@ -317,6 +317,7 @@ BufferedPacket::~BufferedPacket() {
 void BufferedPacket::reset() {
   fHead = fTail = 0;
   fUseCount = 0;
+  fIsFirstPacket = False; // by default
 }
 
 // The following function has been deprecated:
@@ -478,6 +479,7 @@ Boolean ReorderingPacketBuffer::storePacket(BufferedPacket* bPacket) {
 
   if (!fHaveSeenFirstPacket) {
     fNextExpectedSeqNo = rtpSeqNo; // initialization
+    bPacket->isFirstPacket() = True;
     fHaveSeenFirstPacket = True;
   }
 
@@ -535,7 +537,8 @@ BufferedPacket* ReorderingPacketBuffer
   // of the queue:
   // ASSERT: fHeadPacket->rtpSeqNo() >= fNextExpectedSeqNo
   if (fHeadPacket->rtpSeqNo() == fNextExpectedSeqNo) {
-    packetLossPreceded = False;
+    packetLossPreceded = fHeadPacket->isFirstPacket();
+        // (The very first packet is treated as if there was packet loss beforehand.)
     return fHeadPacket;
   }
 

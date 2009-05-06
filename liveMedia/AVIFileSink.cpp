@@ -98,15 +98,17 @@ private:
 
 AVIFileSink::AVIFileSink(UsageEnvironment& env,
 			 MediaSession& inputSession,
-			 FILE* outFid,
+			 char const* outputFileName,
 			 unsigned bufferSize,
 			 unsigned short movieWidth, unsigned short movieHeight,
 			 unsigned movieFPS, Boolean packetLossCompensate)
-  : Medium(env), fInputSession(inputSession), fOutFid(outFid),
+  : Medium(env), fInputSession(inputSession),
     fBufferSize(bufferSize), fPacketLossCompensate(packetLossCompensate),
     fAreCurrentlyBeingPlayed(False), fNumSubsessions(0), fNumBytesWritten(0),
     fHaveCompletedOutputFile(False),
     fMovieWidth(movieWidth), fMovieHeight(movieHeight), fMovieFPS(movieFPS) {
+  fOutFid = OpenOutputFile(env, outputFileName);
+
   // Set up I/O state for each input subsession:
   MediaSubsessionIterator iter(fInputSession);
   MediaSubsession* subsession;
@@ -156,6 +158,9 @@ AVIFileSink::~AVIFileSink() {
 
     delete ioState;
   }
+
+  // Finally, close our output file:
+  CloseOutputFile(fOutFid);
 }
 
 AVIFileSink* AVIFileSink
@@ -164,16 +169,9 @@ AVIFileSink* AVIFileSink
 	    unsigned bufferSize,
 	    unsigned short movieWidth, unsigned short movieHeight,
 	    unsigned movieFPS, Boolean packetLossCompensate) {
-  do {
-    FILE* fid = OpenOutputFile(env, outputFileName);
-    if (fid == NULL) break;
-
-    return new AVIFileSink(env, inputSession, fid, bufferSize,
-			   movieWidth, movieHeight, movieFPS,
-			   packetLossCompensate);
-  } while (0);
-
-  return NULL;
+  return new AVIFileSink(env, inputSession, outputFileName, bufferSize,
+			 movieWidth, movieHeight, movieFPS,
+			 packetLossCompensate);
 }
 
 Boolean AVIFileSink::startPlaying(afterPlayingFunc* afterFunc,

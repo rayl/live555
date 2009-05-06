@@ -205,7 +205,7 @@ private:
 
 QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
 				     MediaSession& inputSession,
-				     FILE* outFid,
+				     char const* outputFileName,
 				     unsigned bufferSize,
 				     unsigned short movieWidth,
 				     unsigned short movieHeight,
@@ -214,7 +214,7 @@ QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
 				     Boolean syncStreams,
 				     Boolean generateHintTracks,
 				     Boolean generateMP4Format)
-  : Medium(env), fInputSession(inputSession), fOutFid(outFid),
+  : Medium(env), fInputSession(inputSession),
     fBufferSize(bufferSize), fPacketLossCompensate(packetLossCompensate),
     fSyncStreams(syncStreams), fGenerateMP4Format(generateMP4Format),
     fAreCurrentlyBeingPlayed(False),
@@ -223,6 +223,7 @@ QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
     fHaveCompletedOutputFile(False),
     fMovieWidth(movieWidth), fMovieHeight(movieHeight),
     fMovieFPS(movieFPS), fMaxTrackDurationM(0) {
+  fOutFid = OpenOutputFile(env, outputFileName);
   fNewestSyncTime.tv_sec = fNewestSyncTime.tv_usec = 0;
   fFirstDataTime.tv_sec = fFirstDataTime.tv_usec = (unsigned)(~0);
 
@@ -307,6 +308,9 @@ QuickTimeFileSink::~QuickTimeFileSink() {
     delete ioState->fHintTrackForUs; // if any
     delete ioState;
   }
+
+  // Finally, close our output file:
+  CloseOutputFile(fOutFid);
 }
 
 QuickTimeFileSink*
@@ -321,17 +325,10 @@ QuickTimeFileSink::createNew(UsageEnvironment& env,
 			     Boolean syncStreams,
 			     Boolean generateHintTracks,
 			     Boolean generateMP4Format) {
-  do {
-    FILE* fid = OpenOutputFile(env, outputFileName);
-    if (fid == NULL) break;
-
-    return new QuickTimeFileSink(env, inputSession, fid, bufferSize,
-				 movieWidth, movieHeight, movieFPS,
-				 packetLossCompensate, syncStreams,
-				 generateHintTracks, generateMP4Format);
-  } while (0);
-
-  return NULL;
+  return new QuickTimeFileSink(env, inputSession, outputFileName, bufferSize,
+			       movieWidth, movieHeight, movieFPS,
+			       packetLossCompensate, syncStreams,
+			       generateHintTracks, generateMP4Format);
 }
 
 Boolean QuickTimeFileSink::startPlaying(afterPlayingFunc* afterFunc,

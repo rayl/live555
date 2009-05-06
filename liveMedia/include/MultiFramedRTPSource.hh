@@ -112,6 +112,7 @@ public:
   unsigned char* data() const { return &fBuf[fHead]; }
   unsigned dataSize() const { return fTail-fHead; }
   Boolean rtpMarkerBit() const { return fRTPMarkerBit; }
+  Boolean& isFirstPacket() { return fIsFirstPacket; }
 
 protected:
   virtual void reset();
@@ -137,6 +138,7 @@ private:
   struct timeval fPresentationTime; // corresponding to "fRTPTimestamp"
   Boolean fHasBeenSyncedUsingRTCP;
   Boolean fRTPMarkerBit;
+  Boolean fIsFirstPacket;
   struct timeval fTimeReceived;
 };
 

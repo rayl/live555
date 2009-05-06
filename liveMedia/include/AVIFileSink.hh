@@ -44,7 +44,7 @@ public:
 
 private:
   AVIFileSink(UsageEnvironment& env, MediaSession& inputSession,
-	      FILE* outFid, unsigned bufferSize,
+	      char const* outputFileName, unsigned bufferSize,
 	      unsigned short movieWidth, unsigned short movieHeight,
 	      unsigned movieFPS, Boolean packetLossCompensate);
       // called only by createNew()
