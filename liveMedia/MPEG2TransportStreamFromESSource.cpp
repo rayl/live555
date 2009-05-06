@@ -198,10 +198,8 @@ Boolean InputESSourceRecord::deliverBufferToClient() {
   // Fill in the PES_packet_length field that we left unset before:
   unsigned PES_packet_length = fInputBufferBytesAvailable - 6;
   if (PES_packet_length > 0xFFFFFFFF) {
-    fParent.envir() << "MPEG2TransportStreamFromESSource: Delivered input data size ("
-		    << fInputBufferBytesAvailable
-		    << ") is too big for a PES packet (maximum: "
-		    << (0xFFFFFFFF+6) << ")\n";
+    // Set the PES_packet_length field to 0.  This indicates an unbounded length (see ISO 13818-1, 2.4.3.7)
+    PES_packet_length = 0;
   }
   fInputBuffer[4] = PES_packet_length>>8;
   fInputBuffer[5] = PES_packet_length;

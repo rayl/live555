@@ -199,6 +199,8 @@ WAVAudioFileSource::~WAVAudioFileSource() {
   CloseInputFile(fFid);
 }
 
+// Note: We should change the following to use asynchronous file reading, #####
+// as we now do with ByteStreamFileSource. #####
 void WAVAudioFileSource::doGetNextFrame() {
   if (feof(fFid) || ferror(fFid)) {
     handleClosure(this);

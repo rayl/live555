@@ -27,7 +27,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "InputFile.hh"
 #include "GroupsockHelper.hh"
 
-#define READ_FROM_FILES_SYNCHRONOUSLY 1 //TEMP TO FIX APPARENT BUG #####@@@@@
 ////////// ByteStreamFileSource //////////
 
 ByteStreamFileSource*
@@ -147,7 +146,14 @@ void ByteStreamFileSource::doReadFromFile() {
     gettimeofday(&fPresentationTime, NULL);
   }
 
-  // Switch to another task, and inform the reader that he has data:
+  // Inform the reader that he has data:
+#ifdef READ_FROM_FILES_SYNCHRONOUSLY
+  // To avoid possible infinite recursion, we need to return to the event loop to do this:
   nextTask() = envir().taskScheduler().scheduleDelayedTask(0,
 				(TaskFunc*)FramedSource::afterGetting, this);
+#else
+  // Because the file read was done from the event loop, we can call the
+  // 'after getting' function directly, without risk of infinite recursion:
+  FramedSource::afterGetting(this);
+#endif
 }

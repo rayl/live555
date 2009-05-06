@@ -111,6 +111,8 @@ static unsigned short frameSizeWideband[16] = {
   FT_INVALID, FT_INVALID, 0, 0
 };
 
+// Note: We should change the following to use asynchronous file reading, #####
+// as we now do with ByteStreamFileSource. #####
 void AMRAudioFileSource::doGetNextFrame() {
   if (feof(fFid) || ferror(fFid)) {
     handleClosure(this);

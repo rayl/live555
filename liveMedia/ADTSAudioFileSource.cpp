@@ -108,6 +108,8 @@ ADTSAudioFileSource::~ADTSAudioFileSource() {
   CloseInputFile(fFid);
 }
 
+// Note: We should change the following to use asynchronous file reading, #####
+// as we now do with ByteStreamFileSource. #####
 void ADTSAudioFileSource::doGetNextFrame() {
   // Begin by reading the 7-byte fixed_variable headers:
   unsigned char headers[7];

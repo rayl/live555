@@ -36,7 +36,6 @@ DeviceSource::~DeviceSource() {
 }
 
 void DeviceSource::doGetNextFrame() {
-
   // Arrange here for our "deliverFrame" member function to be called
   // when the next frame of data becomes available from the device.
   // This must be done in a non-blocking fashion - i.e., so that we
@@ -79,9 +78,6 @@ void DeviceSource::deliverFrame() {
 
   // Deliver the data here:
 
-  // After delivering the data, switch to another task, and inform
-  // the reader that he has data:
-  nextTask()
-    = envir().taskScheduler().scheduleDelayedTask(0, (TaskFunc*)afterGetting,
-						  this);
+  // After delivering the data, inform the reader that it is now available:
+  FramedSource::afterGetting(this);
 }
