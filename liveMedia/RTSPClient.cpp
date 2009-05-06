@@ -1385,7 +1385,7 @@ Boolean RTSPClient::setMediaSessionParameter(MediaSession& /*session*/,
   return False;
 }
 
-Boolean RTSPClient::teardownMediaSession(MediaSession& /*session*/) {
+Boolean RTSPClient::teardownMediaSession(MediaSession& session) {
   char* cmd = NULL;
   do {
     // First, make sure that we have a RTSP session in progreee
@@ -1432,6 +1432,14 @@ Boolean RTSPClient::teardownMediaSession(MediaSession& /*session*/) {
       char* firstLine; char* nextLineStart;
       if (!getResponse("TEARDOWN", bytesRead, responseCode, firstLine, nextLineStart)) break;
       
+      // Run through each subsession, deleting its "sessionId":
+      MediaSubsessionIterator iter(session);
+      MediaSubsession* subsession;
+      while ((subsession = iter.next()) != NULL) {
+	delete[] (char*)subsession->sessionId;
+	subsession->sessionId = NULL;
+      }
+
       delete[] fLastSessionId; fLastSessionId = NULL;
       // we're done with this session
     }
@@ -2078,7 +2086,7 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix) {
       + strlen(urlSuffix)
       + fUserAgentHeaderStrSize
       + strlen(sessionCookie);
-    cmd = new char[cmdSize];
+    delete[] cmd; cmd = new char[cmdSize];
     sprintf(cmd, postCmdFmt,
 	    urlSuffix,
 	    fUserAgentHeaderStr,

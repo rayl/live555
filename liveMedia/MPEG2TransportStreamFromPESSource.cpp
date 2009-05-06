@@ -36,6 +36,7 @@ MPEG2TransportStreamFromPESSource
 }
 
 MPEG2TransportStreamFromPESSource::~MPEG2TransportStreamFromPESSource() {
+  Medium::close(fInputSource);
   delete[] fInputBuffer;
 }
 
@@ -43,7 +44,8 @@ void MPEG2TransportStreamFromPESSource::doStopGettingFrames() {
   fInputSource->stopGettingFrames();
 }
 
-void MPEG2TransportStreamFromPESSource::awaitNewBuffer() {
+void MPEG2TransportStreamFromPESSource
+::awaitNewBuffer(unsigned char* /*oldBuffer*/) {
   fInputSource->getNextFrame(fInputBuffer, MAX_PES_PACKET_SIZE,
 			     afterGettingFrame, this,
 			     FramedSource::handleClosure, this);

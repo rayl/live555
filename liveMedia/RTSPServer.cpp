@@ -656,7 +656,7 @@ void RTSPServer::RTSPClientSession
   // Look up information for the specified subsession (track):
   ServerMediaSubsession* subsession = NULL;
   unsigned streamNum;
-  if (trackId != NULL) { // normal case
+  if (trackId != NULL && trackId[0] != '\0') { // normal case
     for (streamNum = 0; streamNum < fNumStreamStates; ++streamNum) {
       subsession = fStreamStates[streamNum].subsession;
       if (subsession != NULL && strcmp(trackId, subsession->trackId()) == 0) break;

@@ -36,7 +36,8 @@ protected:
   MPEG2TransportStreamMultiplexor(UsageEnvironment& env);
   virtual ~MPEG2TransportStreamMultiplexor();
 
-  virtual void awaitNewBuffer() = 0; // implemented by subclasses
+  virtual void awaitNewBuffer(unsigned char* oldBuffer) = 0;
+      // implemented by subclasses
 
   void handleNewBuffer(unsigned char* buffer, unsigned bufferSize,
 		       int mpegVersion, MPEG1or2Demux::SCR scr);

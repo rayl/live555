@@ -154,6 +154,9 @@ void MPEG2TransportStreamFramer::updateTSPacketDurationEstimate(unsigned char* p
     // We're seeing this PID's PCR for the first time:
     pidStatus = new PIDStatus;
     fPIDStatusTable->Add((char*)pid, pidStatus);
+#ifdef DEBUG_PCR
+    fprintf(stderr, "FIRST PCR 0x%08x+%d:%03x == %f, pkt #%lu\n", pcrBaseHigh, pkt[10]>>7, pcrExt, clock, fTSPacketCount);
+#endif
   } else {
     // We've seen this PID's PCR before; update our per-packet duration estimate:
     double durationPerPacket
@@ -167,7 +170,7 @@ void MPEG2TransportStreamFramer::updateTSPacketDurationEstimate(unsigned char* p
 	+ fTSPacketDurationEstimate*(1-NEW_DURATION_WEIGHT);
     }
 #ifdef DEBUG_PCR
-    fprintf(stderr, "PCR 0x%08x+%d == %f => this duration %f, new estimate %f\n", pcrBaseHigh, pkt[10]>>7, clock, durationPerPacket, fTSPacketDurationEstimate);
+    fprintf(stderr, "PCR 0x%08x+%d:%03x == %f, pkt #%lu => this duration %f, new estimate %f\n", pcrBaseHigh, pkt[10]>>7, pcrExt, clock, fTSPacketCount, durationPerPacket, fTSPacketDurationEstimate);
 #endif
   }
 

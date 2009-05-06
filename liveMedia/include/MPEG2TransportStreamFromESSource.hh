@@ -15,29 +15,28 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
-// A filter for converting a stream of MPEG PES packets to a MPEG-2 Transport Stream
+// A filter for converting one or more MPEG Elementary Streams
+// to a MPEG-2 Transport Stream
 // C++ header
 
-#ifndef _MPEG2_TRANSPORT_STREAM_FROM_PES_SOURCE_HH
-#define _MPEG2_TRANSPORT_STREAM_FROM_PES_SOURCE_HH
+#ifndef _MPEG2_TRANSPORT_STREAM_FROM_ES_SOURCE_HH
+#define _MPEG2_TRANSPORT_STREAM_FROM_ES_SOURCE_HH
 
 #ifndef _MPEG2_TRANSPORT_STREAM_MULTIPLEXOR_HH
 #include "MPEG2TransportStreamMultiplexor.hh"
 #endif
-#ifndef _MPEG_1OR2_DEMUXED_ELEMENTARY_STREAM_HH
-#include "MPEG1or2DemuxedElementaryStream.hh"
-#endif
 
-class MPEG2TransportStreamFromPESSource: public MPEG2TransportStreamMultiplexor {
+class MPEG2TransportStreamFromESSource: public MPEG2TransportStreamMultiplexor {
 public:
-  static MPEG2TransportStreamFromPESSource*
-  createNew(UsageEnvironment& env, MPEG1or2DemuxedElementaryStream* inputSource);
+  static MPEG2TransportStreamFromESSource* createNew(UsageEnvironment& env);
+
+  void addNewVideoSource(FramedSource* inputSource, int mpegVersion);
+  void addNewAudioSource(FramedSource* inputSource, int mpegVersion);
 
 protected:
-  MPEG2TransportStreamFromPESSource(UsageEnvironment& env,
-				    MPEG1or2DemuxedElementaryStream* inputSource);
+  MPEG2TransportStreamFromESSource(UsageEnvironment& env);
       // called only by createNew()
-  virtual ~MPEG2TransportStreamFromPESSource();
+  virtual ~MPEG2TransportStreamFromESSource();
 
 private:
   // Redefined virtual functions:
@@ -45,18 +44,14 @@ private:
   virtual void awaitNewBuffer(unsigned char* oldBuffer);
 
 private:
-  static void afterGettingFrame(void* clientData, unsigned frameSize,
-				unsigned numTruncatedBytes,
-				struct timeval presentationTime,
-				unsigned durationInMicroseconds);
-  void afterGettingFrame1(unsigned frameSize,
-			  unsigned numTruncatedBytes,
-			  struct timeval presentationTime,
-			  unsigned durationInMicroseconds);
+  void addNewInputSource(FramedSource* inputSource,
+			 u_int8_t streamId, int mpegVersion);
+  // used to implement addNew*Source() above
 
 private:
-  MPEG1or2DemuxedElementaryStream* fInputSource;
-  unsigned char* fInputBuffer;
+  friend class InputESSourceRecord;
+  class InputESSourceRecord* fInputSources;
+  unsigned fVideoSourceCounter, fAudioSourceCounter;
 };
 
 #endif

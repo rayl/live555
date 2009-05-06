@@ -51,6 +51,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "JPEGVideoSource.hh"
 #include "MPEG1or2VideoRTPSource.hh"
 #include "MPEG2TransportStreamFromPESSource.hh"
+#include "MPEG2TransportStreamFromESSource.hh"
 #include "MPEG2TransportStreamFramer.hh"
 #include "ADTSAudioFileSource.hh"
 #include "H261VideoRTPSource.hh"
