@@ -1,83 +1,3 @@
-/* Some systems (e.g., SunOS) have header files that erroneously declare
- * inet_addr(), inet_ntoa() and gethostbyname() as taking no arguments.
- * This confuses C++.  To overcome this, we use our own routines,
- * implemented in C.
- */
-
-#ifndef _NET_COMMON_H
-#include "NetCommon.h"
-#endif
-
-#include <stdio.h>
-
-unsigned our_inet_addr(cp)
-	char const* cp;
-{
-	return inet_addr(cp);
-}
-
-char *
-our_inet_ntoa(in)
-        struct in_addr in;
-{
-  return inet_ntoa(in);
-}
-
-#if defined(__WIN32__) || defined(_WIN32)
-#ifndef IMN_PIM
-#define WS_VERSION_CHOICE1 0x202/*MAKEWORD(2,2)*/
-#define WS_VERSION_CHOICE2 0x101/*MAKEWORD(1,1)*/
-int initializeWinsockIfNecessary(void) {
-	/* We need to call an initialization routine before
-	 * we can do anything with winsock.  (How fucking lame!):
-	 */
-	static int _haveInitializedWinsock = 0;
-	WSADATA	wsadata;
-
-	if (!_haveInitializedWinsock) {
-		if ((WSAStartup(WS_VERSION_CHOICE1, &wsadata) != 0)
-		    && ((WSAStartup(WS_VERSION_CHOICE2, &wsadata)) != 0)) {
-			return 0; /* error in initialization */
-		}
-	    	if ((wsadata.wVersion != WS_VERSION_CHOICE1)
-	    	    && (wsadata.wVersion != WS_VERSION_CHOICE2)) {
-	        	WSACleanup();
-				return 0; /* desired Winsock version was not available */
-		}
-		_haveInitializedWinsock = 1;
-	}
-
-	return 1;
-}
-#else
-int initializeWinsockIfNecessary(void) { return 1; }
-#endif
-#else
-#define initializeWinsockIfNecessary() 1
-#endif
-
-#ifndef NULL
-#define NULL 0
-#endif
-
-struct hostent* our_gethostbyname(name)
-     char* name;
-{
-	if (!initializeWinsockIfNecessary()) return NULL;
-
-	return (struct hostent*) gethostbyname(name);
-}
-
-
-#ifdef USE_SYSTEM_RANDOM
-#include <stdlib.h>
-long our_random() {
-  return random();
-}
-void our_srandom(unsigned int x) {
-  return srandom(x);
-}
-#else
 /*
  * random.c:
  *
@@ -405,7 +325,7 @@ our_random()
 	}
 	return(i);
 }
-#endif
+
 
 #ifdef USE_OUR_BZERO
 #ifndef __bzero
