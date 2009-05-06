@@ -92,9 +92,6 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
       }
   }
 
-  // Handle any delayed event that may have come due:
-  fDelayQueue.handleAlarm();
-
   // Call the handler function for one readable socket:
   HandlerIterator iter(*fReadHandlers);
   HandlerDescriptor* handler;
@@ -137,6 +134,10 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
     }
     if (handler == NULL) fLastHandledSocketNum = -1;//because we didn't call a handler
   }
+
+  // Also handle any delayed event that may have come due.  (Note that we do this *after* calling a socket
+  // handler, in case the delayed event handler modifies the set of readable socket.)
+  fDelayQueue.handleAlarm();
 }
 
 void BasicTaskScheduler::turnOnBackgroundReadHandling(int socketNum,
