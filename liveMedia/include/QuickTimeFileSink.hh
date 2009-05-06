@@ -64,6 +64,7 @@ private:
   Boolean fPacketLossCompensate;
   Boolean fSyncStreams;
   struct timeval fNewestSyncTime, fFirstDataTime;
+  double fMaxTrackDuration;
   Boolean fAreCurrentlyBeingPlayed;
   afterPlayingFunc* fAfterFunc;
   void* fAfterClientData;

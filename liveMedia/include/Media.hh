@@ -37,6 +37,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Lots of files end up needing the following, so just #include them here:
 #include <stdlib.h>
 #include <string.h>
+#if defined(__WIN32__) || defined(_WIN32)
+#else
+#include <errno.h>
+#endif
 
 #ifndef __BORLANDC__
 #ifndef errno

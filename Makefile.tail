@@ -21,20 +21,20 @@ all:	$(ALL)
 
 
 $(LIVEMEDIA_LIB):
-	cd $(LIVEMEDIA_DIR); make
+	make --directory=$(LIVEMEDIA_DIR)
 $(GROUPSOCK_LIB):
-	cd $(GROUPSOCK_DIR); make
+	make --directory=$(GROUPSOCK_DIR)
 $(USAGE_ENVIRONMENT_LIB):
-	cd $(USAGE_ENVIRONMENT_DIR); make
+	make --directory=$(USAGE_ENVIRONMENT_DIR)
 
 $(BASIC_USAGE_ENVIRONMENT_LIB):
-	cd $(BASIC_USAGE_ENVIRONMENT_DIR); make
+	make --directory=$(BASIC_USAGE_ENVIRONMENT_DIR)
 $(TESTPROGS_APP):
-	cd $(TESTPROGS_DIR); make
+	make --directory=$(TESTPROGS_DIR)
 
 clean:
-	cd $(LIVEMEDIA_DIR); make clean
-	cd $(GROUPSOCK_DIR); make clean
-	cd $(USAGE_ENVIRONMENT_DIR); make clean
-	cd $(BASIC_USAGE_ENVIRONMENT_DIR); make clean
-	cd $(TESTPROGS_DIR); make clean
+	make --directory=$(LIVEMEDIA_DIR) clean
+	make --directory=$(GROUPSOCK_DIR) clean
+	make --directory=$(USAGE_ENVIRONMENT_DIR) clean
+	make --directory=$(BASIC_USAGE_ENVIRONMENT_DIR) clean
+	make --directory=$(TESTPROGS_DIR) clean

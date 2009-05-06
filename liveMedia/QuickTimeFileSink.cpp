@@ -141,7 +141,8 @@ QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
 				     Boolean syncStreams)
   : Medium(env), fInputSession(inputSession), fOutFid(outFid),
     fPacketLossCompensate(packetLossCompensate),
-    fSyncStreams(syncStreams), fAreCurrentlyBeingPlayed(False),
+    fSyncStreams(syncStreams), fMaxTrackDuration(0.0),
+    fAreCurrentlyBeingPlayed(False),
     fLargestRTPtimestampFrequency(0),
     fNumSubsessions(0), fNumSyncedSubsessions(0),
     fMovieWidth(movieWidth), fMovieHeight(movieHeight),
@@ -336,6 +337,13 @@ void QuickTimeFileSink::onRTCPBye(void* clientData) {
   ioState->onSourceClosure();
 }
 
+static Boolean timevalGE(struct timeval const& tv1,
+			 struct timeval const& tv2) {
+  return (unsigned)tv1.tv_sec > (unsigned)tv2.tv_sec
+    || (tv1.tv_sec == tv2.tv_sec
+	&& (unsigned)tv1.tv_usec >= (unsigned)tv2.tv_usec);
+}
+
 void QuickTimeFileSink::completeOutputFile() {
   if (fOutFid == NULL) return;
 
@@ -344,9 +352,23 @@ void QuickTimeFileSink::completeOutputFile() {
   unsigned curFileSize = ftell(fOutFid);
   setWord(fMDATposition, curFileSize);
 
-  // Then, update the QuickTime-specific state for each active track:
+  // Then, note the time of the first received data:
   MediaSubsessionIterator iter(fInputSession);
   MediaSubsession* subsession;
+  while ((subsession = iter.next()) != NULL) {
+    SubsessionIOState* ioState
+      = (SubsessionIOState*)(subsession->miscPtr); 
+    if (ioState == NULL) continue;
+
+    ChunkDescriptor* const headChunk = ioState->fHeadChunk;
+    if (headChunk != NULL
+	&& timevalGE(fFirstDataTime, headChunk->fPresentationTime)) {
+      fFirstDataTime = headChunk->fPresentationTime;
+    }
+  }
+
+  // Then, update the QuickTime-specific state for each active track:
+  iter.reset();
   while ((subsession = iter.next()) != NULL) {
     SubsessionIOState* ioState
       = (SubsessionIOState*)(subsession->miscPtr); 
@@ -492,16 +514,10 @@ Boolean SubsessionIOState::setQTstate() {
   return False; 
 }
 
-static Boolean timevalGE(struct timeval const& tv1,
-			 struct timeval const& tv2) {
-  return (unsigned)tv1.tv_sec > (unsigned)tv2.tv_sec
-    || (tv1.tv_sec == tv2.tv_sec
-	&& (unsigned)tv1.tv_usec >= (unsigned)tv2.tv_usec);
-}
-
 void SubsessionIOState::setFinalQTstate() {
   // Compute derived parameters, by running through the list of chunks:
   fQTTotNumSamples = fQTDuration = 0;
+  double duration;
 
   ChunkDescriptor* chunk = fHeadChunk;
   while (chunk != NULL) {
@@ -512,31 +528,31 @@ void SubsessionIOState::setFinalQTstate() {
 
     chunk = chunk->fNextChunk;
   }
-
-  if (fHeadChunk != NULL && timevalGE(fOurSink.fFirstDataTime,
-				      fHeadChunk->fPresentationTime)) {
-    fOurSink.fFirstDataTime = fHeadChunk->fPresentationTime;
-  }
+  duration = fQTDuration/(double)fQTTimeScale;
 
   if (fOurSink.fSyncStreams) {
-    //    fprintf(stderr, "old duration (time scale %d): %d\n", fQTTimeScale, fQTDuration);//#####@@@@@
+    //        fprintf(stderr, "old duration (time scale %d): %f\n", fQTTimeScale, duration);//#####@@@@@
     // In this case, compute fQTDuration differently: using the
     // presentation timestamps in the chunks (because we will be
     // using an edit list to keep the stream synchronized).
     if (fHeadChunk == 0) return;
-    struct timeval const& startTime = fHeadChunk->fPresentationTime;
+    struct timeval const& startTime = fOurSink.fFirstDataTime;
     struct timeval const& endTime = fTailChunk->fPresentationTime;
-    double duration = (endTime.tv_sec - startTime.tv_sec)
+    //fprintf(stderr, "start %u.%06d, end %u.%06d\n", startTime.tv_sec, startTime.tv_usec, endTime.tv_sec, endTime.tv_usec);//#####@@@@@
+    duration = (endTime.tv_sec - startTime.tv_sec)
       + (endTime.tv_usec - startTime.tv_usec)/1000000.0;
-    fQTDuration = (unsigned)(duration*fQTTimeScale);
-    //    fprintf(stderr, "start %u.%06d, end %u.%06d\n", startTime.tv_sec, startTime.tv_usec, endTime.tv_sec, endTime.tv_usec);//#####@@@@@
-    //    fprintf(stderr, "New duration: %f, %d\n", duration, fQTDuration);//#####@@@@@
+    //fprintf(stderr, "New duration: %f\n", duration);//#####@@@@@
 
-    // add on the duration of the last chunk:
+    // Add on the duration of the last chunk:
     unsigned lastChunkDuration
       = fTailChunk->fNumFrames*fQTSamplesPerFrame*fQTTimeUnitsPerSample;
-    fQTDuration += lastChunkDuration;
-    //    fprintf(stderr, "+ last chunk duration (%d frames, %d samples/frame, %d units/sample) %d => %d\n", fTailChunk->fNumFrames, fQTSamplesPerFrame, fQTTimeUnitsPerSample, lastChunkDuration, fQTDuration);//#####@@@@@
+    duration += lastChunkDuration/(double)fQTTimeScale;
+    fQTDuration = (unsigned)(duration*fQTTimeScale);
+    //        fprintf(stderr, "+ last chunk duration (%d frames, %d samples/frame, %d units/sample) %d => %f, %d\n", fTailChunk->fNumFrames, fQTSamplesPerFrame, fQTTimeUnitsPerSample, lastChunkDuration, duration, fQTDuration);//#####@@@@@
+  }
+
+  if (duration > fOurSink.fMaxTrackDuration) {
+    fOurSink.fMaxTrackDuration = duration;
   }
 }
 
@@ -688,7 +704,7 @@ Boolean SubsessionIOState::syncOK(struct timeval presentationTime) {
 	// But now we are
 	fSyncTime = presentationTime;
 	++s.fNumSyncedSubsessions;
-	//	fprintf(stderr, "subsession %d (%d): sync time %u.%06d\n", s.fNumSyncedSubsessions, fQTTimeScale, fSyncTime.tv_sec, fSyncTime.tv_usec);fflush(stderr);//#####@@@@@
+	//		fprintf(stderr, "subsession %d (%d): sync time %u.%06d\n", s.fNumSyncedSubsessions, fQTTimeScale, fSyncTime.tv_sec, fSyncTime.tv_usec);fflush(stderr);//#####@@@@@
 
 	if (timevalGE(fSyncTime, s.fNewestSyncTime)) {
 	  s.fNewestSyncTime = fSyncTime;
@@ -863,8 +879,7 @@ addAtom(mvhd);
   unsigned const movieTimeScale = fLargestRTPtimestampFrequency;
   size += addWord(movieTimeScale); // Time scale
 
-  unsigned const duration
-    = (unsigned)(fInputSession.playEndTime()*movieTimeScale);
+  unsigned const duration = (unsigned)(fMaxTrackDuration*movieTimeScale);
   size += addWord(duration); // Duration
 
   size += addWord(0x00010000); // Preferred rate
@@ -958,61 +973,63 @@ addAtom(elst);
   struct timeval editStartTime = fFirstDataTime;
   unsigned editTrackPosition = 0;
   unsigned currentTrackPosition = 0;
+  double movieDurationOfEdit = 0.0;
+  unsigned chunkDuration = 0;
 //double totalEditDuration = 0.0;//#####@@@@@
 
   ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
   while (chunk != NULL) {
     struct timeval const& chunkStartTime = chunk->fPresentationTime;
-    double movieDurationOfEdit
-      = (chunkStartTime.tv_sec - editStartTime.tv_sec)
+    movieDurationOfEdit = (chunkStartTime.tv_sec - editStartTime.tv_sec)
       + (chunkStartTime.tv_usec - editStartTime.tv_usec)/1000000.0;
     double trackDurationOfEdit = (currentTrackPosition-editTrackPosition)
       / (double)(fCurrentIOState->fQTTimeScale);
       
     double outOfSync = movieDurationOfEdit - trackDurationOfEdit;
-    //    fprintf(stderr, "outOfSync: %f == %f - %f\n", outOfSync, movieDurationOfEdit, trackDurationOfEdit);//#####@@@@@
-    //    double timeSinceStart = (chunkStartTime.tv_sec - fFirstDataTime.tv_sec)+ (chunkStartTime.tv_usec - fFirstDataTime.tv_usec)/1000000.0;//#####@@@@@
+    //        fprintf(stderr, "outOfSync: %f == %f - %f\n", outOfSync, movieDurationOfEdit, trackDurationOfEdit);//#####@@@@@
+    //        double timeSinceStart = (chunkStartTime.tv_sec - fFirstDataTime.tv_sec)+ (chunkStartTime.tv_usec - fFirstDataTime.tv_usec)/1000000.0;//#####@@@@@
 
-    //    fprintf(stderr, "(time since start %f, totalEditDuration %f, diff %f)\n", timeSinceStart, totalEditDuration, timeSinceStart-totalEditDuration);//#####@@@@@
+    //        fprintf(stderr, "(time since start %f, totalEditDuration %f, diff %f)\n", timeSinceStart, totalEditDuration, timeSinceStart-totalEditDuration);//#####@@@@@
     if (outOfSync > syncThreshold) {
       // The track's data is too short, so end this edit, add a new 'empty'
       // edit after it, and start a new edit (at the current track posn.):
-      //      fprintf(stderr, "#####track data too short\n");//#####@@@@@
+      //            fprintf(stderr, "#####track data too short\n");//#####@@@@@
       if (trackDurationOfEdit > 0.0) addEdit(trackDurationOfEdit);
       addEmptyEdit(outOfSync);
-      //totalEditDuration += trackDurationOfEdit + outOfSync;//#####@@@@@
+      //      totalEditDuration += trackDurationOfEdit + outOfSync;//#####@@@@@
 
       editStartTime = chunkStartTime;
       editTrackPosition = currentTrackPosition;
     } else if (outOfSync < -syncThreshold) {
-      //      fprintf(stderr, "#####track data too long\n");//#####@@@@@
+      //            fprintf(stderr, "#####track data too long\n");//#####@@@@@
       // The track's data is too long, so end this edit, and start
       // a new edit (pointing at the current track posn.):
       if (movieDurationOfEdit > 0.0) addEdit(movieDurationOfEdit);
-      //totalEditDuration += movieDurationOfEdit;//#####@@@@@
+      //      totalEditDuration += movieDurationOfEdit;//#####@@@@@
 
       editStartTime = chunkStartTime;
       editTrackPosition = currentTrackPosition;
     }
-    //    else fprintf(stderr, "track data OK\n");//#####@@@@@
+    //        else fprintf(stderr, "track data OK\n");//#####@@@@@
 
     // Note the duration of this chunk:
     unsigned const numSamples
       = chunk->fNumFrames*fCurrentIOState->fQTSamplesPerFrame;
-    unsigned const duration
-      = numSamples*fCurrentIOState->fQTTimeUnitsPerSample;
-    currentTrackPosition += duration;
-    //    fprintf(stderr, "duration %d (%f) -> currentTrackPosition %d (%f)\n", duration, (double)duration/fCurrentIOState->fQTTimeScale, currentTrackPosition, (double)currentTrackPosition/fCurrentIOState->fQTTimeScale);//#####@@@@@
+    chunkDuration = numSamples*fCurrentIOState->fQTTimeUnitsPerSample;
+    currentTrackPosition += chunkDuration;
+    //        fprintf(stderr, "duration %d (%f) -> currentTrackPosition %d (%f)\n", chunkDuration, (double)chunkDuration/fCurrentIOState->fQTTimeScale, currentTrackPosition, (double)currentTrackPosition/fCurrentIOState->fQTTimeScale);//#####@@@@@
 
     chunk = chunk->fNextChunk;
   }
 //    fprintf(stderr, "after loop\n");//#####@@@@@
 
-  // Write out the final edit:
-  double trackDurationOfEdit = (currentTrackPosition-editTrackPosition)
-      / (double)(fCurrentIOState->fQTTimeScale);
-  if (trackDurationOfEdit > 0.0) addEdit(trackDurationOfEdit);
-//totalEditDuration += trackDurationOfEdit;//#####@@@@@
+  // Write out the final edit.  Use the presentation times (except for the
+  // final chunk) to compute the duration, to make the sum of the edit
+  // durations consistent with the track duration that we computed earlier.
+  movieDurationOfEdit
+    += (double)chunkDuration/fCurrentIOState->fQTTimeScale;
+  if (movieDurationOfEdit > 0.0) addEdit(movieDurationOfEdit);
+//totalEditDuration += movieDurationOfEdit;//#####@@@@@
 //fprintf(stderr, "totalEditDuration: %f (%d)\n", totalEditDuration, (unsigned)(totalEditDuration*movieTimeScale));//#####@@@@@
 
   // Now go back and fill in the "Number of entries" field:

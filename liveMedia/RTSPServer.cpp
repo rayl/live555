@@ -31,7 +31,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #else
 #include <unistd.h>
 #include <sys/socket.h>
-#include <sys/errno.h>
 #define _close close
 #endif
 
