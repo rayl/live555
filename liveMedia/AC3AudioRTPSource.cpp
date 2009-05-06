@@ -52,7 +52,8 @@ Boolean AC3AudioRTPSource
 
   // TEMP: We can't currently handle packets containing > 1 frame #####
   if (numFrames > 1) {
-    fprintf(stderr, "AC3AudioRTPSource::processSpecialHeader(): packet contains %d frames (we can't handle this!)\n", numFrames);
+    envir() << "AC3AudioRTPSource::processSpecialHeader(): packet contains "
+	    << numFrames << " frames (we can't handle this!)\n";
     return False;
   }
 

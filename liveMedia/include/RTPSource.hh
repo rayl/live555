@@ -111,7 +111,8 @@ public:
     Iterator(RTPReceptionStatsDB& receptionStatsDB);
     virtual ~Iterator();
 
-    RTPReceptionStats* next(); // NULL if none
+    RTPReceptionStats* next(Boolean includeInactiveSources = False);
+        // NULL if none
 
   private:
     HashTable::Iterator* fIter;
@@ -157,6 +158,10 @@ public:
   }
   unsigned totNumPacketsReceived() const { return fTotNumPacketsReceived; }
   double totNumKBytesReceived() const;
+
+  unsigned totNumPacketsExpected() const {
+    return fHighestExtSeqNumReceived - fBaseExtSeqNumReceived;
+  }
 
   unsigned baseExtSeqNumReceived() const { return fBaseExtSeqNumReceived; }
   unsigned lastResetExtSeqNumReceived() const {

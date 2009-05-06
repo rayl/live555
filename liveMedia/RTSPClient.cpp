@@ -21,18 +21,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPClient.hh"
 #include "GroupsockHelper.hh"
 #include "our_md5.h"
+#include <stdlib.h>
 
-#if defined(__WIN32__) || defined(_WIN32)
-#define _close closesocket
-#define _strncasecmp strncmp
-#define snprintf _snprintf
-#else
-#define _close close
-#if defined(_QNX4)
+#if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
 #define _strncasecmp strncmp
 #else
 #define _strncasecmp strncasecmp
-#endif
 #endif
 
 ////////// RTSPClient //////////
@@ -180,8 +174,7 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received DESCRIBE response: %s\n", readBuf);
-      fflush(stderr);
+      envir() << "Received DESCRIBE response: " << readBuf << "\n";
     }
 
     // Inspect the first line to check whether it's a result code that
@@ -250,8 +243,8 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 	if (sscanf(lineStart, "Location: %s", redirectionURL) == 1) {
 	  // Try again with this URL
 	  if (fVerbosityLevel >= 1) {
-	    fprintf(stderr, "Redirecting to the new URL \"%s\"\n",
-		    redirectionURL); fflush(stderr);
+	    envir() << "Redirecting to the new URL \""
+		    << redirectionURL << "\"\n";
 	  }
 	  reset();
 	  char* result = describeURL(redirectionURL);
@@ -296,8 +289,8 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 
 	// Keep reading more data until we have enough:
 	if (fVerbosityLevel >= 1) {
-	  fprintf(stderr, "Need to read %d extra bytes\n",
-		  numExtraBytesNeeded); fflush(stderr);
+	  envir() << "Need to read " << numExtraBytesNeeded
+		  << " extra bytes\n";
 	}
 	while (numExtraBytesNeeded > 0) {
 	  struct sockaddr_in fromAddress;
@@ -307,8 +300,8 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 	  if (bytesRead2 < 0) break;
 	  ptr[bytesRead2] = '\0';
 	  if (fVerbosityLevel >= 1) {
-	    fprintf(stderr, "Read %d extra bytes: %s\n", bytesRead2, ptr);
-	    fflush(stderr);
+	    envir() << "Read " << bytesRead2 << " extra bytes: "
+		    << ptr << "\n";
 	  }
 
 	  bytesRead += bytesRead2;
@@ -362,9 +355,12 @@ char* RTSPClient
   return describeResult;
 }
 
-Boolean RTSPClient::sendOptionsCmd() {
+char* RTSPClient::sendOptionsCmd(char const* url) {
+  char* result = NULL;
   char* cmd = NULL;
   do {
+    if (!openConnectionFromURL(url)) break;
+
     // Send the OPTIONS command:
     char* const cmdFmt =
       "OPTIONS * RTSP/1.0\r\n"
@@ -389,18 +385,36 @@ Boolean RTSPClient::sendOptionsCmd() {
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received OPTIONS response: %s\n", readBuf);
-      fflush(stderr);
+      envir() << "Received OPTIONS response: " << readBuf << "\n";
     }
 
-    // For now, don't bother looking at the response #####
+    // Inspect the first line to check whether it's a result code 200
+    char* firstLine = readBuf;
+    char* nextLineStart = getLine(firstLine);
+    unsigned responseCode;
+    if (!parseResponseCode(firstLine, responseCode)) break;
+    if (responseCode != 200) {
+      envir().setResultMsg("cannot handle SETUP response: ", firstLine);
+      break;
+    }
 
-    delete[] cmd;
-    return True;
+    // Look for a "Public:" header (which will contain our result str):
+    char* lineStart;
+    while (1) {
+      lineStart = nextLineStart;
+      if (lineStart == NULL) break;
+
+      nextLineStart = getLine(lineStart);
+
+      if (_strncasecmp(lineStart, "public: ", 8) == 0) {
+	result = strDup(&lineStart[8]);
+	break;
+      }
+    }
   } while (0);
 
   delete[] cmd;
-  return False;
+  return result;
 }
 
 static Boolean isAbsoluteURL(char const* url) {
@@ -482,8 +496,7 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received ANNOUNCE response: %s\n", readBuf);
-      fflush(stderr);
+      envir() << "Received ANNOUNCE response: " << readBuf << "\n";
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -679,8 +692,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received SETUP response: %s\n", readBuf);
-      fflush(stderr);
+      envir() << "Received SETUP response: " << readBuf << "\n";
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -802,8 +814,7 @@ Boolean RTSPClient::playMediaSession(MediaSession& session) {
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received PLAY response: %s\n", readBuf);
-      fflush(stderr);
+      envir() << "Received PLAY response: " << readBuf << "\n";
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -893,19 +904,35 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received PLAY response: %s\n", readBuf);
-      fflush(stderr);
+      envir() << "Received PLAY response: " << readBuf << "\n";
     }
 
     // Inspect the first line to check whether it's a result code 200
     char* firstLine = readBuf;
-    /*char* nextLineStart =*/ getLine(firstLine);
+    char* nextLineStart = getLine(firstLine);
     unsigned responseCode;
     if (!parseResponseCode(firstLine, responseCode)) break;
     if (responseCode != 200) {
       envir().setResultMsg("cannot handle PLAY response: ", firstLine);
       break;
     }
+
+    // Look for a "RTP-Info:" header:
+    char* lineStart;
+    while (1) {
+      lineStart = nextLineStart;
+      if (lineStart == NULL) break;
+
+      nextLineStart = getLine(lineStart);
+
+      if (parseRTPInfoHeader(lineStart,
+			     subsession.rtpInfo.trackId,
+			     subsession.rtpInfo.seqNum,
+			     subsession.rtpInfo.timestamp)) {
+	break;
+      }
+    }
+
     // (Later, check "CSeq" too #####)
 
     delete[] cmd;
@@ -966,8 +993,7 @@ Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession) {
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received PAUSE response: %s\n", readBuf);
-      fflush(stderr);
+      envir() << "Received PAUSE response: " << readBuf << "\n";
     }
     
     // Inspect the first line to check whether it's a result code 200
@@ -1042,8 +1068,7 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received RECORD response: %s\n", readBuf);
-      fflush(stderr);
+      envir() << "Received RECORD response: " << readBuf << "\n";
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -1120,8 +1145,7 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received TEARDOWN response: %s\n", readBuf);
-      fflush(stderr);
+      envir() << "Received TEARDOWN response: " << readBuf << "\n";
     }
 
     // Inspect the first line to check whether it's a result code 200
@@ -1308,18 +1332,9 @@ RTSPClient::createAuthenticatorString(AuthRecord const* authenticator,
       + strlen(authenticator->username) + strlen(authenticator->realm)
       + strlen(authenticator->nonce) + strlen(url) + strlen(response);
     char* authenticatorStr = new char[authBufSize];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf()
-    // This is a security risk if the component strings
-    // can come from an external user
     sprintf(authenticatorStr, authFmt,
 	    authenticator->username, authenticator->realm,
 	    authenticator->nonce, url, response);
-#else
-    snprintf(authenticatorStr, authBufSize, authFmt,
-	     authenticator->username, authenticator->realm,
-	     authenticator->nonce, url, response);
-#endif
     free((char*)response); // NOT delete, because it was malloc-allocated
 
     return authenticatorStr;
@@ -1354,7 +1369,7 @@ void RTSPClient::resetCurrentAuthenticator() {
 
 Boolean RTSPClient::sendRequest(char const* requestString) {
   if (fVerbosityLevel >= 1) {
-    fprintf(stderr, "Sending request: %s\n", requestString); fflush(stderr);
+    envir() << "Sending request: " << requestString << "\n";
   }
   return send(fSocketNum, requestString, strlen(requestString), 0) >= 0;
 }
@@ -1390,8 +1405,9 @@ int RTSPClient::getResponse(char*& responseBuffer,
 		     fromAddress) != 2) break;
       size = ntohs(size);
       if (fVerbosityLevel >= 1) {
-	fprintf(stderr, "Discarding interleaved RTP or RTCP packet (%d bytes, channel id %d)\n",
-		size, streamChannelId);
+	envir() << "Discarding interleaved RTP or RTCP packet ("
+		<< size << " bytes, channel id "
+		<< streamChannelId << ")\n";
       }
 
       unsigned char* tmpBuffer = new unsigned char[size];
@@ -1479,7 +1495,7 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
   unsigned rtpCid, rtcpCid;
 
   // First, check for "Transport:"
-  if (strncmp(line, "Transport: ", 11) != 0) return False;
+  if (_strncasecmp(line, "transport: ", 11) != 0) return False;
   line += 11;
 
   // Then, run through each of the fields, looking for ones we handle:
@@ -1488,7 +1504,7 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
   while (sscanf(fields, "%[^;]", field) == 1) {
     if (sscanf(field, "server_port=%hu", &serverPortNum) == 1) {
       foundServerPortNum = True;
-    } else if (strncmp(field, "source=", 7) == 0) {
+    } else if (_strncasecmp(field, "source=", 7) == 0) {
       delete[] foundServerAddressStr;
       foundServerAddressStr = strDup(field+7);
     } else if (sscanf(field, "interleaved=%u-%u", &rtpCid, &rtcpCid) == 2) {
@@ -1514,4 +1530,29 @@ Boolean RTSPClient::parseTransportResponse(char const* line,
 
   delete[] foundServerAddressStr;
   return False;
+}
+
+Boolean RTSPClient::parseRTPInfoHeader(char const* line,
+				       unsigned& trackId,
+				       u_int16_t& seqNum,
+				       u_int32_t& timestamp) {
+  if (_strncasecmp(line, "rtp-info: ", 10) != 0) return False;
+  line += 10;
+  char const* fields = line;
+  char* field = strDupSize(fields);
+  
+  while (sscanf(fields, "%[^;]", field) == 1) {
+    if (sscanf(field, "url=trackID=%u", &trackId) == 1 ||
+	sscanf(field, "url=trackid=%u", &trackId) == 1 ||
+	sscanf(field, "seq=%hu", &seqNum) == 1 ||
+	sscanf(field, "rtptime=%u", &timestamp) == 1) {
+    }
+    
+    fields += strlen(field);
+    if (fields[0] == '\0') break;
+    ++fields; // skip over the ';'
+  }
+
+  delete[] field;
+  return True;
 }

@@ -40,15 +40,15 @@ unsigned tabsel_123[2][3][16] = {
 
 long freqs[7] = { 44100, 48000, 32000, 22050, 24000, 16000 , 11025 };
 
-static float ispow[8207];
-static float aa_ca[8], aa_cs[8];
-static float COS1[12][6];
-static float win[4][36];
-static float win1[4][36];
-static float COS9[9];
-static float COS6_1,COS6_2;
-static float tfcos36[9];
-static float tfcos12[3];
+static double ispow[8207];
+static double aa_ca[8], aa_cs[8];
+static double COS1[12][6];
+static double win[4][36];
+static double win1[4][36];
+static double COS9[9];
+static double COS6_1,COS6_2;
+static double tfcos36[9];
+static double tfcos12[3];
 
 static int longLimit[7][23];
 static int shortLimit[7][14];
@@ -109,11 +109,11 @@ static int *mapend[7][3];
 unsigned int n_slen2[512]; /* MPEG 2.0 slen for 'normal' mode */
 unsigned int i_slen2[256]; /* MPEG 2.0 slen for intensity stereo */
 
-static float tan1_1[16],tan2_1[16],tan1_2[16],tan2_2[16];
-static float pow1_1[2][16],pow2_1[2][16],pow1_2[2][16],pow2_2[2][16];
+static double tan1_1[16],tan2_1[16],tan1_2[16],tan2_2[16];
+static double pow1_1[2][16],pow2_1[2][16],pow1_2[2][16],pow2_2[2][16];
 
 // Init tables for layer-3 
-static float gainpow2[256+118+4];
+static double gainpow2[256+118+4];
 
 #define MPG_MD_MONO 3 
 

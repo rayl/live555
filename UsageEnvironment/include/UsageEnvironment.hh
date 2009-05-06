@@ -60,6 +60,16 @@ public:
 	// used to report a (previously set) error message within
 	// a background event
 
+  // 'errno'
+  virtual int getErrno() const = 0;
+
+  // 'console' output:
+  virtual UsageEnvironment& operator<<(char const* str) = 0;
+  virtual UsageEnvironment& operator<<(int i) = 0;
+  virtual UsageEnvironment& operator<<(unsigned u) = 0;
+  virtual UsageEnvironment& operator<<(double d) = 0;
+  virtual UsageEnvironment& operator<<(void* p) = 0;
+
   // a pointer to additional, optional, client-specific state
   void* liveMediaPriv;
   void* groupsockPriv;

@@ -39,6 +39,12 @@ Medium* createClient(UsageEnvironment& env,
 			      verbosityLevel, applicationName);
 }
 
+char* getOptionsResponse(Medium* client, char const* url) {
+  SIPClient* sipClient = (SIPClient*)client;
+  sipClient->envir().setResultMsg("NOT SUPPORTED IN CLIENT");//#####
+  return NULL;//#####
+}
+
 char* getSDPDescriptionFromURL(Medium* client, char const* url,
 			       char const* username, char const* password,
 			       char const* proxyServerName,
@@ -50,8 +56,8 @@ char* getSDPDescriptionFromURL(Medium* client, char const* url,
     // Tell the SIP client about the proxy:
     NetAddressList addresses(proxyServerName);
     if (addresses.numAddresses() == 0) {
-      fprintf(stderr, "Failed to find network address for \"%s\"\n",
-	      proxyServerName);
+      client->envir() << "Failed to find network address for \""
+		      << proxyServerName << "\"\n";
     } else {
       NetAddress address = *(addresses.firstAddress());
       unsigned proxyServerAddress // later, allow for IPv6 #####

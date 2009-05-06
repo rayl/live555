@@ -4,7 +4,9 @@ LIB = libBasicUsageEnvironment.$(LIB_SUFFIX)
 ALL = $(LIB)
 all:	$(ALL)
 
-OBJS = BasicUsageEnvironment.$(OBJ) DelayQueue.$(OBJ) BasicHashTable.$(OBJ)
+OBJS = BasicUsageEnvironment0.$(OBJ) BasicUsageEnvironment.$(OBJ) \
+	BasicTaskScheduler0.$(OBJ) BasicTaskScheduler.$(OBJ) \
+	DelayQueue.$(OBJ) BasicHashTable.$(OBJ)
 
 libBasicUsageEnvironment.$(LIB_SUFFIX): $(OBJS)
 	$(LIBRARY_LINK)$@ $(LIBRARY_LINK_OPTS) \
@@ -16,8 +18,12 @@ libBasicUsageEnvironment.$(LIB_SUFFIX): $(OBJS)
 .$(CPP).$(OBJ):
 	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS) $<
 
+BasicUsageEnvironment0.$(CPP):	include/BasicUsageEnvironment0.hh
+include/BasicUsageEnvironment0.hh:	include/BasicUsageEnvironment_version.hh include/DelayQueue.hh
 BasicUsageEnvironment.$(CPP):	include/BasicUsageEnvironment.hh
-include/BasicUsageEnvironment.hh:	include/BasicUsageEnvironment_version.hh
+include/BasicUsageEnvironment.hh:	include/BasicUsageEnvironment0.hh
+BasicTaskScheduler0.$(CPP):	include/BasicUsageEnvironment0.hh include/HandlerSet.hh
+BasicTaskScheduler.$(CPP):	include/BasicUsageEnvironment.hh include/HandlerSet.hh
 DelayQueue.$(CPP):		include/DelayQueue.hh
 BasicHashTable.$(CPP):		include/BasicHashTable.hh
 

@@ -23,10 +23,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "PassiveServerMediaSession.hh"
 #include "GroupsockHelper.hh"
 
-#if defined(__WIN32__) || defined(_WIN32)
-#define snprintf _snprintf
-#endif
-
 ////////// PassiveServerMediaSession //////////
 
 PassiveServerMediaSession*
@@ -55,36 +51,58 @@ void PassiveServerMediaSession::addSubsession(RTPSink& rtpSink) {
   addSubsessionByComponents(gs.groupAddress(),
 			    ntohs(gs.port().num()),
 			    gs.ttl(), rtpSink.rtpTimestampFrequency(),
+			    rtpSink.numChannels(),
 			    rtpSink.rtpPayloadType(),
 			    rtpSink.sdpMediaType(),
-			    rtpSink.rtpPayloadFormatName());
+			    rtpSink.rtpPayloadFormatName(),
+			    rtpSink.auxSDPLine());
 }
 			    
 void PassiveServerMediaSession
 ::addSubsessionByComponents(struct in_addr const& ipAddress,
 			    unsigned short portNum, unsigned char ttl,
 			    unsigned rtpTimestampFrequency,
+			    unsigned numChannels,
 			    unsigned char rtpPayloadType,
 			    char const* mediaType,
-			    char const* rtpPayloadFormatName) {
+			    char const* rtpPayloadFormatName,
+			    char const* auxSDPLine) {
   // Construct a set of SDP lines that describe this subsession:
 
   // For dynamic payload types, we need a "a=rtpmap:" line also:
   char* rtpmapLine;
   unsigned rtpmapLineSize;
   if (rtpPayloadType >= 96) {
-    char const* const rtpmapFmt = "a=rtpmap:%d %s/%d\r\n";
+    char* encodingParamsPart;
+    if (numChannels != 1) {
+      encodingParamsPart = new char[1 + 20 /* max int len */];
+      sprintf(encodingParamsPart, "/%d", numChannels);
+    } else {
+      encodingParamsPart = strDup("");
+    }
+    char const* const rtpmapFmt = "a=rtpmap:%d %s/%d%s\r\n";
     unsigned rtpmapFmtSize = strlen(rtpmapFmt)
-      + 3 /* max char len */ + strlen(rtpPayloadFormatName) + 20 /* max int len */;
+      + 3 /* max char len */ + strlen(rtpPayloadFormatName)
+      + 20 /* max int len */ + strlen(encodingParamsPart);
     rtpmapLine = new char[rtpmapFmtSize];
     sprintf(rtpmapLine, rtpmapFmt,
-	    rtpPayloadType, rtpPayloadFormatName, rtpTimestampFrequency);
+	    rtpPayloadType, rtpPayloadFormatName,
+	    rtpTimestampFrequency, encodingParamsPart);
     rtpmapLineSize = strlen(rtpmapLine);
+    delete[] encodingParamsPart;
   } else {
     // There's no "a=rtpmap:" line:
     // Static payload type => no "a=rtpmap:" line
     rtpmapLine = strDup("");
     rtpmapLineSize = 0;
+  }
+
+  unsigned auxSDPLineSize;
+  if (auxSDPLine == NULL) {
+    auxSDPLine = "";
+    auxSDPLineSize = 0;
+  } else {
+    auxSDPLineSize = strlen(auxSDPLine);
   }
 
   // Set up our 'track id':
@@ -96,11 +114,13 @@ void PassiveServerMediaSession
   char const* const sdpFmt =
     "m=%s %d RTP/AVP %d\r\n"
     "%s"
+    "%s"
     "a=control:%s\r\n"
     "c=IN IP4 %s/%d\r\n"; 
   unsigned sdpFmtSize = strlen(sdpFmt)
     + strlen(mediaType) + 5 /* max short len */ + 3 /* max char len */
     + rtpmapLineSize
+    + auxSDPLineSize
     + strlen(trackIdBuffer)
     + strlen(ipAddressStr) + 3 /* max char len */;
   char* sdpLine = new char[sdpFmtSize];
@@ -109,6 +129,7 @@ void PassiveServerMediaSession
 	  portNum, // m= <port>
 	  rtpPayloadType, // m= <fmt list>
 	  rtpmapLine, // a=rtpmap:... (if present)
+	  auxSDPLine, // optional extra SDP line
 	  trackIdBuffer, // a=control:<track-id>
 	  ipAddressStr, // c= <connection address>
 	  ttl); // c= TTL

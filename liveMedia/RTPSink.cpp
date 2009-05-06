@@ -52,13 +52,15 @@ static int Idunno;
 RTPSink::RTPSink(UsageEnvironment& env,
 		 Groupsock* rtpGS, unsigned char rtpPayloadType,
 		 unsigned rtpTimestampFrequency,
-		 char const* rtpPayloadFormatName)
+		 char const* rtpPayloadFormatName,
+		 unsigned numChannels)
   : MediaSink(env), fRTPInterface(this, rtpGS),
     fRTPPayloadType(rtpPayloadType),
     fPacketCount(0), fOctetCount(0), fTotalOctetCount(0),
     fTimestampFrequency(rtpTimestampFrequency),
     fRTPPayloadFormatName(rtpPayloadFormatName == NULL
-			  ? NULL : strDup(rtpPayloadFormatName)) {
+			  ? NULL : strDup(rtpPayloadFormatName)),
+    fNumChannels(numChannels) {
   gettimeofday(&fCreationTime, &Idunno);
   fTotalOctetCountStartTime = fCreationTime;
 
@@ -80,9 +82,10 @@ unsigned RTPSink::convertToRTPTimestamp(struct timeval timestamp) const {
        // note: rounding
 
 #ifdef DEBUG_TIMESTAMPS
-  fprintf(stderr, "timestamp base: %u, presentationTime: %u.%06u,\n\tRTP timestamp: %u\n",
+  fprintf(stderr, "timestamp base: %u, presentationTime: %u.%06u,\n\tRTP timestamp: 0x%08x\n",
 	  fTimestampBase, timestamp.tv_sec,
 	  timestamp.tv_usec, rtpTimestamp);
+  fflush(stderr);
 #endif
 
   return rtpTimestamp;
@@ -104,4 +107,8 @@ void RTPSink::getTotalBitrate(unsigned& outNumBytes,
 char const* RTPSink::sdpMediaType() const {
   return "data";
   // default SDP media (m=) type, unless redefined by subclasses
+}
+
+char const* RTPSink::auxSDPLine() const {
+  return NULL; // by default
 }

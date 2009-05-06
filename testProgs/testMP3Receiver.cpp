@@ -41,10 +41,12 @@ struct sessionState_t {
   RTCPInstance* rtcpInstance;
 } sessionState;
 
+UsageEnvironment* env;
+
 int main(int argc, char** argv) {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
-  UsageEnvironment* env = BasicUsageEnvironment::createNew(*scheduler);
+  env = BasicUsageEnvironment::createNew(*scheduler);
 
   // Create the data sink for 'stdout':
   sessionState.sink = FileSink::createNew(*env, "stdout");
@@ -115,7 +117,7 @@ int main(int argc, char** argv) {
   sessionState.source
     = MP3ADUdeinterleaver::createNew(*env, sessionState.source);
   if (sessionState.source == NULL) {
-    fprintf(stderr, "Unable to create an ADU deinterleaving filter for the source\n");
+    *env << "Unable to create an ADU deinterleaving filter for the source\n";
     exit(1);
   }
 
@@ -123,13 +125,13 @@ int main(int argc, char** argv) {
   sessionState.source
     = MP3FromADUSource::createNew(*env, sessionState.source);
   if (sessionState.source == NULL) {
-    fprintf(stderr, "Unable to create an ADU->MP3 filter for the source\n");
+    *env << "Unable to create an ADU->MP3 filter for the source\n";
     exit(1);
   }
 #endif
 
   // Finally, start receiving the multicast stream:
-  fprintf(stderr, "Beginning receiving multicast stream...\n");
+  *env << "Beginning receiving multicast stream...\n";
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);
 
   env->taskScheduler().doEventLoop(); // does not return
@@ -139,7 +141,7 @@ int main(int argc, char** argv) {
 
 
 void afterPlaying(void* /*clientData*/) {
-  fprintf(stderr, "...done receiving\n");
+  *env << "...done receiving\n";
 
   // End by closing the media:
   Medium::close(sessionState.sink);

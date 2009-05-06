@@ -18,14 +18,16 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A sink that generates a QuickTime file from a composite media session
 // Implementation
 
-#include "QuickTimeFileSink.hh"
-#include "QuickTimeGenericRTPSource.hh"
-#include "GroupsockHelper.hh"
-#include "H263plusVideoRTPSource.hh"
 #if defined(__WIN32__) || defined(_WIN32)
 #include <io.h>
 #include <fcntl.h>
 #endif
+#include <ctype.h>
+
+#include "QuickTimeFileSink.hh"
+#include "QuickTimeGenericRTPSource.hh"
+#include "GroupsockHelper.hh"
+#include "H263plusVideoRTPSource.hh"
 
 #define fourChar(x,y,z,w) ( ((x)<<24)|((y)<<16)|((z)<<8)|(w) )
 
@@ -105,6 +107,8 @@ public:
 			   SubsessionIOState* hintTrack);
   Boolean isHintTrack() const { return fTrackHintedByUs != NULL; }
   Boolean hasHintTrack() const { return fHintTrackForUs != NULL; }
+
+  UsageEnvironment& envir() const { return fOurSink.envir(); }
 
 public:
   static unsigned fCurrentTrackNumber;
@@ -423,8 +427,11 @@ void QuickTimeFileSink::onRTCPBye(void* clientData) {
     = timeNow.tv_sec - ioState->fOurSink.fStartTime.tv_sec;
 
   MediaSubsession& subsession = ioState->fOurSubsession;
-  fprintf(stderr, "Received RTCP \"BYE\" on \"%s/%s\" subsession (after %d seconds)\n",
-          subsession.mediumName(), subsession.codecName(), secsDiff);
+  ioState->envir() << "Received RTCP \"BYE\" on \""
+		   << subsession.mediumName()
+		   << "/" << subsession.codecName()
+		   << "\" subsession (after "
+		   << secsDiff << " seconds)\n";
 
   // Handle the reception of a RTCP "BYE" as if the source had closed:
   ioState->onSourceClosure();
@@ -537,7 +544,9 @@ SubsessionIOState::~SubsessionIOState() {
 }
 
 Boolean SubsessionIOState::setQTstate() {
-  char const* noCodecWarning = "Warning: We don't implement a QuickTime %s Media Data Type for the \"%s\" track, so we'll insert a dummy '???' Media Data Atom instead.  A separate, codec-specific editing pass will be needed before this track can be played.\n";
+  char const* noCodecWarning1 = "Warning: We don't implement a QuickTime ";
+  char const* noCodecWarning2 = " Media Data Type for the \"";
+  char const* noCodecWarning3 = "\" track, so we'll insert a dummy '???' Media Data Atom instead.  A separate, codec-specific editing pass will be needed before this track can be played.\n";
   Boolean supportPartiallyOnly = False;
 
   do {
@@ -583,8 +592,8 @@ Boolean SubsessionIOState::setQTstate() {
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_Qclp;
 	fQTSamplesPerFrame = 160;
       } else {
-	fprintf(stderr, noCodecWarning,
-		"Audio", fOurSubsession.codecName());
+	envir() << noCodecWarning1 << "Audio" << noCodecWarning2
+		<< fOurSubsession.codecName() << noCodecWarning3;
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_dummy;
 	fQTEnableTrack = False; // disable this track in the movie
       }
@@ -602,28 +611,31 @@ Boolean SubsessionIOState::setQTstate() {
 	fQTTimeScale = 600;
 	fQTTimeUnitsPerSample = fQTTimeScale/fOurSink.fMovieFPS;
       } else {
-	fprintf(stderr, noCodecWarning,
-		"Video", fOurSubsession.codecName());
+	envir() << noCodecWarning1 << "Video" << noCodecWarning2
+		<< fOurSubsession.codecName() << noCodecWarning3;
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_dummy;
 	fQTEnableTrack = False; // disable this track in the movie
       }
     } else {
-      fprintf(stderr, "Warning: We don't implement a QuickTime Media Handler for media type \"%s\"",
-	      fOurSubsession.mediumName());
+      envir() << "Warning: We don't implement a QuickTime Media Handler for media type \""
+	      << fOurSubsession.mediumName() << "\"";
       break;
     }
 
     if (supportPartiallyOnly) {
-      fprintf(stderr, "Warning: We don't have sufficient codec-specific information (e.g., sample sizes) to fully generate the \"%s/%s\" track, so we'll disable this track in the movie.  A separate, codec-specific editing pass will be needed before this track can be played.\n",
-	      fOurSubsession.mediumName(), fOurSubsession.codecName());
+      envir() << "Warning: We don't have sufficient codec-specific information (e.g., sample sizes) to fully generate the \""
+	      << fOurSubsession.mediumName() << "/"
+	      << fOurSubsession.codecName()
+	      << "\" track, so we'll disable this track in the movie.  A separate, codec-specific editing pass will be needed before this track can be played\n";
       fQTEnableTrack = False; // disable this track in the movie
     }
 
     return True;
   } while (0);
 
-  fprintf(stderr, ", so a track for the \"%s/%s\" subsession will not be included in the output QuickTime file\n",
-	  fOurSubsession.mediumName(), fOurSubsession.codecName());
+  envir() << ", so a track for the \"" << fOurSubsession.mediumName()
+	  << "/" << fOurSubsession.codecName()
+	  << "\" subsession will not be included in the output QuickTime file\n";
   return False; 
 }
 
@@ -634,7 +646,8 @@ void SubsessionIOState::setFinalQTstate() {
   ChunkDescriptor* chunk = fHeadChunk;
   while (chunk != NULL) {
     unsigned const numFrames = chunk->fNumFrames;
-    unsigned const dur = numFrames*chunk->fFrameDuration;
+    unsigned const dur
+      = numFrames*chunk->fFrameDuration/fOurSubsession.numChannels();
 
     fQTDurationT += dur;
 
@@ -1106,8 +1119,9 @@ unsigned QuickTimeFileSink::addArbitraryString(char const* str,
     // Begin with a byte containing the string length:
     unsigned strLength = strlen(str);
     if (strLength >= 256) {
-      fprintf(stderr, "QuickTimeFileSink::addArbitraryString(\"%s\") saw string longer than we know how to handle (%d)\n", str, strLength);
-      exit(1);
+      envir() << "QuickTimeFileSink::addArbitraryString(\""
+	      << str << "\") saw string longer than we know how to handle ("
+	      << strLength << "\n";
     }
     size += addByte((unsigned char)strLength);
   }
@@ -1139,9 +1153,8 @@ void QuickTimeFileSink::setWord(unsigned filePosn, unsigned size) {
   } while (0);
 
   // One of the fseek()s failed, probable because we're not a seekable file
-  fprintf(stderr, "QuickTimeFileSink::setWord(): fseek failed (err %d)\n",
-	  errno);
-  exit(1);
+  envir() << "QuickTimeFileSink::setWord(): fseek failed (err "
+	  << envir().getErrno() << ")\n";
 }
 
 // Methods for writing particular atoms.  Note the following macros:
@@ -1333,7 +1346,8 @@ addAtom(elst);
     }
 
     // Note the duration of this chunk:
-    chunkDuration = chunk->fNumFrames*chunk->fFrameDuration;
+    unsigned numChannels = fCurrentIOState->fOurSubsession.numChannels();
+    chunkDuration = chunk->fNumFrames*chunk->fFrameDuration/numChannels;
     currentTrackPosition += chunkDuration;
 
     chunk = chunk->fNextChunk;
@@ -1507,8 +1521,10 @@ unsigned QuickTimeFileSink::addAtom_soundMediaGeneral() {
   unsigned short const version = fCurrentIOState->fQTSoundSampleVersion;
   size += addWord(version<<16); // Version+Revision level
   size += addWord(0x00000000); // Vendor
-  size += addWord(0x00010010); // Number of channels+Sample size
-      // should we parameterize this??? #####
+  unsigned short numChannels
+    = (unsigned short)(fCurrentIOState->fOurSubsession.numChannels());
+  size += addHalfWord(numChannels); // Number of channels
+  size += addHalfWord(0x0010); // Sample size
   size += addWord(0x00000000); // Compression ID+Packet size
 
   unsigned const timeScale = fCurrentIOState->fQTTimeScale;

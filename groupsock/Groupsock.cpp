@@ -63,9 +63,9 @@ Boolean OutputSocket::write(netAddressBits address, Port port, u_int8_t ttl,
     // kernel chose as our ephemeral source port number:
     if (!getSourcePort(env(), socketNum(), fSourcePort)) {
       if (DebugLevel >= 1)
-	cerr << *this
+	env() << *this
 	     << ": failed to get source port: "
-	     << env().getResultMsg() << endl;
+	     << env().getResultMsg() << "\n";
       return False;
     }
   }
@@ -98,20 +98,20 @@ Groupsock::Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
     fDestPort(port) {
   if (!socketJoinGroup(env, socketNum(), groupAddr.s_addr)) {
     if (DebugLevel >= 1) {
-      cerr << *this << ": failed to join group: "
-	   << env.getResultMsg() << endl;
+      env << *this << ": failed to join group: "
+	  << env.getResultMsg() << "\n";
     }
   }
   
   // Make sure we can get our source address:
   if (ourSourceAddressForMulticast(env) == 0) {
     if (DebugLevel >= 0) { // this is a fatal error
-      cerr << "Unable to determine our source address: "
-	   << env.getResultMsg() << endl;
+      env << "Unable to determine our source address: "
+	  << env.getResultMsg() << "\n";
     }
   }
   
-  if (DebugLevel >= 2) cerr << *this << ": created" << endl;
+  if (DebugLevel >= 2) env << *this << ": created\n";
 }
 
 // Constructor for a source-specific multicast group
@@ -127,19 +127,19 @@ Groupsock::Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
   if (!socketJoinGroupSSM(env, socketNum(), groupAddr.s_addr,
 			  sourceFilterAddr.s_addr)) {
     if (DebugLevel >= 3) {
-      cerr << *this << ": SSM join failed: "
-	   << env.getResultMsg();
-      cerr << " - trying regular join instead" << endl;
+      env << *this << ": SSM join failed: "
+	  << env.getResultMsg();
+      env << " - trying regular join instead\n";
     }
     if (!socketJoinGroup(env, socketNum(), groupAddr.s_addr)) {
       if (DebugLevel >= 1) {
-	cerr << *this << ": failed to join group: "
-	     << env.getResultMsg() << endl;
+	env << *this << ": failed to join group: "
+	     << env.getResultMsg() << "\n";
       }
     }
   }
   
-  if (DebugLevel >= 2) cerr << *this << ": created" << endl;
+  if (DebugLevel >= 2) env << *this << ": created\n";
 }
 
 Groupsock::~Groupsock() {
@@ -152,7 +152,7 @@ Groupsock::~Groupsock() {
     socketLeaveGroup(env(), socketNum(), groupAddress().s_addr);
   }
   
-  if (DebugLevel >= 2) cerr << *this << ": deleting" << endl;
+  if (DebugLevel >= 2) env() << *this << ": deleting\n";
 }
 
 void
@@ -201,20 +201,18 @@ Boolean Groupsock::output(UsageEnvironment& env, u_int8_t ttlToSend,
     if (numMembers < 0) break;
     
     if (DebugLevel >= 3) {
-      cerr << *this << ": wrote " << bufferSize << " bytes, ttl "
-	   << (unsigned)ttlToSend;
+      env << *this << ": wrote " << bufferSize << " bytes, ttl "
+	  << (unsigned)ttlToSend;
       if (numMembers > 0) {
-	cerr << "; relayed to " << numMembers << " members";
+	env << "; relayed to " << numMembers << " members";
       }
-      cerr << endl;
+      env << "\n";
     }
     return True;
   } while (0);
   
   if (DebugLevel >= 0) { // this is a fatal error
-    ostrstream out;
-    out << *this << ": write failed: " << env.getResultMsg() << endl;
-    env.setResultMsg(out.str());
+    env.setResultMsg("Groupsock write failed: ", env.getResultMsg());
   }
   return False;
 }
@@ -232,11 +230,8 @@ Boolean Groupsock::handleRead(unsigned char* buffer, unsigned bufferMaxSize,
 			    buffer, maxBytesToRead, fromAddress);
   if (numBytes < 0) {
     if (DebugLevel >= 0) { // this is a fatal error
-      ostrstream out;
-      out << *this
-	  << ": read failed: " << env().getResultMsg()
-	  << endl;
-      env().setResultMsg(out.str());
+      env().setResultMsg("Groupsock read failed: ",
+			 env().getResultMsg());
     }
     return False;
   }
@@ -266,12 +261,12 @@ Boolean Groupsock::handleRead(unsigned char* buffer, unsigned bufferMaxSize,
     }
   }
   if (DebugLevel >= 3) {
-    cerr << *this << ": read " << bytesRead << " bytes from ";
-    cerr << our_inet_ntoa(fromAddress.sin_addr);
+    env() << *this << ": read " << bytesRead << " bytes from ";
+    env() << our_inet_ntoa(fromAddress.sin_addr);
     if (numMembers > 0) {
-      cerr << "; relayed to " << numMembers << " members";
+      env() << "; relayed to " << numMembers << " members";
     }
-    cerr << endl;
+    env() << "\n";
   }
   
   return True;
@@ -284,8 +279,7 @@ Boolean Groupsock::wasLoopedBackFromUs(UsageEnvironment& env,
     if (fromAddress.sin_port == sourcePortNum()) {
 #ifdef DEBUG_LOOPBACK_CHECKING
       if (DebugLevel >= 3) {
-	cerr << *this <<": got looped-back packet"
-	     << endl;
+	env() << *this << ": got looped-back packet\n";
       }
 #endif
       return True;
@@ -361,7 +355,7 @@ int Groupsock::outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
       }
       
       if (misaligned) {
-	our_bcopy(trailer-trailerOffset, trailerInPacket, trailerSize);
+	memmove(trailerInPacket, trailer-trailerOffset, trailerSize);
       }
       
       size += trailerSize;
@@ -374,11 +368,11 @@ int Groupsock::outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
   return numMembers;
 }
 
-ostream& operator<<(ostream& s, const Groupsock& g) {
-  ostream& s1 = s << timestampString() << " Groupsock("
-		  << g.socketNum() << ": "
-		  << our_inet_ntoa(g.groupAddress())
-		  << ", " << g.port() << ", ";
+UsageEnvironment& operator<<(UsageEnvironment& s, const Groupsock& g) {
+  UsageEnvironment& s1 = s << timestampString() << " Groupsock("
+			   << g.socketNum() << ": "
+			   << our_inet_ntoa(g.groupAddress())
+			   << ", " << g.port() << ", ";
   if (g.isSSM()) {
     return s1 << "SSM source: "
 	      <<  our_inet_ntoa(g.sourceFilterAddress()) << ")";

@@ -21,8 +21,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "AC3AudioRTPSink.hh"
 
 AC3AudioRTPSink::AC3AudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-				 unsigned char rtpPayloadFormat,
-				 unsigned rtpTimestampFrequency)
+				 u_int8_t rtpPayloadFormat,
+				 u_int32_t rtpTimestampFrequency)
   : MultiFramedRTPSink(env, RTPgs, rtpPayloadFormat,
 		       rtpTimestampFrequency, "AC3") {
 }
@@ -32,8 +32,8 @@ AC3AudioRTPSink::~AC3AudioRTPSink() {
 
 AC3AudioRTPSink*
 AC3AudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
-			   unsigned char rtpPayloadFormat,
-			   unsigned rtpTimestampFrequency) {
+			   u_int8_t rtpPayloadFormat,
+			   u_int32_t rtpTimestampFrequency) {
   return new AC3AudioRTPSink(env, RTPgs,
 			     rtpPayloadFormat, rtpTimestampFrequency);
 }

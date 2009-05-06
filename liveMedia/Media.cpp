@@ -106,6 +106,10 @@ Boolean Medium::isRTSPClient() const {
   return False; // default implementation
 }
 
+Boolean Medium::isRTSPServer() const {
+  return False; // default implementation
+}
+
 Boolean Medium::isMediaSession() const {
   return False; // default implementation
 }

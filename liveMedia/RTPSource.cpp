@@ -54,8 +54,8 @@ RTPSource::RTPSource(UsageEnvironment& env, Groupsock* RTPgs,
   : FramedSource(env),
     fRTPInterface(this, RTPgs), fRTPPayloadFormat(rtpPayloadFormat),
     fTimestampFrequency(rtpTimestampFrequency),
-    fSSRC((unsigned)our_random()),
-    fReceptionStatsDB(new RTPReceptionStatsDB(*this)) {
+    fSSRC((unsigned)our_random()) {
+  fReceptionStatsDB = new RTPReceptionStatsDB(*this);
 }
 
 RTPSource::~RTPSource() {
@@ -152,14 +152,17 @@ RTPReceptionStatsDB::Iterator::~Iterator() {
   delete fIter;
 }
 
-RTPReceptionStats* RTPReceptionStatsDB::Iterator::next() {
+RTPReceptionStats*
+RTPReceptionStatsDB::Iterator::next(Boolean includeInactiveSources) {
   char const* key; // dummy
 
-  // Skip over any sources that haven't been active since the last reset:
+  // If asked, skip over any sources that haven't been active
+  // since the last reset:
   RTPReceptionStats* stats;
   do {
     stats = (RTPReceptionStats*)(fIter->next(key));
-  } while (stats != NULL && stats->numPacketsReceivedSinceLastReset() == 0);
+  } while (stats != NULL && !includeInactiveSources
+	   && stats->numPacketsReceivedSinceLastReset() == 0);
 
   return stats;
 }
@@ -179,8 +182,8 @@ void RTPReceptionStatsDB::add(unsigned SSRC, RTPReceptionStats* stats) {
 RTPReceptionStats::RTPReceptionStats(RTPSource& rtpSource, unsigned SSRC,
 				     unsigned short initialSeqNum)
   : fOurRTPSource(rtpSource) {
-  init(SSRC);
   initSeqNum(initialSeqNum);
+  init(SSRC);
 }
 
 RTPReceptionStats::RTPReceptionStats(RTPSource& rtpSource, unsigned SSRC)
@@ -212,7 +215,7 @@ void RTPReceptionStats::init(unsigned SSRC) {
 
 void RTPReceptionStats::initSeqNum(unsigned short initialSeqNum) {
     fBaseExtSeqNumReceived = initialSeqNum-1;
-    fHighestExtSeqNumReceived = initialSeqNum-1;
+    fHighestExtSeqNumReceived = initialSeqNum;
     fHaveSeenInitialSequenceNumber = True;
 }
 

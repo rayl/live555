@@ -202,13 +202,7 @@ void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
   } while (0);
 
 #ifdef DEBUG_SENDING
-  fprintf(stderr, "sendRTPOverTCP: failed: %d\n",
-#if defined(__WIN32__) || defined(_WIN32)
-          WSAGetLastError()
-#else
-          errno
-#endif
-          ); fflush(stderr);
+  fprintf(stderr, "sendRTPOverTCP: failed!\n"); fflush(stderr);
 #endif
 }
 

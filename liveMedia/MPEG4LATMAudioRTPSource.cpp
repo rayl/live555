@@ -72,7 +72,7 @@ Boolean MPEG4LATMAudioRTPSource
 }
 
 char const* MPEG4LATMAudioRTPSource::MIMEtype() const {
-  return "audio/mp4a-latm";
+  return "audio/MP4A-LATM";
 }
 
 

@@ -30,10 +30,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #define SMALL_HASH_TABLE_SIZE 4
 
 class BasicHashTable: public HashTable {
+private:
+	class TableEntry; // forward
+
 public:
   BasicHashTable(int keyType);
   virtual ~BasicHashTable();
-  class TableEntry; // forward
   
   // Used to iterate through the members of the table:
   class Iterator: public HashTable::Iterator {

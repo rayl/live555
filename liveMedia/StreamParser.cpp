@@ -68,8 +68,10 @@ void StreamParser::ensureValidBytes1(unsigned numBytesNeeded) {
   if (fCurParserIndex + numBytesNeeded > BANK_SIZE) {
     // If this happens, it means that we have too much saved parser state.
     // To fix this, increase BANK_SIZE as appropriate.
-    fprintf(stderr, "StreamParser internal error (%d + %d > %d)\n",
-	    fCurParserIndex, numBytesNeeded, BANK_SIZE); fflush(stderr);
+    fInputSource->envir() << "StreamParser internal error ("
+			  << fCurParserIndex << "+ "
+			  << numBytesNeeded << " > "
+			  << BANK_SIZE << ")\n";
     exit(1);
   }
 
@@ -91,8 +93,10 @@ void StreamParser::afterGettingBytes(void* clientData,
   // Sanity check: Make sure we didn't get too many bytes for our bank:
   if (buffer->fTotNumValidBytes + numBytesRead > BANK_SIZE) {
     numBytesRead = BANK_SIZE - buffer->fTotNumValidBytes;
-    fprintf(stderr, "StreamParser::afterGettingBytes() warning: read %d bytes; expected no more than %d\n",
-	    numBytesRead, BANK_SIZE - buffer->fTotNumValidBytes); fflush(stderr);
+    buffer->fInputSource->envir()
+      << "StreamParser::afterGettingBytes() warning: read "
+      << numBytesRead << " bytes; expected no more than "
+      << BANK_SIZE - buffer->fTotNumValidBytes << "\n";
   }
 
   unsigned char* ptr = &buffer->curBank()[buffer->fTotNumValidBytes];

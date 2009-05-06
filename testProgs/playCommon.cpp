@@ -57,10 +57,11 @@ Boolean audioOnly = False;
 Boolean videoOnly = False;
 char const* singleMedium = NULL;
 int verbosityLevel = 0;
-float endTime = 0;
-float endTimeSlop = 5.0; // extra seconds to delay
+double endTime = 0;
+double endTimeSlop = -1.0; // extra seconds to play at the end
 Boolean playContinuously = False;
 int simpleRTPoffsetArg = -1;
+Boolean sendOptionsRequestOnly = False;
 Boolean notifyOnPacketArrival = False;
 Boolean streamUsingTCP = False;
 char* username = NULL;
@@ -87,18 +88,22 @@ static int Idunno;
 struct timeval startTime;
 
 void usage() {
-  fprintf(stderr, "Usage: %s [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-c] [-s <offset>] [-n]%s [-u <username> <password>%s]%s [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] <url>\n",
-	  progName,
-	  controlConnectionUsesTCP ? " [-t]" : "",
-	  allowProxyServers
-	  ? " [<proxy-server> [<proxy-server-port>]]" : "",
-	  supportCodecSelection
-	  ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "");
+  *env << "Usage: " << progName
+       << " [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-c] [-s <offset>] [-n]"
+	   << (controlConnectionUsesTCP ? " [-t]" : "")
+       << " [-u <username> <password>"
+	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
+       << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-D <mime-subtype-name>]" : "")
+       << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] <url> (or " << progName << " -o [-V] <url>)\n";
   //##### Add "-R <dest-rtsp-url>" #####
   shutdown();
 }
 
 int main(int argc, char** argv) {
+  // Begin by setting up our usage environment:
+  TaskScheduler* scheduler = BasicTaskScheduler::createNew();
+  env = BasicUsageEnvironment::createNew(*scheduler);
+
   progName = argv[0];
 
   gettimeofday(&startTime, &Idunno);
@@ -123,7 +128,8 @@ int main(int argc, char** argv) {
 	usage();
       }
       if (portArg <= 0 || portArg >= 65536 || portArg&1) {
-	fprintf(stderr, "bad port number: %d (must be even, and in the range (0,65536))\n", portArg);
+	*env << "bad port number: " << portArg
+		<< " (must be even, and in the range (0,65536))\n";
 	usage();
       }
       desiredPortNum = (unsigned short)portArg;
@@ -163,7 +169,7 @@ int main(int argc, char** argv) {
       if (sscanf(argv[2], "%g", &arg) != 1) {
 	usage();
       }
-      if (argv[2][0] == '-') { // in case argv[2] was "-0"
+      if (argv[2][0] == '-') { // not "arg<0", in case argv[2] was "-0"
 	// a 'negative' argument was specified; use this for "endTimeSlop":
 	endTime = 0; // use whatever's in the SDP
 	endTimeSlop = -arg;
@@ -185,10 +191,15 @@ int main(int argc, char** argv) {
 	usage();
       }
       if (simpleRTPoffsetArg < 0) {
-	fprintf(stderr, "offset argument to \"-s\" must be >= 0\n");
+	*env << "offset argument to \"-s\" must be >= 0\n";
 	usage();
       }
       ++argv; --argc;
+      break;
+    }
+
+    case 'o': { // Send only the "OPTIONS" request to the server
+      sendOptionsRequestOnly = True;
       break;
     }
 
@@ -316,32 +327,47 @@ int main(int argc, char** argv) {
   }
   if (argc != 2) usage();
   if (!createReceivers && outputQuickTimeFile) {
-    fprintf(stderr, "The -r and -q flags cannot both be used!\n");
+    *env << "The -r and -q flags cannot both be used!\n";
     usage();
   }
   if (destRTSPURL != NULL && (!createReceivers || outputQuickTimeFile)) {
-    fprintf(stderr, "The -R flag cannot be used with -r or -q!\n");
+    *env << "The -R flag cannot be used with -r or -q!\n";
     usage();
   }
   if (audioOnly && videoOnly) {
-    fprintf(stderr, "The -a and -v flags cannot both be used!\n");
+    *env << "The -a and -v flags cannot both be used!\n";
     usage();
   }
   if (!createReceivers && notifyOnPacketArrival) {
-    fprintf(stderr, "Warning: Because we're not receiving stream data, the -n flag has no effect\n");
+    *env << "Warning: Because we're not receiving stream data, the -n flag has no effect\n";
+  }
+  if (endTimeSlop < 0) {
+    // This parameter wasn't set, so use a default value.
+    // If we're measuring QOS stats, then don't add any slop, to avoid
+    // having 'empty' measurement intervals at the end.
+    endTimeSlop = qosMeasurementIntervalMS > 0 ? 0.0 : 5.0;
   }
 
   char* url = argv[1];
 
-  // Begin by setting up our usage environment:
-  TaskScheduler* scheduler = BasicTaskScheduler::createNew();
-  env = BasicUsageEnvironment::createNew(*scheduler);
-
   // Create our client object:
   ourClient = createClient(*env, verbosityLevel, progName);
   if (ourClient == NULL) {
-    fprintf(stderr, "Failed to create %s client: %s\n",
-	    clientProtocolName, env->getResultMsg());
+    *env << "Failed to create " << clientProtocolName
+		<< " client: " << env->getResultMsg() << "\n";
+    shutdown();
+  }
+
+  if (sendOptionsRequestOnly) {
+    char* optionsResponse = getOptionsResponse(ourClient, url);
+    if (optionsResponse == NULL) {
+      *env << clientProtocolName << " \"OPTIONS\" request failed: "
+	   << env->getResultMsg() << "\n";
+    } else {
+      *env << clientProtocolName << " \"OPTIONS\" request returned: "
+	   << optionsResponse << "\n";
+      delete[] optionsResponse;
+    }
     shutdown();
   }
 
@@ -351,23 +377,22 @@ int main(int argc, char** argv) {
 			       proxyServerName, proxyServerPortNum,
 			       desiredPortNum);
   if (sdpDescription == NULL) {
-    fprintf(stderr,
-	    "Failed to get a SDP description from URL \"%s\": %s\n",
-	    url, env->getResultMsg());
+    *env << "Failed to get a SDP description from URL \"" << url
+		<< "\": " << env->getResultMsg() << "\n";
     shutdown();
   }
 
-  fprintf(stderr, "Opened URL \"%s\", returning a SDP description:\n%s\n",
-	  url, sdpDescription);
+  *env << "Opened URL \"" << url
+	  << "\", returning a SDP description:\n" << sdpDescription << "\n";
 
   // Create a media session object from this SDP description:
   session = MediaSession::createNew(*env, sdpDescription);
   delete[] sdpDescription;
   if (session == NULL) {
-    fprintf(stderr, "Failed to create a MediaSession object from the SDP description: %s\n", env->getResultMsg());
+    *env << "Failed to create a MediaSession object from the SDP description: " << env->getResultMsg() << "\n";
     shutdown();
   } else if (!session->hasSubsessions()) {
-    fprintf(stderr, "This session has no media subsessions (i.e., \"m=\" lines)\n");
+    *env << "This session has no media subsessions (i.e., \"m=\" lines)\n";
     shutdown();
   }
 
@@ -380,9 +405,10 @@ int main(int argc, char** argv) {
     // If we've asked to receive only a single medium, then check this now:
     if (singleMediumToTest != NULL) {
       if (strcmp(subsession->mediumName(), singleMediumToTest) != 0) {
-	fprintf(stderr, "Ignoring \"%s/%s\" subsession, because we've asked to receive a single %s session only\n",
-		subsession->mediumName(), subsession->codecName(),
-		singleMedium);
+		  *env << "Ignoring \"" << subsession->mediumName()
+			  << "/" << subsession->codecName()
+			  << "\" subsession, because we've asked to receive a single " << singleMedium
+			  << " session only\n";
 	continue;
       } else {
 	// Receive this subsession only
@@ -398,29 +424,31 @@ int main(int argc, char** argv) {
 
     if (createReceivers) {
       if (!subsession->initiate(simpleRTPoffsetArg)) {
-	fprintf(stderr, "Unable to create receiver for \"%s/%s\" subsession: %s\n",
-		subsession->mediumName(), subsession->codecName(),
-		env->getResultMsg());
+		*env << "Unable to create receiver for \"" << subsession->mediumName()
+			<< "/" << subsession->codecName()
+			<< "\" subsession: " << env->getResultMsg() << "\n";
       } else {
-	fprintf(stderr, "Created receiver for \"%s/%s\" subsession (client ports %d-%d)\n",
-		subsession->mediumName(), subsession->codecName(),
-		subsession->clientPortNum(), subsession->clientPortNum()+1);
-	madeProgress = True;
+		*env << "Created receiver for \"" << subsession->mediumName()
+			<< "/" << subsession->codecName()
+			<< "\" subsession (client ports " << subsession->clientPortNum()
+			<< "-" << subsession->clientPortNum()+1 << ")\n";
+		madeProgress = True;
 
-	// Because we're saving the incoming data, rather than playing it
-	// in real time, allow an especially large time threshold (1 second)
-	// for reordering misordered incoming packets:
-	if (subsession->rtpSource() != NULL) {
-	  unsigned const thresh = 1000000; // 1 second 
-	  subsession->rtpSource()->setPacketReorderingThresholdTime(thresh);
-	}
+		// Because we're saving the incoming data, rather than playing it
+		// in real time, allow an especially large time threshold (1 second)
+		// for reordering misordered incoming packets:
+		if (subsession->rtpSource() != NULL) {
+		 unsigned const thresh = 1000000; // 1 second 
+		 subsession->rtpSource()->setPacketReorderingThresholdTime(thresh);
+		}
       }
     } else {
       if (subsession->clientPortNum() == 0) {
-	fprintf(stderr, "No client port was specified for the \"%s/%s\" subsession.  (Try adding the \"-p <portNum>\" option.)\n",
-		subsession->mediumName(), subsession->codecName());
+		*env << "No client port was specified for the \"" << subsession->mediumName()
+			<< "/" << subsession->codecName()
+			<< "\" subsession.  (Try adding the \"-p <portNum>\" option.)\n";
       } else {	
-	madeProgress = True;
+		madeProgress = True;
       }
     }
   }
@@ -440,10 +468,8 @@ int main(int argc, char** argv) {
 					   syncStreams,
 					   generateHintTracks);
       if (qtOut == NULL) {
-	fprintf(stderr,
-		"Failed to create QuickTime file sink for stdout: %s",
-		env->getResultMsg());
-	shutdown();
+		*env << "Failed to create QuickTime file sink for stdout: " << env->getResultMsg();
+		shutdown();
       }
 
       qtOut->startPlaying(sessionAfterPlaying, NULL);
@@ -452,14 +478,11 @@ int main(int argc, char** argv) {
       // and create one or more "RTPTranslator"s to tie the source
       // and destination together:
       if (setupDestinationRTSPServer()) {
-	fprintf(stderr,
-		"Set up destination RTSP session for \"%s\"\n",
-		destRTSPURL);
+		  *env << "Set up destination RTSP session for \"" << destRTSPURL << "\"\n";
       } else {
-	fprintf(stderr,
-		"Failed to set up destination RTSP session for \"%s\": %s\n",
-		destRTSPURL, env->getResultMsg());
-	shutdown();
+		  *env << "Failed to set up destination RTSP session for \"" << destRTSPURL
+			  << "\": " << env->getResultMsg() << "\n";
+		shutdown();
       }
     } else {
       // Create and start "FileSink"s for each subsession:
@@ -474,21 +497,22 @@ int main(int argc, char** argv) {
 	  // Output file name is "<medium_name>-<codec_name>-<counter>"
 	  static unsigned streamCounter = 0;
 	  snprintf(outFileName, sizeof outFileName, "%s-%s-%d",
-		   subsession->mediumName(), subsession->codecName(),
-		   ++streamCounter);
+		  subsession->mediumName(), subsession->codecName(),
+		  ++streamCounter);
 	} else {
 	  sprintf(outFileName, "stdout");
 	}
 	subsession->sink = FileSink::createNew(*env, outFileName);
 	if (subsession->sink == NULL) {
-	  fprintf(stderr, "Failed to create FileSink for \"%s\": %s\n",
-		  outFileName, env->getResultMsg());
+	  *env << "Failed to create FileSink for \"" << outFileName
+		  << "\": " << env->getResultMsg() << "\n";
 	} else {
 	  if (singleMedium == NULL) {
-	    fprintf(stderr, "Created output file: \"%s\"\n", outFileName);
+	    *env << "Created output file: \"" << outFileName << "\"\n";
 	  } else {
-	    fprintf(stderr, "Outputting data from the \"%s/%s\" subsession to 'stdout'\n",
-		    subsession->mediumName(), subsession->codecName());
+	    *env << "Outputting data from the \"" << subsession->mediumName()
+			<< "/" << subsession->codecName()
+			<< "\" subsession to 'stdout'\n";
 	  }
 	  subsession->sink->startPlaying(*(subsession->readSource()),
 					 subsessionAfterPlaying,
@@ -527,14 +551,14 @@ void setupStreams() {
     if (subsession->clientPortNum() == 0) continue; // port # was not set
 
     if (!clientSetupSubsession(ourClient, subsession, streamUsingTCP)) {
-      fprintf(stderr,
-              "Failed to setup \"%s/%s\" subsession: %s\n",
-              subsession->mediumName(), subsession->codecName(),
-              env->getResultMsg());
+      *env << "Failed to setup \"" << subsession->mediumName()
+		<< "/" << subsession->codecName()
+		<< "\" subsession: " << env->getResultMsg() << "\n";
     } else {
-      fprintf(stderr, "Setup \"%s/%s\" subsession (client ports %d-%d)\n",
-              subsession->mediumName(), subsession->codecName(),
-              subsession->clientPortNum(), subsession->clientPortNum()+1);
+      *env << "Setup \"" << subsession->mediumName()
+		<< "/" << subsession->codecName()
+		<< "\" subsession (client ports " << subsession->clientPortNum()
+		<< "-" << subsession->clientPortNum()+1 << ")\n";
       madeProgress = True;
     }
   }
@@ -543,11 +567,10 @@ void setupStreams() {
 
 void startPlayingStreams() {
   if (!clientStartPlayingSession(ourClient, session)) {
-    fprintf(stderr, "Failed to start playing session: %s\n",
-	    env->getResultMsg());
+    *env << "Failed to start playing session: " << env->getResultMsg() << "\n";
     shutdown();
   } else {
-    fprintf(stderr, "Started playing session\n");
+    *env << "Started playing session\n";
   }
 
   if (qosMeasurementIntervalMS > 0) {
@@ -558,12 +581,15 @@ void startPlayingStreams() {
   // Figure out how long to delay (if at all) before shutting down, or
   // repeating the playing
   Boolean timerIsBeingUsed = False;
-  float totalEndTime = endTime;
+  double totalEndTime = endTime;
   if (endTime == 0) endTime = session->playEndTime(); // use SDP end time
   if (endTime > 0) {
-    float const maxDelayTime = (float)( ((unsigned)0x7FFFFFFF)/1000000.0 );
+    double const maxDelayTime
+      = (double)( ((unsigned)0x7FFFFFFF)/1000000.0 );
     if (endTime > maxDelayTime) {
-      fprintf(stderr, "Warning: specified end time %g exceeds maximum %g; will not do a delayed shutdown\n", endTime, maxDelayTime);
+      *env << "Warning: specified end time " << endTime
+		<< " exceeds maximum " << maxDelayTime
+		<< "; will not do a delayed shutdown\n";
       endTime = 0.0;
     } else {
       timerIsBeingUsed = True;
@@ -578,15 +604,18 @@ void startPlayingStreams() {
   char const* actionString
     = createReceivers? "Receiving streamed data":"Data is being streamed";
   if (timerIsBeingUsed) {
-    fprintf(stderr, "%s (for up to %.1f seconds)...\n",
-	    actionString, totalEndTime);
+    *env << actionString
+		<< " (for up to " << totalEndTime
+		<< " seconds)...\n";
   } else {
 #ifdef USE_SIGNALS
     pid_t ourPid = getpid();
-    fprintf(stderr, "%s (signal with \"kill -HUP %d\" or \"kill -USR1 %d\" to terminate)...\n",
-	    actionString, (int)ourPid, (int)ourPid);
+    *env << actionString
+		<< " (signal with \"kill -HUP " << (int)ourPid
+		<< "\" or \"kill -USR1 " << (int)ourPid
+		<< "\" to terminate)...\n";
 #else
-    fprintf(stderr, "%s...\n", actionString);
+    *env << actionString << "...\n";
 #endif
   }
 
@@ -601,8 +630,8 @@ void tearDownStreams() {
   while ((subsession = iter.next()) != NULL) {
     if (subsession->sessionId == NULL) continue; // no PLAY in progress
     
-    fprintf(stderr, "Closing \"%s/%s\" subsession\n",
-	    subsession->mediumName(), subsession->codecName());
+    *env << "Closing \"" << subsession->mediumName()
+		<< "/" << subsession->codecName() << "\" subsession\n";
     clientTearDownSubsession(ourClient, subsession);
   }
 
@@ -644,8 +673,10 @@ void subsessionByeHandler(void* clientData) {
   unsigned secsDiff = timeNow.tv_sec - startTime.tv_sec;
 
   MediaSubsession* subsession = (MediaSubsession*)clientData;
-  fprintf(stderr, "Received RTCP \"BYE\" on \"%s/%s\" subsession (after %d seconds)\n",
-	  subsession->mediumName(), subsession->codecName(), secsDiff);
+  *env << "Received RTCP \"BYE\" on \"" << subsession->mediumName()
+	<< "/" << subsession->codecName()
+	<< "\" subsession (after " << secsDiff
+	<< " seconds)\n";
 
   // Act now as if the subsession had closed:
   subsessionAfterPlaying(subsession);
@@ -678,12 +709,11 @@ public:
 
     RTPReceptionStatsDB::Iterator statsIter(src->receptionStatsDB());
     // Assume that there's only one SSRC source (usually the case):
-    RTPReceptionStats* stats = statsIter.next();
+    RTPReceptionStats* stats = statsIter.next(True);
     if (stats != NULL) {
       kBytesTotal = stats->totNumKBytesReceived();
       totNumPacketsReceived = stats->totNumPacketsReceived();
-      totNumPacketsExpected = stats->highestExtSeqNumReceived()
-	- stats->baseExtSeqNumReceived(); 
+      totNumPacketsExpected = stats->totNumPacketsExpected();
     }
   }
   virtual ~qosMeasurementRecord() { delete fNext; }
@@ -742,19 +772,19 @@ void qosMeasurementRecord
 
   RTPReceptionStatsDB::Iterator statsIter(fSource->receptionStatsDB());
   // Assume that there's only one SSRC source (usually the case):
-  RTPReceptionStats* stats = statsIter.next();
+  RTPReceptionStats* stats = statsIter.next(True);
   if (stats != NULL) {
     double kBytesTotalNow = stats->totNumKBytesReceived();
     double kBytesDeltaNow = kBytesTotalNow - kBytesTotal;
     kBytesTotal = kBytesTotalNow;
 
-    double kbpsNow = 8*kBytesDeltaNow/timeDiff;
+    double kbpsNow = timeDiff == 0.0 ? 0.0 : 8*kBytesDeltaNow/timeDiff;
+    if (kbpsNow < 0.0) kbpsNow = 0.0; // in case of roundoff error
     if (kbpsNow < kbits_per_second_min) kbits_per_second_min = kbpsNow;
     if (kbpsNow > kbits_per_second_max) kbits_per_second_max = kbpsNow;
 
     unsigned totReceivedNow = stats->totNumPacketsReceived();
-    unsigned totExpectedNow = stats->highestExtSeqNumReceived()
-      - stats->baseExtSeqNumReceived();
+    unsigned totExpectedNow = stats->totNumPacketsExpected();
     unsigned deltaReceivedNow = totReceivedNow - totNumPacketsReceived;
     unsigned deltaExpectedNow = totExpectedNow - totNumPacketsExpected;
     totNumPacketsReceived = totReceivedNow;
@@ -762,7 +792,7 @@ void qosMeasurementRecord
 
     double lossFractionNow = deltaExpectedNow == 0 ? 0.0
       : 1.0 - deltaReceivedNow/(double)deltaExpectedNow;
-    if (lossFractionNow < 0.0) lossFractionNow = 0.0; //reordering can cause
+    //if (lossFractionNow < 0.0) lossFractionNow = 0.0; //reordering can cause
     if (lossFractionNow < packet_loss_fraction_min) {
       packet_loss_fraction_min = lossFractionNow;
     }
@@ -797,11 +827,9 @@ void beginQOSMeasurement() {
 
 void printQOSData(int exitCode) {
   if (exitCode != 0 && statusCode == 0) statusCode = 2;
-  fprintf(stderr, "begin_QOS_statistics\n");
-  fprintf(stderr, "server_availability\t%d\n",
-	  statusCode == 1 ? 0 : 100);
-  fprintf(stderr, "stream_availability\t%d\n",
-	  statusCode == 0 ? 100 : 0);
+  *env << "begin_QOS_statistics\n";
+  *env << "server_availability\t" << (statusCode == 1 ? 0 : 100) << "\n";
+  *env << "stream_availability\t" << (statusCode == 0 ? 100 : 0) << "\n";
 
   // Print out stats for each active subsession:
   qosMeasurementRecord* curQOSRecord = qosRecordHead;
@@ -812,84 +840,70 @@ void printQOSData(int exitCode) {
       RTPSource* src = subsession->rtpSource();
       if (src == NULL) continue;
 
-      fprintf(stderr, "subsession\t%s/%s\n",
-	      subsession->mediumName(), subsession->codecName());
+      *env << "subsession\t" << subsession->mediumName()
+		<< "/" << subsession->codecName() << "\n";
 
       unsigned numPacketsReceived = 0, numPacketsExpected = 0;
 
       if (curQOSRecord != NULL) {
-	numPacketsReceived = curQOSRecord->totNumPacketsReceived;
-	numPacketsExpected = curQOSRecord->totNumPacketsExpected;
+		numPacketsReceived = curQOSRecord->totNumPacketsReceived;
+		numPacketsExpected = curQOSRecord->totNumPacketsExpected;
       }
-      fprintf(stderr, "num_packets_received\t%d\n", numPacketsReceived);
-      fprintf(stderr, "num_packets_lost\t%d\n",
-	      numPacketsExpected - numPacketsReceived);
+      *env << "num_packets_received\t" << numPacketsReceived << "\n";
+      *env << "num_packets_lost\t" << numPacketsExpected - numPacketsReceived << "\n";
       
       if (curQOSRecord != NULL) {
-	unsigned secsDiff = curQOSRecord->measurementEndTime.tv_sec
-	  - curQOSRecord->measurementStartTime.tv_sec;
-	int usecsDiff = curQOSRecord->measurementEndTime.tv_usec
-	  - curQOSRecord->measurementStartTime.tv_usec;
-	double measurementTime = secsDiff + usecsDiff/1000000.0;
-	fprintf(stderr, "elapsed_measurement_time\t%.3f\n",
-		measurementTime);
+		unsigned secsDiff = curQOSRecord->measurementEndTime.tv_sec
+		 - curQOSRecord->measurementStartTime.tv_sec;
+		int usecsDiff = curQOSRecord->measurementEndTime.tv_usec
+		 - curQOSRecord->measurementStartTime.tv_usec;
+		double measurementTime = secsDiff + usecsDiff/1000000.0;
+		*env << "elapsed_measurement_time\t" << measurementTime << "\n";
 	
-	fprintf(stderr, "kBytes_received_total\t%.3f\n",
-		curQOSRecord->kBytesTotal);
+		*env << "kBytes_received_total\t" << curQOSRecord->kBytesTotal << "\n";
 	
-	fprintf(stderr, "measurement_sampling_interval_ms\t%d\n",
-		qosMeasurementIntervalMS);
+		*env << "measurement_sampling_interval_ms\t" << qosMeasurementIntervalMS << "\n";
 	
-	if (curQOSRecord->kbits_per_second_max == 0) {
-	  // special case: we didn't receive any data:
-	  fprintf(stderr,
-		  "kbits_per_second_min\tunavailable\n"
-		  "kbits_per_second_ave\tunavailable\n"
-		  "kbits_per_second_max\tunavailable\n");
-	} else {
-	  fprintf(stderr, "kbits_per_second_min\t%.3f\n",
-		  curQOSRecord->kbits_per_second_min);
-	  fprintf(stderr, "kbits_per_second_ave\t%.3f\n",
-		  measurementTime == 0.0 ? 0.0
-		  : 8*curQOSRecord->kBytesTotal/measurementTime);
-	  fprintf(stderr, "kbits_per_second_max\t%.3f\n",
-		  curQOSRecord->kbits_per_second_max);
-	}
+		if (curQOSRecord->kbits_per_second_max == 0) {
+			// special case: we didn't receive any data:
+			*env <<
+			"kbits_per_second_min\tunavailable\n"
+			"kbits_per_second_ave\tunavailable\n"
+			"kbits_per_second_max\tunavailable\n";
+		} else {
+			*env << "kbits_per_second_min\t" << curQOSRecord->kbits_per_second_min << "\n";
+			*env << "kbits_per_second_ave\t"
+				<< (measurementTime == 0.0 ? 0.0 : 8*curQOSRecord->kBytesTotal/measurementTime) << "\n";
+			*env << "kbits_per_second_max\t" << curQOSRecord->kbits_per_second_max << "\n";
+		}
 	
-	fprintf(stderr, "packet_loss_percentage_min\t%.3f\n",
-		100*curQOSRecord->packet_loss_fraction_min);
-	double packetLossFraction = numPacketsExpected == 0 ? 1.0
-	  : 1.0 - numPacketsReceived/(double)numPacketsExpected;
-	if (packetLossFraction < 0.0) packetLossFraction = 0.0;
-	fprintf(stderr, "packet_loss_percentage_ave\t%.3f\n",
-		100*packetLossFraction);
-	fprintf(stderr, "packet_loss_percentage_max\t%.3f\n",
-		packetLossFraction == 1.0 ? 100.0
-		: 100*curQOSRecord->packet_loss_fraction_max);
+		*env << "packet_loss_percentage_min\t" << 100*curQOSRecord->packet_loss_fraction_min << "\n";
+		double packetLossFraction = numPacketsExpected == 0 ? 1.0
+			: 1.0 - numPacketsReceived/(double)numPacketsExpected;
+		if (packetLossFraction < 0.0) packetLossFraction = 0.0;
+		*env << "packet_loss_percentage_ave\t" << 100*packetLossFraction << "\n";
+		*env << "packet_loss_percentage_max\t"
+			<< (packetLossFraction == 1.0 ? 100.0 : 100*curQOSRecord->packet_loss_fraction_max) << "\n";
 	
-	RTPReceptionStatsDB::Iterator statsIter(src->receptionStatsDB());
-	// Assume that there's only one SSRC source (usually the case):
-	RTPReceptionStats* stats = statsIter.next();
-	if (stats != NULL) {
-	  fprintf(stderr, "inter_packet_gap_ms_min\t%.3f\n",
-		  stats->minInterPacketGapUS()/1000.0);
-	  struct timeval totalGaps = stats->totalInterPacketGaps();
-	  double totalGapsMS
-	    = totalGaps.tv_sec*1000.0 + totalGaps.tv_usec/1000.0;
-	  unsigned totNumPacketsReceived = stats->totNumPacketsReceived();
-	  fprintf(stderr, "inter_packet_gap_ms_ave\t%.3f\n",
-		  totNumPacketsReceived == 0 ? 0.0
-		  : totalGapsMS/totNumPacketsReceived);
-	  fprintf(stderr, "inter_packet_gap_ms_max\t%.3f\n",
-		  stats->maxInterPacketGapUS()/1000.0);
-	}
+		RTPReceptionStatsDB::Iterator statsIter(src->receptionStatsDB());
+		// Assume that there's only one SSRC source (usually the case):
+		RTPReceptionStats* stats = statsIter.next(True);
+		if (stats != NULL) {
+			*env << "inter_packet_gap_ms_min\t" << stats->minInterPacketGapUS()/1000.0 << "\n";
+			struct timeval totalGaps = stats->totalInterPacketGaps();
+			double totalGapsMS = totalGaps.tv_sec*1000.0 + totalGaps.tv_usec/1000.0;
+			unsigned totNumPacketsReceived = stats->totNumPacketsReceived();
+			*env << "inter_packet_gap_ms_ave\t"
+				<< (totNumPacketsReceived == 0 ? 0.0 : totalGapsMS/totNumPacketsReceived) << "\n";
+			*env << "inter_packet_gap_ms_max\t" << stats->maxInterPacketGapUS()/1000.0 << "\n";
+		}
 
-	curQOSRecord = curQOSRecord->fNext;
+		curQOSRecord = curQOSRecord->fNext;
       }
     }
   }    
 
-  fprintf(stderr, "end_QOS_statistics\n");
+  *env << "end_QOS_statistics\n";
   delete qosRecordHead;
 }
 
@@ -919,7 +933,7 @@ void shutdown(int exitCode) {
 }
 
 void signalHandlerShutdown(int /*sig*/) {
-  fprintf(stderr, "Got shutdown signal\n");
+  *env << "Got shutdown signal\n";
   shutdown(0);
 }
 
@@ -965,9 +979,10 @@ void checkForPacketArrival(void* clientData) {
   if (notifyTheUser) {
     struct timeval timeNow;
     gettimeofday(&timeNow, &Idunno);
-    fprintf(stderr, "%sata packets have begun arriving [%ld%03ld]\007\n",
-	    syncStreams ? "Synchronized d" : "D",
-	    timeNow.tv_sec, timeNow.tv_usec/1000);
+	char timestampStr[100];
+	sprintf(timestampStr, "%ld%03ld", timeNow.tv_sec, timeNow.tv_usec/1000);
+    *env << (syncStreams ? "Synchronized d" : "D")
+		<< "ata packets have begun arriving [" << timestampStr << "]\007\n";
     return;
   }
 

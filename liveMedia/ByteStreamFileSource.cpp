@@ -18,14 +18,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A file source that is a plain byte stream (rather than frames)
 // Implementation
 
-#include "ByteStreamFileSource.hh"
-#include "GroupsockHelper.hh"
-
-#include <string.h>
 #if defined(__WIN32__) || defined(_WIN32)
 #include <io.h>
 #include <fcntl.h>
 #endif
+
+#include "ByteStreamFileSource.hh"
+#include "GroupsockHelper.hh"
 
 ////////// ByteStreamFileSource //////////
 

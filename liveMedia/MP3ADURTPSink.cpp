@@ -34,8 +34,9 @@ MP3ADURTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
   return new MP3ADURTPSink(env, RTPgs, RTPPayloadType);
 }
 
-static void badDataSize(unsigned numBytesInFrame) {
-  fprintf(stderr, "MP3ADURTPSink::doSpecialFrameHandling(): invalid size (%d) of non-fragmented input ADU!\n", numBytesInFrame);
+static void badDataSize(UsageEnvironment& env, unsigned numBytesInFrame) {
+  env << "MP3ADURTPSink::doSpecialFrameHandling(): invalid size ("
+      << numBytesInFrame << ") of non-fragmented input ADU!\n";
 }
 
 void MP3ADURTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
@@ -48,11 +49,17 @@ void MP3ADURTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
   if (fragmentationOffset == 0) {
     unsigned aduDescriptorSize;
 
-    if (numBytesInFrame < 1) { badDataSize(numBytesInFrame); return; }
+    if (numBytesInFrame < 1) {
+      badDataSize(envir(), numBytesInFrame);
+      return;
+    }
     if (frameStart[0]&0x40) {
       // We have a 2-byte ADU descriptor
       aduDescriptorSize = 2;
-      if (numBytesInFrame < 2) { badDataSize(numBytesInFrame); return; }
+      if (numBytesInFrame < 2) {
+	badDataSize(envir(), numBytesInFrame);
+	return;
+      }
       fCurADUSize = ((frameStart[0]&~0xC0)<<8) | frameStart[1];
     } else {
       // We have a 1-byte ADU descriptor
@@ -61,7 +68,7 @@ void MP3ADURTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
     }
 
     if (frameStart[0]&0x80) {
-      fprintf(stderr, "Unexpected \"C\" bit seen on non-fragment input ADU!\n");
+      envir() << "Unexpected \"C\" bit seen on non-fragment input ADU!\n";
       return;
     }
 
@@ -71,11 +78,12 @@ void MP3ADURTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
       fragmentationOffset + numBytesInFrame + numRemainingBytes
       - aduDescriptorSize;
     if (fCurADUSize != expectedADUSize) {
-      fprintf(stderr, "MP3ADURTPSink::doSpecialFrameHandling(): Warning: Input ADU size %d (=%d+%d+%d-%d) did not match the value (%d) in the ADU descriptor!\n",
-	      expectedADUSize,
-	      fragmentationOffset, numBytesInFrame, numRemainingBytes,
-	      aduDescriptorSize,
-	      fCurADUSize);
+      envir() << "MP3ADURTPSink::doSpecialFrameHandling(): Warning: Input ADU size "
+	      << expectedADUSize << " (=" << fragmentationOffset
+	      << "+" << numBytesInFrame << "+" << numRemainingBytes
+	      << "-" << aduDescriptorSize
+	      << ") did not match the value (" << fCurADUSize
+	      << ") in the ADU descriptor!\n";
       fCurADUSize = expectedADUSize;
     }
   } else {

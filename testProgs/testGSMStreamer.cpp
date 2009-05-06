@@ -75,7 +75,7 @@ void play() {
   extern FramedSource* createNewGSMAudioSource(UsageEnvironment&);
   sessionState.source = createNewGSMAudioSource(*env);
   if (sessionState.source == NULL) {
-    fprintf(stderr, "Failed to create GSM source\n");
+    *env << "Failed to create GSM source\n";
     exit(1);
   }
   
@@ -131,14 +131,17 @@ void play() {
 		"Session streamed by \"testGSMStreamer\"", isSSM);
   rtspServer = RTSPServer::createNew(*env, *serverMediaSession, 7070);
   if (rtspServer == NULL) {
-    fprintf(stderr, "Failed to create RTSP server: %s\n",
-	    env->getResultMsg());
+    *env << "Failed to create RTSP server: " << env->getResultMsg() << "%s\n";
     exit(1);
+  } else {
+    char* url = rtspServer->rtspURL();
+    *env << "Play this stream using the URL \"" << url << "\"\n";
+    delete[] url;
   }
 #endif
 
   // Finally, start the streaming:
-  fprintf(stderr, "Beginning streaming...\n");
+  *env << "Beginning streaming...\n";
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);
 
   env->taskScheduler().doEventLoop();
@@ -146,7 +149,7 @@ void play() {
 
 
 void afterPlaying(void* /*clientData*/) {
-  fprintf(stderr, "...done streaming\n");
+  *env << "...done streaming\n";
 
   // End this loop by closing the media:
 #ifdef IMPLEMENT_RTSP_SERVER

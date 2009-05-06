@@ -187,7 +187,9 @@ Boolean ADUFromMP3Source::doGetNextFrame1() {
   fprintf(stderr, "m->a:outputting ADU %d<-%d, nbr:%d, sis:%d, dh:%d, (descriptor size: %d)\n", tailSeg->aduSize, tailSeg->backpointer, fFrameSize, tailSeg->sideInfoSize, tailSeg->dataHere(), descriptorSize);
 #endif
   if (descriptorSize + fFrameSize > fMaxSize) {
-    fprintf(stderr, "ADUFromMP3Source::doGetNextFrame1(): not enough room (%d>%d)\n", descriptorSize + fFrameSize, fMaxSize);
+    envir() << "ADUFromMP3Source::doGetNextFrame1(): not enough room ("
+	    << descriptorSize + fFrameSize << ">"
+	    << fMaxSize << ")\n";
     fFrameSize = 0;
     return False;
   }
@@ -487,7 +489,7 @@ unsigned Segment::dataHere() {
 void SegmentQueue::enqueueNewSegment(FramedSource* inputSource,
 				     FramedSource* usingSource) {
   if (isFull()) {
-    fprintf(stderr, "SegmentQueue::enqueueNewSegment() overflow\n");
+    usingSource->envir() << "SegmentQueue::enqueueNewSegment() overflow\n";
     FramedSource::handleClosure(usingSource);
     return;
   }
@@ -551,7 +553,7 @@ Boolean SegmentQueue::sqAfterGettingCommon(Segment& seg,
 
 Boolean SegmentQueue::dequeue() {
   if (isEmpty()) {
-    fprintf(stderr, "SegmentQueue::dequeue(): underflow!\n");
+    fUsingSource->envir() << "SegmentQueue::dequeue(): underflow!\n";
     return False;
   }
 

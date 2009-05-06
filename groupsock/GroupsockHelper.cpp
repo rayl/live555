@@ -23,13 +23,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #if defined(__WIN32__) || defined(_WIN32)
 #include <time.h>
 extern "C" int initializeWinsockIfNecessary();
-#define _close closesocket
 #else
 #include <stdarg.h>
 #include <time.h>
 #include <fcntl.h>
 #define initializeWinsockIfNecessary() 1
-#define _close close
 #endif
 #include <stdio.h>
 
@@ -38,17 +36,6 @@ netAddressBits SendingInterfaceAddr = INADDR_ANY;
 netAddressBits ReceivingInterfaceAddr = INADDR_ANY;
 
 static void socketErr(UsageEnvironment& env, char* errorMsg) {
-#if defined(__WIN32__) || defined(_WIN32)
-	// On Windows, sometimes system calls fail, but with "errno" == 0
-	// Treat this especially, so it can be handled at a higher level:
-	if (errno == 0) {
-		errno = WSAGetLastError();
-	}
-	if (errno == 0) {
-		env.setResultMsg("no_error ", errorMsg);
-		return;
-	}
-#endif
 	env.setResultErrMsg(errorMsg);
 }
 
@@ -197,8 +184,8 @@ int setupStreamSocket(UsageEnvironment& env,
 
   if (makeNonBlocking) {
     // Make the socket non-blocking:
-#if defined(__WIN32__) || defined(_WIN32)
-    u_long FAR arg = 1;
+#if defined(__WIN32__) || defined(_WIN32) || defined(IMN_PIM)
+    unsigned long arg = 1;
     if (ioctlsocket(newSocket, FIONBIO, &arg) != 0) {
 #else
     int curFlags = fcntl(newSocket, F_GETFL, 0);
@@ -213,72 +200,89 @@ int setupStreamSocket(UsageEnvironment& env,
   return newSocket;
 }
 
+#ifndef IMN_PIM
+static int blockUntilReadable(UsageEnvironment& env,
+			      int socket, struct timeval* timeout) {
+  int result = -1;
+  do {
+    fd_set rd_set;
+    FD_ZERO(&rd_set);
+    if (socket < 0) break;
+    FD_SET((unsigned) socket, &rd_set);
+    const unsigned numFds = socket+1;
+    
+    result = select(numFds, &rd_set, NULL, NULL, timeout);
+    if (timeout != NULL && result == 0) {
+      break; // this is OK - timeout occurred
+    } else if (result <= 0) {
+      socketErr(env, "select() error: ");
+      break;
+    }
+    
+    if (!FD_ISSET(socket, &rd_set)) {
+      socketErr(env, "select() error - !FD_ISSET");
+      break;
+    }
+  } while (0);
+
+  return result;
+}
+#else
+extern int blockUntilReadable(UsageEnvironment& env,
+			      int socket, struct timeval* timeout);
+#endif
+
 int readSocket(UsageEnvironment& env,
 	       int socket, unsigned char* buffer, unsigned bufferSize,
 	       struct sockaddr_in& fromAddress,
 	       struct timeval* timeout) {
-	int bytesRead = -1; 
-	do {
-		fd_set rd_set;
-		FD_ZERO(&rd_set);
-		if (socket < 0) break;
-		FD_SET((unsigned) socket, &rd_set);
-		const unsigned numFds = socket+1;
-    		
-		int selectResult
-			= select(numFds, &rd_set, NULL, NULL, timeout);
-		if (selectResult == 0 && timeout != NULL) {
-			bytesRead = 0;
-			break;
-		} else if (selectResult <= 0) {
-			socketErr(env, "select() error: ");
-			break;
-		}
-
-		if (!FD_ISSET(socket, &rd_set)) {
-			socketErr(env, "select() error - !FD_ISSET");
-			break;
-		}
-    		
-		SOCKLEN_T addressSize = sizeof fromAddress;
-		bytesRead = recvfrom(socket, (char*)buffer, bufferSize, 0,
-							 (struct sockaddr*)&fromAddress,
-							 &addressSize);
-		if (bytesRead < 0) {
-		    //##### HACK to work around bugs in Linux and Windows:
-			if (errno == 111 /*ECONNREFUSED (Linux)*/
+  int bytesRead = -1;
+  do {
+    int result = blockUntilReadable(env, socket, timeout);
+    if (timeout != NULL && result == 0) {
+      bytesRead = 0;
+      break;
+    } else if (result <= 0) {
+      break;
+    }
+    
+    SOCKLEN_T addressSize = sizeof fromAddress;
+    bytesRead = recvfrom(socket, (char*)buffer, bufferSize, 0,
+			 (struct sockaddr*)&fromAddress,
+			 &addressSize);
+    if (bytesRead < 0) {
+      //##### HACK to work around bugs in Linux and Windows:
+      int err = env.getErrno();
+      if (err == 111 /*ECONNREFUSED (Linux)*/
 #if defined(__WIN32__) || defined(_WIN32)
-			// What a piece of crap Windows is.  Sometimes
-			// recvfrom() returns -1, but with errno == 0.
-			// This appears not to be a real error; just treat
-			// it as if it were a read of zero bytes, and hope
-			// we don't have to do anything else to 'reset'
-			// this alleged error:
-				|| errno == 0
+	  // What a piece of crap Windows is.  Sometimes
+	  // recvfrom() returns -1, but with an 'errno' of 0.
+	  // This appears not to be a real error; just treat
+	  // it as if it were a read of zero bytes, and hope
+	  // we don't have to do anything else to 'reset'
+	  // this alleged error:
+	  || err == 0
 #else
-				|| errno == EAGAIN
+	  || err == EAGAIN
 #endif
-				|| errno == 113 /*EHOSTUNREACH (Linux)*/) {
+	  || err == 113 /*EHOSTUNREACH (Linux)*/) {
 			        //Why does Linux return this for datagram sock?
-			        fromAddress.sin_addr.s_addr = 0;
-			        return 0;
-			}
-			//##### END HACK
-			socketErr(env, "recvfrom() error: ");
-			break;
-		}
-	} while (0);
-
-	return bytesRead;
+	fromAddress.sin_addr.s_addr = 0;
+	return 0;
+      }
+      //##### END HACK
+      socketErr(env, "recvfrom() error: ");
+      break;
+    }
+  } while (0);
+  
+  return bytesRead;
 }
 
 Boolean writeSocket(UsageEnvironment& env,
 		    int socket, struct in_addr address, Port port,
 		    u_int8_t ttlArg,
 		    unsigned char* buffer, unsigned bufferSize) {
-#ifdef DEBUG_PRINT
-  fprintf(stderr, "Writing %d-byte packet to \"%s\", port %d (host order)\n", bufferSize, our_inet_ntoa(address), ntohs(port.num()));
-#endif
 	do {
 		if (ttlArg != 0) {
 			// Before sending, set the socket's TTL:
@@ -601,7 +605,7 @@ char const* timestampString() {
 	return (char const*)&timeString;
 }
 
-#if defined(__WIN32__) || defined(_WIN32)
+#if (defined(__WIN32__) || defined(_WIN32)) && !defined(IMN_PIM)
 // For Windoze, we need to implement our own gettimeofday()
 #include <sys/timeb.h>
 

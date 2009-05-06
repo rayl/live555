@@ -22,13 +22,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupsockHelper.hh"
 #include "MP3StreamState.hh"
 
-#if defined(__WIN32__) || defined(_WIN32)
-#define _close closesocket
-#else
-#define _close close
-#endif
-
-
 MP3HTTPSource* MP3HTTPSource::createNew(UsageEnvironment& env,
 					NetAddress const& remoteAddress,
 					Port remotePort,
@@ -60,7 +53,10 @@ MP3HTTPSource* MP3HTTPSource::createNew(UsageEnvironment& env,
     
     // Try to make the new socket into a FILE*:
     unsigned streamLength = 0; //#####
-    FILE* fid = fdopen(ourSocket, "r+b");
+    FILE* fid = NULL;
+#ifndef IMN_PIM
+    fid = fdopen(ourSocket, "r+b");
+#endif
     if (fid == NULL) {
       // HACK HACK HACK #####
       // We couldn't convert the socket to a FILE*; perhaps this is Windoze?

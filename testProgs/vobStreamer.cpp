@@ -59,17 +59,21 @@ Groupsock* rtpGroupsockVideo;
 Groupsock* rtcpGroupsockVideo;
 
 void usage() {
-  fprintf(stderr, "usage: %s [-i] [-a|-v] "
+  *env << "usage: " << programName << " [-i] [-a|-v] "
 #ifdef IMPLEMENT_RTSP_SERVER
 	  "[-p <RTSP-server-port-number>] "
 #endif
-	  "<VOB-file>...<VOB-file>\n", programName);
+	  "<VOB-file>...<VOB-file>\n";
   exit(1);
 }
 
 void play(); // forward
 
 int main(int argc, char const** argv) {
+  // Begin by setting up our usage environment:
+  TaskScheduler* scheduler = BasicTaskScheduler::createNew();
+  env = BasicUsageEnvironment::createNew(*scheduler);
+
   // Parse command-line options:
   // (Unfortunately we can't use getopt() here; Windoze doesn't have it)
   programName = argv[0];
@@ -99,8 +103,8 @@ int main(int argc, char const** argv) {
         usage();
       }
       if (portArg <= 0 || portArg >= 65536) {
-        fprintf(stderr, "bad port number: %d "
-		"(must be in the range (0,65536))\n", portArg);
+        *env << "bad port number: " << portArg
+	     << " (must be in the range (0,65536))\n";
         usage();
       }
       rtspServerPortNum = (unsigned short)portArg;
@@ -118,19 +122,15 @@ int main(int argc, char const** argv) {
   }
   if (argc < 2) usage();
   if (mediaToStream == 0) {
-    fprintf(stderr, "The -a and -v flags cannot both be used!\n");
+    *env << "The -a and -v flags cannot both be used!\n";
     usage();
   }
   if (iFramesOnly && (mediaToStream&VOB_VIDEO) == 0) {
-    fprintf(stderr, "Warning: Because we're not streaming video, the -i flag has no effect.\n");
+    *env << "Warning: Because we're not streaming video, the -i flag has no effect.\n";
   }
     
   inputFileNames = &argv[1];
   curInputFileName = inputFileNames;
-
-  // Begin by setting up our usage environment:
-  TaskScheduler* scheduler = BasicTaskScheduler::createNew();
-  env = BasicUsageEnvironment::createNew(*scheduler);
 
   // Create 'groupsocks' for RTP and RTCP:
   struct in_addr destinationAddress;
@@ -197,7 +197,7 @@ int main(int argc, char const** argv) {
   }
 
   // Finally, start the streaming:
-  fprintf(stderr, "Beginning streaming...\n");
+  *env << "Beginning streaming...\n";
   play();
 
   env->taskScheduler().doEventLoop(); // does not return
@@ -216,7 +216,7 @@ void afterPlaying(void* clientData) {
   
   // Now that both sinks have ended, close both input sources,
   // and start playing again:
-  fprintf(stderr, "...done reading from file\n");
+  *env << "...done reading from file\n";
 
   if (audioSink != NULL) audioSink->stopPlaying();
   if (videoSink != NULL) videoSink->stopPlaying();
@@ -246,8 +246,8 @@ void play() {
   ByteStreamFileSource* fileSource
     = ByteStreamFileSource::createNew(*env, *curInputFileName);
   if (fileSource == NULL) {
-    fprintf(stderr, "Unable to open file \"%s\" as a byte-stream file source\n",
-	    *curInputFileName);
+    *env << "Unable to open file \"" << *curInputFileName
+	 << "\" as a byte-stream file source\n";
     // Try the next file instead:
     ++curInputFileName;
     play();
@@ -274,8 +274,7 @@ void play() {
   // Finally, start playing each sink.
   // (Start playing video first, to ensure that any video sequence header
   // at the start of the file gets read.)
-  fprintf(stderr, "Beginning to read from \"%s\"...\n",
-	  *curInputFileName);
+  *env << "Beginning to read from \"" << *curInputFileName << "\"...\n";
   if (videoSink != NULL) {
     videoSink->startPlaying(*videoSource, afterPlaying, videoSink);
   }
@@ -294,23 +293,15 @@ void play() {
     rtspServer = RTSPServer::createNew(*env, *serverMediaSession,
 				       rtspServerPortNum);
     if (rtspServer != NULL) {
-      fprintf(stderr, "Created RTSP server.\n");
+      *env << "Created RTSP server.\n";
 
       // Display our "rtsp://" URL, for clients to connect to:
-      struct in_addr ourIPAddress;
-      ourIPAddress.s_addr = ourSourceAddressForMulticast(*env);
-      char portStr[10];
-      if (rtspServerPortNum == defaultRTSPServerPortNum) {
-	portStr[0] = '\0';
-      } else {
-	sprintf(portStr, ":%d", rtspServerPortNum);
-      }
-      fprintf(stderr, "Access this stream using the URL:\n"
-	      "\trtsp://%s%s/\n", our_inet_ntoa(ourIPAddress), portStr);
+      char* url = rtspServer->rtspURL();
+      *env << "Access this stream using the URL:\n\t" << url << "\n";
+      delete[] url;
     } else {
-      fprintf(stderr, "Failed to create RTSP server: %s\n",
-	      env->getResultMsg());
-      fprintf(stderr, "To change the RTSP server's port number, use the \"-p <port number>\" option.\n");
+      *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
+      *env << "To change the RTSP server's port number, use the \"-p <port number>\" option.\n";
       exit(1);
     }
   }

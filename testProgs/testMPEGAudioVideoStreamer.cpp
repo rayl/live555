@@ -126,14 +126,17 @@ int main(int argc, char** argv) {
   // port: 554.  To use a different port number, add it as an extra
   // (optional) parameter to the "RTSPServer::createNew()" call above.
   if (rtspServer == NULL) {
-    fprintf(stderr, "Failed to create RTSP server: %s\n",
-            env->getResultMsg());
+    *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
+  } else {
+    char* url = rtspServer->rtspURL();
+    *env << "Play this stream using the URL \"" << url << "\"\n";
+    delete[] url;
   }
 #endif
 
   // Finally, start the streaming:
-  fprintf(stderr, "Beginning streaming...\n");
+  *env << "Beginning streaming...\n";
   play();
 
   env->taskScheduler().doEventLoop(); // does not return
@@ -150,7 +153,7 @@ void afterPlaying(void* clientData) {
   
   // Now that both sinks have ended, close both input sources,
   // and start playing again:
-  fprintf(stderr, "...done reading from file\n");
+  *env << "...done reading from file\n";
 
   audioSink->stopPlaying();
   videoSink->stopPlaying();
@@ -169,8 +172,8 @@ void play() {
   ByteStreamFileSource* fileSource
     = ByteStreamFileSource::createNew(*env, inputFileName);
   if (fileSource == NULL) {
-    fprintf(stderr, "Unable to open file \"%s\" as a byte-stream file source\n",
-	    inputFileName);
+    *env << "Unable to open file \"" << inputFileName
+	 << "\" as a byte-stream file source\n";
     exit(1);
   }
   
@@ -189,7 +192,7 @@ void play() {
   // Finally, start playing each sink.
   // (Start playing video first, to ensure that any video sequence header
   // at the start of the file gets read.)
-  fprintf(stderr, "Beginning to read from file...\n");
+  *env << "Beginning to read from file...\n";
   videoSink->startPlaying(*videoSource, afterPlaying, videoSink);
   audioSink->startPlaying(*audioSource, afterPlaying, audioSink);
 }

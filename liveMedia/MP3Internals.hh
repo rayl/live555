@@ -52,8 +52,8 @@ typedef struct MP3SideInfo {
     unsigned preflag;
     unsigned scalefac_scale;
     unsigned count1table_select;
-    float *full_gain[3];
-    float *pow2gain;
+    double *full_gain[3];
+    double *pow2gain;
   } gr_info_s_t;
   struct {
     gr_info_s_t gr[2];

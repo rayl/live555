@@ -93,7 +93,8 @@ MPEG4GenericRTPSource
     fMode = mode == NULL ? NULL : strDup(mode);
     // Check for a "mode" that we don't yet support: //#####
     if (mode == NULL || strcmp(mode, "aac-hbr") != 0) {
-      fprintf(stderr, "MPEG4GenericRTPSource Warning: Unknown or unsupported \"mode\": %s\n", mode);
+      envir() << "MPEG4GenericRTPSource Warning: Unknown or unsupported \"mode\": "
+	      << mode << "\n";
     }
 }
 
@@ -177,7 +178,10 @@ unsigned MPEG4GenericBufferedPacket
   unsigned numAUHeaders = fOurSource->fNumAUHeaders;
   if (auHeader == NULL
       || fOurSource->fNextAUHeader >= numAUHeaders) {
-    fprintf(stderr, "MPEG4GenericBufferedPacket::nextEnclosedFrameSize(%d): data error (%p,%d,%d)!\n", dataSize, auHeader, fOurSource->fNextAUHeader, numAUHeaders);
+    fOurSource->envir() << "MPEG4GenericBufferedPacket::nextEnclosedFrameSize("
+			<< dataSize << "): data error ("
+			<< auHeader << "," << fOurSource->fNextAUHeader
+			<< "," << numAUHeaders << ")!\n";
     return dataSize;
   }
 

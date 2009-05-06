@@ -25,6 +25,7 @@
  */
 
 #include "our_md5.h"
+#include <string.h>
 
 /*
  * Constants for MD5Transform routine.
@@ -99,7 +100,9 @@ Encode(unsigned char *output, UNSIGNED32 * input, unsigned int len)
 {
 	unsigned int    i, j;
 
-	//assert((len % 4) == 0);
+#if 0
+	assert((len % 4) == 0);
+#endif
 
 	for (i = 0, j = 0; j < len; i++, j += 4) {
 		output[j] = (unsigned char) (input[i] & 0xff);

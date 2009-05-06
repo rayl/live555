@@ -38,17 +38,19 @@ struct sessionState_t {
   FileSink* audioSink;
 } sessionState;
 
+UsageEnvironment* env;
+
 int main(int argc, char** argv) {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
-  UsageEnvironment* env = BasicUsageEnvironment::createNew(*scheduler);
+  env = BasicUsageEnvironment::createNew(*scheduler);
 
   // Open the input file as a 'byte-stream file source':
   ByteStreamFileSource* inputSource
     = ByteStreamFileSource::createNew(*env, inputFileName);
   if (inputSource == NULL) {
-    fprintf(stderr, "Unable to open file \"%s\" as a byte-stream file source\n",
-	    inputFileName);
+    *env << "Unable to open file \"" << inputFileName
+	 << "\" as a byte-stream file source\n";
     exit(1);
   }
   
@@ -66,7 +68,7 @@ int main(int argc, char** argv) {
   // Finally, start playing each sink.
   // (Start playing video first, to ensure that any video sequence header
   // at the start of the file gets read.)
-  fprintf(stderr, "Beginning to read...\n");
+  *env << "Beginning to read...\n";
   sessionState.videoSink->startPlaying(*sessionState.videoSource,
 				       afterPlaying, sessionState.videoSink);
   sessionState.audioSink->startPlaying(*sessionState.audioSource,
@@ -81,19 +83,19 @@ void afterPlaying(void* clientData) {
   Medium* finishedSink = (Medium*)clientData;
 
   if (finishedSink == sessionState.videoSink) {
-    fprintf(stderr, "No more video\n");
+    *env << "No more video\n";
     Medium::close(sessionState.videoSink);
     Medium::close(sessionState.videoSource);
     sessionState.videoSink = NULL;
   } else if (finishedSink == sessionState.audioSink) {
-    fprintf(stderr, "No more audio\n");
+    *env << "No more audio\n";
     Medium::close(sessionState.audioSink);
     Medium::close(sessionState.audioSource);
     sessionState.audioSink = NULL;
   }
 
   if (sessionState.videoSink == NULL && sessionState.audioSink == NULL) {
-    fprintf(stderr, "...finished reading\n");
+    *env << "...finished reading\n";
 
     Medium::close(sessionState.baseDemultiplexor);
 

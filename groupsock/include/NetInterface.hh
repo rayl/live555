@@ -25,10 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "NetAddress.hh"
 #endif
 
-#ifndef _USAGE_ENVIRONMENT_HH
-#include "UsageEnvironment.hh"
-#endif
-
 class NetInterface {
 public:
   virtual ~NetInterface();
@@ -110,7 +106,7 @@ private:
   Port fPort;
 };
 
-ostream& operator<<(ostream& s, const Socket& sock);
+UsageEnvironment& operator<<(UsageEnvironment& s, const Socket& sock);
 
 // A data structure for looking up a Socket by port:
 

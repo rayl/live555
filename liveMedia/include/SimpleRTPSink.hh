@@ -34,6 +34,7 @@ public:
 	    unsigned rtpTimestampFrequency,
 	    char const* sdpMediaTypeString,
 	    char const* rtpPayloadFormatName,
+	    unsigned numChannels = 1,
 	    Boolean allowMultipleFramesPerPacket = True,
 	    Boolean doNormalMBitRule = True);
   // "doNormalMBitRule" means: If the medium is video, set the RTP "M"
@@ -45,6 +46,7 @@ protected:
 		unsigned rtpTimestampFrequency,
 		char const* sdpMediaTypeString,
 		char const* rtpPayloadFormatName,
+		unsigned numChannels,
 		Boolean allowMultipleFramesPerPacket,
 		Boolean doNormalMBitRule);
 	// called only by createNew()

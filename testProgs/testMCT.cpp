@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
   //addNewRTPStream(*env, s, "233.64.133.32", 7004, 255, 32);
 
   // Finally, start receiving the multicast streams:
-  fprintf(stderr, "Beginning receiving multicast streams...\n");
+  *env << "Beginning receiving multicast streams...\n";
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);
 
   env->taskScheduler().doEventLoop(); // does not return
@@ -116,7 +116,7 @@ void addNewRTPStream(UsageEnvironment& env,
 
 
 void afterPlaying(void* /*clientData*/) {
-  fprintf(stderr, "...done receiving\n");
+  *env << "...done receiving\n";
 
   // End by closing the media:
   Medium::close(sessionState.sink);

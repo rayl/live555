@@ -20,8 +20,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "DelayQueue.hh"
 #include "GroupsockHelper.hh"
-#include <signal.h>
-#include <stdio.h> //#####@@@@@
 
 static const int MILLION = 1000000;
 
@@ -190,7 +188,7 @@ DelayQueueEntry* DelayQueue::findEntryByToken(long tokenToFind) {
 }
 
 void DelayQueue::synchronize() {
-  // First, figure out hos much time has elapsed since the last sync:
+  // First, figure out how much time has elapsed since the last sync:
   EventTime timeNow = TimeNow();
   DelayInterval timeSinceLastSync = timeNow - fLastSyncTime;
   fLastSyncTime = timeNow;

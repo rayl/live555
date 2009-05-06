@@ -22,10 +22,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupsockHelper.hh"
 
 #if defined(__WIN32__) || defined(_WIN32)
-#define _close closesocket
 #define snprintf _snprintf
-#else
-#define _close close
 #endif
 
 #define MILLION 1000000
@@ -116,8 +113,10 @@ Boolean MP3StreamState::readFrame(unsigned char* outBuf, unsigned outBufSize,
   resultFrameSize = 4 + fr().frameSize;
 
   if (outBufSize < resultFrameSize) {
+#ifdef DEBUG_ERRORS
     fprintf(stderr, "Insufficient buffer size for reading input frame (%d, need %d)\n",
 	    outBufSize, resultFrameSize);
+#endif
     if (outBufSize < 4) outBufSize = 0;
     resultFrameSize = outBufSize;
 
@@ -140,7 +139,7 @@ Boolean MP3StreamState::readFrame(unsigned char* outBuf, unsigned outBufSize,
 void MP3StreamState::getAttributes(char* buffer, unsigned bufferSize) const {
   char const* formatStr
     = "bandwidth %d MPEGnumber %d MPEGlayer %d samplingFrequency %d isStereo %d playTime %d isVBR %d";
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
+#if defined(IRIX) || defined(ALPHA) || defined(_QNX4) || defined(IMN_PIM)
   /* snprintf() isn't defined, so just use sprintf() - ugh! */
   sprintf(buffer, formatStr,
 	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().layer, fr().samplingFreq, fr().isStereo,
@@ -168,7 +167,7 @@ void MP3StreamState::writeGetCmd(char const* hostName,
     long fid_long = (long)fFid;
     int sock = (int)fid_long;
     char writeBuf[100];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
+#if defined(IRIX) || defined(ALPHA) || defined(_QNX4) || defined(IMN_PIM)
     /* snprintf() isn't defined, so just use sprintf() */
     /* This is a security risk if filename can come from an external user */
     sprintf(writeBuf, getCmdFmt, fileName, hostName, portNum);

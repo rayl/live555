@@ -25,10 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "groupsock_version.hh"
 #endif
 
-#ifndef _USAGE_ENVIRONMENT_HH
-#include "UsageEnvironment.hh"
-#endif
-
 #ifndef _NET_INTERFACE_HH
 #include "NetInterface.hh"
 #endif
@@ -151,7 +147,7 @@ private:
   DirectedNetInterfaceSet fMembers;
 };
 
-ostream& operator<<(ostream& s, const Groupsock& g);
+UsageEnvironment& operator<<(UsageEnvironment& s, const Groupsock& g);
 
 // A data structure for looking up a 'groupsock'
 // by (multicast address, port), or by socket number

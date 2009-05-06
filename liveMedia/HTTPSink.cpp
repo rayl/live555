@@ -23,10 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include <string.h>
 #if defined(__WIN32__) || defined(_WIN32)
-#define _close closesocket
 #define snprintf _snprintf
-#else
-#define _close close
 #endif
 
 ////////// HTTPSink //////////
@@ -112,11 +109,8 @@ Boolean HTTPSink::continuePlaying() {
     fClientSocket = accept(fSocket, (struct sockaddr*)&clientAddr,
 			   &clientAddrLen);
     if (fClientSocket < 0) {
-#if defined(__WIN32__) || defined(_WIN32)
-      if (WSAGetLastError() != WSAEWOULDBLOCK) {
-#else
-      if (errno != EWOULDBLOCK) {
-#endif
+      int err = envir().getErrno();
+      if (err != EWOULDBLOCK) {
 	envir().setResultErrMsg("accept() failed: ");
 	return False;
       }
@@ -163,15 +157,14 @@ void HTTPSink::afterGettingFrame1(unsigned frameSize,
   if (fClientSocket >= 0 && isUseableFrame(fBuffer, frameSize)) {
     int sendResult
       = send(fClientSocket, (char*)(&fBuffer[0]), frameSize, 0);
-#if defined(__WIN32__) || defined(_WIN32)
-    if (sendResult < 0 && WSAGetLastError() != WSAEWOULDBLOCK) {
-#else
-    if (sendResult < 0 && errno != EWOULDBLOCK) {
-#endif
-      // The client appears to have gone; close him down,
-      // and consider ourselves done:
-      ourOnSourceClosure(this);
-      return;
+    if (sendResult < 0) {
+      int err = envir().getErrno();
+      if (err != EWOULDBLOCK) {
+	// The client appears to have gone; close him down,
+	// and consider ourselves done:
+	ourOnSourceClosure(this);
+	return;
+      }
     }
   }
 

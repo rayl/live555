@@ -24,6 +24,11 @@ Medium* createClient(UsageEnvironment& env,
   return RTSPClient::createNew(env, verbosityLevel, applicationName);
 }
 
+char* getOptionsResponse(Medium* client, char const* url) {
+  RTSPClient* rtspClient = (RTSPClient*)client;
+  return rtspClient->sendOptionsCmd(url);
+}
+
 char* getSDPDescriptionFromURL(Medium* client, char const* url,
 			       char const* username, char const* password,
 			       char const* /*proxyServerName*/,

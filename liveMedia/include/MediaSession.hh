@@ -73,7 +73,8 @@ private:
   Boolean parseSDPAttribute_source_filter(char const* sdpLine);
 
   static char* lookupPayloadFormat(unsigned char rtpPayloadType,
-				   unsigned& rtpTimestampFrequency);
+				   unsigned& rtpTimestampFrequency,
+				   unsigned& numChannels);
   static unsigned guessRTPTimestampFrequency(char const* mediumName,
 					     char const* codecName);
 
@@ -152,7 +153,6 @@ public:
 
   // Various parameters specific to MPEG-4 streams:
   // (most of these are unnecessary; don't define them unless needed)
-#if 0
   unsigned fmtp_auxiliarydatasizelength() const { return fAuxiliarydatasizelength; }
   unsigned fmtp_constantduration() const { return fConstantduration; }
   unsigned fmtp_constantsize() const { return fConstantsize; }
@@ -170,8 +170,14 @@ public:
   Boolean fmtp_cpresent() const { return fCpresent; }
   Boolean fmtp_randomaccessindication() const { return fRandomaccessindication; }
   char const* fmtp_mode() const { return fMode; }
-#endif
   char const* fmtp_config() const { return fConfig; }
+
+  unsigned connectionEndpointAddress() const;
+      // Converts "fConnectionEndpointName" to an address (or 0 if unknown)
+  void setDestinations(unsigned defaultDestAddress);
+      // Uses "fConnectionEndpointName" and "serverPortNum" to set
+      // the destination address and port of the RTP and RTCP objects.
+      // This is typically called by RTSP clients after doing "SETUP".
 
   // Public fields that external callers can use to keep state.
   // (They are responsible for all storage management on these fields)
@@ -181,12 +187,12 @@ public:
   MediaSink* sink; // callers can use this to keep track of who's playing us
   void* miscPtr; // callers can use this for whatever they want
 
-  unsigned connectionEndpointAddress() const;
-      // Converts "fConnectionEndpointName" to an address (or 0 if unknown)
-  void setDestinations(unsigned defaultDestAddress);
-      // Uses "fConnectionEndpointName" and "serverPortNum" to set
-      // the destination address and port of the RTP and RTCP objects.
-      // This is typically called by RTSP clients after doing "SETUP".
+  // Parameters set from a RTSP "RTP-Info:" header:
+  struct {
+    unsigned trackId;
+    u_int16_t seqNum;
+    u_int32_t timestamp;
+  } rtpInfo;
 
 private:
   friend class MediaSession;

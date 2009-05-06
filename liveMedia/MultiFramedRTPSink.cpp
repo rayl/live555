@@ -32,9 +32,10 @@ MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,
 				       Groupsock* rtpGS,
 				       unsigned char rtpPayloadType,
 				       unsigned rtpTimestampFrequency,
-				       char const* rtpPayloadFormatName)
+				       char const* rtpPayloadFormatName,
+				       unsigned numChannels)
   : RTPSink(env, rtpGS, rtpPayloadType, rtpTimestampFrequency,
-	    rtpPayloadFormatName),
+	    rtpPayloadFormatName, numChannels),
     fCurFragmentationOffset(0), fPreviousFrameEndedFragmentation(False) {
   fOutBuf = new OutPacketBuffer(preferredPacketSize, maxPacketSize);
 }

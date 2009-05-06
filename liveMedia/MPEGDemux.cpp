@@ -112,7 +112,8 @@ void MPEGDemux::registerReadInterest(unsigned char streamIdTag,
     
   // Make sure this stream is not already being read:
   if (out.isCurrentlyAwaitingData) {
-    fprintf(stderr, "MPEGDemux::registerReadInterest(): attempt to read stream id 0x%02x more than once!\n", streamIdTag);
+    envir() << "MPEGDemux::registerReadInterest(): attempt to read stream id "
+	    << (void*)streamIdTag << " more than once!\n";
     exit(1);
   }
     
@@ -353,7 +354,9 @@ void MPEGProgramStreamParser::parsePackHeader() {
     unsigned char pack_stuffing_length = getBits(3);
     skipBytes(pack_stuffing_length);
   } else { // unknown
-    fprintf(stderr, "StreamParser::parsePack() saw strange byte 0x%02x following pack_start_code\n", nextByte); fflush(stderr);
+    fUsingSource->envir() << "StreamParser::parsePack() saw strange byte "
+			  << (void*)nextByte
+			  << " following pack_start_code\n";
   }
   
   // Check for a System Header next:
@@ -381,7 +384,8 @@ void MPEGProgramStreamParser::parseSystemHeader() {
   // According to the MPEG-1 and MPEG-2 specs, "remaining_header_length" should be
   // at least 6 bytes.  Check this now:
   if (remaining_header_length < 6) {
-    fprintf(stderr, "StreamParser::parseSystemHeader(): saw strange header_length: %d < %d\n", remaining_header_length, 6); fflush(stderr);
+    fUsingSource->envir() << "StreamParser::parseSystemHeader(): saw strange header_length: "
+			  << remaining_header_length << " < 6\n";
   }
   skipBytes(remaining_header_length);
   
@@ -568,7 +572,9 @@ unsigned char MPEGProgramStreamParser::parsePESPacket() {
   unsigned currentParserOffset = curOffset();
   unsigned bytesSkipped = currentParserOffset - savedParserOffset;
   if (PES_packet_length < bytesSkipped) {
-    fprintf(stderr, "StreamParser::parsePESPacket(): saw inconsistent PES_packet_length %d < %d\n", PES_packet_length, bytesSkipped); fflush(stderr);
+    fUsingSource->envir() << "StreamParser::parsePESPacket(): saw inconsistent PES_packet_length "
+			  << PES_packet_length << " < "
+			  << bytesSkipped << "\n";
   } else {
     PES_packet_length -= bytesSkipped;
 #ifdef DEBUG
@@ -581,7 +587,10 @@ unsigned char MPEGProgramStreamParser::parsePESPacket() {
     if (out.isCurrentlyAwaitingData) {
       unsigned numBytesToCopy;
       if (PES_packet_length > out.maxSize) {
-	fprintf(stderr, "MPEGProgramStreamParser::parsePESPacket() error: PES_packet_length (%d) exceeds max frame size asked for (%d)\n", PES_packet_length, out.maxSize);
+	fUsingSource->envir() << "MPEGProgramStreamParser::parsePESPacket() error: PES_packet_length ("
+			      << PES_packet_length
+			      << ") exceeds max frame size asked for ("
+			      << out.maxSize << ")\n";
 	numBytesToCopy = out.maxSize;
       } else {
 	numBytesToCopy = PES_packet_length;

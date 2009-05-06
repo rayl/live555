@@ -30,15 +30,25 @@ public:
   static RTSPServer* createNew(UsageEnvironment& env,
 			       ServerMediaSession& serverMediaSession,
 			       Port ourPort = 554);
-      // if ourPort.num() == 0, we'll choose (& return) port
+      // if ourPort.num() == 0, we'll choose the port number
+
+  static Boolean lookupByName(UsageEnvironment& env,
+			      char const* sourceName,
+			      RTSPServer*& resultServer);
+
+  char* rtspURL() const; // dynamically allocated; caller should delete[]
 
 protected:
   RTSPServer(UsageEnvironment& env,
-	     ServerMediaSession& serverMediaSession, int ourSocket);
+	     ServerMediaSession& serverMediaSession,
+	     int ourSocket, Port ourPort);
       // called only by createNew();
   virtual ~RTSPServer();
 
   static int setUpOurSocket(UsageEnvironment& env, Port& ourPort);
+
+private: // redefined virtual functions
+  virtual Boolean isRTSPServer() const;
 
 private:
   static void incomingConnectionHandler(void*, int /*mask*/);
@@ -66,6 +76,8 @@ private:
 			    char const* cseq);
     void handleCmd_PLAY(ServerMediaSubsession* subsession,
 			char const* cseq);
+    void handleCmd_PAUSE(ServerMediaSubsession* subsession,
+			 char const* cseq);
     Boolean parseRequestString(char const *reqStr, unsigned reqStrSize,
 			       char *resultCmdName,
 			       unsigned resultCmdNameMaxSize, 
@@ -83,8 +95,9 @@ private:
   };
 
 private:
-  ServerMediaSession& fOurServerMediaSession;
   int fServerSocket;
+  Port fServerPort;
+  ServerMediaSession& fOurServerMediaSession;
   unsigned fSessionIdCounter;
 };
 

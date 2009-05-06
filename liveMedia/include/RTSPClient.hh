@@ -69,9 +69,9 @@ public:
       // Uses "announceSDPDescription()" to do an "ANNOUNCE" - first
       // without using "password", then (if we get an Unauthorized
       // response) with an authentication response computed from "password"
-  Boolean sendOptionsCmd();
+  char* sendOptionsCmd(char const* url);
       // Issues a RTSP "OPTIONS" command
-      // Returns True iff this command succeeds
+      // Returns a string containing the list of options, or NULL
 
   Boolean setupMediaSubsession(MediaSubsession& subsession,
 			       Boolean streamOutgoing = False,
@@ -132,6 +132,8 @@ private:
 				 portNumBits& serverPortNum,
 				 unsigned char& rtpChannelId,
 				 unsigned char& rtcpChannelId);
+  Boolean parseRTPInfoHeader(char const* line, unsigned& trackId,
+			     u_int16_t& seqNum, u_int32_t& timestamp);
   void constructSubsessionURL(MediaSubsession const& subsession,
 			      char const*& prefix,
 			      char const*& separator,

@@ -112,7 +112,9 @@ OutPacketBuffer::~OutPacketBuffer() {
 
 void OutPacketBuffer::enqueue(unsigned char const* from, unsigned numBytes) {
   if (numBytes > totalBytesAvailable()) {
+#ifdef DEBUG
     fprintf(stderr, "OutPacketBuffer::enqueue() warning: %d > %d\n", numBytes, totalBytesAvailable());
+#endif
     numBytes = totalBytesAvailable();
   }
 

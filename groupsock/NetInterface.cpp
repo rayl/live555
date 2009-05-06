@@ -23,10 +23,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #if defined(__WIN32__) || defined(_WIN32)
 #include <strstrea.h>
-#define _close closesocket
 #else
 #include <strstream.h>
-#define _close close
 #endif
 
 ////////// NetInterface //////////
@@ -97,7 +95,7 @@ Socket::~Socket() {
 	_close(fSocketNum);
 }
 
-ostream& operator<<(ostream& s, const Socket& sock) {
+UsageEnvironment& operator<<(UsageEnvironment& s, const Socket& sock) {
 	return s << timestampString() << " Socket(" << sock.socketNum() << ")";
 }
 

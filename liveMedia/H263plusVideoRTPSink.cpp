@@ -57,11 +57,13 @@ void H263plusVideoRTPSink
     // Also, reuse the first two bytes of the payload for this special
     // header.  (They should both have been zero.)
     if (numBytesInFrame < 2) {
-      fprintf(stderr, "H263plusVideoRTPSink::doSpecialFrameHandling(): bad frame size %d\n", numBytesInFrame);
+      envir() << "H263plusVideoRTPSink::doSpecialFrameHandling(): bad frame size "
+	      << numBytesInFrame << "\n";
       return;
     }
     if (frameStart[0] != 0 || frameStart[1] != 0) {
-      fprintf(stderr, "H263plusVideoRTPSink::doSpecialFrameHandling(): unexpected non-zero first two bytes: 0x%02x, 0x%02x\n", frameStart[0], frameStart[1]);
+      envir() << "H263plusVideoRTPSink::doSpecialFrameHandling(): unexpected non-zero first two bytes: "
+	      << (void*)(frameStart[0]) << "," << (void*)(frameStart[1]) << "\n";
     }
     frameStart[0] = specialHeader>>8;
     frameStart[1] = (unsigned char)specialHeader;
@@ -84,7 +86,7 @@ void H263plusVideoRTPSink
 
 
 unsigned H263plusVideoRTPSink::specialHeaderSize() const {
-  // There's a 2-byte special audio header.  However, if we're the first
+  // There's a 2-byte special video header.  However, if we're the first
   // (or only) fragment of a frame, then we reuse the first 2 bytes of
   // the payload instead.
   return fAreInFragmentedFrame ? 2 : 0;

@@ -608,7 +608,8 @@ unsigned MPEGVideoStreamParser::parseSlice() {
       break;
     }
     default: {
-      fprintf(stderr, "MPEGVideoStreamParser::parseSlice(): Saw unexpected code 0x%08x\n", next4Bytes);
+      fUsingSource->envir() << "MPEGVideoStreamParser::parseSlice(): Saw unexpected code "
+			    << (void*)next4Bytes << "\n";
       setParseState(PARSING_SLICE); // the safest way to recover...
       break;
     }

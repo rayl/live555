@@ -29,13 +29,13 @@ class AC3AudioRTPSink: public MultiFramedRTPSink {
 public:
   static AC3AudioRTPSink* createNew(UsageEnvironment& env,
 				    Groupsock* RTPgs,
-				    unsigned char rtpPayloadFormat,
-				    unsigned rtpTimestampFrequency);
+				    u_int8_t rtpPayloadFormat,
+				    u_int32_t rtpTimestampFrequency);
 
 protected:
   AC3AudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		  unsigned char rtpPayloadFormat,
-		  unsigned rtpTimestampFrequency);
+		  u_int8_t rtpPayloadFormat,
+		  u_int32_t rtpTimestampFrequency);
 	// called only by createNew()
 
   virtual ~AC3AudioRTPSink();

@@ -39,12 +39,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 #include <stdio.h>
 
-#ifndef __BORLANDC__
-#ifndef errno
-extern int errno;
-#endif
-#endif
-
 // The following makes the Borland compiler happy:
 #ifdef __BORLANDC__
 #define _setmode setmode
@@ -71,6 +65,7 @@ public:
   virtual Boolean isSink() const;
   virtual Boolean isRTCPInstance() const;
   virtual Boolean isRTSPClient() const;
+  virtual Boolean isRTSPServer() const;
   virtual Boolean isMediaSession() const;
   virtual Boolean isServerMediaSession() const;
 

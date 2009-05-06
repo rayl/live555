@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "liveMedia.hh"
 #include "GroupsockHelper.hh"
+#include <ctype.h>
 
 ////////// MediaSession //////////
 
@@ -170,7 +171,8 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     if (subsession->fCodecName == NULL) {
       subsession->fCodecName
 	= lookupPayloadFormat(subsession->fRTPPayloadFormat,
-			      subsession->fRTPTimestampFrequency);
+			      subsession->fRTPTimestampFrequency,
+			      subsession->fNumChannels);
       if (subsession->fCodecName == NULL) {
 	char typeStr[20];
 	sprintf(typeStr, "%d", subsession->fRTPPayloadFormat);
@@ -291,7 +293,7 @@ static Boolean parseSourceFilterAttribute(char const* sdpLine,
     result = True;
   } while (0);
 
-  delete sourceName;
+  delete[] sourceName;
   return result;
 }
 
@@ -301,35 +303,36 @@ Boolean MediaSession
 }
 
 char* MediaSession::lookupPayloadFormat(unsigned char rtpPayloadType,
-					unsigned& rtpTimestampFrequency) {
+					unsigned& freq, unsigned& nCh) {
   // Look up the codec name and timestamp frequency for known (static)
   // RTP payload formats.
   char* temp = NULL;
   switch (rtpPayloadType) {
-  case 0: {temp = "PCMU"; rtpTimestampFrequency = 8000; break;}
-  case 2: {temp = "G726-32"; rtpTimestampFrequency = 8000; break;}
-  case 3: {temp = "GSM"; rtpTimestampFrequency = 8000; break;}
-  case 4: {temp = "G723"; rtpTimestampFrequency = 8000; break;}
-  case 5: {temp = "DVI4"; rtpTimestampFrequency = 8000; break;}
-  case 6: {temp = "DVI4"; rtpTimestampFrequency = 16000; break;}
-  case 7: {temp = "LPC"; rtpTimestampFrequency = 8000; break;}
-  case 8: {temp = "PCMA"; rtpTimestampFrequency = 8000; break;}
-  case 9: {temp = "G722"; rtpTimestampFrequency = 8000; break;}
-  case 10: {temp = "L16"; rtpTimestampFrequency = 44100; break;}
-  case 11: {temp = "L16"; rtpTimestampFrequency = 44100; break;}
-  case 12: {temp = "QCELP"; rtpTimestampFrequency = 8000; break;}
-  case 14: {temp = "MPA"; rtpTimestampFrequency = 90000; break;}
-  case 15: {temp = "G728"; rtpTimestampFrequency = 8000; break;}
-  case 16: {temp = "DVI4"; rtpTimestampFrequency = 11025; break;}
-  case 17: {temp = "DVI4"; rtpTimestampFrequency = 22050; break;}
-  case 18: {temp = "G729"; rtpTimestampFrequency = 8000; break;}
-  case 25: {temp = "CELB"; rtpTimestampFrequency = 90000; break;}
-  case 26: {temp = "JPEG"; rtpTimestampFrequency = 90000; break;}
-  case 28: {temp = "NV"; rtpTimestampFrequency = 90000; break;}
-  case 31: {temp = "H261"; rtpTimestampFrequency = 90000; break;}
-  case 32: {temp = "MPV"; rtpTimestampFrequency = 90000; break;}
-  case 33: {temp = "MP2T"; rtpTimestampFrequency = 90000; break;}
-  case 34: {temp = "H263"; rtpTimestampFrequency = 90000; break;}
+  case 0: {temp = "PCMU"; freq = 8000; nCh = 1; break;}
+  case 2: {temp = "G726-32"; freq = 8000; nCh = 1; break;}
+  case 3: {temp = "GSM"; freq = 8000; nCh = 1; break;}
+  case 4: {temp = "G723"; freq = 8000; nCh = 1; break;}
+  case 5: {temp = "DVI4"; freq = 8000; nCh = 1; break;}
+  case 6: {temp = "DVI4"; freq = 16000; nCh = 1; break;}
+  case 7: {temp = "LPC"; freq = 8000; nCh = 1; break;}
+  case 8: {temp = "PCMA"; freq = 8000; nCh = 1; break;}
+  case 9: {temp = "G722"; freq = 8000; nCh = 1; break;}
+  case 10: {temp = "L16"; freq = 44100; nCh = 2; break;}
+  case 11: {temp = "L16"; freq = 44100; nCh = 1; break;}
+  case 12: {temp = "QCELP"; freq = 8000; nCh = 1; break;}
+  case 14: {temp = "MPA"; freq = 90000; nCh = 1; break;}
+    // 'number of channels' is actually encoded in the media stream
+  case 15: {temp = "G728"; freq = 8000; nCh = 1; break;}
+  case 16: {temp = "DVI4"; freq = 11025; nCh = 1; break;}
+  case 17: {temp = "DVI4"; freq = 22050; nCh = 1; break;}
+  case 18: {temp = "G729"; freq = 8000; nCh = 1; break;}
+  case 25: {temp = "CELB"; freq = 90000; nCh = 1; break;}
+  case 26: {temp = "JPEG"; freq = 90000; nCh = 1; break;}
+  case 28: {temp = "NV"; freq = 90000; nCh = 1; break;}
+  case 31: {temp = "H261"; freq = 90000; nCh = 1; break;}
+  case 32: {temp = "MPV"; freq = 90000; nCh = 1; break;}
+  case 33: {temp = "MP2T"; freq = 90000; nCh = 1; break;}
+  case 34: {temp = "H263"; freq = 90000; nCh = 1; break;}
   };
 
   if (temp != NULL) return strDup(temp);
@@ -565,7 +568,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
     if (!success) break;
 
     // Set our RTCP port to be the RTP port +1
-    unsigned short const rtcpPortNum = fClientPortNum + 1;
+    unsigned short const rtcpPortNum = fClientPortNum|1;
     if (isSSM()) {
       fRTCPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr,
 				  rtcpPortNum);

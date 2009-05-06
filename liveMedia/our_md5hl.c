@@ -8,10 +8,10 @@
  * ----------------------------------------------------------------------------
  */
 
-#include "NetCommon.h"
-#include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "our_md5.h"
+#include "NetCommon.h"
 
 char *
 our_MD5End(MD5_CTX *ctx, char *buf)
@@ -21,7 +21,7 @@ our_MD5End(MD5_CTX *ctx, char *buf)
     static const char hex[]="0123456789abcdef";
 
     if (!buf)
-        buf = malloc(2*LENGTH + 1);
+        buf = (char*)malloc(2*LENGTH + 1);
     if (!buf)
 	return 0;
     our_MD5Final(digest, ctx);
@@ -38,7 +38,7 @@ our_MD5File(const char *filename, char *buf)
 {
     unsigned char buffer[BUFSIZ];
     MD5_CTX ctx;
-    int i,j;
+    int i;
 	FILE* f;
 
     our_MD5Init(&ctx);
@@ -47,9 +47,7 @@ our_MD5File(const char *filename, char *buf)
     while ((i = fread(buffer,1,sizeof buffer,f)) > 0) {
 	ourMD5Update(&ctx,buffer,i);
     }
-    j = errno;
     fclose(f);
-    errno = j;
     if (i < 0) return 0;
     return our_MD5End(&ctx, buf);
 }

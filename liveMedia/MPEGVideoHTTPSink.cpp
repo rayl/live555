@@ -20,12 +20,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "MPEGVideoHTTPSink.hh"
 
-#if defined(__WIN32__) || defined(_WIN32)
-#define _close closesocket
-#else
-#define _close close
-#endif
-
 ////////// MPEGVideoHTTPSink //////////
 
 MPEGVideoHTTPSink* MPEGVideoHTTPSink::createNew(UsageEnvironment& env, Port ourPort) {

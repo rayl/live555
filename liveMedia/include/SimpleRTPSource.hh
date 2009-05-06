@@ -35,7 +35,11 @@ public:
 				    unsigned char rtpPayloadFormat,
 				    unsigned rtpTimestampFrequency,
 				    char const* mimeTypeString,
-				    unsigned offset = 0);
+				    unsigned offset = 0,
+				    Boolean doNormalMBitRule = True);
+  // "doNormalMBitRule" means: If the medium is video, use the RTP "M"
+  // bit on each incoming packet to indicate the last (or only) fragment
+  // of a frame.  (Otherwise, ignore the "M" bit.)
 
 protected:
   virtual ~SimpleRTPSource();
@@ -44,7 +48,8 @@ private:
   SimpleRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 		  unsigned char rtpPayloadFormat,
 		  unsigned rtpTimestampFrequency,
-		  char const* mimeTypeString, unsigned offset);
+		  char const* mimeTypeString, unsigned offset,
+		  Boolean doNormalMBitRule);
       // called only by createNew()
 
 private:
@@ -58,6 +63,7 @@ private:
 private:
   char const* fMIMEtypeString;
   unsigned fOffset;
+  Boolean fUseMBitForFrameEnd;
 };
 
 #endif

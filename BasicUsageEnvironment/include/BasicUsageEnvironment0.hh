@@ -1,0 +1,99 @@
+/**********
+This library is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the
+Free Software Foundation; either version 2.1 of the License, or (at your
+option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
+
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+**********/
+// Copyright (c) 1996-2000 Live Networks, Inc.  All rights reserved.
+// Basic Usage Environment: for a simple, non-scripted, console application
+// C++ header
+
+#ifndef _BASIC_USAGE_ENVIRONMENT0_HH
+#define _BASIC_USAGE_ENVIRONMENT0_HH
+
+#ifndef _BASICUSAGEENVIRONMENT_VERSION_HH
+#include "BasicUsageEnvironment_version.hh"
+#endif
+
+#ifndef _USAGE_ENVIRONMENT_HH
+#include "UsageEnvironment.hh"
+#endif
+
+#ifndef _DELAY_QUEUE_HH
+#include "DelayQueue.hh"
+#endif
+
+#define RESULT_MSG_BUFFER_MAX 1000
+
+// An abstract base class, useful for subclassing
+// (e.g., to redefine the implementation of "operator<<")
+class BasicUsageEnvironment0: public UsageEnvironment {
+public:
+  virtual ~BasicUsageEnvironment0();
+  
+protected:
+  BasicUsageEnvironment0(TaskScheduler& taskScheduler);
+
+protected:
+  // redefined virtual functions:
+  virtual MsgString getResultMsg() const;
+  
+  virtual void setResultMsg(MsgString msg);
+  virtual void setResultMsg(MsgString msg1,
+		    MsgString msg2);
+  virtual void setResultMsg(MsgString msg1,
+		    MsgString msg2,
+		    MsgString msg3);
+  virtual void setResultErrMsg(MsgString msg);
+  
+  virtual void appendToResultMsg(MsgString msg);
+  
+  virtual void reportBackgroundError();
+  
+private:
+  void reset();
+  
+  char fResultMsgBuffer[RESULT_MSG_BUFFER_MAX];
+  unsigned fCurBufferSize;
+  unsigned fBufferMaxSize;
+};
+
+class HandlerSet; // forward
+
+// An abstract base class, useful for subclassing
+// (e.g., to redefine the implementation of socket event handling)
+class BasicTaskScheduler0: public TaskScheduler {
+public:
+  virtual ~BasicTaskScheduler0();
+
+  virtual void SingleStep() = 0;
+  
+protected:
+  BasicTaskScheduler0();
+
+protected:
+  // Redefined virtual functions:
+  virtual TaskToken scheduleDelayedTask(int microseconds, TaskFunc* proc,
+				void* clientData);
+  virtual void unscheduleDelayedTask(TaskToken& prevTask);
+  
+  virtual void doEventLoop(char* watchVariable);
+
+protected:
+  // To implement delayed operations:
+  DelayQueue fDelayQueue;
+
+  // To implement background reads:
+  HandlerSet* fReadHandlers;
+};
+
+#endif

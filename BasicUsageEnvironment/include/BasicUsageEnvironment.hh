@@ -20,92 +20,52 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _BASIC_USAGE_ENVIRONMENT_HH
 #define _BASIC_USAGE_ENVIRONMENT_HH
 
-#ifndef _BASICUSAGEENVIRONMENT_VERSION_HH
-#include "BasicUsageEnvironment_version.hh"
+#ifndef _BASIC_USAGE_ENVIRONMENT0_HH
+#include "BasicUsageEnvironment0.hh"
 #endif
 
-#ifndef _USAGE_ENVIRONMENT_HH
-#include "UsageEnvironment.hh"
-#endif
-
-#ifndef _DELAY_QUEUE_HH
-#include "DelayQueue.hh"
-#endif
-
-#include <sys/types.h>
-#if defined(_QNX4)
-#include <sys/select.h>
-#include <unix.h>
-#endif
-
-#define RESULT_MSG_BUFFER_MAX 1000
-
-class BasicUsageEnvironment: public UsageEnvironment {
+class BasicUsageEnvironment: public BasicUsageEnvironment0 {
 public:
   static BasicUsageEnvironment* createNew(TaskScheduler& taskScheduler);
   virtual ~BasicUsageEnvironment();
   
   // redefined virtual functions:
-  MsgString getResultMsg() const;
-  
-  void setResultMsg(MsgString msg);
-  void setResultMsg(MsgString msg1,
-		    MsgString msg2);
-  void setResultMsg(MsgString msg1,
-		    MsgString msg2,
-		    MsgString msg3);
-  void setResultErrMsg(MsgString msg);
-  
-  void appendToResultMsg(MsgString msg);
-  
-  void reportBackgroundError();
-  
+  virtual int getErrno() const;
+
+  virtual UsageEnvironment& operator<<(char const* str);
+  virtual UsageEnvironment& operator<<(int i);
+  virtual UsageEnvironment& operator<<(unsigned u);
+  virtual UsageEnvironment& operator<<(double d);
+  virtual UsageEnvironment& operator<<(void* p);
+
 protected:
   BasicUsageEnvironment(TaskScheduler& taskScheduler);
       // called only by "createNew()" (or subclass constructors)
-
-private:
-  void reset();
-  
-  char fResultMsgBuffer[RESULT_MSG_BUFFER_MAX];
-  unsigned fCurBufferSize;
-  unsigned fBufferMaxSize;
 };
 
-class HandlerSet; // forward
 
-class BasicTaskScheduler: public TaskScheduler {
+class BasicTaskScheduler: public BasicTaskScheduler0 {
 public:
   static BasicTaskScheduler* createNew();
   virtual ~BasicTaskScheduler();
 
-  void SingleStep();
-  
 protected:
   BasicTaskScheduler();
-      // called only by "createNew()" (or subclass constructors)
+      // called only by "createNew()"
 
 private:
   // Redefined virtual functions:
-  TaskToken scheduleDelayedTask(int microseconds, TaskFunc* proc,
-				void* clientData);
-  void unscheduleDelayedTask(TaskToken& prevTask);
-  
-  void turnOnBackgroundReadHandling(int socketNum,
+  virtual void SingleStep();
+
+  virtual void turnOnBackgroundReadHandling(int socketNum,
 				    BackgroundHandlerProc* handlerProc,
 				    void* clientData);
-  void turnOffBackgroundReadHandling(int socketNum);
+  virtual void turnOffBackgroundReadHandling(int socketNum);
   
-  void doEventLoop(char* watchVariable);
-
 private:
-  // To implement delayed operations:
-  DelayQueue fDelayQueue;
-
   // To implement background reads:
   int fMaxNumSockets;
   fd_set fReadSet;
-  HandlerSet* fReadHandlers;
 };
 
 #endif

@@ -31,7 +31,8 @@ protected:
   MultiFramedRTPSink(UsageEnvironment& env,
 		     Groupsock* rtpgs, unsigned char rtpPayloadType,
 		     unsigned rtpTimestampFrequency,
-		     char const* rtpPayloadFormatName);
+		     char const* rtpPayloadFormatName,
+		     unsigned numChannels = 1);
 	// we're a virtual base class
 
   virtual ~MultiFramedRTPSink();

@@ -29,7 +29,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "NetCommon.h"
 #endif
 
-#include <iostream.h>
+#ifndef _USAGE_ENVIRONMENT_HH
+#include "UsageEnvironment.hh"
+#endif
 
 // Definition of a type representing a low-level network address.
 // At present, this is 32-bits, for IPv4.  Later, generalize it,
@@ -103,7 +105,7 @@ class Port {
 #endif
 };
 
-ostream& operator<<(ostream& s, const Port& p);
+UsageEnvironment& operator<<(UsageEnvironment& s, const Port& p);
 
 
 // A generic table for looking up objects by (address1, address2, port)

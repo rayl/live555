@@ -18,13 +18,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // File sinks
 // Implementation
 
-#include "FileSink.hh"
-#include "GroupsockHelper.hh"
-#include <string.h>
 #if defined(__WIN32__) || defined(_WIN32)
 #include <io.h>
 #include <fcntl.h>
 #endif
+#include "FileSink.hh"
+#include "GroupsockHelper.hh"
 
 ////////// FileSink //////////
 

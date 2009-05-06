@@ -193,9 +193,11 @@ void BasicHashTable::deleteEntry(unsigned index, TableEntry* entry) {
   }
 
   if (!foundIt) { // shouldn't happen
+#ifdef DEBUG
     fprintf(stderr, "BasicHashTable[%p]::deleteEntry(%d,%p): internal error - not found (first entry %p", this, index, entry, fBuckets[index]);
     if (fBuckets[index] != NULL) fprintf(stderr, ", next entry %p", fBuckets[index]->fNext);
     fprintf(stderr, ")\n");
+#endif
   }
 
   --fNumEntries;

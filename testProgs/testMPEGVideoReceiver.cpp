@@ -36,10 +36,12 @@ struct sessionState_t {
   RTCPInstance* rtcpInstance;
 } sessionState;
 
+UsageEnvironment* env;
+
 int main(int argc, char** argv) {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
-  UsageEnvironment* env = BasicUsageEnvironment::createNew(*scheduler);
+  env = BasicUsageEnvironment::createNew(*scheduler);
 
   // Create the data sink for 'stdout':
   sessionState.sink = FileSink::createNew(*env, "stdout");
@@ -97,7 +99,7 @@ int main(int argc, char** argv) {
   // Note: This starts RTCP running automatically
 
   // Finally, start receiving the multicast stream:
-  fprintf(stderr, "Beginning receiving multicast stream...\n");
+  *env << "Beginning receiving multicast stream...\n";
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);
 
   env->taskScheduler().doEventLoop(); // does not return
@@ -107,7 +109,7 @@ int main(int argc, char** argv) {
 
 
 void afterPlaying(void* /*clientData*/) {
-  fprintf(stderr, "...done receiving\n");
+  *env << "...done receiving\n";
 
   // End by closing the media:
   Medium::close(sessionState.sink);

@@ -333,7 +333,9 @@ PacketWarehouse::PacketWarehouse(unsigned seqNumStagger)
     fInterArrivalAveGap(0) {
   fPacketDescriptors = new WarehousedPacketDescriptor[fNumDescriptors];
   if (fPacketDescriptors == NULL) {
+#ifdef DEBUG
     fprintf(stderr, "PacketWarehouse failed to allocate %d descriptors; seqNumStagger too large!\n", fNumDescriptors);
+#endif
     exit(1);
   }
 
@@ -405,7 +407,9 @@ void PacketWarehouse::addNewFrame(unsigned priority,
   // Record this new frame:
   desc.buffer = new unsigned char[frameSize];
   if (desc.buffer == NULL) {
+#ifdef DEBUG
     fprintf(stderr, "PacketWarehouse::addNewFrame failed to allocate %d-byte buffer!\n", frameSize);
+#endif DEBUG
     exit(1);
   }
   memmove(desc.buffer, buffer, frameSize);

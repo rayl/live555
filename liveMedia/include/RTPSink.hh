@@ -51,10 +51,11 @@ public:
   }
   char const* rtpPayloadFormatName() const {return fRTPPayloadFormatName;}
 
+  unsigned numChannels() const { return fNumChannels; }
+
   virtual char const* sdpMediaType() const; // for use in SDP m= lines
-  struct timeval const& creationTime() const { // for use in SDP o= lines
-    return fCreationTime;
-  }
+  virtual char const* auxSDPLine() const;
+      // optional SDP line (e.g. a=fmtp).  Dynamically allocated
 
   unsigned short currentSeqNo() const { return fSeqNo; }
   unsigned currentTimestamp() const { return fCurrentTimestamp; }
@@ -72,7 +73,8 @@ protected:
   RTPSink(UsageEnvironment& env,
 	  Groupsock* rtpGS, unsigned char rtpPayloadType,
 	  unsigned rtpTimestampFrequency,
-	  char const* rtpPayloadFormatName);
+	  char const* rtpPayloadFormatName,
+	  unsigned numChannels);
 	// abstract base class
 
   virtual ~RTPSink();
@@ -91,6 +93,7 @@ private:
 private:
   unsigned fSSRC, fTimestampBase, fTimestampFrequency;
   char const* fRTPPayloadFormatName;
+  unsigned fNumChannels;
   struct timeval fCreationTime;
 };
 

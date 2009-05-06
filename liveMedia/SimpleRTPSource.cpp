@@ -23,25 +23,29 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "SimpleRTPSource.hh"
 #include <string.h>
 
-SimpleRTPSource* SimpleRTPSource::createNew(UsageEnvironment& env,
-					    Groupsock* RTPgs,
-					    unsigned char rtpPayloadFormat,
-					    unsigned rtpTimestampFrequency,
-					    char const* mimeTypeString,
-					    unsigned offset) {
+SimpleRTPSource*
+SimpleRTPSource::createNew(UsageEnvironment& env,
+			   Groupsock* RTPgs,
+			   unsigned char rtpPayloadFormat,
+			   unsigned rtpTimestampFrequency,
+			   char const* mimeTypeString,
+			   unsigned offset, Boolean doNormalMBitRule) {
   return new SimpleRTPSource(env, RTPgs, rtpPayloadFormat,
 			     rtpTimestampFrequency,
-			     mimeTypeString, offset);
+			     mimeTypeString, offset, doNormalMBitRule);
 }
 
-SimpleRTPSource::SimpleRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
-				 unsigned char rtpPayloadFormat,
-				 unsigned rtpTimestampFrequency,
-				 char const* mimeTypeString,
-				 unsigned offset)
+SimpleRTPSource
+::SimpleRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
+		  unsigned char rtpPayloadFormat,
+		  unsigned rtpTimestampFrequency,
+		  char const* mimeTypeString,
+		  unsigned offset, Boolean doNormalMBitRule)
   : MultiFramedRTPSource(env, RTPgs,
 			 rtpPayloadFormat, rtpTimestampFrequency),
     fMIMEtypeString(strDup(mimeTypeString)), fOffset(offset) {
+  fUseMBitForFrameEnd
+    = strncmp(mimeTypeString, "video/", 6) == 0 && doNormalMBitRule;
 }
 
 SimpleRTPSource::~SimpleRTPSource() {
@@ -51,8 +55,10 @@ SimpleRTPSource::~SimpleRTPSource() {
 Boolean SimpleRTPSource
 ::processSpecialHeader(unsigned char* /*headerStart*/,
 		       unsigned /*packetSize*/,
-		       Boolean /*rtpMarkerBit*/,
+		       Boolean rtpMarkerBit,
 		       unsigned& resultSpecialHeaderSize) {
+  fCurrentPacketCompletesFrame = !fUseMBitForFrameEnd || rtpMarkerBit;
+
   resultSpecialHeaderSize = fOffset;
   return True;
 }

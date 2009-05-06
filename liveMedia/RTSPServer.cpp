@@ -21,13 +21,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPServer.hh"
 #include "GroupsockHelper.hh"
 
-#if defined(__WIN32__) || defined(_WIN32)
-#define _close closesocket
-#define snprintf _snprintf
-#else
-#define _close close
-#endif
-
 ////////// RTSPServer //////////
 
 RTSPServer* RTSPServer::createNew(UsageEnvironment& env,
@@ -40,12 +33,45 @@ RTSPServer* RTSPServer::createNew(UsageEnvironment& env,
     int ourSocket = setUpOurSocket(env, ourPort);
     if (ourSocket == -1) break;
 
-    return new RTSPServer(env, serverMediaSession, ourSocket);
+    return new RTSPServer(env, serverMediaSession, ourSocket, ourPort);
   } while (0);
 
   if (ourSocket != -1) ::_close(ourSocket);
   delete newServer;
   return NULL;
+}
+
+Boolean RTSPServer::lookupByName(UsageEnvironment& env,
+				 char const* instanceName,
+				 RTSPServer*& resultServer) {
+  resultServer = NULL; // unless we succeed
+
+  Medium* medium;
+  if (!Medium::lookupByName(env, instanceName, medium)) return False;
+
+  if (!medium->isRTSPServer()) {
+    env.setResultMsg(instanceName, " is not a RTSP server");
+    return False;
+  }
+
+  resultServer = (RTSPServer*)medium;
+  return True;
+}
+
+char* RTSPServer::rtspURL() const {
+  struct in_addr ourAddress;
+  ourAddress.s_addr = ourSourceAddressForMulticast(envir()); // hack
+
+  char urlBuffer[50 /*large enough even for an IPv6 address*/];
+  portNumBits portNumHostOrder = ntohs(fServerPort.num());
+  if (portNumHostOrder == 554 /* the default port number */) {
+    sprintf(urlBuffer, "rtsp://%s/", our_inet_ntoa(ourAddress));
+  } else {
+    sprintf(urlBuffer, "rtsp://%s:%hu/",
+	    our_inet_ntoa(ourAddress), portNumHostOrder);
+  }
+
+  return strDup(urlBuffer);
 }
 
 #define LISTEN_BACKLOG_SIZE 20
@@ -80,9 +106,10 @@ int RTSPServer::setUpOurSocket(UsageEnvironment& env, Port& ourPort) {
 
 RTSPServer::RTSPServer(UsageEnvironment& env,
 		       ServerMediaSession& serverMediaSession,
-		       int ourSocket)
-  : Medium(env), fOurServerMediaSession(serverMediaSession),
-    fServerSocket(ourSocket), fSessionIdCounter(0) {
+		       int ourSocket, Port ourPort)
+  : Medium(env),
+  fServerSocket(ourSocket), fServerPort(ourPort),
+  fOurServerMediaSession(serverMediaSession), fSessionIdCounter(0) {
 
   // Arrange to handle connections from others:
   env.taskScheduler().turnOnBackgroundReadHandling(fServerSocket,
@@ -95,6 +122,10 @@ RTSPServer::~RTSPServer() {
   envir().taskScheduler().turnOffBackgroundReadHandling(fServerSocket);
 
   ::_close(fServerSocket);
+}
+
+Boolean RTSPServer::isRTSPServer() const {
+  return True;
 }
 
 void RTSPServer::incomingConnectionHandler(void* instance, int /*mask*/) {
@@ -110,11 +141,8 @@ void RTSPServer::incomingConnectionHandler1() {
   int clientSocket = accept(fServerSocket, (struct sockaddr*)&clientAddr,
 			    &clientAddrLen);
   if (clientSocket < 0) {
-#if defined(__WIN32__) || defined(_WIN32)
-    if (WSAGetLastError() != WSAEWOULDBLOCK) {
-#else
-    if (errno != EWOULDBLOCK) {
-#endif
+    int err = envir().getErrno();
+    if (err != EWOULDBLOCK) {
         envir().setResultErrMsg("accept() failed: ");
     }
     return;
@@ -162,7 +190,11 @@ void RTSPServer::RTSPSession::incomingRequestHandler1() {
 #ifdef DEBUG
   fprintf(stderr, "RTSPSession[%p]::incomingRequestHandler1() read %d bytes:%s\n", this, bytesRead, fBuffer);
 #endif
-  if (bytesRead <= 0) return;
+  if (bytesRead <= 0) {
+    // The client socket has apparently died - kill it:
+    delete this;
+    return;
+  }
 
   // Parse the request string into command name and 'CSeq',
   // then handle the command:
@@ -183,7 +215,8 @@ void RTSPServer::RTSPSession::incomingRequestHandler1() {
     handleCmd_DESCRIBE(cseq);
   } else if (strcmp(cmdName, "SETUP") == 0
 	     || strcmp(cmdName, "TEARDOWN") == 0
-	     || strcmp(cmdName, "PLAY") == 0) {
+	     || strcmp(cmdName, "PLAY") == 0
+	     || strcmp(cmdName, "PAUSE") == 0) {
     handleCmd_subsession(cmdName, urlSuffix, cseq);
   } else {
     handleCmd_notSupported(cseq);
@@ -200,7 +233,7 @@ void RTSPServer::RTSPSession::incomingRequestHandler1() {
 // Handler routines for specific RTSP commands:
 
 static char const* allowedCommandNames
-  = "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY";
+  = "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE";
 
 void RTSPServer::RTSPSession::handleCmd_bad(char const* /*cseq*/) {
   // Don't do anything with "cseq", because it might be nonsense
@@ -261,6 +294,8 @@ void RTSPServer::RTSPSession
     handleCmd_TEARDOWN(subsession, cseq);
   } else if (strcmp(cmdName, "PLAY") == 0) {
     handleCmd_PLAY(subsession, cseq);
+  } else if (strcmp(cmdName, "PAUSE") == 0) {
+    handleCmd_PAUSE(subsession, cseq);
   }
 }
 
@@ -284,6 +319,15 @@ void RTSPServer::RTSPSession
 void RTSPServer::RTSPSession
   ::handleCmd_PLAY(ServerMediaSubsession* /*subsession*/,
 		   char const* cseq) {
+  // We should really check that the supplied "Session:" parameter #####
+  // matches us #####
+  sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nSession: %d\r\n\r\n",
+	  cseq, fOurSessionId);
+}
+
+void RTSPServer::RTSPSession
+  ::handleCmd_PAUSE(ServerMediaSubsession* /*subsession*/,
+		       char const* cseq) {
   // We should really check that the supplied "Session:" parameter #####
   // matches us #####
   sprintf((char*)fBuffer, "RTSP/1.0 200 OK\r\nCSeq: %s\r\nSession: %d\r\n\r\n",

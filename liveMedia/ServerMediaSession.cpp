@@ -24,10 +24,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "ServerMediaSession.hh"
 #include "GroupsockHelper.hh"
 
-#if defined(__WIN32__) || defined(_WIN32)
-#define snprintf _snprintf
-#endif
-
 ////////// ServerMediaSession //////////
 
 Boolean ServerMediaSession::lookupByName(UsageEnvironment& env,
@@ -186,6 +182,7 @@ ServerMediaSubsession
 }
 
 ServerMediaSubsession::~ServerMediaSubsession() {
-  delete[] (char*)fTrackId;
   delete[] (char*)fSDPLines;
+  delete[] (char*)fTrackId;
+  delete fNext;
 }

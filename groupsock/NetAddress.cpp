@@ -182,7 +182,7 @@ Port::Port(portNumBits num /* in host byte order */) {
 	fPortNum = htons(num);
 }
 
-ostream& operator<<(ostream& s, const Port& p) {
+UsageEnvironment& operator<<(UsageEnvironment& s, const Port& p) {
 	return s << ntohs(p.num());
 }
 

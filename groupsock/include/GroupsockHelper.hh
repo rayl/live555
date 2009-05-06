@@ -25,10 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "NetAddress.hh"
 #endif
 
-#ifndef _USAGE_ENVIRONMENT_HH
-#include "UsageEnvironment.hh"
-#endif
-
 #ifndef SOCKLEN_T
 #define SOCKLEN_T int
 #endif
@@ -81,7 +77,7 @@ netAddressBits chooseRandomIPv4SSMAddress(UsageEnvironment& env);
 // Returns a simple "hh:mm:ss" string, for use in debugging output (e.g.)
 char const* timestampString();
 
-#if defined(__WIN32__) || defined(_WIN32)
+#if (defined(__WIN32__) || defined(_WIN32)) && !defined(IMN_PIM)
 // For Windoze, we need to implement our own gettimeofday()
 extern int gettimeofday(struct timeval*, int*);
 #endif
@@ -90,7 +86,6 @@ extern int gettimeofday(struct timeval*, int*);
 extern "C" netAddressBits our_inet_addr(char*);
 extern "C" char* our_inet_ntoa(struct in_addr);
 extern "C" struct hostent* our_gethostbyname(char* name);
-extern "C" void our_bcopy(/*#####const*/ void*, void*, size_t);
 extern "C" void our_srandom(int x);
 extern "C" long our_random();
 

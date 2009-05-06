@@ -13,16 +13,20 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
-// "groupsock" interface
-// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
-// Common include files, typically used for networking
+/* "groupsock" interface
+ * Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
+ * Common include files, typically used for networking
+ */
 
 #ifndef _NET_COMMON_H
 #define _NET_COMMON_H
 
 #include <string.h>
+#if defined(IMN_PIM)
+#include "IMN_PIMNetCommon.h"
+#else
 #if defined(__WIN32__) || defined(_WIN32)
-// Windows
+/* Windows */
 #if defined(_WINNT) || defined(__BORLANDC__)
 #define _MSWSOCK_
 #include <winsock2.h>
@@ -30,13 +34,16 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 #include <windows.h>
 
-// Definitions of size-specific types:
+#define _close closesocket
+#define EWOULDBLOCK WSAEWOULDBLOCK
+
+/* Definitions of size-specific types: */
 typedef unsigned u_int32_t;
 typedef unsigned short u_int16_t;
 typedef unsigned char u_int8_t;
 
 #else
-// Unix
+/* Unix */
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -52,12 +59,15 @@ typedef unsigned char u_int8_t;
 #include <sys/select.h>
 #include <unix.h>
 #endif
-#endif
+
+#define _close close
 
 #ifdef SOLARIS
 #define u_int32_t uint32_t
 #define u_int16_t uint16_t
 #define u_int8_t uint8_t
+#endif
+#endif
 #endif
 
 #endif

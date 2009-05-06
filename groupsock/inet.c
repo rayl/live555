@@ -24,11 +24,13 @@ our_inet_ntoa(in)
 }
 
 #if defined(__WIN32__) || defined(_WIN32)
+#ifndef IMN_PIM
 #define WS_VERSION_CHOICE1 0x202/*MAKEWORD(2,2)*/
 #define WS_VERSION_CHOICE2 0x101/*MAKEWORD(1,1)*/
 int initializeWinsockIfNecessary(void) {
-	// We need to call an initialization routine before
-	// we can do anything with winsock.  (How fucking lame!):
+	/* We need to call an initialization routine before
+	 * we can do anything with winsock.  (How fucking lame!):
+	 */
 	static int _haveInitializedWinsock = 0;
 	WSADATA	wsadata;
 
@@ -48,6 +50,9 @@ int initializeWinsockIfNecessary(void) {
 	return 1;
 }
 #else
+int initializeWinsockIfNecessary(void) { return 1; }
+#endif
+#else
 #define initializeWinsockIfNecessary() 1
 #endif
 
@@ -63,88 +68,6 @@ struct hostent* our_gethostbyname(name)
 	return (struct hostent*) gethostbyname(name);
 }
 
-
-/* Some systems don't seem to know about bcopy(); provide it ourselves
- *
- * sizeof(word) MUST BE A POWER OF TWO
- * SO THAT wmask BELOW IS ALL ONES
- */
-typedef	int word;		/* "word" used for optimal copy speed */
-
-#define	wsize	sizeof(word)
-#define	wmask	(wsize - 1)
-
-/*
- * Copy a block of memory, handling overlap.
- */
-void
-our_bcopy(src0, dst0, length)
-	void *dst0;
-	/*#####const*/ void *src0;
-	register size_t length;
-{
-	register char *dst = dst0;
-	register /*#####const*/ char *src = src0;
-	register size_t t;
-
-	if (length == 0 || dst == src)		/* nothing to do */
-		goto done;
-
-	/*
-	 * Macros: loop-t-times; and loop-t-times, t>0
-	 */
-#define	TLOOP(s) if (t) TLOOP1(s)
-#define	TLOOP1(s) do { s; } while (--t)
-
-	if ((unsigned long)dst < (unsigned long)src) {
-		/*
-		 * Copy forward.
-		 */
-		t = (size_t)src;	/* only need low bits */
-		if ((t | (size_t)dst) & wmask) {
-			/*
-			 * Try to align operands.  This cannot be done
-			 * unless the low bits match.
-			 */
-			if ((t ^ (size_t)dst) & wmask || length < wsize)
-				t = length;
-			else
-				t = wsize - (t & wmask);
-			length -= t;
-			TLOOP1(*dst++ = *src++);
-		}
-		/*
-		 * Copy whole words, then mop up any trailing bytes.
-		 */
-		t = length / wsize;
-		TLOOP(*(word *)dst = *(word *)src; src += wsize; dst += wsize);
-		t = length & wmask;
-		TLOOP(*dst++ = *src++);
-	} else {
-		/*
-		 * Copy backwards.  Otherwise essentially the same.
-		 * Alignment works as before, except that it takes
-		 * (t&wmask) bytes to align, not wsize-(t&wmask).
-		 */
-		src += length;
-		dst += length;
-		t = (size_t)src;
-		if ((t | (size_t)dst) & wmask) {
-			if ((t ^ (size_t)dst) & wmask || length <= wsize)
-				t = length;
-			else
-				t &= wmask;
-			length -= t;
-			TLOOP1(*--dst = *--src);
-		}
-		t = length / wsize;
-		TLOOP(src -= wsize; dst -= wsize; *(word *)dst = *(word *)src);
-		t = length & wmask;
-		TLOOP(*--dst = *--src);
-	}
-done:
-	return;
-}
 
 /*
  * random.c:
@@ -347,8 +270,10 @@ our_initstate(seed, arg_state, n)
 	else
 		state[-1] = MAX_TYPES * (rptr - state) + rand_type;
 	if (n < BREAK_0) {
+#ifdef DEBUG
 		(void)fprintf(stderr,
 		    "random: not enough state (%d bytes); ignored.\n", n);
+#endif
 		return(0);
 	}
 	if (n < BREAK_1) {
@@ -421,8 +346,11 @@ our_setstate(arg_state)
 		rand_sep = seps[type];
 		break;
 	default:
+#ifdef DEBUG
 		(void)fprintf(stderr,
 		    "random: state info corrupted; not changed.\n");
+#endif
+		break;
 	}
 	state = &new_state[1];
 	if (rand_type != TYPE_0) {

@@ -54,8 +54,8 @@ int main(int argc, char** argv) {
 
     // Ignore the first 8 bytes (SAP header).
     if (packetSize < 8) {
-      fprintf(stderr, "Ignoring short packet from %s!\n",
-	      our_inet_ntoa(fromAddress.sin_addr));
+      *env << "Ignoring short packet from "
+	   << our_inet_ntoa(fromAddress.sin_addr) << "%s!\n";
       continue;
     }
 

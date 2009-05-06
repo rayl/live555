@@ -375,14 +375,18 @@ static int read_decoder_table(unsigned char* fi) {
     if (strcmp(command,".end")==0)
       return n;
     else if (strcmp(command,".table")!=0) {
+#ifdef DEBUG
       fprintf(stderr,"huffman table %u data corrupted\n",n);
+#endif
       return -1;
     }
     rsf_ht[n].linmax = (1<<rsf_ht[n].linbits)-1;
    
     sscanf(rsf_ht[n].tablename,"%u",&nn);
     if (nn != n) {
+#ifdef DEBUG
       fprintf(stderr,"wrong table number %u\n",n);
+#endif
       return(-2);
     } 
     do {
@@ -396,7 +400,9 @@ static int read_decoder_table(unsigned char* fi) {
       rsf_ht[n].treelen  = rsf_ht[t].treelen;
       if ( (rsf_ht[n].xlen != rsf_ht[t].xlen) ||
            (rsf_ht[n].ylen != rsf_ht[t].ylen)  ) {
+#ifdef DEBUG
         fprintf(stderr,"wrong table %u reference\n",n);
+#endif
         return (-3);
       };
       while ((line[0] == '#') || (line[0] < ' ') ) {
@@ -408,7 +414,9 @@ static int read_decoder_table(unsigned char* fi) {
       rsf_ht[n].val = (unsigned char (*)[2]) 
         new unsigned char[2*(rsf_ht[n].treelen)];
       if ((rsf_ht[n].val == NULL) && ( rsf_ht[n].treelen != 0 )){
+#ifdef DEBUG
     	fprintf(stderr, "heaperror at table %d\n",n);
+#endif
     	exit (-10);
       }
       for (i=0;(unsigned)i<rsf_ht[n].treelen; i++) {
@@ -421,7 +429,9 @@ static int read_decoder_table(unsigned char* fi) {
       rsf_getline(line,99,&fi); /* read the rest of the line */
     }
     else {
+#ifdef DEBUG
       fprintf(stderr,"huffman decodertable error at table %d\n",n);
+#endif
     }
   }
   return n;
@@ -433,7 +443,9 @@ static void initialize_huffman() {
    if (huffman_initialized) return;
 
    if (read_decoder_table(huffdec) != HTN) {
+#ifdef DEBUG
       fprintf(stderr,"decoder table read error\n");
+#endif
       exit(4);
       }
    huffman_initialized = True;
@@ -833,7 +845,9 @@ static void buildHuffmanEncodingTable(struct huffcodetab* h) {
       }
     }
   }
+#ifdef DEBUG
   fprintf(stderr, "Didn't find enough entries!\n"); // shouldn't happen
+#endif
 }
 
 static void lookupXYandPutBits(BitVector& bv, struct huffcodetab const* h,
@@ -897,7 +911,9 @@ static void rsf_huffman_encoder(BitVector& bv,
 
     // Sanity check: x,y,v,w must all be 0 or 1:
     if (x>1 || y>1 || v>1 || w>1) {
+#ifdef DEBUG
       fprintf(stderr, "rsf_huffman_encoder quad sanity check fails: %x,%x,%x,%x\n", x, y, v, w);
+#endif
     }
 
     xy = (v<<3)|(w<<2)|(x<<1)|y;
@@ -910,7 +926,9 @@ static void rsf_huffman_encoder(BitVector& bv,
   } else { // dual tables
     // Sanity check: v and w must be 0:
     if (v != 0 || w != 0) {
+#ifdef DEBUG
       fprintf(stderr, "rsf_huffman_encoder dual sanity check 1 fails: %x,%x,%x,%x\n", x, y, v, w);
+#endif
     }
 
     if (x < 0) { xIsNeg = True; x = -x; }
@@ -918,7 +936,9 @@ static void rsf_huffman_encoder(BitVector& bv,
 
     // Sanity check: x and y must be <= 255:
     if (x > 255 || y > 255) {
+#ifdef DEBUG
       fprintf(stderr, "rsf_huffman_encoder dual sanity check 2 fails: %x,%x,%x,%x\n", x, y, v, w);
+#endif
     }
 
     int xl1 = h->xlen-1;
@@ -934,7 +954,9 @@ static void rsf_huffman_encoder(BitVector& bv,
     } else if (x >= xl1) {
       linbitsX = (unsigned)(x - xl1);
       if (linbitsX > h->linmax) {
+#ifdef DEBUG
 	fprintf(stderr,"warning: Huffman X table overflow\n");
+#endif
 	linbitsX = h->linmax;
       };
 
@@ -943,7 +965,9 @@ static void rsf_huffman_encoder(BitVector& bv,
 	lookupXYandPutBits(bv, h, xy);
 	linbitsY = (unsigned)(y - yl1);
 	if (linbitsY > h->linmax) {
+#ifdef DEBUG
 	  fprintf(stderr,"warning: Huffman Y table overflow\n");
+#endif
 	  linbitsY = h->linmax;
 	};
 
@@ -963,7 +987,9 @@ static void rsf_huffman_encoder(BitVector& bv,
       lookupXYandPutBits(bv, h, xy);
       linbitsY = y-yl1;
       if (linbitsY > h->linmax) {
+#ifdef DEBUG
 	fprintf(stderr,"warning: Huffman Y table overflow\n");
+#endif
 	linbitsY = h->linmax;
       };
       if (x) bv.put1Bit(xIsNeg);

@@ -79,8 +79,8 @@ void play() {
   // Open the file as a 'MP3 file source':
   sessionState.source = MP3FileSource::createNew(*env, inputFileName);
   if (sessionState.source == NULL) {
-    fprintf(stderr, "Unable to open file \"%s\" as a MP3 file source\n",
-	    inputFileName);
+    *env << "Unable to open file \"" << inputFileName
+	 << "\" as a MP3 file source\n";
     exit(1);
   }
   
@@ -89,7 +89,7 @@ void play() {
   sessionState.source
     = ADUFromMP3Source::createNew(*env, sessionState.source);
   if (sessionState.source == NULL) {
-    fprintf(stderr, "Unable to create a MP3->ADU filter for the source\n");
+    *env << "Unable to create a MP3->ADU filter for the source\n";
     exit(1);
   }
 
@@ -102,7 +102,7 @@ void play() {
   sessionState.source
     = MP3ADUinterleaver::createNew(*env, interleaving, sessionState.source);
   if (sessionState.source == NULL) {
-    fprintf(stderr, "Unable to create an ADU interleaving filter for the source\n");
+    *env << "Unable to create an ADU interleaving filter for the source\n";
     exit(1);
   }
 #endif
@@ -171,14 +171,17 @@ void play() {
   // port: 554.  To use a different port number, add it as an extra
   // (optional) parameter to the "RTSPServer::createNew()" call above.
   if (rtspServer == NULL) {
-    fprintf(stderr, "Failed to create RTSP server: %s\n",
-	    env->getResultMsg());
+    *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
+  } else {
+    char* url = rtspServer->rtspURL();
+    *env << "Play this stream using the URL \"" << url << "\"\n";
+    delete[] url;
   }
 #endif
 
   // Finally, start the streaming:
-  fprintf(stderr, "Beginning streaming...\n");
+  *env << "Beginning streaming...\n";
   sessionState.sink->startPlaying(*sessionState.source, afterPlaying, NULL);
 
   env->taskScheduler().doEventLoop();
@@ -186,7 +189,7 @@ void play() {
 
 
 void afterPlaying(void* /*clientData*/) {
-  fprintf(stderr, "...done streaming\n");
+  *env << "...done streaming\n";
 
   // End this loop by closing the media:
 #ifdef IMPLEMENT_RTSP_SERVER

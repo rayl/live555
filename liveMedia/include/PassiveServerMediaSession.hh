@@ -38,9 +38,11 @@ public:
 				 unsigned short portNum /* host order */,
 				 unsigned char ttl,
 				 unsigned rtpTimestampFrequency,
+				 unsigned numChannels,
 				 unsigned char rtpPayloadType,
 				 char const* mediaType,
-				 char const* rtpPayloadFormatName);
+				 char const* rtpPayloadFormatName,
+				 char const* auxSDPLine);
       // As an alternative to specifying a subsession by adding a RTP Sink,
       // you can call this routine to specify it by its components.
 

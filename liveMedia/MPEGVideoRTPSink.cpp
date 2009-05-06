@@ -98,7 +98,10 @@ void MPEGVideoRTPSink
       thisFrameIsASlice = True;
 
       if (fragmentationOffset > 0) { // sanity check
-	fprintf(stderr, "Warning: MPEGVideoRTPSink::doSpecialFrameHandling saw slice start code 0x%08x, but also fragmentationOffset %d\n", startCode, fragmentationOffset);
+	envir() << "Warning: MPEGVideoRTPSink::doSpecialFrameHandling saw slice start code "
+		<< (void*)startCode
+		<< ", but also fragmentationOffset "
+		<< fragmentationOffset << "\n";
       }
     } else {
       // This is probably a GOP header; we don't do anything with this
@@ -109,7 +112,8 @@ void MPEGVideoRTPSink
     thisFrameIsASlice = True;
 
     if (fragmentationOffset == 0) { // sanity check
-      fprintf(stderr, "Warning: MPEGVideoRTPSink::doSpecialFrameHandling saw strange first 4 bytes 0x%08x, but we're not a fragment\n", startCode);
+      envir() << "Warning: MPEGVideoRTPSink::doSpecialFrameHandling saw strange first 4 bytes "
+	      << (void*)startCode << ", but we're not a fragment\n";
     }
   }
 
@@ -142,11 +146,13 @@ void MPEGVideoRTPSink
   setTimestamp(frameTimestamp);
 
   // Set the RTP 'M' (marker) bit iff this frame ends (i.e., is the last
-  // slice of) a picture.  This relies on the source being a
-  // "MPEGVideoStreamFramer", and so is a hack.  Eventually, we need a
-  // more general mechanism for accessing per-frame meta-data like this.
+  // slice of) a picture (and there are no fragments remaining).
+  // This relies on the source being a "MPEGVideoStreamFramer",
+  // and so is a hack.  Eventually, we need a more general mechanism
+  // for accessing per-frame meta-data like this.
   MPEGVideoStreamFramer* framerSource = (MPEGVideoStreamFramer*)fSource;
-  if (framerSource != NULL && framerSource->fPictureEndMarker) {
+  if (framerSource != NULL && framerSource->fPictureEndMarker
+      && numRemainingBytes == 0) {
     setMarkerBit();
     framerSource->fPictureEndMarker = False;
   }

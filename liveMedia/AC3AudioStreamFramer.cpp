@@ -303,7 +303,7 @@ unsigned AC3AudioStreamParser::parseFrame() {
     return frameSize;
   } catch (int /*e*/) {
 #ifdef DEBUG
-    fprintf(stderr, "AC3AudioStreamParser::parseFrame() EXCEPTION\n");
+    envir() << "AC3AudioStreamParser::parseFrame() EXCEPTION\n";
 #endif
     return 0;  // the parsing got interrupted
   }

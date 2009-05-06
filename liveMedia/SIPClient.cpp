@@ -21,10 +21,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "SIPClient.hh"
 #include "our_md5.h"
 #include "GroupsockHelper.hh"
+#include <stdlib.h>
 
 #if defined(__WIN32__) || defined(_WIN32)
 #define _strncasecmp strncmp
-#define snprintf _snprintf
 #else
 #if defined(_QNX4)
 #define _strncasecmp strncmp
@@ -54,6 +54,7 @@ SIPClient::SIPClient(UsageEnvironment& env,
     fVerbosityLevel(verbosityLevel),
     fCSeq(0), fURL(NULL), fURLSize(0),
     fToTagStr(NULL), fToTagStrSize(0), fValidAuthenticator(NULL),
+    fUserName(NULL), fUserNameSize(0),
     fInviteSDPDescription(NULL), fInviteCmd(NULL), fInviteCmdSize(0){
   if (mimeSubtype == NULL) mimeSubtype = "";
   fMIMESubtype = strDup(mimeSubtype);
@@ -70,9 +71,9 @@ SIPClient::SIPClient(UsageEnvironment& env,
 
   fOurSocket = new Groupsock(env, ourAddress, 0, 255);
   if (fOurSocket == NULL) {
-    fprintf(stderr,
-	    "ERROR: Failed to create socket for addr %s: %s\n",
-	    our_inet_ntoa(ourAddress), env.getResultMsg());
+    env << "ERROR: Failed to create socket for addr "
+	<< our_inet_ntoa(ourAddress) << ": "
+	<< env.getResultMsg() << "\n";
   }
 
   // Now, find out our source port number.  Hack: Do this by first trying to
@@ -88,9 +89,10 @@ SIPClient::SIPClient(UsageEnvironment& env,
     delete fOurSocket;
     fOurSocket = new Groupsock(env, ourAddress, fOurPortNum, 255);
     if (fOurSocket == NULL) {
-      fprintf(stderr,
-	      "ERROR: Failed to create socket for addr %s, port %d: %s\n",
-	      our_inet_ntoa(ourAddress), fOurPortNum, env.getResultMsg());
+      env << "ERROR: Failed to create socket for addr "
+	  << our_inet_ntoa(ourAddress) << ", port "
+	  << fOurPortNum << ": "
+	  << env.getResultMsg() << "\n";
     }
   }
       
@@ -336,9 +338,9 @@ unsigned const timerDFires = 0xDDDDDDDD;
 void SIPClient::timerAHandler(void* clientData) {
   SIPClient* client = (SIPClient*)clientData;
   if (client->fVerbosityLevel >= 1) {
-    fprintf(stderr, "RETRANSMISSION %d, after %.1f additional seconds\n",
-	    ++client->fTimerACount, client->fTimerALen/1000000.0);
-    fflush(stderr);
+    client->envir() << "RETRANSMISSION " << ++client->fTimerACount
+		    << ", after " << client->fTimerALen/1000000.0
+		    << " additional seconds\n";
   }
   client->doInviteStateMachine(timerAFires);
 }
@@ -346,8 +348,8 @@ void SIPClient::timerAHandler(void* clientData) {
 void SIPClient::timerBHandler(void* clientData) {
   SIPClient* client = (SIPClient*)clientData;
   if (client->fVerbosityLevel >= 1) {
-    fprintf(stderr, "RETRANSMISSION TIMEOUT, after %.1f seconds\n",
-	    64*client->fT1/1000000.0);
+    client->envir() << "RETRANSMISSION TIMEOUT, after "
+		    << 64*client->fT1/1000000.0 << " seconds\n";
     fflush(stderr);
   }
   client->doInviteStateMachine(timerBFires);
@@ -356,8 +358,7 @@ void SIPClient::timerBHandler(void* clientData) {
 void SIPClient::timerDHandler(void* clientData) {
   SIPClient* client = (SIPClient*)clientData;
   if (client->fVerbosityLevel >= 1) {
-    fprintf(stderr, "TIMER D EXPIRED\n");
-    fflush(stderr);
+    client->envir() << "TIMER D EXPIRED\n";
   }
   client->doInviteStateMachine(timerDFires);
 }
@@ -465,8 +466,7 @@ unsigned SIPClient::getResponseCode() {
     int bytesRead = getResponse(readBuf, readBufSize);
     if (bytesRead < 0) break;
     if (fVerbosityLevel >= 1) {
-      fprintf(stderr, "Received INVITE response: %s\n", readBuf);
-      fflush(stderr);
+      envir() << "Received INVITE response: " << readBuf << "\n";
     }
 
     // Inspect the first line to get the response code:
@@ -519,7 +519,6 @@ unsigned SIPClient::getResponseCode() {
     // The remaining data is assumed to be the SDP descriptor that we want.
     // We should really do some more checking on the headers here - e.g., to
     // check for "Content-type: application/sdp", "CSeq", etc. #####
-    char* toTagStr = strDupSize(readBuf);
     int contentLength = -1;
     char* lineStart;
     while (1) {
@@ -529,10 +528,12 @@ unsigned SIPClient::getResponseCode() {
       nextLineStart = getLine(lineStart);
       if (lineStart[0] == '\0') break; // this is a blank line
 
+      char* toTagStr = strDupSize(lineStart);
       if (sscanf(lineStart, "To:%*[^;]; tag=%s", toTagStr) == 1) {
-	delete[] (char*)fToTagStr; fToTagStr = strDupSize(toTagStr);
+	delete[] (char*)fToTagStr; fToTagStr = strDup(toTagStr);
 	fToTagStrSize = strlen(fToTagStr);
       }
+      delete[] toTagStr;
  
       if (sscanf(lineStart, "Content-Length: %d", &contentLength) == 1
           || sscanf(lineStart, "Content-length: %d", &contentLength) == 1) {
@@ -543,7 +544,6 @@ unsigned SIPClient::getResponseCode() {
         }
       }
     }
-    delete[] toTagStr;
 
     // We're now at the end of the response header lines
     if (lineStart == NULL) {
@@ -577,8 +577,8 @@ unsigned SIPClient::getResponseCode() {
 
         // Keep reading more data until we have enough:
         if (fVerbosityLevel >= 1) {
-          fprintf(stderr, "Need to read %d extra bytes\n",
-                  numExtraBytesNeeded); fflush(stderr);
+          envir() << "Need to read " << numExtraBytesNeeded
+		  << " extra bytes\n";
         }
         while (numExtraBytesNeeded > 0) {
           char* ptr = &readBuf[bytesRead];
@@ -591,8 +591,8 @@ unsigned SIPClient::getResponseCode() {
           if (!readSuccess) break;
           ptr[bytesRead2] = '\0';
           if (fVerbosityLevel >= 1) {
-            fprintf(stderr, "Read %d extra bytes: %s\n", bytesRead2, ptr);
-	    fflush(stderr);
+            envir() << "Read " << bytesRead2
+		    << " extra bytes: " << ptr << "\n";
           }
 
           bytesRead += bytesRead2;
@@ -902,18 +902,9 @@ SIPClient::createAuthenticatorString(AuthRecord const* authenticator,
       + strlen(authenticator->username) + strlen(authenticator->realm)
       + strlen(authenticator->nonce) + strlen(url) + strlen(response);
     char* authenticatorStr = new char[authBufSize];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4)
-    // snprintf() isn't defined, so just use sprintf()
-    // This is a security risk if the component strings
-    // can come from an external user
     sprintf(authenticatorStr, authFmt,
 	    authenticator->username, authenticator->realm,
 	    authenticator->nonce, response, url);
-#else
-    snprintf(authenticatorStr, authBufSize, authFmt,
-	     authenticator->username, authenticator->realm,
-	     authenticator->nonce, response, url);
-#endif
     free((char*)response); // NOT delete, because it was malloc-allocated
 
     return authenticatorStr;
@@ -949,8 +940,7 @@ void SIPClient::resetValidAuthenticator() {
 Boolean SIPClient::sendRequest(char const* requestString,
 			       unsigned requestLength) {
   if (fVerbosityLevel >= 1) {
-    fprintf(stderr, "Sending request: %s\n", requestString);
-    fflush(stderr);
+    envir() << "Sending request: " << requestString << "\n";
   }
   // NOTE: We should really check that "requestLength" is not #####
   // too large for UDP (see RFC 3261, section 18.1.1) #####

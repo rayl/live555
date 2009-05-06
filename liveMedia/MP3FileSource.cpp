@@ -18,15 +18,14 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // MP3 File Sources
 // Implementation
 
-#include "MP3FileSource.hh"
-#include "MP3StreamState.hh"
-
 #include <sys/stat.h>
-#include <string.h>
 #if defined(__WIN32__) || defined(_WIN32)
 #include <io.h>
 #include <fcntl.h>
 #endif
+
+#include "MP3FileSource.hh"
+#include "MP3StreamState.hh"
 
 ////////// MP3FileSource //////////
 
