@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "Whoa! This software distribution doesn't use the normal Unix \"autoconf\"/\"configure\" mechanism for generating a Makefile.  For instructions on how to build this software, see <http://live.sourceforge.net/>"
+

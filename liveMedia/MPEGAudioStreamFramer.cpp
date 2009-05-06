@@ -1,0 +1,186 @@
+/**********
+This library is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the
+Free Software Foundation; either version 2.1 of the License, or (at your
+option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
+
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+**********/
+// "liveMedia"
+// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// A filter that breaks up an MPEG (1,2) audio elementary stream into frames
+// Implementation
+
+#include "MPEGAudioStreamFramer.hh"
+#include "StreamParser.hh"
+#include "MP3Internals.hh"
+#include <GroupsockHelper.hh>
+
+////////// MPEGAudioStreamParser definition //////////
+
+class MPEGAudioStreamParser: public StreamParser {
+public:
+  MPEGAudioStreamParser(MPEGAudioStreamFramer* usingSource,
+			FramedSource* inputSource);
+  virtual ~MPEGAudioStreamParser();
+
+public:
+  unsigned parse();
+      // returns the size of the frame that was acquired, or 0 if none was
+
+  void registerReadInterest(unsigned char* to, unsigned maxSize);
+
+  MP3FrameParams const& currentFrame() const { return fCurrentFrame; }
+
+private:
+  unsigned char* fTo;
+  unsigned fMaxSize;
+
+  // Parameters of the most recently read frame:
+  MP3FrameParams fCurrentFrame; // also works for layer I or II
+};
+
+
+////////// MPEGAudioStreamFramer implementation //////////
+
+#ifdef BSD
+static struct timezone Idunno;
+#else
+static int Idunno;
+#endif
+
+MPEGAudioStreamFramer::MPEGAudioStreamFramer(UsageEnvironment& env,
+					     FramedSource* inputSource)
+  : FramedFilter(env, inputSource) {
+  // Use the current wallclock time as the initial 'presentation time':
+  gettimeofday(&fNextFramePresentationTime, &Idunno);
+
+  fParser = new MPEGAudioStreamParser(this, inputSource);
+}
+
+MPEGAudioStreamFramer::~MPEGAudioStreamFramer() {
+  delete fParser;
+}
+
+MPEGAudioStreamFramer*
+MPEGAudioStreamFramer::createNew(UsageEnvironment& env,
+				 FramedSource* inputSource) {
+  // Need to add source type checking here???  #####
+  return new MPEGAudioStreamFramer(env, inputSource);
+}
+
+void MPEGAudioStreamFramer::doGetNextFrame() {
+  fParser->registerReadInterest(fTo, fMaxSize);
+  continueReadProcessing();
+}
+
+#define MILLION 1000000
+
+static unsigned numSamplesByLayer[4] = {0, 384, 1152, 1152};
+
+struct timeval MPEGAudioStreamFramer::currentFramePlayTime() const {
+  MP3FrameParams const& fr = fParser->currentFrame();
+  unsigned const numSamples = numSamplesByLayer[fr.layer];
+  unsigned const freq = fr.samplingFreq*(1 + fr.isMPEG2);
+
+  // result is numSamples/freq
+  unsigned const uSeconds
+    = ((numSamples*2*MILLION)/freq + 1)/2; // rounds to nearest integer
+
+  struct timeval result;
+  result.tv_sec = uSeconds/MILLION;
+  result.tv_usec = uSeconds%MILLION;
+  return result;
+}
+
+float MPEGAudioStreamFramer::getPlayTime(unsigned numFrames) const {
+  // Note: This won't work properly for VBR streams #####
+  struct timeval const pt = currentFramePlayTime();
+  float fpt = pt.tv_sec + pt.tv_usec/(float)MILLION;
+
+  return numFrames*fpt;
+}
+
+void MPEGAudioStreamFramer::continueReadProcessing(void* clientData) {
+  MPEGAudioStreamFramer* framer = (MPEGAudioStreamFramer*)clientData;
+  framer->continueReadProcessing();
+}
+
+void MPEGAudioStreamFramer::continueReadProcessing() {
+  unsigned acquiredFrameSize = fParser->parse();
+  if (acquiredFrameSize > 0) {
+    // We were able to acquire a frame from the input.
+    // It has already been copied to the reader's space.
+    fFrameSize = acquiredFrameSize;
+    
+    // Also set the presentation time, and increment it for next time,
+    // based on the length of this frame:
+    fPresentationTime = fNextFramePresentationTime;
+
+    struct timeval framePlayTime = currentFramePlayTime();
+    fNextFramePresentationTime.tv_usec += framePlayTime.tv_usec;
+    fNextFramePresentationTime.tv_sec
+      += framePlayTime.tv_sec + fNextFramePresentationTime.tv_usec/MILLION;
+    fNextFramePresentationTime.tv_usec %= MILLION;
+
+    // Call our own 'after getting' function.  Because we're not a 'leaf'
+    // source, we can call this directly, without risking infinite recursion.
+    afterGetting(this);
+  } else {
+    // We were unable to parse a complete frame from the input, because:
+    // - we had to read more data from the source stream, or
+    // - the source stream has ended.
+  }
+}
+
+
+////////// MPEGAudioStreamParser implementation //////////
+
+MPEGAudioStreamParser
+::MPEGAudioStreamParser(MPEGAudioStreamFramer* usingSource,
+			FramedSource* inputSource)
+  : StreamParser(inputSource, FramedSource::handleClosure, usingSource,
+		 &MPEGAudioStreamFramer::continueReadProcessing, usingSource) {
+}
+
+MPEGAudioStreamParser::~MPEGAudioStreamParser() {
+}
+
+void MPEGAudioStreamParser::registerReadInterest(unsigned char* to,
+						 unsigned maxSize) {
+  fTo = to;
+  fMaxSize = maxSize;
+}
+
+unsigned MPEGAudioStreamParser::parse() {
+  try {
+    saveParserState();
+    
+    // We expect a MPEG audio header (first 11 bits set to 1) at the start:
+    while ((fCurrentFrame.hdr = test4Bytes())&0xFFE00000 != 0xFFE00000) {
+      skipBytes(1);
+      saveParserState();
+    }
+    
+    fCurrentFrame.setParamsFromHeader();
+    
+    // Copy the frame to the requested destination:
+    unsigned frameSize = fCurrentFrame.frameSize + 4; // include header
+    if (frameSize > fMaxSize) frameSize = fMaxSize;
+    getBytes(fTo, frameSize);
+    
+    return frameSize;
+  } catch (int /*e*/) {
+#ifdef DEBUG
+    fprintf(stderr, "MPEGAudioStreamParser::parse() EXCEPTION\n");
+#endif
+    return 0;  // the parsing got interrupted
+  }
+}

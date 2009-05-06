@@ -1,0 +1,177 @@
+/**********
+This library is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the
+Free Software Foundation; either version 2.1 of the License, or (at your
+option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
+
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+**********/
+// "mTunnel" multicast access service
+// Copyright (c) 1996-1998 Live Networks, Inc.  All rights reserved.
+// Network Interfaces
+// Implementation
+
+#include "NetInterface.hh"
+#include "GroupsockHelper.hh"
+#include "TunnelEncaps.hh"
+#include "IOHandlers.hh"
+
+#if defined(__WIN32__) || defined(_WIN32)
+#include <strstrea.h>
+#define _close closesocket
+#else
+#include <unistd.h>
+#include <strstream.h>
+#define _close close
+#endif
+
+////////// NetInterface //////////
+
+UsageEnvironment* NetInterface::DefaultUsageEnvironment = NULL;
+
+NetInterface::NetInterface() {
+}
+
+NetInterface::~NetInterface() {
+}
+
+//##### TEMP: Use a single buffer, sized for UDP tunnels:
+//##### This assumes that the I/O handlers are non-reentrant
+static unsigned const maxPacketLength = 50*1024; // bytes
+    // This is usually overkill, because UDP packets are usually no larger
+    // than the typical Ethernet MTU (1500 bytes).  However, I've seen reports
+    // of Windows Media Servers sending UDP packets as large as 27 kBytes.
+    // These will probably undego lots of IP-level fragmentation, but that
+    // occurs below us.  We just have to hope that fragments don't get lost.
+static unsigned const ioBufferSize
+	= maxPacketLength + TunnelEncapsulationTrailerMaxSize;
+static unsigned char ioBuffer[ioBufferSize];
+
+unsigned char* NetInterface::IOBuffer() {
+	return ioBuffer;
+}
+
+unsigned NetInterface::IOBufferSize() {
+	return ioBufferSize;
+}
+
+
+////////// NetInterface //////////
+
+DirectedNetInterface::DirectedNetInterface() {
+}
+
+DirectedNetInterface::~DirectedNetInterface() {
+}
+
+
+////////// DirectedNetInterfaceSet //////////
+
+DirectedNetInterfaceSet::DirectedNetInterfaceSet()
+	: fTable(HashTable::create(ONE_WORD_HASH_KEYS)) {
+}
+
+DirectedNetInterfaceSet::~DirectedNetInterfaceSet() {
+	delete fTable;
+}
+
+DirectedNetInterface*
+    DirectedNetInterfaceSet::Add(DirectedNetInterface const* interf) {
+	return (DirectedNetInterface*) fTable->Add((char*)interf, (void*)interf);
+}
+
+Boolean DirectedNetInterfaceSet::Remove(DirectedNetInterface const* interf) {
+	return fTable->Remove((char*)interf);
+}
+
+DirectedNetInterfaceSet::Iterator::
+    Iterator(DirectedNetInterfaceSet& interfaces)
+	: fIter(HashTable::Iterator::create(*(interfaces.fTable))) {
+}
+
+DirectedNetInterfaceSet::Iterator::~Iterator() {
+	delete fIter;
+}
+
+DirectedNetInterface* DirectedNetInterfaceSet::Iterator::next() {
+  char const* key; // dummy
+  return (DirectedNetInterface*) fIter->next(key);
+};
+
+
+////////// Socket //////////
+
+int Socket::DebugLevel = 1; // default value
+
+Socket::Socket(UsageEnvironment& env, Port port, Boolean setLoopback)
+	: fEnv(DefaultUsageEnvironment != NULL ? *DefaultUsageEnvironment : env), fPort(port) {
+	fSocketNum = setupDatagramSocket(fEnv, port, setLoopback);
+	sanityHack = 42+fSocketNum;
+}
+
+Socket::~Socket() {
+	sanityHack = 0; // see IOHandlers.C
+
+	_close(fSocketNum);
+}
+
+ostream& operator<<(ostream& s, const Socket& sock) {
+	return s << timestampString() << " Socket(" << sock.socketNum() << ")";
+}
+
+////////// SocketLookupTable //////////
+
+SocketLookupTable::SocketLookupTable()
+	: fTable(HashTable::create(ONE_WORD_HASH_KEYS)) {
+}
+
+SocketLookupTable::~SocketLookupTable() {
+	delete fTable;
+}
+
+Socket* SocketLookupTable::Fetch(UsageEnvironment& env, Port port,
+				 Boolean& isNew) {
+	isNew = False;
+	Socket* sock;
+	do {
+		sock = (Socket*) fTable->Lookup((char*)(port.num()));
+		if (sock == NULL) { // we need to create one:
+			sock = CreateNew(env, port);
+			if (sock == NULL || sock->socketNum() < 0) break;
+
+			fTable->Add((char*)(port.num()), (void*)sock);
+			isNew = True;
+		}
+
+		return sock;
+	} while (0);
+
+	delete sock;
+	return NULL;
+}
+
+Boolean SocketLookupTable::Remove(Socket const* sock) {
+	return fTable->Remove( (char*)(sock->port().num()) );
+}
+
+////////// NetInterfaceTrafficStats //////////
+
+NetInterfaceTrafficStats::NetInterfaceTrafficStats() {
+  fTotNumPackets = fTotNumBytes = 0.0;
+}
+
+void NetInterfaceTrafficStats::countPacket(unsigned packetSize) {
+  fTotNumPackets += 1.0;
+  fTotNumBytes += packetSize;
+}
+
+Boolean NetInterfaceTrafficStats::haveSeenTraffic() const {
+  return fTotNumPackets != 0.0;
+}

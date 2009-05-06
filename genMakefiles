@@ -1,0 +1,31 @@
+#!/bin/sh
+
+cd liveMedia
+/bin/rm -f Makefile
+cat Makefile.head ../config.$1 Makefile.tail > Makefile
+chmod a-w Makefile
+
+cd ../groupsock
+/bin/rm -f Makefile
+cat Makefile.head ../config.$1 Makefile.tail > Makefile
+chmod a-w Makefile
+
+cd ../UsageEnvironment
+/bin/rm -f Makefile
+cat Makefile.head ../config.$1 Makefile.tail > Makefile
+chmod a-w Makefile
+
+cd ../BasicUsageEnvironment
+/bin/rm -f Makefile
+cat Makefile.head ../config.$1 Makefile.tail > Makefile
+chmod a-w Makefile
+
+cd ../testProgs
+/bin/rm -f Makefile
+cat Makefile.head ../config.$1 Makefile.tail > Makefile
+chmod a-w Makefile
+
+cd ..
+/bin/rm -f Makefile
+cat Makefile.head config.$1 Makefile.tail > Makefile
+chmod a-w Makefile

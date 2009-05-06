@@ -1,0 +1,2 @@
+INCLUDES = -IUsageEnvironment/include -Igroupsock/include -ITclUsageEnvironment/include -ImTunnel/include
+##### Change the following for your environment: 

@@ -1,0 +1,30 @@
+##### End of variables to change
+
+LIB = libBasicUsageEnvironment.$(LIB_SUFFIX)
+ALL = $(LIB)
+all:	$(ALL)
+
+OBJS = BasicUsageEnvironment.$(OBJ) DelayQueue.$(OBJ) Lock.$(OBJ) \
+	BasicHashTable.$(OBJ)
+
+libBasicUsageEnvironment.$(LIB_SUFFIX): $(OBJS)
+	$(LIBRARY_LINK)$@ $(LIBRARY_LINK_OPTS) \
+		$(OBJS)
+
+.$(C).$(OBJ):
+	$(C_COMPILER) -c $(C_FLAGS) $<       
+
+.$(CPP).$(OBJ):
+	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS) $<
+
+BasicUsageEnvironment.$(CPP):	include/BasicUsageEnvironment.hh
+include/BasicUsageEnvironment.hh:	include/BasicUsageEnvironment_version.hh
+DelayQueue.$(CPP):		include/DelayQueue.hh
+include/DelayQueue.hh:		include/Lock.hh
+Lock.$(CPP):			include/Lock.hh
+BasicHashTable.$(CPP):		include/BasicHashTable.hh
+
+clean:
+	-rm -rf *.$(OBJ) $(ALL) core *.core *~ include/*~
+
+##### Any additional, platform-specific rules come here:

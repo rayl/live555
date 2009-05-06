@@ -1,0 +1,79 @@
+/**********
+This library is free software; you can redistribute it and/or modify it under
+the terms of the GNU Lesser General Public License as published by the
+Free Software Foundation; either version 2.1 of the License, or (at your
+option) any later version. (See <http://www.gnu.org/copyleft/lesser.html>.)
+
+This library is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for
+more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with this library; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+**********/
+// "liveMedia"
+// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// MPEG Audio RTP Sources
+// Implementation
+
+#include "MPEGAudioRTPSource.hh"
+#include "GroupsockHelper.hh"
+
+MPEGAudioRTPSource*
+MPEGAudioRTPSource::createNew(UsageEnvironment& env,
+			      Groupsock* RTPgs,
+			      unsigned char rtpPayloadFormat,
+			      unsigned rtpTimestampFrequency) {
+  MPEGAudioRTPSource* newSource = NULL;
+
+  do {
+    newSource = new MPEGAudioRTPSource(env, RTPgs, rtpPayloadFormat,
+				       rtpTimestampFrequency);
+    if (newSource == NULL) break;
+
+    // Try to use a big receive buffer for RTP:
+    increaseReceiveBufferTo(env, RTPgs->socketNum(), 50*1024);
+
+    return newSource;
+  } while (0);
+
+  delete newSource;
+  return NULL;
+}
+
+MPEGAudioRTPSource::MPEGAudioRTPSource(UsageEnvironment& env,
+				       Groupsock* rtpGS,
+				       unsigned char rtpPayloadFormat,
+				       unsigned rtpTimestampFrequency)
+  : MultiFramedRTPSource(env, rtpGS,
+			 rtpPayloadFormat, rtpTimestampFrequency) {
+}
+
+MPEGAudioRTPSource::~MPEGAudioRTPSource() {
+}
+
+Boolean MPEGAudioRTPSource
+::processSpecialHeader(unsigned char* headerStart, unsigned packetSize,
+		       Boolean /*rtpMarkerBit*/,
+                       unsigned& resultSpecialHeaderSize) {
+  // There's a 4-byte header indicating fragmentation.
+  if (packetSize < 4) return False;
+
+  //unsigned header = ntohl(*(unsigned*)headerStart);
+
+  // Note: This fragmentation header is actually useless to us, because
+  // it doesn't tell us whether or not this RTP packet *ends* a
+  // fragmented frame.  Thus, we can't use it to properly set
+  // "fCurrentPacketCompletesFrame".  Instead, we assume that even
+  // a partial audio frame will be usable to clients.
+
+  resultSpecialHeaderSize = 4;
+  return True;
+}    
+
+char const* MPEGAudioRTPSource::MIMEtype() const {
+  return "audio/mpeg";
+}
+
