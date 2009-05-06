@@ -40,6 +40,7 @@ void sessionTimerHandler(void* clientData);
 void shutdown(int exitCode = 1);
 void signalHandlerShutdown(int sig);
 void checkForPacketArrival(void* clientData);
+Boolean setupDestinationRTSPServer(); // WORK IN PROGRESS #####
 
 char const* progName;
 UsageEnvironment* env;
@@ -52,6 +53,7 @@ QuickTimeFileSink* qtOut = NULL;
 Boolean audioOnly = False;
 Boolean videoOnly = False;
 char const* singleMedium = NULL;
+int verbosityLevel = 0;
 float endTime = 0;
 float endTimeSlop = 5.0; // extra seconds to delay
 Boolean playContinuously = False;
@@ -69,6 +71,7 @@ unsigned movieFPS = 15;
 Boolean packetLossCompensate = False;
 Boolean syncStreams = False;
 Boolean generateHintTracks = False;
+char* destRTSPURL = NULL;
 
 #ifdef BSD
 static struct timezone Idunno;
@@ -100,7 +103,6 @@ int main(int argc, char** argv) {
 #endif
 
   unsigned short desiredPortNum = 0;
-  int verbosityLevel = 0;
 
   // unfortunately we can't use getopt() here, as Windoze doesn't have it
   while (argc > 2) {
@@ -269,6 +271,13 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 'R': { // inject received data into a RTSP server
+      // WORK IN PROGRESS #####
+      destRTSPURL = argv[2];
+      ++argv; --argc;
+      break;
+    }
+
     default: {
       usage();
       break;
@@ -282,8 +291,12 @@ int main(int argc, char** argv) {
     fprintf(stderr, "The -r and -q flags cannot both be used!\n");
     usage();
   }
+  if (destRTSPURL != NULL && (!createReceivers || outputQuickTimeFile)) {
+    fprintf(stderr, "The -R flag cannot be used with -r or -q!\n");
+    usage();
+  }
   if (audioOnly && videoOnly) {
-    fprintf(stderr, "The -a and -v flags cannot bot be used!\n");
+    fprintf(stderr, "The -a and -v flags cannot both be used!\n");
     usage();
   }
   if (!createReceivers && notifyOnPacketArrival) {
@@ -406,6 +419,21 @@ int main(int argc, char** argv) {
       }
 
       qtOut->startPlaying(sessionAfterPlaying, NULL);
+    } else if (destRTSPURL != NULL) {
+      // Announce the session into a (separate) RTSP server,
+      // and create one or more "RTPTranslator"s to tie the source
+      // and destination together:
+      // WORK IN PROGRESS #####
+      if (setupDestinationRTSPServer()) {
+	fprintf(stderr,
+		"Set up destination RTSP session for \"%s\"\n",
+		destRTSPURL);
+      } else {
+	fprintf(stderr,
+		"Failed to set up destination RTSP session for \"%s\": %s\n",
+		destRTSPURL, env->getResultMsg());
+	shutdown();
+      }
     } else {
       // Create and start "FileSink"s for each subsession:
       madeProgress = False;
@@ -685,4 +713,48 @@ void checkForPacketArrival(void* clientData) {
   currentTimerTask
     = env->taskScheduler().scheduleDelayedTask(uSecsToDelay,
 			       (TaskFunc*)checkForPacketArrival, NULL);
+}
+
+// WORK IN PROGRESS #####
+RTSPClient* rtspClientOutgoing = NULL;
+Boolean setupDestinationRTSPServer() {
+  do {
+    rtspClientOutgoing
+      = RTSPClient::createNew(*env, verbosityLevel, progName);
+    if (rtspClientOutgoing == NULL) break;
+
+    char* destSDPDescription =
+      // TEMP, FOR TESTING. FIX #####
+      "v=0\n"
+      "o=- 12345 6789 IN IP4 127.0.0.1\n"
+      "s=RTSP session, relayed through \"playSIP\"\n"
+      "i=RTSP session\n"
+      "t=0 0\n"
+      "c=IN IP4 66.80.62.34\n"
+      "a=control:*\n"
+      "m=audio 0 RTP/AVP 0\n"
+      "a=control:trackID=0\n"
+      ;
+
+    Boolean announceResult;
+    if (username != NULL) {
+      announceResult
+	= rtspClientOutgoing->announceWithPassword(destRTSPURL,
+						   destSDPDescription,
+						   username, password);
+    } else {
+      announceResult
+	= rtspClientOutgoing->announceSDPDescription(destRTSPURL,
+						     destSDPDescription);
+    }
+    if (!announceResult) break;
+
+    // Next, set up RTPTranslator(s) between source(s) and destination(s),
+    // and start playing them.
+    // TO COMPLETE #####
+
+    return True;
+  } while (0);
+
+  return False;
 }
