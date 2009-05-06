@@ -66,6 +66,8 @@ private:
 private:
   unsigned fOutgoingPacketCounter;
   unsigned fProgramMapVersion;
+  u_int8_t fPreviousInputProgramMapVersion, fCurrentInputProgramMapVersion;
+      // These two fields are used if we see "program_stream_map"s in the input.
   struct {
     unsigned counter;
     u_int8_t streamType; // for use in Program Maps
@@ -77,7 +79,6 @@ private:
   u_int16_t fPCRExtension;
   unsigned char* fInputBuffer;
   unsigned fInputBufferSize, fInputBufferBytesUsed;
-  u_int8_t fProgramStreamMap[256]; // maps elementary_stream_id -> stream_type
 };
 
 #endif

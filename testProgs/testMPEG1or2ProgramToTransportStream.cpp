@@ -69,5 +69,6 @@ int main(int argc, char** argv) {
 
 void afterPlaying(void* /*clientData*/) {
   *env << "Done reading.\n";
+  *env << "Wrote output file: \"" << outputFileName << "\"\n";
   exit(0);
 }

@@ -36,6 +36,7 @@ MPEG2TransportStreamFromPESSource
 				    MPEG1or2DemuxedElementaryStream* inputSource)
   : FramedFilter(env, inputSource),
     fOutgoingPacketCounter(0), fProgramMapVersion(0),
+    fPreviousInputProgramMapVersion(0xFF), fCurrentInputProgramMapVersion(0xFF),
     fPCR_PID(0), fCurrentPID(0),
     fPCRHighBit(0), fPCRRemainingBits(0), fPCRExtension(0),
     fInputBufferSize(0), fInputBufferBytesUsed(0) {
@@ -45,8 +46,6 @@ MPEG2TransportStreamFromPESSource
   }
 
   fInputBuffer = new unsigned char[MAX_PES_PACKET_SIZE];
-
-  for (unsigned j = 0; j < sizeof fProgramStreamMap; ++j) fProgramStreamMap[j] = 0;
 }
 
 MPEG2TransportStreamFromPESSource::~MPEG2TransportStreamFromPESSource() {
@@ -71,9 +70,13 @@ void MPEG2TransportStreamFromPESSource::doGetNextFrame() {
     }
 
     // Periodically (or when we see a new PID) return a Program Map Table instead:
-    Boolean programMapHasChanged = fPIDState[fCurrentPID].counter == 0;
+    Boolean programMapHasChanged = fPIDState[fCurrentPID].counter == 0
+      || fCurrentInputProgramMapVersion != fPreviousInputProgramMapVersion;
     if (fOutgoingPacketCounter % PMT_FREQUENCY == 0 || programMapHasChanged) {
-      if (programMapHasChanged) fPIDState[fCurrentPID].counter = 1; // for next time
+      if (programMapHasChanged) { // reset values for next time:
+	fPIDState[fCurrentPID].counter = 1;
+	fPreviousInputProgramMapVersion = fCurrentInputProgramMapVersion;
+      }
       deliverPMTPacket(programMapHasChanged);
       break;
     }
@@ -122,7 +125,6 @@ void MPEG2TransportStreamFromPESSource
 
       // Set the stream's type:
       u_int8_t& streamType = fPIDState[fCurrentPID].streamType; // alias
-      streamType = fProgramStreamMap[stream_id];
 
       if (streamType == 0) {
 	// Instead, set the stream's type to default values, based on whether
@@ -336,6 +338,10 @@ void MPEG2TransportStreamFromPESSource::setProgramStreamMap(unsigned frameSize) 
     frameSize = 6+program_stream_map_length;
   }
   
+  u_int8_t versionByte = fInputBuffer[6];
+  if ((versionByte&0x80) == 0) return; // "current_next_indicator" is not set
+  fCurrentInputProgramMapVersion = versionByte&0x1F;
+
   u_int16_t program_stream_info_length = (fInputBuffer[8]<<8) | fInputBuffer[9];
   unsigned offset = 10 + program_stream_info_length; // skip over 'descriptors'
 
@@ -351,7 +357,7 @@ void MPEG2TransportStreamFromPESSource::setProgramStreamMap(unsigned frameSize) 
     u_int8_t stream_type = fInputBuffer[offset];
     u_int8_t elementary_stream_id = fInputBuffer[offset+1];
 
-    fProgramStreamMap[elementary_stream_id] = stream_type;
+    fPIDState[elementary_stream_id].streamType = stream_type;
 
     u_int16_t elementary_stream_info_length
       = (fInputBuffer[offset+2]<<8) | fInputBuffer[offset+3];
