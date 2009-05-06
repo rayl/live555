@@ -330,7 +330,7 @@ void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor,
     // (Later, fix) #####
     unsigned char c;
     struct sockaddr_in fromAddress;
-    struct timeval timeout;
+    struct timeval timeout; timeout.tv_sec = 0; timeout.tv_usec = 0;
     do {
       int result = readSocket(env, socketNum, &c, 1, fromAddress, &timeout);
       if (result != 1) { // error reading TCP socket

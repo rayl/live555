@@ -69,7 +69,11 @@ ADTSAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
 
     // If we get here, the frame header was OK.
     // Reset the fid to the beginning of the file:
+#ifndef _WIN32_WCE
     rewind(fid);
+#else
+    fseek(fid, SEEK_SET,0);
+#endif
 #ifdef DEBUG
     fprintf(stderr, "Read first frame: profile %d, "
 	    "sampling_frequency_index %d => samplingFrequency %d, "
