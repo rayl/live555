@@ -49,9 +49,6 @@ private: // redefined virtual functions:
   Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
 					 unsigned numBytesInFrame) const;
   virtual unsigned specialHeaderSize() const;
-
-private:
-  Boolean fAreInFragmentedFrame;
 };
 
 #endif

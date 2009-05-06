@@ -82,11 +82,14 @@ void BasicTaskScheduler0::doEventLoop(char* watchVariable) {
 
 HandlerDescriptor::HandlerDescriptor(HandlerDescriptor* nextHandler) {
   // Link this descriptor into a doubly-linked list:
-  // (Note that this code works even if "nextHandler == this")
-  fNextHandler = nextHandler;
-  fPrevHandler = nextHandler->fPrevHandler;
-  nextHandler->fPrevHandler = this;
-  fPrevHandler->fNextHandler = this;
+  if (nextHandler == this) { // initialization
+    fNextHandler = fPrevHandler = this;
+  } else {
+    fNextHandler = nextHandler;
+    fPrevHandler = nextHandler->fPrevHandler;
+    nextHandler->fPrevHandler = this;
+    fPrevHandler->fNextHandler = this;
+  }
 }
 
 HandlerDescriptor::~HandlerDescriptor() {

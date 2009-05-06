@@ -112,7 +112,7 @@ public:
         // Sets "prevTask" to NULL afterwards.
 
   virtual void rescheduleDelayedTask(TaskToken& task,
-				     int microseconds, TaskFunc* proc,
+				     int64_t microseconds, TaskFunc* proc,
 				     void* clientData);
   // Combines "unscheduleDelayedTask()" with "scheduleDelayedTask()"
   // (setting "task" to the new task token).
