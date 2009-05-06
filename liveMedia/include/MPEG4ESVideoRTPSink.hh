@@ -29,11 +29,13 @@ class MPEG4ESVideoRTPSink: public VideoRTPSink {
 public:
   static MPEG4ESVideoRTPSink* createNew(UsageEnvironment& env,
 					Groupsock* RTPgs,
-					unsigned char rtpPayloadFormat);
+					unsigned char rtpPayloadFormat,
+					u_int32_t rtpTimestampFrequency = 90000);
 
 protected:
   MPEG4ESVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		      unsigned char rtpPayloadFormat);
+		      unsigned char rtpPayloadFormat,
+		      u_int32_t rtpTimestampFrequency);
 	// called only by createNew()
 
   virtual ~MPEG4ESVideoRTPSink();

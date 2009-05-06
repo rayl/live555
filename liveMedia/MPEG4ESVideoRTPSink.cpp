@@ -23,8 +23,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 MPEG4ESVideoRTPSink
 ::MPEG4ESVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		      unsigned char rtpPayloadFormat)
-  : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 90000, "MP4V-ES"),
+		      unsigned char rtpPayloadFormat,
+		      u_int32_t rtpTimestampFrequency)
+  : VideoRTPSink(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency, "MP4V-ES"),
     fVOPIsPresent(False), fAuxSDPLine(NULL) {
 }
 
@@ -34,8 +35,10 @@ MPEG4ESVideoRTPSink::~MPEG4ESVideoRTPSink() {
 
 MPEG4ESVideoRTPSink*
 MPEG4ESVideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
-			       unsigned char rtpPayloadFormat) {
-  return new MPEG4ESVideoRTPSink(env, RTPgs, rtpPayloadFormat);
+			       unsigned char rtpPayloadFormat,
+			       u_int32_t rtpTimestampFrequency) {
+  return new MPEG4ESVideoRTPSink(env, RTPgs, rtpPayloadFormat,
+				 rtpTimestampFrequency);
 }
 
 Boolean MPEG4ESVideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {

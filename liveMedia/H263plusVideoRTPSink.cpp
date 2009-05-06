@@ -22,8 +22,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 H263plusVideoRTPSink
 ::H263plusVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		       unsigned char rtpPayloadFormat)
-  : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 90000, "H263-1998"),
+		       unsigned char rtpPayloadFormat,
+		       u_int32_t rtpTimestampFrequency)
+  : VideoRTPSink(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency, "H263-1998"),
     fAreInFragmentedFrame(False) {
 }
 
@@ -32,8 +33,9 @@ H263plusVideoRTPSink::~H263plusVideoRTPSink() {
 
 H263plusVideoRTPSink*
 H263plusVideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
-				unsigned char rtpPayloadFormat) {
-  return new H263plusVideoRTPSink(env, RTPgs, rtpPayloadFormat);
+				unsigned char rtpPayloadFormat,
+				u_int32_t rtpTimestampFrequency) {
+  return new H263plusVideoRTPSink(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency);
 }
 
 Boolean H263plusVideoRTPSink
