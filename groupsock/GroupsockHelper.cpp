@@ -431,8 +431,16 @@ Boolean socketJoinGroup(UsageEnvironment& env, int socket,
   imr.imr_interface.s_addr = ReceivingInterfaceAddr;
   if (setsockopt(socket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
 		 (const char*)&imr, sizeof (struct ip_mreq)) < 0) {
-    socketErr(env, "setsockopt(IP_ADD_MEMBERSHIP) error: ");
-    return False;
+#if defined(__WIN32__) || defined(_WIN32)
+    if (env.getErrno() != 0) {
+      // That piece-of-shit toy operating system (Windows) sometimes lies
+      // about setsockopt() failing!
+#endif
+      socketErr(env, "setsockopt(IP_ADD_MEMBERSHIP) error: ");
+      return False;
+#if defined(__WIN32__) || defined(_WIN32)
+    }
+#endif
   }
   
   return True;

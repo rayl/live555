@@ -40,12 +40,25 @@ Boolean MPEG1or2VideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
   return source.isMPEG1or2VideoStreamFramer();
 }
 
+Boolean MPEG1or2VideoRTPSink::allowFragmentationAfterStart() const {
+  return True;
+}
+
 Boolean MPEG1or2VideoRTPSink
-::frameCanAppearAfterPacketStart(unsigned char const* /*frameStart*/,
-				 unsigned /*numBytesInFrame*/) const {
-  // A frame can appear at other than the first position in a packet
-  // only if the previous frame was not a slice.
-  return !fPreviousFrameWasSlice;
+::frameCanAppearAfterPacketStart(unsigned char const* frameStart,
+				 unsigned numBytesInFrame) const {
+  // A 'frame' (which in this context can mean a header or a slice as well as a
+  // complete picture) can appear at other than the first position in a packet
+  // in all situations, EXCEPT when it follows the end of (i.e., the last slice
+  // of) a picture.  I.e., the headers at the beginning of a picture must
+  // appear at the start of a RTP packet. 
+  if (!fPreviousFrameWasSlice) return True;
+
+  // A slice is already packed into this packet.  We allow this new 'frame'
+  // to be packed after it, provided that it is also a slice:
+  return numBytesInFrame >= 4
+    && frameStart[0] == 0 && frameStart[1] == 0 && frameStart[2] == 1
+    && frameStart[3] >= 1 && frameStart[3] <= 0xAF;
 }
 
 #define VIDEO_SEQUENCE_HEADER_START_CODE 0x000001B3

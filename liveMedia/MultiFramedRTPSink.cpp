@@ -307,7 +307,8 @@ void MultiFramedRTPSink
         || fOutBuf->wouldOverflow(numFrameBytesToUse)
         || (fPreviousFrameEndedFragmentation && 
             !allowOtherFramesAfterLastFragment()) 
-        || !frameCanAppearAfterPacketStart(fOutBuf->curPtr(), frameSize) ) {
+        || !frameCanAppearAfterPacketStart(fOutBuf->curPtr() - frameSize,
+					   frameSize) ) {
       // The packet is ready to be sent now
       sendPacketIfNecessary();
     } else {
