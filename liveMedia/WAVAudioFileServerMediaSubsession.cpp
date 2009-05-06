@@ -63,15 +63,16 @@ FramedSource* WAVAudioFileServerMediaSubsession
 
     // Add in any filter necessary to transform the data prior to streaming:
     if (fBitsPerSample == 16) {
+      // Note that samples in the WAV audio file are in little-endian order.
       if (fConvertToULaw) {
 	// Add a filter that converts from raw 16-bit PCM audio
 	// to 8-bit u-law audio:
 	resultSource
-	  = uLawFromPCMAudioSource::createNew(envir(), pcmSource);
+	  = uLawFromPCMAudioSource::createNew(envir(), pcmSource, 1/*little-endian*/);
 	bitsPerSecond /= 2;
       } else {
-	// Add a filter that converts from host to network order: 
-	resultSource = NetworkFromHostOrder16::createNew(envir(), pcmSource);
+	// Add a filter that converts from little-endian to network (big-endian) order: 
+	resultSource = EndianSwap16::createNew(envir(), pcmSource);
       }
     } else { // fBitsPerSample == 8
       // Don't do any transformation; send the 8-bit PCM data 'as is':

@@ -20,6 +20,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "liveMedia.hh"
+#ifdef SUPPORT_REAL_RTSP
+#include "../RealRTSP/include/RealRDTSource.hh"
+#endif
 #include "GroupsockHelper.hh"
 #include <ctype.h>
 
@@ -688,6 +691,13 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
       // A UDP-packetized text stream (*not* a RTP stream)
       fReadSource = BasicUDPSource::createNew(env(), fRTPSocket);
       fRTPSource = NULL; // Note!
+#ifdef SUPPORT_REAL_RTSP
+    } else if (strcmp(fCodecName, "X-PN-REALAUDIO") == 0 ||
+	       strcmp(fCodecName, "X-PN-REALVIDEO") == 0) {
+      // A RealNetworks 'RDT' stream (*not* a RTP stream)
+      fReadSource = RealRDTSource::createNew(env());
+      fRTPSource = NULL; // Note!
+#endif
     } else if (  strcmp(fCodecName, "PCMU") == 0 // PCM u-law audio
 	       || strcmp(fCodecName, "GSM") == 0 // GSM audio
 	       || strcmp(fCodecName, "PCMA") == 0 // PCM a-law audio

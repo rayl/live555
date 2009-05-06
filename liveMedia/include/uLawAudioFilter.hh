@@ -25,16 +25,20 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "FramedFilter.hh"
 #endif
 
-////////// 16-bit PCM (in host order) -> 8-bit u-Law //////////
+////////// 16-bit PCM (in various byte orderings) -> 8-bit u-Law //////////
 
 class uLawFromPCMAudioSource: public FramedFilter {
 public:
   static uLawFromPCMAudioSource*
-  createNew(UsageEnvironment& env, FramedSource* inputSource);
+  createNew(UsageEnvironment& env, FramedSource* inputSource,
+	    int byteOrdering = 0);
+  // "byteOrdering" == 0 => host order (the default)
+  // "byteOrdering" == 1 => little-endian order
+  // "byteOrdering" == 2 => network (i.e., big-endian) order
 
 protected:
-  uLawFromPCMAudioSource(UsageEnvironment& env,
-			 FramedSource* inputSource);
+  uLawFromPCMAudioSource(UsageEnvironment& env, FramedSource* inputSource,
+			 int byteOrdering);
       // called only by createNew()
   virtual ~uLawFromPCMAudioSource();
 
@@ -53,6 +57,7 @@ private:
 			  unsigned durationInMicroseconds);
 
 private:
+  int fByteOrdering;
   unsigned char* fInputBuffer;
   unsigned fInputBufferSize;
 };
@@ -130,6 +135,33 @@ protected:
   HostFromNetworkOrder16(UsageEnvironment& env, FramedSource* inputSource);
       // called only by createNew()
   virtual ~HostFromNetworkOrder16();
+
+private:
+  // Redefined virtual functions:
+  virtual void doGetNextFrame();
+
+private:
+  static void afterGettingFrame(void* clientData, unsigned frameSize,
+				unsigned numTruncatedBytes,
+				struct timeval presentationTime,
+				unsigned durationInMicroseconds);
+  void afterGettingFrame1(unsigned frameSize,
+			  unsigned numTruncatedBytes,
+			  struct timeval presentationTime,
+			  unsigned durationInMicroseconds);
+};
+
+
+////////// 16-bit values: little-endian <-> big-endian //////////
+
+class EndianSwap16: public FramedFilter {
+public:
+  static EndianSwap16* createNew(UsageEnvironment& env, FramedSource* inputSource);
+
+protected:
+  EndianSwap16(UsageEnvironment& env, FramedSource* inputSource);
+      // called only by createNew()
+  virtual ~EndianSwap16();
 
 private:
   // Redefined virtual functions:

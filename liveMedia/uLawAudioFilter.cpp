@@ -20,18 +20,23 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "uLawAudioFilter.hh"
 
-////////// 16-bit PCM (in host order) -> 8-bit u-Law //////////
+////////// 16-bit PCM (in various byte orders) -> 8-bit u-Law //////////
 
 uLawFromPCMAudioSource* uLawFromPCMAudioSource
-::createNew(UsageEnvironment& env, FramedSource* inputSource) {
-  return new uLawFromPCMAudioSource(env, inputSource);
+::createNew(UsageEnvironment& env, FramedSource* inputSource, int byteOrdering) {
+  // "byteOrdering" must be 0, 1, or 2:
+  if (byteOrdering < 0 || byteOrdering > 2) {
+    env.setResultMsg("uLawFromPCMAudioSource::createNew(): bad \"byteOrdering\" parameter");
+    return NULL;
+  } 
+  return new uLawFromPCMAudioSource(env, inputSource, byteOrdering);
 }
 
 uLawFromPCMAudioSource
-::uLawFromPCMAudioSource(UsageEnvironment& env,
-			 FramedSource* inputSource)
+::uLawFromPCMAudioSource(UsageEnvironment& env, FramedSource* inputSource,
+			 int byteOrdering)
   : FramedFilter(env, inputSource),
-    fInputBuffer(NULL), fInputBufferSize(0) {
+    fByteOrdering(byteOrdering), fInputBuffer(NULL), fInputBufferSize(0) {
 }    
 
 uLawFromPCMAudioSource::~uLawFromPCMAudioSource() {
@@ -103,11 +108,29 @@ void uLawFromPCMAudioSource
 		     unsigned durationInMicroseconds) {
   // Translate raw 16-bit PCM samples (in the input buffer)
   // into uLaw samples (in the output buffer).
-  // Note: The input samples are assumed to be in host byte order.
   unsigned numSamples = frameSize/2;
-  short* inputSample = (short*)fInputBuffer;
-  for (unsigned i = 0; i < numSamples; ++i) {
-    fTo[i] = uLawFrom16BitLinear(inputSample[i]);
+  switch (fByteOrdering) {
+    case 0: { // host order
+      short* inputSample = (short*)fInputBuffer;
+      for (unsigned i = 0; i < numSamples; ++i) {
+	fTo[i] = uLawFrom16BitLinear(inputSample[i]);
+      }
+      break;
+    }
+    case 1: { // little-endian order
+      for (unsigned i = 0; i < numSamples; ++i) {
+	short const newValue = (fInputBuffer[2*i+1]<<8)|fInputBuffer[2*i];
+	fTo[i] = uLawFrom16BitLinear(newValue);
+      }
+      break;
+    }
+    case 2: { // network (i.e., big-endian) order
+      for (unsigned i = 0; i < numSamples; ++i) {
+	short const newValue = (fInputBuffer[2*i]<<8)|fInputBuffer[2*i+i];
+	fTo[i] = uLawFrom16BitLinear(newValue);
+      }
+      break;
+    }
   }
 
   // Complete delivery to the client:
@@ -293,6 +316,57 @@ void HostFromNetworkOrder16
   short* value = (short*)fTo;
   for (unsigned i = 0; i < numValues; ++i) {
     value[i] = ntohs(value[i]);
+  }
+
+  // Complete delivery to the client:
+  fFrameSize = numValues*2;
+  fNumTruncatedBytes = numTruncatedBytes;
+  fPresentationTime = presentationTime;
+  fDurationInMicroseconds = durationInMicroseconds;
+  afterGetting(this);
+}
+
+
+////////// 16-bit values: little-endian <-> big-endian //////////
+
+EndianSwap16*
+EndianSwap16::createNew(UsageEnvironment& env, FramedSource* inputSource) {
+  return new EndianSwap16(env, inputSource);
+}
+
+EndianSwap16::EndianSwap16(UsageEnvironment& env,
+			 FramedSource* inputSource)
+  : FramedFilter(env, inputSource) {
+}    
+
+EndianSwap16::~EndianSwap16() {
+} 
+
+void EndianSwap16::doGetNextFrame() {
+  // Arrange to read data directly into the client's buffer:
+  fInputSource->getNextFrame(fTo, fMaxSize,
+			     afterGettingFrame, this,
+                             FramedSource::handleClosure, this);
+}
+
+void EndianSwap16::afterGettingFrame(void* clientData, unsigned frameSize,
+				     unsigned numTruncatedBytes,
+				     struct timeval presentationTime,
+				     unsigned durationInMicroseconds) {
+  EndianSwap16* source = (EndianSwap16*)clientData;
+  source->afterGettingFrame1(frameSize, numTruncatedBytes,
+			     presentationTime, durationInMicroseconds);
+}
+
+void EndianSwap16::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
+				      struct timeval presentationTime,
+				      unsigned durationInMicroseconds) {
+  // Swap the byte order of the 16-bit values that we have just read (in place):
+  unsigned numValues = frameSize/2;
+  short* value = (short*)fTo;
+  for (unsigned i = 0; i < numValues; ++i) {
+    short const orig = value[i];
+    value[i] = ((orig&0xFF)<<8) | ((orig&0xFF00)>>8);
   }
 
   // Complete delivery to the client:

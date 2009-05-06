@@ -90,10 +90,10 @@ void play() {
   unsigned char payloadFormatCode;
   if (bitsPerSample == 16) {
 #ifdef CONVERT_TO_ULAW
-    // Add a filter that converts from raw 16-bit PCM audio
+    // Add a filter that converts from raw 16-bit PCM audio (in little-endian order)
     // to 8-bit u-law audio:
     sessionState.source
-      = uLawFromPCMAudioSource::createNew(*env, pcmSource);
+      = uLawFromPCMAudioSource::createNew(*env, pcmSource, 1/*little-endian*/);
     if (sessionState.source == NULL) {
       *env << "Unable to create a u-law filter from the PCM audio source: "
 	   << env->getResultMsg() << "\n";
@@ -109,11 +109,11 @@ void play() {
     *env << "Converting to 8-bit u-law audio for streaming => "
 	 << bitsPerSecond << " bits-per-second\n";
 #else
-    // Add a filter that converts from host to network order: 
-    sessionState.source
-      = NetworkFromHostOrder16::createNew(*env, pcmSource);
+    // The 16-bit samples in WAV files are in little-endian order.
+    // Add a filter that converts them to network (i.e., big-endian) order:
+    sessionState.source = EndianSwap16::createNew(*env, pcmSource);
     if (sessionState.source == NULL) {
-      *env << "Unable to create a host->network order filter from the PCM audio source: "
+      *env << "Unable to create a little->bit-endian order filter from the PCM audio source: "
 	   << env->getResultMsg() << "\n";
       exit(1);
     }
