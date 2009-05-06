@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
   // Note: This starts RTCP running automatically
 
   // Create and start a RTSP server to serve this stream.
-  RTSPServer* rtspServer = RTSPServer::createNew(*env, 7070);
+  RTSPServer* rtspServer = RTSPServer::createNew(*env, 8554);
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);

@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
   // Note: This starts RTCP running automatically
 
 #ifdef IMPLEMENT_RTSP_SERVER
-  rtspServer = RTSPServer::createNew(*env, 7070);
+  rtspServer = RTSPServer::createNew(*env, 8554);
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "%s\n";
     exit(1);

@@ -897,9 +897,9 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
   return False;
 }
 
-static char* createScaleString(float scale) {
+static char* createScaleString(float scale, float currentScale) {
   char buf[100];
-  if (scale == 1.0) {
+  if (scale == 1.0f && currentScale == 1.0f) {
     // This is the default value; we don't need a "Scale:" header:
     buf[0] = '\0';
   } else {
@@ -949,7 +949,7 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
     char* authenticatorStr
       = createAuthenticatorString(&fCurrentAuthenticator, "PLAY", fBaseURL);
     // And then a "Scale:" string:
-    char* scaleStr = createScaleString(scale);
+    char* scaleStr = createScaleString(scale, session.scale());
     // And then a "Range:" string:
     char* rangeStr = createRangeString(start, end);
 
@@ -1027,7 +1027,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
     char* authenticatorStr
       = createAuthenticatorString(&fCurrentAuthenticator, "PLAY", fBaseURL);
     // And then a "Scale:" string:
-    char* scaleStr = createScaleString(scale);
+    char* scaleStr = createScaleString(scale, subsession.scale());
     // And then a "Range:" string:
     char* rangeStr = createRangeString(start, end);
 

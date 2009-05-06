@@ -176,7 +176,7 @@ void play() {
   // Note: This starts RTCP running automatically
 
   // Create and start a RTSP server to serve this stream:
-  sessionState.rtspServer = RTSPServer::createNew(*env, 7070);
+  sessionState.rtspServer = RTSPServer::createNew(*env, 8554);
   if (sessionState.rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);

@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 			    True /* we're a SSM source */);
   // Note: This starts RTCP running automatically
 
-  RTSPServer* rtspServer = RTSPServer::createNew(*env, 7070);
+  RTSPServer* rtspServer = RTSPServer::createNew(*env, 8554);
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
