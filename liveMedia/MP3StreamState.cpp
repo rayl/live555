@@ -386,7 +386,7 @@ unsigned MP3StreamState::readFromStream(unsigned char* buf,
 
     return totBytesRead;
   } else {
-    waitUntilSocketIsReadable(fEnv, fileno(fFid));
+    waitUntilSocketIsReadable(fEnv, (int)fileno(fFid));
     return fread(buf, 1, numChars, fFid);
   }
 }

@@ -18,8 +18,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // MP3 File Sources
 // Implementation
 
+#ifndef _WIN32_WCE
 #include <sys/stat.h>
-#if defined(__WIN32__) || defined(_WIN32)
+#endif
+#if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
 #include <io.h>
 #include <fcntl.h>
 #endif
@@ -61,10 +63,16 @@ MP3FileSource* MP3FileSource::createNew(UsageEnvironment& env, char const* fileN
 	env.setResultMsg("unable to open file \"",fileName, "\"");
 	break;
       }
-      struct stat sb;
-      if (stat(fileName, &sb) == 0) {
-	fileSize = sb.st_size;
-      }
+#if defined(_WIN32_WCE)
+        fseek(fid, 0, SEEK_END);
+        fileSize = ftell(fid);
+        fseek(fid, 0, SEEK_SET);
+#else
+        struct stat sb;
+        if (stat(fileName, &sb) == 0) {
+            fileSize = sb.st_size;
+        }
+#endif
     }
 
     newSource = new MP3FileSource(env, fid);

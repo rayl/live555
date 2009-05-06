@@ -54,7 +54,7 @@ MP3HTTPSource* MP3HTTPSource::createNew(UsageEnvironment& env,
     // Try to make the new socket into a FILE*:
     unsigned streamLength = 0; //#####
     FILE* fid = NULL;
-#if !defined(IMN_PIM) && !defined(CRIS)
+#if !defined(IMN_PIM) && !defined(CRIS) && !defined(_WIN32_WCE)
     fid = fdopen(ourSocket, "r+b");
 #endif
     if (fid == NULL) {

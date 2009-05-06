@@ -699,13 +699,32 @@ char const* timestampString() {
 
 #if (defined(__WIN32__) || defined(_WIN32)) && !defined(IMN_PIM)
 // For Windoze, we need to implement our own gettimeofday()
+#if !defined(_WIN32_WCE)
 #include <sys/timeb.h>
+#endif
 
 int gettimeofday(struct timeval* tp, int* /*tz*/) {
-	struct timeb tb;
-	ftime(&tb);
-	tp->tv_sec = tb.time;
-	tp->tv_usec = 1000*tb.millitm;
-	return 0;
+#if defined(_WIN32_WCE)
+  /* FILETIME of Jan 1 1970 00:00:00. */
+  static const unsigned __int64 epoch = 116444736000000000L;
+
+  FILETIME    file_time;
+  SYSTEMTIME  system_time;
+  ULARGE_INTEGER ularge;
+
+  GetSystemTime(&system_time);
+  SystemTimeToFileTime(&system_time, &file_time);
+  ularge.LowPart = file_time.dwLowDateTime;
+  ularge.HighPart = file_time.dwHighDateTime;
+
+  tp->tv_sec = (long) ((ularge.QuadPart - epoch) / 10000000L);
+  tp->tv_usec = (long) (system_time.wMilliseconds * 1000);
+#else
+  struct timeb tb;
+  ftime(&tb);
+  tp->tv_sec = tb.time;
+  tp->tv_usec = 1000*tb.millitm;
+#endif
+  return 0;
 }
 #endif

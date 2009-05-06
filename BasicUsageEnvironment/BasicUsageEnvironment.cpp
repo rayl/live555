@@ -48,11 +48,17 @@ BasicUsageEnvironment::createNew(TaskScheduler& taskScheduler) {
 
 int BasicUsageEnvironment::getErrno() const {
 #if defined(__WIN32__) || defined(_WIN32)
+#ifndef _WIN32_WCE
   if (errno == 0) {
     errno = WSAGetLastError();
   }
 #endif
+#endif
+#if defined(_WIN32_WCE)
+  return WSAGetLastError();
+#else
   return errno;
+#endif
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(char const* str) {

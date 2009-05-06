@@ -13,6 +13,11 @@
 #include "our_md5.h"
 #include "NetCommon.h"
 
+#ifndef BUFSIZ //pocket pc
+#define BUFSIZ 255
+#endif
+
+
 char *
 our_MD5End(MD5_CTX *ctx, char *buf)
 {

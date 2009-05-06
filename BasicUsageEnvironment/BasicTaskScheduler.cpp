@@ -58,7 +58,7 @@ void BasicTaskScheduler::SingleStep() {
   int selectResult = select(fMaxNumSockets, &readSet, NULL, NULL,
 			    &tv_timeToDelay);
   if (selectResult < 0) {
-#if defined(__WIN32__) || defined(_WIN32)
+#if defined(__WIN32__) || defined(_WIN32) || defined(_WIN32_WCE)
     int err = WSAGetLastError();
     // For some unknown reason, select() in Windoze sometimes fails with WSAEINVAL if
     // it was called with no entries set in "readSet".  If this happens, ignore it:
@@ -72,7 +72,12 @@ void BasicTaskScheduler::SingleStep() {
 #endif
       {
 	// Unexpected error - treat this as fatal:
+#if defined(_WIN32_WCE)
+	MessageBox(NULL, L"BasicTaskScheduler::SingleStep(): select() fails",
+		   L"error", MB_OK);
+#else
 	perror("BasicTaskScheduler::SingleStep(): select() fails");
+#endif
 	exit(0);
       }
   }

@@ -24,9 +24,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #if defined(IMN_PIM)
 #include "IMN_PIMNetCommon.h"
 
-#elif defined(__WIN32__) || defined(_WIN32)
+#elif defined(__WIN32__) || defined(_WIN32) || defined(_WIN32_WCE)
 /* Windows */
-#if defined(_WINNT) || defined(__BORLANDC__) || defined(__MINGW32__)
+#if defined(_WINNT) || defined(__BORLANDC__) || defined(__MINGW32__) || defined(_WIN32_WCE)
 #define _MSWSOCK_
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -37,12 +37,17 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #define _close closesocket
 #define EWOULDBLOCK WSAEWOULDBLOCK
 
+#if defined(_WIN32_WCE)
+#define NO_STRSTREAM 1
+#endif
+
 /* Definitions of size-specific types: */
 typedef unsigned u_int32_t;
 typedef unsigned short u_int16_t;
 typedef unsigned char u_int8_t;
 
 #elif defined(VXWORKS)
+/* VxWorks */
 #include <time.h>
 #include <timers.h>
 #include <sys/times.h>
