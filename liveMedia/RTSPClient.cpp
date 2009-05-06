@@ -196,7 +196,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
       return result;
     }
 
-    if (!openConnectionFromURL(url)) break;
+    if (!openConnectionFromURL(url, authenticator)) break;
 
     // Send the DESCRIBE command:
 
@@ -510,7 +510,7 @@ char* RTSPClient::sendOptionsCmd(char const* url) {
   char* result = NULL;
   char* cmd = NULL;
   do {
-    if (!openConnectionFromURL(url)) break;
+    if (!openConnectionFromURL(url, NULL)) break;
 
     // Send the OPTIONS command:
     char* const cmdFmt =
@@ -605,7 +605,7 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
 					   Authenticator* authenticator) {
   char* cmd = NULL;
   do {
-    if (!openConnectionFromURL(url)) break;
+    if (!openConnectionFromURL(url, authenticator)) break;
 
     // Send the ANNOUNCE command:
 
@@ -1668,7 +1668,8 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
   return False;
 }
 
-Boolean RTSPClient::openConnectionFromURL(char const* url) {
+Boolean RTSPClient
+::openConnectionFromURL(char const* url, Authenticator* authenticator) {
   do {
     // Set this as our base URL:
     delete[] fBaseURL; fBaseURL = strDup(url); if (fBaseURL == NULL) break;
@@ -1697,7 +1698,7 @@ Boolean RTSPClient::openConnectionFromURL(char const* url) {
 	break;
       }
       
-      if (fTunnelOverHTTPPortNum != 0 && !setupHTTPTunneling(urlSuffix)) break;
+      if (fTunnelOverHTTPPortNum != 0 && !setupHTTPTunneling(urlSuffix, authenticator)) break;
     }
 
     return True; 
@@ -2218,7 +2219,8 @@ Boolean RTSPClient::parseGetParameterHeader(char const* line,
   return False;
 }
 
-Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix) {
+Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix,
+				       Authenticator* authenticator) {
   if (fVerbosityLevel >= 1) {
     envir() << "Requesting RTSP-over-HTTP tunneling (on port "
 	    << fTunnelOverHTTPPortNum << ")\n\n";
@@ -2240,9 +2242,14 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix) {
     // DSS seems to require that the 'session cookie' string be 22 bytes long:
     sessionCookie[23] = '\0';
     
+    // Construct an authenticator string:
+    char* authenticatorStr
+      = createAuthenticatorString(authenticator, "GET", urlSuffix);
+
     // Begin by sending a HTTP "GET", to set up the server->client link:
     char* const getCmdFmt =
       "GET %s HTTP/1.0\r\n"
+      "%s"
       "%s"
       "x-sessioncookie: %s\r\n"
       "Accept: application/x-rtsp-tunnelled\r\n"
@@ -2251,19 +2258,28 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix) {
       "\r\n";
     unsigned cmdSize = strlen(getCmdFmt)
       + strlen(urlSuffix)
+      + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize
       + strlen(sessionCookie);
     cmd = new char[cmdSize];
     sprintf(cmd, getCmdFmt,
 	    urlSuffix,
+	    authenticatorStr,
 	    fUserAgentHeaderStr,
 	    sessionCookie);
+    delete[] authenticatorStr;
     if (!sendRequest(cmd, "HTTP GET", False/*don't base64-encode*/)) break;
     
     // Get the response from the server:
     unsigned bytesRead; unsigned responseCode;
     char* firstLine; char* nextLineStart;
-    if (!getResponse("HTTP GET", bytesRead, responseCode, firstLine, nextLineStart)) break;
+    if (!getResponse("HTTP GET", bytesRead, responseCode, firstLine, nextLineStart,
+		     False /*don't check for response code 200*/)) break;
+    if (responseCode != 200) {
+      checkForAuthenticationFailure(responseCode, nextLineStart, authenticator);
+      envir().setResultMsg("cannot handle HTTP GET response: ", firstLine);
+      break;
+    }
 
     // Next, set up a second TCP connection (to the same server & port as before)
     // for the HTTP-tunneled client->server link.  All future output will be to
@@ -2280,8 +2296,10 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix) {
     }
 
     // Then, send a HTTP "POST", to set up the client->server link:
+    authenticatorStr = createAuthenticatorString(authenticator, "POST", urlSuffix);
     char* const postCmdFmt =
       "POST %s HTTP/1.0\r\n"
+      "%s"
       "%s"
       "x-sessioncookie: %s\r\n"
       "Content-Type: application/x-rtsp-tunnelled\r\n"
@@ -2292,13 +2310,16 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix) {
       "\r\n";
     cmdSize = strlen(postCmdFmt)
       + strlen(urlSuffix)
+      + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize
       + strlen(sessionCookie);
     delete[] cmd; cmd = new char[cmdSize];
     sprintf(cmd, postCmdFmt,
 	    urlSuffix,
+	    authenticatorStr,
 	    fUserAgentHeaderStr,
 	    sessionCookie);
+    delete[] authenticatorStr;
     if (!sendRequest(cmd, "HTTP POST", False/*don't base64-encode*/)) break;
     
     // Note that there's no response to the "POST".

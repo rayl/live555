@@ -548,6 +548,7 @@ netAddressBits ourSourceAddressForMulticast(UsageEnvironment& env) {
   if (ourAddress == 0) {
     // We need to find our source address
     struct sockaddr_in fromAddr;
+    fromAddr.sin_addr.s_addr = 0;
     
     // Get our address by sending a (0-TTL) multicast packet,
     // receiving it, and looking at the source address used.
