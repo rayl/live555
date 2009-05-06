@@ -95,13 +95,15 @@ void StreamParser::afterGettingBytes(void* clientData,
 	    numBytesRead, BANK_SIZE - buffer->fTotNumValidBytes); fflush(stderr);
   }
 
+  unsigned char* ptr = &buffer->curBank()[buffer->fTotNumValidBytes];
   buffer->fTotNumValidBytes += numBytesRead;
 
   // Continue our original calling source where it left off:
   buffer->restoreSavedParserState();
       // Sigh... this is a crock; things would have been a lot simpler
       // here if we were using threads, with synchronous I/O...
-  buffer->fClientContinueFunc(buffer->fClientContinueClientData);
+  buffer->fClientContinueFunc(buffer->fClientContinueClientData,
+			      ptr, numBytesRead);
 }
 
 void StreamParser::saveParserState() {

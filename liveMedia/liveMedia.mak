@@ -59,7 +59,7 @@ all:	$(ALL)
 	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS) $<
 
 MP3_SOURCE_OBJS = MP3FileSource.$(OBJ) MP3HTTPSource.$(OBJ) MP3Transcoder.$(OBJ) MP3ADU.$(OBJ) MP3ADUdescriptor.$(OBJ) MP3ADUinterleaving.$(OBJ) MP3ADUTranscoder.$(OBJ) MP3StreamState.$(OBJ) MP3Internals.$(OBJ) MP3InternalsHuffman.$(OBJ) MP3InternalsHuffmanTable.$(OBJ) MP3ADURTPSource.$(OBJ)
-MPEG_SOURCE_OBJS = MPEGDemux.$(OBJ) MPEGDemuxedElementaryStream.$(OBJ) MPEGVideoStreamFramer.$(OBJ) MPEGAudioStreamFramer.$(OBJ) MPEGAudioRTPSource.$(OBJ) MPEG4LATMAudioRTPSource.$(OBJ) MPEG4ESVideoRTPSource.$(OBJ) MPEG4GenericRTPSource.$(OBJ) $(MP3_SOURCE_OBJS) MPEGVideoRTPSource.$(OBJ)
+MPEG_SOURCE_OBJS = MPEGDemux.$(OBJ) MPEGDemuxedElementaryStream.$(OBJ) MPEGVideoStreamFramer.$(OBJ) MPEGAudioStreamFramer.$(OBJ) AC3AudioStreamFramer.$(OBJ) MPEGAudioRTPSource.$(OBJ) MPEG4LATMAudioRTPSource.$(OBJ) MPEG4ESVideoRTPSource.$(OBJ) MPEG4GenericRTPSource.$(OBJ) $(MP3_SOURCE_OBJS) MPEGVideoRTPSource.$(OBJ)
 MP3_SINK_OBJS = MP3ADURTPSink.$(OBJ)
 MPEG_SINK_OBJS = MPEGAudioRTPSink.$(OBJ) $(MP3_SINK_OBJS) MPEGVideoRTPSink.$(OBJ) MPEGVideoHTTPSink.$(OBJ)
 
@@ -130,6 +130,8 @@ MPEGVideoStreamFramer.$(CPP):	include/MPEGVideoStreamFramer.hh StreamParser.hh
 include/MPEGVideoStreamFramer.hh:	include/FramedFilter.hh
 MPEGAudioStreamFramer.$(CPP):	include/MPEGAudioStreamFramer.hh StreamParser.hh MP3Internals.hh
 include/MPEGAudioStreamFramer.hh:	include/FramedFilter.hh
+AC3AudioStreamFramer.$(CPP):	include/AC3AudioStreamFramer.hh StreamParser.hh
+include/AC3AudioStreamFramer.hh:	include/FramedFilter.hh
 MPEGAudioRTPSource.$(CPP):	include/MPEGAudioRTPSource.hh
 include/MPEGAudioRTPSource.hh:	include/MultiFramedRTPSource.hh
 MPEG4LATMAudioRTPSource.$(CPP):	include/MPEG4LATMAudioRTPSource.hh
@@ -211,7 +213,7 @@ StreamParser.$(CPP):	StreamParser.hh
 our_md5.$(C):		our_md5.h
 our_md5hl.$(C):		our_md5.h
 
-include/liveMedia.hh: include/MPEGAudioRTPSink.hh include/MP3ADURTPSink.hh include/MPEGVideoRTPSink.hh include/FileSink.hh include/MPEGVideoHTTPSink.hh include/GSMAudioRTPSink.hh include/H263plusVideoRTPSink.hh include/SimpleRTPSink.hh include/ByteStreamFileSource.hh include/BasicUDPSource.hh include/SimpleRTPSource.hh include/MPEGAudioRTPSource.hh include/MPEG4LATMAudioRTPSource.hh include/MPEG4ESVideoRTPSource.hh include/MPEG4GenericRTPSource.hh include/MP3ADURTPSource.hh include/QCELPAudioRTPSource.hh include/JPEGVideoRTPSource.hh include/MPEGVideoRTPSource.hh include/H261VideoRTPSource.hh include/H263plusVideoRTPSource.hh include/MP3HTTPSource.hh include/MP3ADU.hh include/MP3ADUinterleaving.hh include/MP3Transcoder.hh include/MPEGDemuxedElementaryStream.hh include/MPEGAudioStreamFramer.hh include/MPEGVideoStreamFramer.hh include/DeviceSource.hh include/PrioritizedRTPStreamSelector.hh include/RTSPServer.hh include/RTSPClient.hh include/SIPClient.hh include/QuickTimeFileSink.hh include/QuickTimeGenericRTPSource.hh include/PassiveServerMediaSession.hh
+include/liveMedia.hh: include/MPEGAudioRTPSink.hh include/MP3ADURTPSink.hh include/MPEGVideoRTPSink.hh include/FileSink.hh include/MPEGVideoHTTPSink.hh include/GSMAudioRTPSink.hh include/H263plusVideoRTPSink.hh include/SimpleRTPSink.hh include/ByteStreamFileSource.hh include/BasicUDPSource.hh include/SimpleRTPSource.hh include/MPEGAudioRTPSource.hh include/MPEG4LATMAudioRTPSource.hh include/MPEG4ESVideoRTPSource.hh include/MPEG4GenericRTPSource.hh include/MP3ADURTPSource.hh include/QCELPAudioRTPSource.hh include/JPEGVideoRTPSource.hh include/MPEGVideoRTPSource.hh include/H261VideoRTPSource.hh include/H263plusVideoRTPSource.hh include/MP3HTTPSource.hh include/MP3ADU.hh include/MP3ADUinterleaving.hh include/MP3Transcoder.hh include/MPEGDemuxedElementaryStream.hh include/MPEGAudioStreamFramer.hh include/MPEGVideoStreamFramer.hh include/AC3AudioStreamFramer.hh include/DeviceSource.hh include/PrioritizedRTPStreamSelector.hh include/RTSPServer.hh include/RTSPClient.hh include/SIPClient.hh include/QuickTimeFileSink.hh include/QuickTimeGenericRTPSource.hh include/PassiveServerMediaSession.hh
 
 clean:
 	-rm -rf *.$(OBJ) $(ALL) core *.core *~ include/*~

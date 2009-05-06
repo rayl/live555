@@ -44,7 +44,8 @@ private:
       // called only by createNew()
   virtual ~MPEGVideoStreamFramer();
 
-  static void continueReadProcessing(void* clientData);
+  static void continueReadProcessing(void* clientData,
+				     unsigned char* ptr, unsigned size);
   void continueReadProcessing();
 
 private:

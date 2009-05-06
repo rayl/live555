@@ -15,29 +15,33 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
-// A filter that breaks up an MPEG (1,2) audio elementary stream into frames
+// A filter that breaks up an AC3 audio elementary stream into frames
 // C++ header
 
-#ifndef _MPEG_AUDIO_STREAM_FRAMER_HH
-#define _MPEG_AUDIO_STREAM_FRAMER_HH
+#ifndef _AC3_AUDIO_STREAM_FRAMER_HH
+#define _AC3_AUDIO_STREAM_FRAMER_HH
 
 #ifndef _FRAMED_FILTER_HH
 #include "FramedFilter.hh"
 #endif
 
-class MPEGAudioStreamFramer: public FramedFilter {
+class AC3AudioStreamFramer: public FramedFilter {
 public:
-  static MPEGAudioStreamFramer*
-  createNew(UsageEnvironment& env, FramedSource* inputSource);
+  static AC3AudioStreamFramer*
+  createNew(UsageEnvironment& env, FramedSource* inputSource,
+	    unsigned char streamCode = 0x80);
 
 private:
-  MPEGAudioStreamFramer(UsageEnvironment& env, FramedSource* inputSource);
+  AC3AudioStreamFramer(UsageEnvironment& env, FramedSource* inputSource,
+		       unsigned char streamCode);
       // called only by createNew()
-  virtual ~MPEGAudioStreamFramer();
+  virtual ~AC3AudioStreamFramer();
 
-  static void continueReadProcessing(void* clientData,
-				     unsigned char* ptr, unsigned size);
-  void continueReadProcessing();
+  static void handleNewData(void* clientData,
+			    unsigned char* ptr, unsigned size);
+  void handleNewData(unsigned char* ptr, unsigned size);
+
+  void parseNextFrame();
 
 private:
   // redefined virtual functions:
@@ -51,8 +55,9 @@ private:
   struct timeval fNextFramePresentationTime;
 
 private: // parsing state
-  class MPEGAudioStreamParser* fParser;
-  friend class MPEGAudioStreamParser; // hack
+  class AC3AudioStreamParser* fParser;
+  unsigned char fOurStreamCode;
+  friend class AC3AudioStreamParser; // hack
 };
 
 #endif

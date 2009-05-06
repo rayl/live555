@@ -191,7 +191,9 @@ float MPEGVideoStreamFramer::getPlayTime(unsigned /*numFrames*/) const {
   return (float)result;
 }
 
-void MPEGVideoStreamFramer::continueReadProcessing(void* clientData) {
+void MPEGVideoStreamFramer::continueReadProcessing(void* clientData,
+						   unsigned char* /*ptr*/,
+						   unsigned /*size*/) {
   MPEGVideoStreamFramer* framer = (MPEGVideoStreamFramer*)clientData;
   framer->continueReadProcessing();
 }

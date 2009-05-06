@@ -51,6 +51,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MP3Transcoder.hh"
 #include "MPEGDemuxedElementaryStream.hh"
 #include "MPEGAudioStreamFramer.hh"
+#include "AC3AudioStreamFramer.hh"
 #include "MPEGVideoStreamFramer.hh"
 #include "DeviceSource.hh"
 #include "PrioritizedRTPStreamSelector.hh"

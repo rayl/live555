@@ -31,7 +31,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class StreamParser {
 protected: // we're a virtual base class
-  typedef void (clientContinueFunc)(void* clientData);
+  typedef void (clientContinueFunc)(void* clientData,
+				    unsigned char* ptr, unsigned size);
   StreamParser(FramedSource* inputSource,
 	       FramedSource::onCloseFunc* onInputCloseFunc,
 	       void* onInputCloseClientData,
@@ -90,6 +91,8 @@ protected: // we're a virtual base class
       // numBits <= 32; returns data into low-order bits of result
 
   unsigned curOffset() const { return fCurParserIndex; }
+
+  unsigned& totNumValidBytes() { return fTotNumValidBytes; }
 
 private:
   unsigned char* curBank() { return fCurBank; }

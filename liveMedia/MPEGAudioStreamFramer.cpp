@@ -108,7 +108,9 @@ float MPEGAudioStreamFramer::getPlayTime(unsigned numFrames) const {
   return numFrames*fpt;
 }
 
-void MPEGAudioStreamFramer::continueReadProcessing(void* clientData) {
+void MPEGAudioStreamFramer::continueReadProcessing(void* clientData,
+						   unsigned char* /*ptr*/,
+						   unsigned /*size*/) {
   MPEGAudioStreamFramer* framer = (MPEGAudioStreamFramer*)clientData;
   framer->continueReadProcessing();
 }

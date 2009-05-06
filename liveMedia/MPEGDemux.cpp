@@ -128,7 +128,9 @@ void MPEGDemux::registerReadInterest(unsigned char streamIdTag,
   ++fNumPendingReads;
 }
 
-void MPEGDemux::continueReadProcessing(void* clientData) {
+void MPEGDemux::continueReadProcessing(void* clientData,
+				       unsigned char* /*ptr*/,
+				       unsigned /*size*/) {
   MPEGDemux* demux = (MPEGDemux*)clientData;
   demux->continueReadProcessing();
 }

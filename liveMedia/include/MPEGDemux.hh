@@ -73,7 +73,8 @@ private:
 			    onCloseFunc* onCloseFunc,
 			    void* onCloseClientData);
 
-  static void continueReadProcessing(void* clientData);
+  static void continueReadProcessing(void* clientData,
+				     unsigned char* ptr, unsigned size);
   void continueReadProcessing();
 
 private:
