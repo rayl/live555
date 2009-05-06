@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
 // A class encapsulating the state of a MP3 stream
 // Implementation
 
@@ -198,7 +198,7 @@ void MP3StreamState::getAttributes(char* buffer, unsigned bufferSize) const {
 void MP3StreamState::writeGetCmd(char const* hostName,
 				 unsigned short portNum,
 				 char const* fileName) {
-  char* getCmdFmt = "GET %s HTTP/1.1\r\nHost: %s:%d\r\n\r\n";
+  char const* const getCmdFmt = "GET %s HTTP/1.1\r\nHost: %s:%d\r\n\r\n";
 
   if (fFidIsReallyASocket) {
     long fid_long = (long)fFid;

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
 // A generic RTSP client
 // Implementation
 
@@ -190,7 +190,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
       : "Accept: application/sdp\r\n";
 
     // (Later implement more, as specified in the RTSP spec, sec D.1 #####)
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "DESCRIBE %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "%s"
@@ -540,7 +540,7 @@ char* RTSPClient::sendOptionsCmd(char const* url,
     char* authenticatorStr
       = createAuthenticatorString(authenticator, "OPTIONS", url);
 
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "OPTIONS %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "%s"
@@ -660,7 +660,7 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
     char* authenticatorStr
       = createAuthenticatorString(authenticator, "ANNOUNCE", url);
 
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "ANNOUNCE %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Content-Type: application/sdp\r\n"
@@ -839,7 +839,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 
     char const *prefix, *separator, *suffix;
     constructSubsessionURL(subsession, prefix, separator, suffix);
-    char* transportFmt;
+    char const* transportFmt;
 
     if (strcmp(subsession.protocolName(), "UDP") == 0) {
       char const* setupFmt = "SETUP %s%s RTSP/1.0\r\n";
@@ -894,7 +894,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     }
 
     // (Later implement more, as specified in the RTSP spec, sec D.1 #####)
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "%s"
       "CSeq: %d\r\n"
       "%s"
@@ -1074,7 +1074,7 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
     // And then a "Range:" string:
     char* rangeStr = createRangeString(start, end);
 
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "PLAY %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
@@ -1175,7 +1175,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
     // And then a "Range:" string:
     char* rangeStr = createRangeString(start, end);
 
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "PLAY %s%s%s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
@@ -1267,7 +1267,7 @@ Boolean RTSPClient::pauseMediaSession(MediaSession& session) {
       = createAuthenticatorString(&fCurrentAuthenticator, "PAUSE", fBaseURL);
 
     char const* sessURL = sessionURL(session);
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "PAUSE %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
@@ -1322,7 +1322,7 @@ Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession) {
     char* authenticatorStr
       = createAuthenticatorString(&fCurrentAuthenticator, "PAUSE", fBaseURL);
 
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "PAUSE %s%s%s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
@@ -1382,7 +1382,7 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
       = createAuthenticatorString(&fCurrentAuthenticator,
 				  "RECORD", fBaseURL);
 
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "RECORD %s%s%s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
@@ -1442,7 +1442,7 @@ Boolean RTSPClient::setMediaSessionParameter(MediaSession& /*session*/,
       = createAuthenticatorString(&fCurrentAuthenticator,
 				  "SET_PARAMETER", fBaseURL);
 
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "SET_PARAMETER %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
@@ -1506,7 +1506,7 @@ Boolean RTSPClient::getMediaSessionParameter(MediaSession& /*session*/,
 				  "GET_PARAMETER", fBaseURL);
 
     if (haveParameterName) {
-      char* const cmdFmt =
+      char const* const cmdFmt =
 	"GET_PARAMETER %s RTSP/1.0\r\n"
 	"CSeq: %d\r\n"
 	"Session: %s\r\n"
@@ -1534,7 +1534,7 @@ Boolean RTSPClient::getMediaSessionParameter(MediaSession& /*session*/,
 	      parameterNameLen + 2, // the "+ 2" is for the \r\n after the parameter name
 	      parameterName);
     } else {
-      char* const cmdFmt =
+      char const* const cmdFmt =
 	"GET_PARAMETER %s RTSP/1.0\r\n"
 	"CSeq: %d\r\n"
 	"Session: %s\r\n"
@@ -1678,7 +1678,7 @@ Boolean RTSPClient::teardownMediaSession(MediaSession& session) {
 				  "TEARDOWN", fBaseURL);
 
     char const* sessURL = sessionURL(session);
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "TEARDOWN %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
@@ -1745,7 +1745,7 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
       = createAuthenticatorString(&fCurrentAuthenticator,
 				  "TEARDOWN", fBaseURL);
 
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "TEARDOWN %s%s%s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
@@ -1835,7 +1835,7 @@ Boolean RTSPClient
       }
       if (connect(fInputSocketNum, (struct sockaddr*) &remoteName, sizeof remoteName) != 0) {
 #if defined(__WIN32__) || defined(_WIN32)
-        if (errno != WSAEINPROGRESS) {
+        if (errno != WSAEINPROGRESS && errno != WSAEWOULDBLOCK) {
 #else
         if (errno != EINPROGRESS) {
 #endif
@@ -1995,7 +1995,7 @@ RTSPClient::createAuthenticatorString(Authenticator const* authenticator,
     // We've been provided a filled-in authenticator, so use it:
     char* authenticatorStr;
     if (authenticator->nonce() != NULL) { // Digest authentication
-      char* const authFmt =
+      char const* const authFmt =
 	"Authorization: Digest username=\"%s\", realm=\"%s\", "
 	"nonce=\"%s\", uri=\"%s\", response=\"%s\"\r\n";
       char const* response = authenticator->computeDigestResponse(cmd, url);
@@ -2008,7 +2008,7 @@ RTSPClient::createAuthenticatorString(Authenticator const* authenticator,
 	      authenticator->nonce(), url, response);
       authenticator->reclaimDigestResponse(response);
     } else { // Basic authentication
-      char* const authFmt = "Authorization: Basic %s\r\n";
+      char const* const authFmt = "Authorization: Basic %s\r\n";
 
       unsigned usernamePasswordLength = strlen(authenticator->username()) + 1 + strlen(authenticator->password());
       char* usernamePassword = new char[usernamePasswordLength+1];
@@ -2414,7 +2414,7 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix,
       = createAuthenticatorString(authenticator, "GET", urlSuffix);
 
     // Begin by sending a HTTP "GET", to set up the server->client link:
-    char* const getCmdFmt =
+    char const* const getCmdFmt =
       "GET %s HTTP/1.0\r\n"
       "%s"
       "%s"
@@ -2464,7 +2464,7 @@ Boolean RTSPClient::setupHTTPTunneling(char const* urlSuffix,
 
     // Then, send a HTTP "POST", to set up the client->server link:
     authenticatorStr = createAuthenticatorString(authenticator, "POST", urlSuffix);
-    char* const postCmdFmt =
+    char const* const postCmdFmt =
       "POST %s HTTP/1.0\r\n"
       "%s"
       "%s"

@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
 // A test program that reads a MPEG-1 or 2 Program Stream file,
 // splits it into Audio and Video Elementary Streams,
 // and streams both using RTP
@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
   env = BasicUsageEnvironment::createNew(*scheduler);
 
   // Create 'groupsocks' for RTP and RTCP:
-  char* destinationAddressStr
+  char const* destinationAddressStr
 #ifdef USE_SSM
     = "232.255.42.42";
 #else

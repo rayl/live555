@@ -140,7 +140,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     // or "m=<medium_name> <client_portNum>/<num_ports> RTP/AVP <fmt>"
     // (Should we be checking for >1 payload format number here?)#####
     char* mediumName = strDupSize(sdpLine); // ensures we have enough space
-    char const* protocolName = NULL;
+    char* protocolName = NULL;
     unsigned payloadFormat;
     if ((sscanf(sdpLine, "m=%s %hu RTP/AVP %u",
 		mediumName, &subsession->fClientPortNum, &payloadFormat) == 3 ||
@@ -427,7 +427,7 @@ char* MediaSession::lookupPayloadFormat(unsigned char rtpPayloadType,
 					unsigned& freq, unsigned& nCh) {
   // Look up the codec name and timestamp frequency for known (static)
   // RTP payload formats.
-  char const* temp = NULL;
+  char* temp = NULL;
   switch (rtpPayloadType) {
   case 0: {temp = "PCMU"; freq = 8000; nCh = 1; break;}
   case 2: {temp = "G726-32"; freq = 8000; nCh = 1; break;}
@@ -594,101 +594,64 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 
     // Create RTP and RTCP 'Groupsocks' on which to receive incoming data.
     // (Groupsocks will work even for unicast addresses)
+    Groupsock* oldGroupsock = NULL;
+    Boolean success = False;
     struct in_addr tempAddr;
     tempAddr.s_addr = connectionEndpointAddress();
         // This could get changed later, as a result of a RTSP "SETUP"
-
-    if (fClientPortNum != 0) {
-      // The sockets' port numbers were specified for us.  Use these:
-      fClientPortNum = fClientPortNum&~1; // even
+    unsigned short firstRTPPortNum = fClientPortNum&~1;
+    while (1) {
+      unsigned short rtpPortNum = fClientPortNum&~1;
       if (isSSM()) {
-	fRTPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr, fClientPortNum);
+	fRTPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr,
+				   rtpPortNum);
       } else {
-	fRTPSocket = new Groupsock(env(), tempAddr, fClientPortNum, 255);
+	fRTPSocket = new Groupsock(env(), tempAddr, rtpPortNum, 255);
       }
       if (fRTPSocket == NULL) {
 	env().setResultMsg("Failed to create RTP socket");
 	break;
       }
-      
-      // Set our RTCP port to be the RTP port +1
-      portNumBits const rtcpPortNum = fClientPortNum|1;
-      if (isSSM()) {
-	fRTCPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr, rtcpPortNum);
-      } else {
-	fRTCPSocket = new Groupsock(env(), tempAddr, rtcpPortNum, 255);
-      }
-      if (fRTCPSocket == NULL) {
-	char tmpBuf[100];
-	sprintf(tmpBuf, "Failed to create RTCP socket (port %d)", rtcpPortNum);
-	env().setResultMsg(tmpBuf);
+
+      // Get the client port number, to make sure that it's even (for RTP):
+      Port clientPort(0);
+      if (!getSourcePort(env(), fRTPSocket->socketNum(), clientPort)) {
 	break;
       }
-    } else {
-      // Port numbers were not specified in advance, so we use ephemeral port numbers.
-      // Create sockets until we get a port-number pair (even: RTP; even+1: RTCP).
-      // We need to make sure that we don't keep trying to use the same bad port numbers over and over again.
-      // so we store bad sockets in a table, and delete them all when we're done.
-      HashTable* socketHashTable = HashTable::create(ONE_WORD_HASH_KEYS);
-      if (socketHashTable == NULL) break;
-      Boolean success = False;
+      fClientPortNum = ntohs(clientPort.num());
 
-      while (1) {
-	// Create a new socket:
-	if (isSSM()) {
-	  fRTPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr, 0);
-	} else {
-	  fRTPSocket = new Groupsock(env(), tempAddr, 0, 255);
-	}
-	if (fRTPSocket == NULL) {
-	  env().setResultMsg("MediaSession::initiate(): unable to create RTP and RTCP sockets");
-	  break;
-	}
-
-	// Get the client port number, and check whether it's even (for RTP):
-	Port clientPort(0);
-	if (!getSourcePort(env(), fRTPSocket->socketNum(), clientPort)) {
-	  break;
-	}
-	fClientPortNum = ntohs(clientPort.num()); 
-	if ((fClientPortNum&1) != 0) { // it's odd
-	  // Record this socket in our table, and keep trying:
-	  unsigned key = (unsigned)fClientPortNum;
-	  socketHashTable->Add((char const*)key, fRTPSocket);
-	  continue;
-	}
-
-	// Make sure we can use the next (i.e., odd) port number, for RTCP:
-	portNumBits rtcpPortNum = fClientPortNum|1;
-	if (isSSM()) {
-	  fRTCPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr, rtcpPortNum);
-	} else {
-	  fRTCPSocket = new Groupsock(env(), tempAddr, rtcpPortNum, 255);
-	}
-	if (fRTCPSocket != NULL) {
-	  // Success! Use these two sockets (and delete any others that we've created):
-	  Groupsock* oldGS;
-	  while ((oldGS = (Groupsock*)socketHashTable->RemoveNext()) != NULL) {
-	    delete oldGS;
-	  }
-	  delete socketHashTable;
-	  success = True;
-	  break;
-	} else {
-	  // We couldn't create the RTCP socket (perhaps that port number's already in use elsewhere?).
-	  // Record the first socket in our table, and keep trying:
-	  unsigned key = (unsigned)fClientPortNum;
-	  socketHashTable->Add((char const*)key, fRTPSocket);
-	  continue;
-	}
+      // If the port number's not even, try again:
+      if ((fClientPortNum&1) == 0) {
+	success = True;
+	break;
       }
-      if (!success) break; // a fatal error occurred trying to create the RTP and RTCP sockets; we can't continue
+      // Try again:
+      delete oldGroupsock;
+      oldGroupsock = fRTPSocket;
+      if (firstRTPPortNum > 0) break; // Because we were told what port number to use, we can't choose another ourself
+      fClientPortNum += 2; // so that the OS doesn't choose the same port number again
     }
+    delete oldGroupsock;
+    if (!success) break;
 
-    // ASSERT: fRTPSocket != NULL && fRTCPSocket != NULL
+    // Set our RTCP port to be the RTP port +1
+    unsigned short const rtcpPortNum = fClientPortNum|1;
     if (isSSM()) {
-      // Special case for RTCP SSM: Send RTCP packets back to the source via unicast:
-      fRTCPSocket->changeDestinationParameters(fSourceFilterAddr,0,~0);
+      fRTCPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr,
+				  rtcpPortNum);
+      // Also, send RTCP packets back to the source via unicast:
+      if (fRTCPSocket != NULL) {
+	fRTCPSocket->changeDestinationParameters(fSourceFilterAddr,0,~0);
+      }
+    } else {
+      fRTCPSocket = new Groupsock(env(), tempAddr, rtcpPortNum, 255);
+    }
+    if (fRTCPSocket == NULL) {
+      char tmpBuf[100];
+      sprintf(tmpBuf, "Failed to create RTCP socket (port %d)",
+	      rtcpPortNum);
+      env().setResultMsg(tmpBuf);
+      break;
     }
 
     // Check "fProtocolName"

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2008 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
 // A generic SIP client
 // Implementation
 
@@ -202,7 +202,7 @@ char* SIPClient::invite1(Authenticator* authenticator) {
     char* rtpmapLine;
     unsigned rtpmapLineSize;
     if (fMIMESubtypeSize > 0) {
-      char* const rtpmapFmt =
+      char const* const rtpmapFmt =
 	"a=rtpmap:%u %s/8000\r\n";
       unsigned rtpmapFmtSize = strlen(rtpmapFmt)
 	+ 3 /* max char len */ + fMIMESubtypeSize;
@@ -215,7 +215,7 @@ char* SIPClient::invite1(Authenticator* authenticator) {
       rtpmapLine = strDup("");
       rtpmapLineSize = 0;
     }
-    char* const inviteSDPFmt =
+    char const* const inviteSDPFmt =
       "v=0\r\n"
       "o=- %u %u IN IP4 %s\r\n"
       "s=%s session\r\n"
@@ -240,7 +240,7 @@ char* SIPClient::invite1(Authenticator* authenticator) {
     unsigned inviteSDPSize = strlen(fInviteSDPDescription);
     delete[] rtpmapLine;
 
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "INVITE %s SIP/2.0\r\n"
       "From: %s <sip:%s@%s>;tag=%u\r\n"
       "Via: SIP/2.0/UDP %s:%u\r\n"
@@ -635,7 +635,7 @@ char* SIPClient::inviteWithPassword(char const* url, char const* username,
 Boolean SIPClient::sendACK() {
   char* cmd = NULL;
   do {
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "ACK %s SIP/2.0\r\n"
       "From: %s <sip:%s@%s>;tag=%u\r\n"
       "Via: SIP/2.0/UDP %s:%u\r\n"
@@ -676,7 +676,7 @@ Boolean SIPClient::sendBYE() {
   // NOTE: This should really be retransmitted, for reliability #####
   char* cmd = NULL;
   do {
-    char* const cmdFmt =
+    char const* const cmdFmt =
       "BYE %s SIP/2.0\r\n"
       "From: %s <sip:%s@%s>;tag=%u\r\n"
       "Via: SIP/2.0/UDP %s:%u\r\n"
@@ -857,7 +857,8 @@ SIPClient::createAuthenticatorString(Authenticator const* authenticator,
       && authenticator->nonce() != NULL && authenticator->username() != NULL
       && authenticator->password() != NULL) {
     // We've been provided a filled-in authenticator, so use it:
-    char* const authFmt = "Proxy-Authorization: Digest username=\"%s\", realm=\"%s\", nonce=\"%s\", response=\"%s\", uri=\"%s\"\r\n";
+    char const* const authFmt
+      = "Proxy-Authorization: Digest username=\"%s\", realm=\"%s\", nonce=\"%s\", response=\"%s\", uri=\"%s\"\r\n";
     char const* response = authenticator->computeDigestResponse(cmd, url);
     unsigned authBufSize = strlen(authFmt)
       + strlen(authenticator->username()) + strlen(authenticator->realm())

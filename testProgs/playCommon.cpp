@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
 // A common framework, used for the "openRTSP" and "playSIP" applications
 // Implementation
 
@@ -90,7 +90,7 @@ unsigned short movieHeight = 180; // default
 Boolean movieHeightOptionSet = False;
 unsigned movieFPS = 15; // default
 Boolean movieFPSOptionSet = False;
-char* fileNamePrefix = "";
+char const* fileNamePrefix = "";
 unsigned fileSinkBufferSize = 20000;
 unsigned socketInputBufferSize = 0;
 Boolean packetLossCompensate = False;

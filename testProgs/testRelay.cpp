@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2008, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
 // A test program that receives a UDP multicast stream
 // and retransmits it to another (multicast or unicast) address & port
 // main program
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
   env = BasicUsageEnvironment::createNew(*scheduler);
 
   // Create a 'groupsock' for the input multicast group,port:
-  char* inputAddressStr
+  char const* inputAddressStr
 #ifdef USE_SSM
     = "232.255.42.42";
 #else
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
 
   // Create a 'groupsock' for the destination address and port:
-  char* outputAddressStr = "239.255.43.43"; // this could also be unicast
+  char const* outputAddressStr = "239.255.43.43"; // this could also be unicast
     // Note: You may change "outputAddressStr" to use a different multicast
     // (or unicast address), but do *not* change it to use the same multicast
     // address as "inputAddressStr".
