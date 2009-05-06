@@ -633,15 +633,6 @@ void startPlayingStreams() {
 
 void tearDownStreams() {
   if (session == NULL) return;
-  MediaSubsessionIterator iter(*session);
-  MediaSubsession* subsession;
-  while ((subsession = iter.next()) != NULL) {
-    if (subsession->sessionId == NULL) continue; // no PLAY in progress
-    
-    *env << "Closing \"" << subsession->mediumName()
-		<< "/" << subsession->codecName() << "\" subsession\n";
-    clientTearDownSubsession(ourClient, subsession);
-  }
 
   clientTearDownSession(ourClient, session);
 }

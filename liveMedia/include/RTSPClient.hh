@@ -93,6 +93,9 @@ public:
   Boolean recordMediaSubsession(MediaSubsession& subsession);
       // Issues a RTSP "RECORD" command on "subsession".
       // Returns True iff this command succeeds
+  Boolean teardownMediaSession(MediaSession& session);
+      // Issues an aggregate RTSP "TEARDOWN" command on "session".
+      // Returns True iff this command succeeds
   Boolean teardownMediaSubsession(MediaSubsession& subsession);
       // Issues a RTSP "TEARDOWN" command on "subsession".
       // Returns True iff this command succeeds

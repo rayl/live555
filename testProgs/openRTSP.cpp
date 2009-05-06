@@ -49,6 +49,7 @@ char* getSDPDescriptionFromURL(Medium* client, char const* url,
 
 Boolean clientSetupSubsession(Medium* client, MediaSubsession* subsession,
 			      Boolean streamUsingTCP) {
+  if (client == NULL || subsession == NULL) return False;
   RTSPClient* rtspClient = (RTSPClient*)client;
   return rtspClient->setupMediaSubsession(*subsession,
 					  False, streamUsingTCP);
@@ -56,21 +57,16 @@ Boolean clientSetupSubsession(Medium* client, MediaSubsession* subsession,
 
 Boolean clientStartPlayingSession(Medium* client,
 				  MediaSession* session) {
+  if (client == NULL || session == NULL) return False;
   RTSPClient* rtspClient = (RTSPClient*)client;
   return rtspClient->playMediaSession(*session);
 }
 
-Boolean clientTearDownSubsession(Medium* client,
-                                 MediaSubsession* subsession) {
-  if (client == NULL || subsession == NULL) return False;
+Boolean clientTearDownSession(Medium* client,
+			      MediaSession* session) {
+  if (client == NULL || session == NULL) return False;
   RTSPClient* rtspClient = (RTSPClient*)client;
-  return rtspClient->teardownMediaSubsession(*subsession);
-}
-
-Boolean clientTearDownSession(Medium* /*client*/,
-			      MediaSession* /*session*/) {
-  // Do nothing; all the work's done by clientTearDownSubsession()
-  return True;
+  return rtspClient->teardownMediaSession(*session);
 }
 
 Boolean allowProxyServers = False;

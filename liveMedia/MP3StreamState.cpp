@@ -139,7 +139,7 @@ Boolean MP3StreamState::readFrame(unsigned char* outBuf, unsigned outBufSize,
 void MP3StreamState::getAttributes(char* buffer, unsigned bufferSize) const {
   char const* formatStr
     = "bandwidth %d MPEGnumber %d MPEGlayer %d samplingFrequency %d isStereo %d playTime %d isVBR %d";
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4) || defined(IMN_PIM)
+#if defined(IRIX) || defined(ALPHA) || defined(_QNX4) || defined(IMN_PIM) || defined(CRIS)
   /* snprintf() isn't defined, so just use sprintf() - ugh! */
   sprintf(buffer, formatStr,
 	  fr().bitrate, fr().isMPEG2 ? 2 : 1, fr().layer, fr().samplingFreq, fr().isStereo,
@@ -167,7 +167,7 @@ void MP3StreamState::writeGetCmd(char const* hostName,
     long fid_long = (long)fFid;
     int sock = (int)fid_long;
     char writeBuf[100];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4) || defined(IMN_PIM)
+#if defined(IRIX) || defined(ALPHA) || defined(_QNX4) || defined(IMN_PIM) || defined(CRIS)
     /* snprintf() isn't defined, so just use sprintf() */
     /* This is a security risk if filename can come from an external user */
     sprintf(writeBuf, getCmdFmt, fileName, hostName, portNum);

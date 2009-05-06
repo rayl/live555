@@ -98,12 +98,6 @@ Boolean clientStartPlayingSession(Medium* client,
   //##### it *each time* we get a 2xx response from the server.
 }
 
-Boolean clientTearDownSubsession(Medium* /*client*/,
-                                 MediaSubsession* /*subsession*/) {
-  // Do nothing; all the work's done by clientTearDownSession()
-  return True;
-}
-
 Boolean clientTearDownSession(Medium* client,
 			      MediaSession* /*session*/) {
   if (client == NULL) return False;

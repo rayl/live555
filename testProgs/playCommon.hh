@@ -38,8 +38,6 @@ extern Boolean clientSetupSubsession(Medium* client,
 extern Boolean clientStartPlayingSession(Medium* client,
 					 MediaSession* session);
 
-extern Boolean clientTearDownSubsession(Medium* client,
-					MediaSubsession* subsession);
 extern Boolean clientTearDownSession(Medium* client,
 				     MediaSession* session);
 

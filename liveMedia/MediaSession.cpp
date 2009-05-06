@@ -63,7 +63,12 @@ MediaSession::MediaSession(UsageEnvironment& env)
   // Get our host name, and use this for the RTCP CNAME:
   const unsigned maxCNAMElen = 100;
   char CNAME[maxCNAMElen+1];
+#ifndef CRIS
   gethostname((char*)CNAME, maxCNAMElen);
+#else
+  // "gethostname()" isn't defined for this platform
+  sprintf(CNAME, "unknown host %d", (unsigned)(our_random()*0x7FFFFFFF));
+#endif
   CNAME[maxCNAMElen] = '\0'; // just in case
   fCNAME = strDup(CNAME);
 }
@@ -116,7 +121,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
     }
 
     // Parse the line as "m=<medium_name> <client_portNum> RTP/AVP <fmt>"
-    // (Should we be checking for >1 payload format number here??)#####
+    // (Should we be checking for >1 payload format number here?)#####
     char* mediumName = strDupSize(sdpLine); // ensures we have enough space
     unsigned payloadFormat;
     if (sscanf(sdpLine, "m=%s %hu RTP/AVP %u",

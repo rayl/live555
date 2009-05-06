@@ -1090,6 +1090,80 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
   return False;
 }
 
+Boolean RTSPClient::teardownMediaSession(MediaSession& session) {
+  char* cmd = NULL;
+  do {
+    // First, make sure that we have a RTSP session in progreee
+    if (fLastSessionId == NULL) {
+      envir().setResultMsg("No RTSP session is currently in progress\n");
+      break;
+    }
+
+    // Send the TEARDOWN command:
+
+    // First, construct an authenticator string:
+    char* authenticatorStr
+      = createAuthenticatorString(fCurrentAuthenticator,
+				  "TEARDOWN", fBaseURL);
+
+    char* const cmdFmt =
+      "TEARDOWN %s RTSP/1.0\r\n"
+      "CSeq: %d\r\n"
+      "Session: %s\r\n"
+      "%s"
+      "%s\r\n";
+
+    unsigned cmdSize = strlen(cmdFmt)
+      + strlen(fBaseURL)
+      + 20 /* max int len */
+      + strlen(fLastSessionId)
+      + strlen(authenticatorStr)
+      + fUserAgentHeaderStrSize;
+    cmd = new char[cmdSize];
+    sprintf(cmd, cmdFmt,
+	    fBaseURL,
+	    ++fCSeq,
+	    fLastSessionId,
+	    authenticatorStr,
+	    fUserAgentHeaderStr);
+    delete[] authenticatorStr;
+
+    if (!sendRequest(cmd)) {
+      envir().setResultErrMsg("TEARDOWN send() failed: ");
+      break;
+    }
+
+    // Get the response from the server:
+    unsigned const readBufSize = 10000;
+    char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
+    int bytesRead = getResponse(readBuf, readBufSize);
+    if (bytesRead < 0) break;
+    if (fVerbosityLevel >= 1) {
+      envir() << "Received TEARDOWN response: " << readBuf << "\n";
+    }
+
+    // Inspect the first line to check whether it's a result code 200
+    char* firstLine = readBuf;
+    /*char* nextLineStart =*/ getLine(firstLine);
+    unsigned responseCode;
+    if (!parseResponseCode(firstLine, responseCode)) break;
+    if (responseCode != 200) {
+      envir().setResultMsg("cannot handle TEARDOWN response: ", firstLine);
+      break;
+    }
+    // (Later, check "CSeq" too #####)
+
+    delete[] fLastSessionId; fLastSessionId = NULL;
+    // we're done with this session
+
+    delete[] cmd;
+    return True;
+  } while (0);
+
+  delete[] cmd;
+  return False;
+}
+
 Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
   char* cmd = NULL;
   do {
@@ -1136,9 +1210,6 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
       break;
     }
 
-  // Don't bother getting the response to the TEARDOWN.
-  // (The Darwin server appears to hang after the first subsession TEARDOWN)
-#ifdef GET_TEARDOWN_RESPONSE
     // Get the response from the server:
     unsigned const readBufSize = 10000;
     char readBuffer[readBufSize+1]; char* readBuf = readBuffer;
@@ -1158,7 +1229,6 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
       break;
     }
     // (Later, check "CSeq" too #####)
-#endif
 
     delete[] (char*)subsession.sessionId;
     subsession.sessionId = NULL;

@@ -78,7 +78,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
 #endif
   
 #ifdef IP_MULTICAST_LOOP
-  const u_char loop = (u_char)setLoopback;
+  const u_int8_t loop = (u_int8_t)setLoopback;
   if (setsockopt(newSocket, IPPROTO_IP, IP_MULTICAST_LOOP,
 		 (const char*)&loop, sizeof loop) < 0) {
     socketErr(env, "setsockopt(IP_MULTICAST_LOOP) error: ");
@@ -289,7 +289,7 @@ Boolean writeSocket(UsageEnvironment& env,
 #if defined(__WIN32__) || defined(_WIN32)
 #define TTL_TYPE int
 #else
-#define TTL_TYPE u_char
+#define TTL_TYPE u_int8_t
 #endif
 			TTL_TYPE ttl = (TTL_TYPE)ttlArg;
 			if (setsockopt(socket, IPPROTO_IP, IP_MULTICAST_TTL,
@@ -506,7 +506,12 @@ netAddressBits ourSourceAddressForMulticast(UsageEnvironment& env) {
 		  // We couldn't find our address using multicast loopback
 		  // so try instead to look it up directly.
 		  char hostname[100];
+#ifndef CRIS
 		  gethostname(hostname, sizeof hostname);
+#else
+		  // "gethostname()" isn't defined on this platform; give up
+		  hostname[0] = '\0';
+#endif
 		  if (hostname[0] == '\0') {
 			env.setResultErrMsg("initial gethostname() failed");
 			break;

@@ -3,19 +3,19 @@
 # See http://developer.axis.com/doc/software/apps/apps-howto.html
 # for more information.
 AXIS_DIR = $(AXIS_TOP_DIR)/target/cris-axis-linux-gnu
-COMPILE_OPTS = $(INCLUDES) -I. -mlinux -isystem $(AXIS_DIR)/include -Wall -O2 -DSOCKLEN_T=socklen_t
+COMPILE_OPTS = $(INCLUDES) -I. -mlinux -isystem $(AXIS_DIR)/include -Wall -O2 -DSOCKLEN_T=socklen_t -DCRIS
 C =			c
 C_COMPILER =		gcc-cris
 C_FLAGS =		$(COMPILE_OPTS)
 CPP =			cpp
 CPLUSPLUS_COMPILER =	c++-cris
-CPLUSPLUS_FLAGS =	$(COMPILE_OPTS) -Wno-ctor-dtor-privacy -ansi -pipe -DBSD=1
+CPLUSPLUS_FLAGS =	$(COMPILE_OPTS) -Wno-ctor-dtor-privacy -ansi -pipe
 OBJ =			o
-LINK =			c++-cris -o
+LINK =			c++-cris -static -o
 AXIS_LINK_OPTS =	-L$(AXIS_DIR)/lib
 LINK_OPTS =		-L.
-CONSOLE_LINK_OPTS =	$(LINK_OPTS) -mlinux -L$(AXIS_DIR)/lib
-LIBRARY_LINK =		ld-cris -o
+CONSOLE_LINK_OPTS =	$(LINK_OPTS) -L$(AXIS_DIR)/lib -mlinux
+LIBRARY_LINK =		ld-cris -mcrislinux -o
 LIBRARY_LINK_OPTS =	$(LINK_OPTS) -r -Bstatic
 LIB_SUFFIX =			a
 LIBS_FOR_CONSOLE_APPLICATION =
