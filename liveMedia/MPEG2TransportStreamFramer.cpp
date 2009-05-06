@@ -86,6 +86,7 @@ void MPEG2TransportStreamFramer::doGetNextFrame() {
 void MPEG2TransportStreamFramer::doStopGettingFrames() {
   FramedFilter::doStopGettingFrames();
   fTSPacketCount = 0;
+  fTSPCRCount = 0;
 
   clearPIDStatusTable();
 }

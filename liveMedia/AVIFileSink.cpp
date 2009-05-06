@@ -108,6 +108,7 @@ AVIFileSink::AVIFileSink(UsageEnvironment& env,
     fHaveCompletedOutputFile(False),
     fMovieWidth(movieWidth), fMovieHeight(movieHeight), fMovieFPS(movieFPS) {
   fOutFid = OpenOutputFile(env, outputFileName);
+  if (fOutFid == NULL) return;
 
   // Set up I/O state for each input subsession:
   MediaSubsessionIterator iter(fInputSession);
@@ -169,9 +170,15 @@ AVIFileSink* AVIFileSink
 	    unsigned bufferSize,
 	    unsigned short movieWidth, unsigned short movieHeight,
 	    unsigned movieFPS, Boolean packetLossCompensate) {
-  return new AVIFileSink(env, inputSession, outputFileName, bufferSize,
-			 movieWidth, movieHeight, movieFPS,
-			 packetLossCompensate);
+  AVIFileSink* newSink =
+    new AVIFileSink(env, inputSession, outputFileName, bufferSize,
+		    movieWidth, movieHeight, movieFPS, packetLossCompensate);
+  if (newSink == NULL || newSink->fOutFid == NULL) {
+    delete newSink;
+    return NULL;
+  }
+
+  return newSink;
 }
 
 Boolean AVIFileSink::startPlaying(afterPlayingFunc* afterFunc,

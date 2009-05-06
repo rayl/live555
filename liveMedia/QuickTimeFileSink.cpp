@@ -224,6 +224,8 @@ QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
     fMovieWidth(movieWidth), fMovieHeight(movieHeight),
     fMovieFPS(movieFPS), fMaxTrackDurationM(0) {
   fOutFid = OpenOutputFile(env, outputFileName);
+  if (fOutFid == NULL) return;
+
   fNewestSyncTime.tv_sec = fNewestSyncTime.tv_usec = 0;
   fFirstDataTime.tv_sec = fFirstDataTime.tv_usec = (unsigned)(~0);
 
@@ -325,10 +327,15 @@ QuickTimeFileSink::createNew(UsageEnvironment& env,
 			     Boolean syncStreams,
 			     Boolean generateHintTracks,
 			     Boolean generateMP4Format) {
-  return new QuickTimeFileSink(env, inputSession, outputFileName, bufferSize,
-			       movieWidth, movieHeight, movieFPS,
-			       packetLossCompensate, syncStreams,
-			       generateHintTracks, generateMP4Format);
+  QuickTimeFileSink* newSink = 
+    new QuickTimeFileSink(env, inputSession, outputFileName, bufferSize, movieWidth, movieHeight, movieFPS,
+			  packetLossCompensate, syncStreams, generateHintTracks, generateMP4Format);
+  if (newSink == NULL || newSink->fOutFid == NULL) {
+    delete newSink;
+    return NULL;
+  }
+
+  return newSink;
 }
 
 Boolean QuickTimeFileSink::startPlaying(afterPlayingFunc* afterFunc,
