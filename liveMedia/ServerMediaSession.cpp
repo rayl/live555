@@ -105,7 +105,7 @@ char* ServerMediaSession::generateSDPDescription() {
 
   char const* const sdpPrefixFmt =
     "v=0\r\n"
-    "o=- %d%06d %d IN IP4 %s\r\n"
+    "o=- %ld%06ld %d IN IP4 %s\r\n"
     "s=%s\r\n"
     "i=%s\r\n"
     "t=0 0\r\n"

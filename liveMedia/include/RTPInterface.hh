@@ -30,6 +30,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "Groupsock.hh"
 #endif
 
+// Typedef for an optional auxilliary handler function, to be called
+// when each new packet is read:
+typedef void AuxHandlerFunc(void* clientData, unsigned char* packet,
+			    unsigned packetSize);
+
 class RTPInterface {
 public:
   RTPInterface(Medium* owner, Groupsock* gs);
@@ -49,6 +54,12 @@ public:
 
   UsageEnvironment& envir() const { return fOwner->envir(); }
 
+  void setAuxilliaryReadHandler(AuxHandlerFunc* handlerFunc,
+				void* handlerClientData) {
+    fAuxReadHandlerFunc = handlerFunc;
+    fAuxReadHandlerClientData = handlerClientData;
+  }
+
 private:
   friend class SocketDescriptor;
   Medium* fOwner;
@@ -58,8 +69,11 @@ private:
   unsigned char fStreamChannelId;
 
   unsigned short fNextTCPReadSize;
-      // how much data (if any) is available to be read from the TCP stream
-  TaskScheduler::BackgroundHandlerProc* fHandlerProc; // if any
+    // how much data (if any) is available to be read from the TCP stream
+  TaskScheduler::BackgroundHandlerProc* fReadHandlerProc; // if any
+  
+  AuxHandlerFunc* fAuxReadHandlerFunc;
+  void* fAuxReadHandlerClientData;
 };
 
 #endif

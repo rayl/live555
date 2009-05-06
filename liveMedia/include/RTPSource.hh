@@ -61,6 +61,12 @@ public:
     fRTPInterface.setStreamSocket(sockNum, streamChannelId);
   }
 
+  void setAuxilliaryReadHandler(AuxHandlerFunc* handlerFunc,
+                                void* handlerClientData) {
+    fRTPInterface.setAuxilliaryReadHandler(handlerFunc,
+					   handlerClientData);
+  }
+
 protected:
   RTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 	    unsigned char rtpPayloadFormat, unsigned rtpTimestampFrequency);

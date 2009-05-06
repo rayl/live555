@@ -65,6 +65,12 @@ public:
   void setStreamSocket(int sockNum, unsigned char streamChannelId);
     // hack to allow sending RTP over TCP (RFC 2236, section 10.12)
 
+  void setAuxilliaryReadHandler(AuxHandlerFunc* handlerFunc,
+                                void* handlerClientData) {
+    fRTCPInterface.setAuxilliaryReadHandler(handlerFunc,
+					    handlerClientData);
+  }
+
 protected:
   RTCPInstance(UsageEnvironment& env, Groupsock* RTPgs, unsigned totSessionBW,
 	       unsigned char const* cname,

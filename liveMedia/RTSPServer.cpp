@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2003 Live Networks, Inc.  All rights reserved.
 // A RTSP server
 // Implementation
 
@@ -157,12 +157,12 @@ void RTSPServer::RTSPSession::incomingRequestHandler(void* instance,
 
 void RTSPServer::RTSPSession::incomingRequestHandler1() {
   struct sockaddr_in fromAddress;
-  unsigned bytesRead = readSocket(envir(), fClientSocket,
-				  fBuffer, sizeof fBuffer, fromAddress);
+  int bytesRead = readSocket(envir(), fClientSocket,
+			     fBuffer, sizeof fBuffer, fromAddress);
 #ifdef DEBUG
   fprintf(stderr, "RTSPSession[%p]::incomingRequestHandler1() read %d bytes:%s\n", this, bytesRead, fBuffer);
 #endif
-  //  if (bytesRead == 0) return;
+  if (bytesRead <= 0) return;
 
   // Parse the request string into command name and 'CSeq',
   // then handle the command:

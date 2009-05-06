@@ -75,7 +75,7 @@ GroupEId::GroupEId(struct in_addr const& groupAddr,
 		   struct in_addr const& sourceFilterAddr,
 		   portNumBits portNum,
 		   unsigned numSuccessiveGroupAddrs) {
-  init(groupAddr, sourceFilterAddr, portNum, 1, numSuccessiveGroupAddrs);
+  init(groupAddr, sourceFilterAddr, portNum, 255, numSuccessiveGroupAddrs);
 }
 
 GroupEId::GroupEId() {

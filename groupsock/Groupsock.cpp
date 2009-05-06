@@ -388,6 +388,8 @@ ostream& operator<<(ostream& s, const Groupsock& g) {
 }
 
 
+////////// GroupsockLookupTable //////////
+
 
 // A hash table used to index Groupsocks by socket number.
 
@@ -466,8 +468,6 @@ static Groupsock* getGroupsockBySocket(UsageEnvironment& env, int sock) {
   
   return NULL;
 }
-
-////////// GroupsockLookupTable //////////
 
 Groupsock*
 GroupsockLookupTable::Fetch(UsageEnvironment& env,

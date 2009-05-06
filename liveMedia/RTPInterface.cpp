@@ -68,7 +68,8 @@ static SocketDescriptor* lookupSocketDescriptor(int sockNum) {
 
 RTPInterface::RTPInterface(Medium* owner, Groupsock* gs)
   : fOwner(owner), fGS(gs), fStreamSocketNum(-1),
-    fNextTCPReadSize(0), fHandlerProc(NULL) {
+    fNextTCPReadSize(0), fReadHandlerProc(NULL),
+    fAuxReadHandlerFunc(NULL), fAuxReadHandlerClientData(NULL) {
 }
 
 RTPInterface::~RTPInterface() {}
@@ -97,7 +98,7 @@ void RTPInterface
       turnOnBackgroundReadHandling(fGS->socketNum(), handlerProc, fOwner);
   } else {
     // Receive RTP over TCP.
-    fHandlerProc = handlerProc;
+    fReadHandlerProc = handlerProc;
 
     // Get a socket descriptor for "fStreamSockNum":
     if (socketHashTable == NULL) {
@@ -120,9 +121,11 @@ Boolean RTPInterface::handleRead(unsigned char* buffer,
 				 unsigned bufferMaxSize,
 				 unsigned& bytesRead,
 				 struct sockaddr_in& fromAddress) {
+  Boolean readSuccess;
   if (fStreamSocketNum < 0) {
     // Normal case: read from the (datagram) 'groupsock':
-    return fGS->handleRead(buffer, bufferMaxSize, bytesRead, fromAddress);
+    readSuccess
+      = fGS->handleRead(buffer, bufferMaxSize, bytesRead, fromAddress);
   } else {
     // Read from the TCP connection:
     bytesRead = 0;
@@ -139,10 +142,17 @@ Boolean RTPInterface::handleRead(unsigned char* buffer,
     }
     if (curBytesRead <= 0) {
       bytesRead = 0;
-      return False;
+      readSuccess = False;
+    } else {
+      readSuccess = True;
     }
-    return True;
   }
+
+  if (readSuccess && fAuxReadHandlerFunc != NULL) {
+    // Also pass the newly-read packet data to our auxilliary handler:
+    (*fAuxReadHandlerFunc)(fAuxReadHandlerClientData, buffer, bytesRead);
+  }
+  return readSuccess;
 }
 
 void RTPInterface::stopNetworkReading() {
@@ -277,8 +287,8 @@ void SocketDescriptor::tcpReadHandler(int socketNum, int mask) {
 
     // Now that we have the data set up, call this subchannel's
     // read handler:
-    if (rtpInterface->fHandlerProc != NULL) {
-      rtpInterface->fHandlerProc(rtpInterface->fOwner, mask);
+    if (rtpInterface->fReadHandlerProc != NULL) {
+      rtpInterface->fReadHandlerProc(rtpInterface->fOwner, mask);
     }
 
   } while (0);

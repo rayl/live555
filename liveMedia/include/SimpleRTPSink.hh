@@ -28,32 +28,44 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class SimpleRTPSink: public MultiFramedRTPSink {
 public:
-  static SimpleRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs,
-				  unsigned char rtpPayloadFormat,
-				  unsigned rtpTimestampFrequency,
-				  char const* sdpMediaTypeString,
-				  char const* rtpPayloadFormatName,
-				  Boolean allowMultipleFramesPerPacket = True);
+  static SimpleRTPSink*
+  createNew(UsageEnvironment& env, Groupsock* RTPgs,
+	    unsigned char rtpPayloadFormat,
+	    unsigned rtpTimestampFrequency,
+	    char const* sdpMediaTypeString,
+	    char const* rtpPayloadFormatName,
+	    Boolean allowMultipleFramesPerPacket = True,
+	    Boolean doNormalMBitRule = True);
+  // "doNormalMBitRule" means: If the medium is video, set the RTP "M"
+  // bit on each outgoing packet iff it contains the last (or only)
+  // fragment of a frame.  (Otherwise, leave the "M" bit unset.)
 protected:
   SimpleRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 		unsigned char rtpPayloadFormat,
 		unsigned rtpTimestampFrequency,
 		char const* sdpMediaTypeString,
 		char const* rtpPayloadFormatName,
-		Boolean allowMultipleFramesPerPacket);
+		Boolean allowMultipleFramesPerPacket,
+		Boolean doNormalMBitRule);
 	// called only by createNew()
 
   virtual ~SimpleRTPSink();
 
 private: // redefined virtual functions
-  virtual char const* sdpMediaType() const;
+  virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
+                                      unsigned char* frameStart,
+                                      unsigned numBytesInFrame,
+                                      struct timeval frameTimestamp,
+                                      unsigned numRemainingBytes);
   virtual
   Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
 					 unsigned numBytesInFrame) const;
+  virtual char const* sdpMediaType() const;
 
 private:
   char const* fSDPMediaTypeString;
   Boolean fAllowMultipleFramesPerPacket;
+  Boolean fSetMBitOnLastFrames;
 };
 
 #endif

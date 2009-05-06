@@ -57,11 +57,8 @@ int main(int argc, char** argv) {
 #endif
   const unsigned short rtpPortNum = 8888;
   const unsigned short rtcpPortNum = rtpPortNum+1;
-  const unsigned char ttl
-#ifdef USE_SSM
-    = 0; // RTCP RRs don't go anywhere
-#else
-    = 1; // low, in case routers don't admin scope
+#ifndef USE_SSM
+  const unsigned char ttl = 1; // low, in case routers don't admin scope
 #endif
   
   struct in_addr sessionAddress;
@@ -76,10 +73,13 @@ int main(int argc, char** argv) {
   sourceFilterAddress.s_addr = our_inet_addr(sourceAddressStr);
 
   Groupsock rtpGroupsock(*env, sessionAddress, sourceFilterAddress, rtpPort);
+  Groupsock rtcpGroupsock(*env, sessionAddress, sourceFilterAddress, rtcpPort);
+  rtcpGroupsock.changeDestinationParameters(sourceFilterAddress,0,~0);
+      // our RTCP "RR"s are sent back using unicast
 #else
   Groupsock rtpGroupsock(*env, sessionAddress, rtpPort, ttl);
-#endif
   Groupsock rtcpGroupsock(*env, sessionAddress, rtcpPort, ttl);
+#endif
   
   // Create the data source: a "MPEG Video RTP source"
   sessionState.source = MPEGVideoRTPSource::createNew(*env, &rtpGroupsock);
