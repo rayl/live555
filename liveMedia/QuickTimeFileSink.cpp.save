@@ -593,9 +593,6 @@ Boolean SubsessionIOState::setQTstate() {
       } else if (strcmp(fOurSubsession.codecName(), "QCELP") == 0) {
 	fQTMediaDataAtomCreator = &QuickTimeFileSink::addAtom_Qclp;
 	fQTSamplesPerFrame = 160;
-      } else if (strcmp(fOurSubsession.codecName(), "MPEG4-GENERIC") == 0) {
-	fQTAudioDataType = "mp4a";
-	fQTBytesPerFrame = 1;//#####@@@@@ NEED TO FIX
       } else {
 	envir() << noCodecWarning1 << "Audio" << noCodecWarning2
 		<< fOurSubsession.codecName() << noCodecWarning3;

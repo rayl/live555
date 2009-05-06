@@ -171,6 +171,7 @@ static int isKnownAtom(unsigned atomType, unsigned atomSize,
   case at('m','i','n','f'): {offsetToEnclosedAtoms = 0; break;}
   case at('m','o','o','v'): {offsetToEnclosedAtoms = 0; break;}
   case at('m','p','3',' '): {offsetToEnclosedAtoms = 7*4; break;}
+  case at('m','p','4','a'): {offsetToEnclosedAtoms = 11*4; break;}
   case at('m','v','h','d'): {offsetToEnclosedAtoms = 25*4; break;}
   case at('n','a','m','e'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('n','p','c','k'): {offsetToEnclosedAtoms = 1*4; break;}
@@ -209,6 +210,7 @@ static int isKnownAtom(unsigned atomType, unsigned atomSize,
   case at('t','w','o','s'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('u','d','t','a'): {offsetToEnclosedAtoms = 0; break;}
   case at('u','l','a','w'): {offsetToEnclosedAtoms = atomSize-8; break;}
+  case at('u','r','l',' '): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('v','m','h','d'): {offsetToEnclosedAtoms = 3*4; break;}
   case at('V','P','3','1'): {offsetToEnclosedAtoms = atomSize-8; break;}
   case at('w','a','v','e'): {offsetToEnclosedAtoms = atomSize-8; break;}

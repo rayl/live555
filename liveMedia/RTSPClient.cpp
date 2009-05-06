@@ -852,7 +852,8 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
   return False;
 }
 
-Boolean RTSPClient::playMediaSession(MediaSession& session) {
+Boolean RTSPClient::playMediaSession(MediaSession& session,
+				     float start, float end) {
 #ifdef SUPPORT_REAL_RTSP
   if (isRealNetworksSession()) {
     // This is a RealNetworks stream; set the "Subscribe" parameter before proceeding:
@@ -879,15 +880,20 @@ Boolean RTSPClient::playMediaSession(MediaSession& session) {
       "PLAY %s RTSP/1.0\r\n"
       "CSeq: %d\r\n"
       "Session: %s\r\n"
-      "Range: npt=0-\r\n"
+      "Range: npt=%s-%s\r\n"
       "%s"
       "%s"
       "\r\n";
 
+    char startStr[30], endStr[30];
+    sprintf(startStr, "%.3f", start); sprintf(endStr, "%.3f", end);
+    if (end == -1) endStr[0] = '\0';
+      
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(fBaseURL)
       + 20 /* max int len */
       + strlen(fLastSessionId)
+      + strlen(startStr) + strlen(endStr)
       + strlen(authenticatorStr)
       + fUserAgentHeaderStrSize;
     cmd = new char[cmdSize];
@@ -895,6 +901,7 @@ Boolean RTSPClient::playMediaSession(MediaSession& session) {
 	    fBaseURL,
 	    ++fCSeq,
 	    fLastSessionId,
+	    startStr, endStr,
 	    authenticatorStr,
 	    fUserAgentHeaderStr);
     delete[] authenticatorStr;
@@ -960,7 +967,6 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
 
     char startStr[30], endStr[30];
     sprintf(startStr, "%.3f", start); sprintf(endStr, "%.3f", end);
-    if (start==-1) startStr[0]='\0';
     if (end == -1) endStr[0] = '\0';
       
     char const *prefix, *separator, *suffix;

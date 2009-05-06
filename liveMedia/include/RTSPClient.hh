@@ -81,7 +81,8 @@ public:
       // Issues a RTSP "SETUP" command on "subsession".
       // Returns True iff this command succeeds
 
-  Boolean playMediaSession(MediaSession& session);
+  Boolean playMediaSession(MediaSession& session,
+			   float start = 0.0, float end = -1.0);
       // Issues an aggregate RTSP "PLAY" command on "session".
       // Returns True iff this command succeeds
   Boolean playMediaSubsession(MediaSubsession& subsession,

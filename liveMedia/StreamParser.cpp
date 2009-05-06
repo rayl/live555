@@ -23,6 +23,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <string.h>
 #include <stdlib.h>
 
+#define BANK_SIZE 150000
+
 StreamParser::StreamParser(FramedSource* inputSource,
 			   FramedSource::onCloseFunc* onInputCloseFunc,
 			   void* onInputCloseClientData,
@@ -32,12 +34,16 @@ StreamParser::StreamParser(FramedSource* inputSource,
     fOnInputCloseClientData(onInputCloseClientData),
     fClientContinueFunc(clientContinueFunc),
     fClientContinueClientData(clientContinueClientData),
-    fCurBankNum(0), fCurBank(fBank[0]),
     fSavedParserIndex(0), fCurParserIndex(0), fRemainingUnparsedBits(0),
     fTotNumValidBytes(0) {
+  fBank[0] = new unsigned char[BANK_SIZE];
+  fBank[1] = new unsigned char[BANK_SIZE];
+  fCurBankNum = 0;
+  fCurBank = fBank[fCurBankNum];
 }
 
 StreamParser::~StreamParser() {
+  delete[] fBank[0]; delete[] fBank[1];
 }
 
 #define NO_MORE_BUFFERED_INPUT 1
