@@ -32,7 +32,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GSMAudioRTPSink.hh"
 #include "H263plusVideoRTPSink.hh"
 #include "SimpleRTPSink.hh"
-#include "ByteStreamFileSource.hh"
+#include "ByteStreamMultiFileSource.hh"
 #include "BasicUDPSource.hh"
 #include "SimpleRTPSource.hh"
 #include "MPEGAudioRTPSource.hh"

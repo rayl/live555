@@ -94,7 +94,8 @@ Boolean clientTearDownSubsession(Medium* /*client*/,
 }
 
 Boolean clientTearDownSession(Medium* client,
-			      MediaSession* session) {
+			      MediaSession* /*session*/) {
+  if (client == NULL) return False;
   SIPClient* sipClient = (SIPClient*)client;
   return sipClient->sendBYE();
 }

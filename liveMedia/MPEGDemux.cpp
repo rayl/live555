@@ -191,6 +191,8 @@ void MPEGDemux::stopGettingFrames(unsigned char streamIdTag) {
 void MPEGDemux::handleClosure(void* clientData) {
   MPEGDemux* demux = (MPEGDemux*)clientData;
 
+  demux->fNumPendingReads = 0;
+
   // Tell all pending readers that our source has closed.
   // Note that we need to make a copy of our readers' close functions
   // (etc.) before we start calling any of them, in case one of them
@@ -209,6 +211,7 @@ void MPEGDemux::handleClosure(void* clientData) {
 	++numPending;
       }
     }
+    out.isCurrentlyActive = out.isCurrentlyAwaitingData = False;
   } 
   for (i = 0; i < numPending; ++i) {
     (*savedPending[i].fOnCloseFunc)(savedPending[i].onCloseClientData);

@@ -19,9 +19,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "ByteStreamMultiFileSource.hh"
-#include <string.h>
-
-////////// ByteStreamFileSource //////////
 
 ByteStreamMultiFileSource
 ::ByteStreamMultiFileSource(UsageEnvironment& env,
@@ -34,7 +31,7 @@ ByteStreamMultiFileSource
     }
 
     // Next, copy the source file names into our own array:
-    fFileNameArray = new (char const*)[fNumSources];
+    fFileNameArray = new char const*[fNumSources];
     if (fFileNameArray == NULL) return;
     unsigned i;
     for (i = 0; i < fNumSources; ++i) {
@@ -43,7 +40,7 @@ ByteStreamMultiFileSource
 
     // Next, set up our array of component ByteStreamFileSources
     // Don't actually create these yet; instead, do this on demand
-    fSourceArray = new (ByteStreamFileSource*)[fNumSources];
+    fSourceArray = new ByteStreamFileSource*[fNumSources];
     if (fSourceArray == NULL) return;
     for (i = 0; i < fNumSources; ++i) {
       fSourceArray[i] = NULL;
@@ -58,7 +55,7 @@ ByteStreamMultiFileSource::~ByteStreamMultiFileSource() {
   delete[] fSourceArray;
 
   for (i = 0; i < fNumSources; ++i) {
-    delete[] fFileNameArray[i];
+    delete[] (char*)(fFileNameArray[i]);
   }
   delete[] fFileNameArray;
 }
@@ -89,6 +86,7 @@ void ByteStreamMultiFileSource::doGetNextFrame() {
     source->getNextFrame(fTo, fMaxSize,
 			       afterGettingFrame, this,
 			       onSourceClosure, this);
+    return;
   } while (0);
 
   // An error occurred; consider ourselves closed:

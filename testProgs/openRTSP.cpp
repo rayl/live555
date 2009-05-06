@@ -52,6 +52,7 @@ Boolean clientStartPlayingSession(Medium* client,
 
 Boolean clientTearDownSubsession(Medium* client,
                                  MediaSubsession* subsession) {
+  if (client == NULL || subsession == NULL) return False;
   RTSPClient* rtspClient = (RTSPClient*)client;
   return rtspClient->teardownMediaSubsession(*subsession);
 }

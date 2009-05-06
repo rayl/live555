@@ -570,7 +570,6 @@ void startPlayingStreams() {
 }
 
 void tearDownStreams() {
-  if (session == NULL) return;
   MediaSubsessionIterator iter(*session);
   MediaSubsession* subsession;
   while ((subsession = iter.next()) != NULL) {
@@ -587,7 +586,6 @@ void tearDownStreams() {
 void closeMediaSinks() {
   Medium::close(qtOut);
 
-  if (session == NULL) return;
   MediaSubsessionIterator iter(*session);
   MediaSubsession* subsession;
   while ((subsession = iter.next()) != NULL) {
@@ -646,11 +644,15 @@ void shutdown(int exitCode) {
     env->taskScheduler().unscheduleDelayedTask(currentTimerTask);
   }
 
-  // Close our output files:
-  closeMediaSinks();
+  if (ourClient != NULL) {
+    // Teardown any outstanding sessions, and close media sinks:
+    if (session != NULL){
+      tearDownStreams();
+      closeMediaSinks();
+    }
+  }
 
-  // Teardown, then shutdown, any outstanding RTP/RTCP subsessions
-  tearDownStreams();
+  // Shutdown the Media session (and all of the RTP/RTCP subsessions):
   Medium::close(session);
 
   // Finally, shut down our client:

@@ -16,7 +16,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // "liveMedia"
 // Copyright (c) 1996-2002 Live Networks, Inc.  All rights reserved.
 // An abstraction of a network interface used for RTP (or RTCP).
-// (This allows the RTP-over-TCP hack (RFC 2236, section 10.12) to
+// (This allows the RTP-over-TCP hack (RFC 2326, section 10.12) to
 // be implemented transparently.)
 // C++ header
 
