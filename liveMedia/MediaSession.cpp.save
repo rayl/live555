@@ -165,7 +165,6 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
       if (subsession->parseSDPAttribute_rtpmap(sdpLine)) continue;
       if (subsession->parseSDPAttribute_control(sdpLine)) continue;
       if (subsession->parseSDPAttribute_range(sdpLine)) continue;
-      if (subsession->parseSDPAttribute_fmtp(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_mct_slap(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_dimensions(sdpLine)) continue;
       if (subsession->parseSDPAttribute_x_framerate(sdpLine)) continue;
@@ -439,8 +438,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fConnectionEndpointName(NULL),
     fClientPortNum(0), fRTPPayloadFormat(0xFF),
     fSavedSDPLines(NULL), fMediumName(NULL), fCodecName(NULL),
-    fRTPTimestampFrequency(0), fControlPath(NULL),
-    fCpresent(False), fConfig(NULL), fPlayEndTime(0.0),
+    fRTPTimestampFrequency(0), fControlPath(NULL), fPlayEndTime(0.0),
     fMCT_SLAP_SessionId(0), fMCT_SLAP_Stagger(0),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0),
     fRTPSocket(NULL), fRTCPSocket(NULL),
@@ -452,7 +450,7 @@ MediaSubsession::~MediaSubsession() {
 
   delete fConnectionEndpointName;
   delete fSavedSDPLines; delete fMediumName; delete fCodecName;
-  delete fControlPath; delete fConfig;
+  delete fControlPath;
 
   delete fNext;
 }
@@ -802,26 +800,6 @@ Boolean MediaSubsession::parseSDPAttribute_range(char const* sdpLine) {
       }
     }
   }
-
-  return parseSuccess;
-}
-
-Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
-  // Check for a "a=fmtp:" line:
-  // TEMP: We check only for "a=fmtp:<num>;cpresent=<num>;config=<string>" #####
-  // Later: (i) check that payload format number matches; #####
-  //        (ii) look for other parameters also (generalize?) #####  
-  Boolean parseSuccess = False;
-
-  int cpresent;
-  char* config = strdup(sdpLine); // ensures we have enough space
-  char const* fmtStr = "a=fmtp: %*d cpresent = %d ; config = %s";
-  if (sscanf(sdpLine, fmtStr, &cpresent, config) == 2) {
-    parseSuccess = True;
-    fCpresent = cpresent != 0;
-    delete fConfig; fConfig = strdup(config);
-  }
-  delete config;
 
   return parseSuccess;
 }

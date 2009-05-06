@@ -36,6 +36,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "BasicUDPSource.hh"
 #include "SimpleRTPSource.hh"
 #include "MPEGAudioRTPSource.hh"
+#include "MPEG4LATMAudioRTPSource.hh"
 #include "MP3ADURTPSource.hh"
 #include "QCELPAudioRTPSource.hh"
 #include "MPEGVideoRTPSource.hh"

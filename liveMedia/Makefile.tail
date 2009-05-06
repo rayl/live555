@@ -11,7 +11,7 @@ all:	$(ALL)
 	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS) $<
 
 MP3_SOURCE_OBJS = MP3FileSource.$(OBJ) MP3HTTPSource.$(OBJ) MP3Transcoder.$(OBJ) MP3ADU.$(OBJ) MP3ADUdescriptor.$(OBJ) MP3ADUinterleaving.$(OBJ) MP3ADUTranscoder.$(OBJ) MP3StreamState.$(OBJ) MP3Internals.$(OBJ) MP3InternalsHuffman.$(OBJ) MP3InternalsHuffmanTable.$(OBJ) MP3ADURTPSource.$(OBJ)
-MPEG_SOURCE_OBJS = MPEGDemux.$(OBJ) MPEGDemuxedElementaryStream.$(OBJ) MPEGVideoStreamFramer.$(OBJ) MPEGAudioStreamFramer.$(OBJ) MPEGAudioRTPSource.$(OBJ) $(MP3_SOURCE_OBJS) MPEGVideoRTPSource.$(OBJ)
+MPEG_SOURCE_OBJS = MPEGDemux.$(OBJ) MPEGDemuxedElementaryStream.$(OBJ) MPEGVideoStreamFramer.$(OBJ) MPEGAudioStreamFramer.$(OBJ) MPEGAudioRTPSource.$(OBJ) MPEG4LATMAudioRTPSource.$(OBJ) $(MP3_SOURCE_OBJS) MPEGVideoRTPSource.$(OBJ)
 MP3_SINK_OBJS = MP3ADURTPSink.$(OBJ)
 MPEG_SINK_OBJS = MPEGAudioRTPSink.$(OBJ) $(MP3_SINK_OBJS) MPEGVideoRTPSink.$(OBJ) MPEGVideoHTTPSink.$(OBJ)
 
@@ -79,6 +79,8 @@ MPEGAudioStreamFramer.$(CPP):	include/MPEGAudioStreamFramer.hh StreamParser.hh M
 include/MPEGAudioStreamFramer.hh:	include/FramedFilter.hh
 MPEGAudioRTPSource.$(CPP):	include/MPEGAudioRTPSource.hh
 include/MPEGAudioRTPSource.hh:	include/MultiFramedRTPSource.hh
+MPEG4LATMAudioRTPSource.$(CPP):	include/MPEG4LATMAudioRTPSource.hh
+include/MPEG4LATMAudioRTPSource.hh:	include/MultiFramedRTPSource.hh
 MP3FileSource.$(CPP):	include/MP3FileSource.hh MP3StreamState.hh
 include/MP3FileSource.hh:	include/FramedFileSource.hh
 MP3StreamState.hh:	MP3Internals.hh

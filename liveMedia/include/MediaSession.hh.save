@@ -111,8 +111,6 @@ public:
   char const* mediumName() const { return fMediumName; }
   char const* codecName() const { return fCodecName; }
   char const* controlPath() const { return fControlPath; }
-  Boolean fmtp_cpresent() const { return fCpresent; }
-  char const* fmtp_config() const { return fConfig; }
   int mctSLAPSessionId() const { return fMCT_SLAP_SessionId; }
   unsigned mctSLAPStagger() const { return fMCT_SLAP_Stagger; }
   unsigned short videoWidth() const { return fVideoWidth; }
@@ -172,7 +170,6 @@ private:
   Boolean parseSDPAttribute_rtpmap(char const* sdpLine);
   Boolean parseSDPAttribute_control(char const* sdpLine);
   Boolean parseSDPAttribute_range(char const* sdpLine);
-  Boolean parseSDPAttribute_fmtp(char const* sdpLine);
   Boolean parseSDPAttribute_x_mct_slap(char const* sdpLine);
   Boolean parseSDPAttribute_x_dimensions(char const* sdpLine);
   Boolean parseSDPAttribute_x_framerate(char const* sdpLine);
@@ -192,8 +189,6 @@ private:
   char* fCodecName;
   unsigned fRTPTimestampFrequency;
   char* fControlPath;
-  Boolean fCpresent;
-  char* fConfig;
   float fPlayEndTime;
   int fMCT_SLAP_SessionId; // 0 if not part of a MCT SLAP session
   unsigned fMCT_SLAP_Stagger; // seconds (used only if the above is != 0)

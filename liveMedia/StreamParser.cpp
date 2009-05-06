@@ -68,7 +68,7 @@ void StreamParser::ensureValidBytes1(unsigned numBytesNeeded) {
   if (fCurParserIndex + numBytesNeeded > BANK_SIZE) {
     // If this happens, it means that we have too much saved parser state.
     // To fix this, increase BANK_SIZE as appropriate.
-    fprintf(stderr, "MPEGDemux internal error (%d, %d, %d)\n",
+    fprintf(stderr, "StreamParser internal error (%d + %d > %d)\n",
 	    fCurParserIndex, numBytesNeeded, BANK_SIZE); fflush(stderr);
     exit(1);
   }
@@ -100,7 +100,7 @@ void StreamParser::afterGettingBytes(void* clientData,
   // Continue our original calling source where it left off:
   buffer->restoreSavedParserState();
       // Sigh... this is a crock; things would have been a lot simpler
-      // here if we using threads, with synchronous I/O...
+      // here if we were using threads, with synchronous I/O...
   buffer->fClientContinueFunc(buffer->fClientContinueClientData);
 }
 
