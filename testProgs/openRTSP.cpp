@@ -82,7 +82,7 @@ static int Idunno;
 struct timeval startTime;
 
 void usage() {
-  fprintf(stderr, "Usage: %s [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-c] [-s <offset>] [-n] [-t] [-u <username> <password>] [-w <width> -h <height>] [-f <frames-per-second>] [-l] [-y] <url>\n", progName);
+  fprintf(stderr, "Usage: %s [-p <startPortNum>] [-r|-q] [-a|-v] [-V] [-e <endTime>] [-c] [-s <offset>] [-n] [-t] [-u <username> <password>] [-w <width> -h <height>] [-f <frames-per-second>] [-y] <url>\n", progName);
   shutdown();
 }
 
@@ -230,12 +230,13 @@ int main(int argc, char** argv) {
       break;
     }
 
+    // Note: The following option is deprecated, and may someday be removed:
     case 'l': { // try to compensate for packet loss by repeating frames
       packetLossCompensate = True;
       break;
     }
 
-    case 'y': { // synchronize audio and video streams at the beginning
+    case 'y': { // synchronize audio and video streams
       syncStreams = True;
       break;
     }

@@ -63,7 +63,7 @@ private:
   FILE* fOutFid;
   Boolean fPacketLossCompensate;
   Boolean fSyncStreams;
-  struct timeval fNewestSyncTime;
+  struct timeval fNewestSyncTime, fFirstDataTime;
   Boolean fAreCurrentlyBeingPlayed;
   afterPlayingFunc* fAfterFunc;
   void* fAfterClientData;
@@ -90,6 +90,8 @@ private:
   _atom(mvhd);
       _atom(trak);
           _atom(tkhd);
+          _atom(edts);
+              _atom(elst);
           _atom(mdia);
               _atom(mdhd);
               _atom(hdlr);

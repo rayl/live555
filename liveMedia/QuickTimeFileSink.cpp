@@ -34,17 +34,19 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class ChunkDescriptor {
 public:
   ChunkDescriptor(unsigned offsetInFile, unsigned size,
-		  unsigned frameSize);
+		  unsigned frameSize, struct timeval presentationTime);
   virtual ~ChunkDescriptor();
 
   ChunkDescriptor* extendChunk(unsigned newOffsetInFile, unsigned newSize,
-			       unsigned newFrameSize);
+			       unsigned newFrameSize,
+			       struct timeval newPresentationTime);
       // this may end up allocating a new chunk instead
 public:
   ChunkDescriptor* fNextChunk;
   unsigned fOffsetInFile;
   unsigned fNumFrames;
   unsigned fFrameSize;
+  struct timeval fPresentationTime; // of the start of the data
 };
 
 class SubsessionBuffer {
@@ -58,7 +60,13 @@ public:
   unsigned bytesInUse() const { return fBytesInUse; }
   unsigned bytesAvailable() const { return sizeof fData - fBytesInUse; }
   
+  void setPresentationTime(struct timeval const& presentationTime) {
+    fPresentationTime = presentationTime;
+  }
+  struct timeval const& presentationTime() const {return fPresentationTime;}
+
 private:
+  struct timeval fPresentationTime;
   unsigned char fData[20000];
   unsigned fBytesInUse;
 };
@@ -71,7 +79,8 @@ public:
   Boolean setQTstate();
   void setFinalQTstate();
 
-  void afterGettingFrame(unsigned packetDataSize);
+  void afterGettingFrame(unsigned packetDataSize,
+			 struct timeval presentationTime);
   void onSourceClosure();
 
   Boolean syncOK(struct timeval presentationTime);
@@ -100,9 +109,11 @@ public:
   unsigned fQTTimeUnitsPerSample;
   unsigned fQTBytesPerFrame;
   unsigned fQTSamplesPerFrame;
-  // These next fields are derived from the ones above:
+  // These next fields are derived from the ones above,
+  // plus the information from each chunk:
   unsigned fQTTotNumSamples;
   unsigned fQTDuration;
+  unsigned fQTInitialOffsetDuration; // if there's a pause at the beginning
 
   ChunkDescriptor *fHeadChunk, *fTailChunk;
   unsigned fNumChunks;
@@ -136,6 +147,7 @@ QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
     fMovieWidth(movieWidth), fMovieHeight(movieHeight),
     fMovieFPS(movieFPS), fCurrentTrackNumber(0) {
   fNewestSyncTime.tv_sec = fNewestSyncTime.tv_usec = 0;
+  fFirstDataTime.tv_sec = fFirstDataTime.tv_usec = (unsigned)(~0);
 
   // Set up I/O state for each input subsession:
   MediaSubsessionIterator iter(fInputSession);
@@ -279,7 +291,7 @@ void QuickTimeFileSink
     ioState->fOurSink.continuePlaying();
     return;
   }
-  ioState->afterGettingFrame(packetDataSize);
+  ioState->afterGettingFrame(packetDataSize, presentationTime);
 }
 
 void QuickTimeFileSink::onSourceClosure(void* clientData) {
@@ -480,11 +492,18 @@ Boolean SubsessionIOState::setQTstate() {
   return False; 
 }
 
+static Boolean timevalGE(struct timeval const& tv1,
+			 struct timeval const& tv2) {
+  return (unsigned)tv1.tv_sec > (unsigned)tv2.tv_sec
+    || (tv1.tv_sec == tv2.tv_sec
+	&& (unsigned)tv1.tv_usec >= (unsigned)tv2.tv_usec);
+}
+
 void SubsessionIOState::setFinalQTstate() {
   // Compute derived parameters, by running through the list of chunks:
   fQTTotNumSamples = fQTDuration = 0;
 
-  ChunkDescriptor *chunk = fHeadChunk;
+  ChunkDescriptor* chunk = fHeadChunk;
   while (chunk != NULL) {
     unsigned numSamples = chunk->fNumFrames*fQTSamplesPerFrame;
 
@@ -493,9 +512,36 @@ void SubsessionIOState::setFinalQTstate() {
 
     chunk = chunk->fNextChunk;
   }
+
+  if (fHeadChunk != NULL && timevalGE(fOurSink.fFirstDataTime,
+				      fHeadChunk->fPresentationTime)) {
+    fOurSink.fFirstDataTime = fHeadChunk->fPresentationTime;
+  }
+
+  if (fOurSink.fSyncStreams) {
+    //    fprintf(stderr, "old duration (time scale %d): %d\n", fQTTimeScale, fQTDuration);//#####@@@@@
+    // In this case, compute fQTDuration differently: using the
+    // presentation timestamps in the chunks (because we will be
+    // using an edit list to keep the stream synchronized).
+    if (fHeadChunk == 0) return;
+    struct timeval const& startTime = fHeadChunk->fPresentationTime;
+    struct timeval const& endTime = fTailChunk->fPresentationTime;
+    double duration = (endTime.tv_sec - startTime.tv_sec)
+      + (endTime.tv_usec - startTime.tv_usec)/1000000.0;
+    fQTDuration = (unsigned)(duration*fQTTimeScale);
+    //    fprintf(stderr, "start %u.%06d, end %u.%06d\n", startTime.tv_sec, startTime.tv_usec, endTime.tv_sec, endTime.tv_usec);//#####@@@@@
+    //    fprintf(stderr, "New duration: %f, %d\n", duration, fQTDuration);//#####@@@@@
+
+    // add on the duration of the last chunk:
+    unsigned lastChunkDuration
+      = fTailChunk->fNumFrames*fQTSamplesPerFrame*fQTTimeUnitsPerSample;
+    fQTDuration += lastChunkDuration;
+    //    fprintf(stderr, "+ last chunk duration (%d frames, %d samples/frame, %d units/sample) %d => %d\n", fTailChunk->fNumFrames, fQTSamplesPerFrame, fQTTimeUnitsPerSample, lastChunkDuration, fQTDuration);//#####@@@@@
+  }
 }
 
-void SubsessionIOState::afterGettingFrame(unsigned packetDataSize) {
+void SubsessionIOState::afterGettingFrame(unsigned packetDataSize,
+					  struct timeval presentationTime) {
   // Begin by checking whether there was a gap in the RTP stream.
   // If so, try to compensate for this (if desired):
   unsigned short rtpSeqNum
@@ -510,6 +556,9 @@ void SubsessionIOState::afterGettingFrame(unsigned packetDataSize) {
   fLastPacketRTPSeqNum = rtpSeqNum;
 
   // Now, continue working with the frame that we just got
+  if (fBuffer->bytesInUse() == 0) {
+    fBuffer->setPresentationTime(presentationTime);
+  }
   fBuffer->addBytes(packetDataSize);
 
   // If our RTP source is a "QuickTimeGenericRTPSource", then
@@ -591,6 +640,7 @@ void SubsessionIOState::afterGettingFrame(unsigned packetDataSize) {
 
 void SubsessionIOState::useFrame(SubsessionBuffer& buffer) {
   unsigned packetDataSize = buffer.bytesInUse();
+  struct timeval const& presentationTime = buffer.presentationTime();
 
   // Figure out the bytes-per-sample for this data:
   unsigned frameSize = fQTBytesPerFrame;
@@ -604,10 +654,11 @@ void SubsessionIOState::useFrame(SubsessionBuffer& buffer) {
   ChunkDescriptor* newTailChunk;
   if (fTailChunk == NULL) {
     newTailChunk = fHeadChunk
-      = new ChunkDescriptor(ftell(outFid), packetDataSize, frameSize);
+      = new ChunkDescriptor(ftell(outFid), packetDataSize, frameSize,
+			    presentationTime);
   } else {
     newTailChunk = fTailChunk->extendChunk(ftell(outFid), packetDataSize,
-					   frameSize);
+					   frameSize, presentationTime);
   }
   if (newTailChunk != fTailChunk) {
    // This data created a new chunk, rather than extending the old one
@@ -624,13 +675,6 @@ void SubsessionIOState::onSourceClosure() {
   fOurSink.onSourceClosure1();
 }
 
-static Boolean timevalGE(struct timeval const& tv1,
-			 struct timeval const& tv2) {
-  return (unsigned)tv1.tv_sec > (unsigned)tv2.tv_sec
-    || (tv1.tv_sec == tv2.tv_sec
-	&& (unsigned)tv1.tv_usec >= (unsigned)tv2.tv_usec);
-}
-
 Boolean SubsessionIOState::syncOK(struct timeval presentationTime) {
   QuickTimeFileSink& s = fOurSink; // abbreviation
   if (!s.fSyncStreams) return True; // we don't care
@@ -644,6 +688,7 @@ Boolean SubsessionIOState::syncOK(struct timeval presentationTime) {
 	// But now we are
 	fSyncTime = presentationTime;
 	++s.fNumSyncedSubsessions;
+	//	fprintf(stderr, "subsession %d (%d): sync time %u.%06d\n", s.fNumSyncedSubsessions, fQTTimeScale, fSyncTime.tv_sec, fSyncTime.tv_usec);fflush(stderr);//#####@@@@@
 
 	if (timevalGE(fSyncTime, s.fNewestSyncTime)) {
 	  s.fNewestSyncTime = fSyncTime;
@@ -660,18 +705,20 @@ Boolean SubsessionIOState::syncOK(struct timeval presentationTime) {
 }
 
 ChunkDescriptor::ChunkDescriptor(unsigned offsetInFile, unsigned size,
-				 unsigned frameSize)
+				 unsigned frameSize,
+				 struct timeval presentationTime)
   : fNextChunk(NULL), fOffsetInFile(offsetInFile),
-    fNumFrames(size/frameSize), fFrameSize(frameSize) {
+    fNumFrames(size/frameSize), fFrameSize(frameSize),
+    fPresentationTime(presentationTime) {
 }
 
 ChunkDescriptor::~ChunkDescriptor() {
   delete fNextChunk;
 }
 
-ChunkDescriptor* ChunkDescriptor::extendChunk(unsigned newOffsetInFile,
-					      unsigned newSize,
-					      unsigned newFrameSize) {
+ChunkDescriptor* ChunkDescriptor
+::extendChunk(unsigned newOffsetInFile, unsigned newSize,
+	      unsigned newFrameSize, struct timeval newPresentationTime) {
   // First, check whether the new space is just at the end of this
   // existing chunk:
   if (newOffsetInFile == fOffsetInFile + fNumFrames*fFrameSize) {
@@ -685,7 +732,8 @@ ChunkDescriptor* ChunkDescriptor::extendChunk(unsigned newOffsetInFile,
 
   // We'll allocate a new ChunkDescriptor, and link it to the end of us:
   ChunkDescriptor* newDescriptor
-    = new ChunkDescriptor(newOffsetInFile, newSize, newFrameSize);
+    = new ChunkDescriptor(newOffsetInFile, newSize, newFrameSize,
+			  newPresentationTime);
 
   fNextChunk = newDescriptor;
 
@@ -833,6 +881,11 @@ addAtomEnd;
 
 addAtom(trak);
   size += addAtom_tkhd();
+  // If we're synchronizing the media streams, add an edit list
+  // that helps do this:
+  if (fSyncStreams && fCurrentIOState->fHeadChunk != NULL) {
+      size += addAtom_edts();
+  }
   size += addAtom_mdia();
 addAtomEnd;
 
@@ -864,6 +917,106 @@ addAtom(tkhd);
   size += addWord(0x40000000); // matrix bottom right corner
   size += addWord(fMovieWidth<<16); // Track width
   size += addWord(fMovieHeight<<16); // Track height
+addAtomEnd;
+
+addAtom(edts);
+  size += addAtom_elst();
+addAtomEnd;
+
+#define addEdit1(duration,trackPosition) do { \
+      unsigned trackDuration \
+        = (unsigned) ((2*(duration)*movieTimeScale+1)/2); \
+            /* in movie time units */ \
+/*fprintf(stderr, "addEdit1(%f->%d,%d)\n", duration, trackDuration, trackPosition);*//*#####@@@@@*/ \
+      size += addWord(trackDuration); /* Track duration */ \
+      size += addWord(trackPosition); /* Media time */ \
+      size += addWord(0x00010000); /* Media rate (1x) */ \
+      ++numEdits; \
+} while (0)
+#define addEdit(duration) addEdit1((duration),editTrackPosition)
+#define addEmptyEdit(duration) addEdit1((duration),-1)
+
+addAtom(elst);
+  unsigned const movieTimeScale = fLargestRTPtimestampFrequency;
+
+  size += addWord(0x00000000); // Version + Flags
+
+  // Add a dummy "Number of entries" field
+  // (and remember its position).  We'll fill this field in later:
+  unsigned numEntriesPosition = ftell(fOutFid);
+  size += addWord(0); // dummy for "Number of entries"
+  unsigned numEdits = 0;
+
+  // Run through our chunks, looking at their presentation times.
+  // From these, figure out the edits that need to be made to keep
+  // the track media data in sync with the presentation times.
+//  fprintf(stderr, "checking chunks (time scale %d)\n", fCurrentIOState->fQTTimeScale);//#####@@@@@
+  
+  double const syncThreshold = 0.1; // 100 ms
+    // don't allow the track to get out of sync by more than this
+
+  struct timeval editStartTime = fFirstDataTime;
+  unsigned editTrackPosition = 0;
+  unsigned currentTrackPosition = 0;
+//double totalEditDuration = 0.0;//#####@@@@@
+
+  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
+  while (chunk != NULL) {
+    struct timeval const& chunkStartTime = chunk->fPresentationTime;
+    double movieDurationOfEdit
+      = (chunkStartTime.tv_sec - editStartTime.tv_sec)
+      + (chunkStartTime.tv_usec - editStartTime.tv_usec)/1000000.0;
+    double trackDurationOfEdit = (currentTrackPosition-editTrackPosition)
+      / (double)(fCurrentIOState->fQTTimeScale);
+      
+    double outOfSync = movieDurationOfEdit - trackDurationOfEdit;
+    //    fprintf(stderr, "outOfSync: %f == %f - %f\n", outOfSync, movieDurationOfEdit, trackDurationOfEdit);//#####@@@@@
+    //    double timeSinceStart = (chunkStartTime.tv_sec - fFirstDataTime.tv_sec)+ (chunkStartTime.tv_usec - fFirstDataTime.tv_usec)/1000000.0;//#####@@@@@
+
+    //    fprintf(stderr, "(time since start %f, totalEditDuration %f, diff %f)\n", timeSinceStart, totalEditDuration, timeSinceStart-totalEditDuration);//#####@@@@@
+    if (outOfSync > syncThreshold) {
+      // The track's data is too short, so end this edit, add a new 'empty'
+      // edit after it, and start a new edit (at the current track posn.):
+      //      fprintf(stderr, "#####track data too short\n");//#####@@@@@
+      if (trackDurationOfEdit > 0.0) addEdit(trackDurationOfEdit);
+      addEmptyEdit(outOfSync);
+      //totalEditDuration += trackDurationOfEdit + outOfSync;//#####@@@@@
+
+      editStartTime = chunkStartTime;
+      editTrackPosition = currentTrackPosition;
+    } else if (outOfSync < -syncThreshold) {
+      //      fprintf(stderr, "#####track data too long\n");//#####@@@@@
+      // The track's data is too long, so end this edit, and start
+      // a new edit (pointing at the current track posn.):
+      if (movieDurationOfEdit > 0.0) addEdit(movieDurationOfEdit);
+      //totalEditDuration += movieDurationOfEdit;//#####@@@@@
+
+      editStartTime = chunkStartTime;
+      editTrackPosition = currentTrackPosition;
+    }
+    //    else fprintf(stderr, "track data OK\n");//#####@@@@@
+
+    // Note the duration of this chunk:
+    unsigned const numSamples
+      = chunk->fNumFrames*fCurrentIOState->fQTSamplesPerFrame;
+    unsigned const duration
+      = numSamples*fCurrentIOState->fQTTimeUnitsPerSample;
+    currentTrackPosition += duration;
+    //    fprintf(stderr, "duration %d (%f) -> currentTrackPosition %d (%f)\n", duration, (double)duration/fCurrentIOState->fQTTimeScale, currentTrackPosition, (double)currentTrackPosition/fCurrentIOState->fQTTimeScale);//#####@@@@@
+
+    chunk = chunk->fNextChunk;
+  }
+//    fprintf(stderr, "after loop\n");//#####@@@@@
+
+  // Write out the final edit:
+  double trackDurationOfEdit = (currentTrackPosition-editTrackPosition)
+      / (double)(fCurrentIOState->fQTTimeScale);
+  if (trackDurationOfEdit > 0.0) addEdit(trackDurationOfEdit);
+//totalEditDuration += trackDurationOfEdit;//#####@@@@@
+//fprintf(stderr, "totalEditDuration: %f (%d)\n", totalEditDuration, (unsigned)(totalEditDuration*movieTimeScale));//#####@@@@@
+
+  // Now go back and fill in the "Number of entries" field:
+  setWord(numEntriesPosition, numEdits);
 addAtomEnd;
 
 addAtom(mdia);
@@ -1087,7 +1240,7 @@ addAtom(stsc); // Sample-to-Chunk
   // in this (compressed) Sample-to-Chunk table:
   unsigned numEntries = 0, chunkNumber = 0;
   unsigned prevSamplesPerChunk = ~0;
-  ChunkDescriptor *chunk = fCurrentIOState->fHeadChunk;
+  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
   while (chunk != NULL) {
     ++chunkNumber;
     unsigned const samplesPerChunk
@@ -1116,7 +1269,7 @@ addAtom(stsz); // Sample Size
   // has just a single entry, or multiple entries.
   Boolean haveSingleEntryTable = True;
   double firstBPS = 0.0;
-  ChunkDescriptor *chunk = fCurrentIOState->fHeadChunk;
+  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
   while (chunk != NULL) {
     double bps = chunk->fFrameSize/(fCurrentIOState->fQTSamplesPerFrame);
     if (bps < 1.0) {
@@ -1148,7 +1301,7 @@ addAtom(stsz); // Sample Size
   if (!haveSingleEntryTable) {
     // Multiple-entry table:
     // Run through the chunk descriptors, entering the sample sizes:
-    ChunkDescriptor *chunk = fCurrentIOState->fHeadChunk;
+    ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
     while (chunk != NULL) {
       unsigned numSamples
 	= chunk->fNumFrames*(fCurrentIOState->fQTSamplesPerFrame);
@@ -1168,7 +1321,7 @@ addAtom(stco); // Chunk Offset
   size += addWord(fCurrentIOState->fNumChunks); // Number of entries
 
   // Run through the chunk descriptors, entering the file offsets:
-  ChunkDescriptor *chunk = fCurrentIOState->fHeadChunk;
+  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
   while (chunk != NULL) {
     size += addWord(chunk->fOffsetInFile);
 

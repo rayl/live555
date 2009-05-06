@@ -1,0 +1,687 @@
+Opened URL "rtsp://localhost/foo.sdp", returning a SDP description:
+v=0
+o=- 1034995317 1034995317 IN IP4 127.0.0.1
+s=GSM/H.263+ session, sourced from the horizonEncoder
+i=GSM/H.263+ session
+c=IN IP4 0.0.0.0
+t=0 0
+a=control:*
+a=control:*
+m=audio 0 RTP/AVP 3
+a=control:trackID=1
+m=video 0 RTP/AVP 96
+a=rtpmap:96 H263-1998/90000
+a=control:trackID=2
+a=x-dimensions:352,288
+a=x-framerate:1
+
+Created receiver for "audio/GSM" subsession (client ports 1602-1603)
+Created receiver for "video/H263-1998" subsession (client ports 1604-1605)
+Issued RTSP "SETUP" on "audio/GSM" subsession (client ports 1602-1603)
+Issued RTSP "SETUP" on "video/H263-1998" subsession (client ports 1604-1605)
+Issued RTSP "PLAY" command on "audio/GSM" subsession
+Issued RTSP "PLAY" command on "video/H263-1998" subsession
+Receiving streamed data (signal with "kill -HUP 41376" or "kill -USR1 41376" to terminate)...
+subsession 1 (8000): sync time 1034995344.783000
+subsession 2 (600): sync time 1034995344.476000
+Got shutdown signal
+Closing "audio/GSM" subsession
+Closing "video/H263-1998" subsession
+old duration (time scale 8000): 669600
+start 1034995346.916000, end 1034995429.475000
+New duration: 82.559000, 660472
++ last chunk duration (50 frames, 160 samples/frame, 1 units/sample) 8000 => 668472
+old duration (time scale 600): 49200
+start 1034995345.476000, end 1034995426.476000
+New duration: 81.000000, 48600
++ last chunk duration (1 frames, 1 samples/frame, 600 units/sample) 600 => 49200
+checking chunks (time scale 8000)
+outOfSync: 1.440000 == 1.440000 - 0.000000
+(time since start 1.440000, totalEditDuration 0.000000, diff 1.440000)
+#####track data too short
+addEdit1(1.440000->129600,-1)
+duration 13600 (1.700000) -> currentTrackPosition 13600 (1.700000)
+outOfSync: 0.042000 == 1.742000 - 1.700000
+(time since start 3.182000, totalEditDuration 1.440000, diff 1.742000)
+track data OK
+duration 3200 (0.400000) -> currentTrackPosition 16800 (2.100000)
+outOfSync: 0.003000 == 2.103000 - 2.100000
+(time since start 3.543000, totalEditDuration 1.440000, diff 2.103000)
+track data OK
+duration 12800 (1.600000) -> currentTrackPosition 29600 (3.700000)
+outOfSync: 0.055000 == 3.755000 - 3.700000
+(time since start 5.195000, totalEditDuration 1.440000, diff 3.755000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 37600 (4.700000)
+outOfSync: 0.057000 == 4.757000 - 4.700000
+(time since start 6.197000, totalEditDuration 1.440000, diff 4.757000)
+track data OK
+duration 3200 (0.400000) -> currentTrackPosition 40800 (5.100000)
+outOfSync: -0.003000 == 5.097000 - 5.100000
+(time since start 6.537000, totalEditDuration 1.440000, diff 5.097000)
+track data OK
+duration 12800 (1.600000) -> currentTrackPosition 53600 (6.700000)
+outOfSync: 0.060000 == 6.760000 - 6.700000
+(time since start 8.200000, totalEditDuration 1.440000, diff 6.760000)
+track data OK
+duration 16000 (2.000000) -> currentTrackPosition 69600 (8.700000)
+outOfSync: 0.062000 == 8.762000 - 8.700000
+(time since start 10.202000, totalEditDuration 1.440000, diff 8.762000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 77600 (9.700000)
+outOfSync: 0.054000 == 9.754000 - 9.700000
+(time since start 11.194000, totalEditDuration 1.440000, diff 9.754000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 85600 (10.700000)
+outOfSync: 0.055000 == 10.755000 - 10.700000
+(time since start 12.195000, totalEditDuration 1.440000, diff 10.755000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 93600 (11.700000)
+outOfSync: 0.057000 == 11.757000 - 11.700000
+(time since start 13.197000, totalEditDuration 1.440000, diff 11.757000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 101600 (12.700000)
+outOfSync: 0.058000 == 12.758000 - 12.700000
+(time since start 14.198000, totalEditDuration 1.440000, diff 12.758000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 109600 (13.700000)
+outOfSync: 0.060000 == 13.760000 - 13.700000
+(time since start 15.200000, totalEditDuration 1.440000, diff 13.760000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 117600 (14.700000)
+outOfSync: 0.061000 == 14.761000 - 14.700000
+(time since start 16.201000, totalEditDuration 1.440000, diff 14.761000)
+track data OK
+duration 16000 (2.000000) -> currentTrackPosition 133600 (16.700000)
+outOfSync: 0.054000 == 16.754000 - 16.700000
+(time since start 18.194000, totalEditDuration 1.440000, diff 16.754000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 141600 (17.700000)
+outOfSync: 0.055000 == 17.755000 - 17.700000
+(time since start 19.195000, totalEditDuration 1.440000, diff 17.755000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 149600 (18.700000)
+outOfSync: 0.057000 == 18.757000 - 18.700000
+(time since start 20.197000, totalEditDuration 1.440000, diff 18.757000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 157600 (19.700000)
+outOfSync: -0.002000 == 19.698000 - 19.700000
+(time since start 21.138000, totalEditDuration 1.440000, diff 19.698000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 165600 (20.700000)
+outOfSync: -0.010000 == 20.690000 - 20.700000
+(time since start 22.130000, totalEditDuration 1.440000, diff 20.690000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 173600 (21.700000)
+outOfSync: -0.009000 == 21.691000 - 21.700000
+(time since start 23.131000, totalEditDuration 1.440000, diff 21.691000)
+track data OK
+duration 4800 (0.600000) -> currentTrackPosition 178400 (22.300000)
+outOfSync: -0.008000 == 22.292000 - 22.300000
+(time since start 23.732000, totalEditDuration 1.440000, diff 22.292000)
+track data OK
+duration 11200 (1.400000) -> currentTrackPosition 189600 (23.700000)
+outOfSync: 0.004000 == 23.704000 - 23.700000
+(time since start 25.144000, totalEditDuration 1.440000, diff 23.704000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 197600 (24.700000)
+outOfSync: 0.005000 == 24.705000 - 24.700000
+(time since start 26.145000, totalEditDuration 1.440000, diff 24.705000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 205600 (25.700000)
+outOfSync: -0.003000 == 25.697000 - 25.700000
+(time since start 27.137000, totalEditDuration 1.440000, diff 25.697000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 213600 (26.700000)
+outOfSync: -0.002000 == 26.698000 - 26.700000
+(time since start 28.138000, totalEditDuration 1.440000, diff 26.698000)
+track data OK
+duration 8800 (1.100000) -> currentTrackPosition 222400 (27.800000)
+outOfSync: 0.000000 == 27.800000 - 27.800000
+(time since start 29.240000, totalEditDuration 1.440000, diff 27.800000)
+track data OK
+duration 4000 (0.500000) -> currentTrackPosition 226400 (28.300000)
+outOfSync: -0.019000 == 28.281000 - 28.300000
+(time since start 29.721000, totalEditDuration 1.440000, diff 28.281000)
+track data OK
+duration 11200 (1.400000) -> currentTrackPosition 237600 (29.700000)
+outOfSync: 0.003000 == 29.703000 - 29.700000
+(time since start 31.143000, totalEditDuration 1.440000, diff 29.703000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 245600 (30.700000)
+outOfSync: -0.006000 == 30.694000 - 30.700000
+(time since start 32.134000, totalEditDuration 1.440000, diff 30.694000)
+track data OK
+duration 8800 (1.100000) -> currentTrackPosition 254400 (31.800000)
+outOfSync: -0.004000 == 31.796000 - 31.800000
+(time since start 33.236000, totalEditDuration 1.440000, diff 31.796000)
+track data OK
+duration 7200 (0.900000) -> currentTrackPosition 261600 (32.700000)
+outOfSync: -0.023000 == 32.677000 - 32.700000
+(time since start 34.117000, totalEditDuration 1.440000, diff 32.677000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 269600 (33.700000)
+outOfSync: -0.002000 == 33.698000 - 33.700000
+(time since start 35.138000, totalEditDuration 1.440000, diff 33.698000)
+track data OK
+duration 4800 (0.600000) -> currentTrackPosition 274400 (34.300000)
+outOfSync: -0.061000 == 34.239000 - 34.300000
+(time since start 35.679000, totalEditDuration 1.440000, diff 34.239000)
+track data OK
+duration 11200 (1.400000) -> currentTrackPosition 285600 (35.700000)
+outOfSync: 0.001000 == 35.701000 - 35.700000
+(time since start 37.141000, totalEditDuration 1.440000, diff 35.701000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 293600 (36.700000)
+outOfSync: 0.003000 == 36.703000 - 36.700000
+(time since start 38.143000, totalEditDuration 1.440000, diff 36.703000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 301600 (37.700000)
+outOfSync: 0.004000 == 37.704000 - 37.700000
+(time since start 39.144000, totalEditDuration 1.440000, diff 37.704000)
+track data OK
+duration 3200 (0.400000) -> currentTrackPosition 304800 (38.100000)
+outOfSync: -0.076000 == 38.024000 - 38.100000
+(time since start 39.464000, totalEditDuration 1.440000, diff 38.024000)
+track data OK
+duration 12800 (1.600000) -> currentTrackPosition 317600 (39.700000)
+outOfSync: -0.023000 == 39.677000 - 39.700000
+(time since start 41.117000, totalEditDuration 1.440000, diff 39.677000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 325600 (40.700000)
+outOfSync: -0.002000 == 40.698000 - 40.700000
+(time since start 42.138000, totalEditDuration 1.440000, diff 40.698000)
+track data OK
+duration 2400 (0.300000) -> currentTrackPosition 328000 (41.000000)
+outOfSync: -0.061000 == 40.939000 - 41.000000
+(time since start 42.379000, totalEditDuration 1.440000, diff 40.939000)
+track data OK
+duration 13600 (1.700000) -> currentTrackPosition 341600 (42.700000)
+outOfSync: 0.001000 == 42.701000 - 42.700000
+(time since start 44.141000, totalEditDuration 1.440000, diff 42.701000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 349600 (43.700000)
+outOfSync: 0.003000 == 43.703000 - 43.700000
+(time since start 45.143000, totalEditDuration 1.440000, diff 43.703000)
+track data OK
+duration 3200 (0.400000) -> currentTrackPosition 352800 (44.100000)
+outOfSync: 0.003000 == 44.103000 - 44.100000
+(time since start 45.543000, totalEditDuration 1.440000, diff 44.103000)
+track data OK
+duration 12800 (1.600000) -> currentTrackPosition 365600 (45.700000)
+outOfSync: 0.006000 == 45.706000 - 45.700000
+(time since start 47.146000, totalEditDuration 1.440000, diff 45.706000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 373600 (46.700000)
+outOfSync: -0.063000 == 46.637000 - 46.700000
+(time since start 48.077000, totalEditDuration 1.440000, diff 46.637000)
+track data OK
+duration 16000 (2.000000) -> currentTrackPosition 389600 (48.700000)
+outOfSync: -0.070000 == 48.630000 - 48.700000
+(time since start 50.070000, totalEditDuration 1.440000, diff 48.630000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 397600 (49.700000)
+outOfSync: -0.069000 == 49.631000 - 49.700000
+(time since start 51.071000, totalEditDuration 1.440000, diff 49.631000)
+track data OK
+duration 3200 (0.400000) -> currentTrackPosition 400800 (50.100000)
+outOfSync: -0.118000 == 49.982000 - 50.100000
+(time since start 51.422000, totalEditDuration 1.440000, diff 49.982000)
+#####track data too long
+addEdit1(49.982000->4498380,0)
+duration 9600 (1.200000) -> currentTrackPosition 410400 (51.300000)
+outOfSync: 0.041000 == 1.241000 - 1.200000
+(time since start 52.663000, totalEditDuration 51.422000, diff 1.241000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 418400 (52.300000)
+outOfSync: 0.043000 == 2.243000 - 2.200000
+(time since start 53.665000, totalEditDuration 51.422000, diff 2.243000)
+track data OK
+duration 7200 (0.900000) -> currentTrackPosition 425600 (53.200000)
+outOfSync: 0.034000 == 3.134000 - 3.100000
+(time since start 54.556000, totalEditDuration 51.422000, diff 3.134000)
+track data OK
+duration 8800 (1.100000) -> currentTrackPosition 434400 (54.300000)
+outOfSync: 0.036000 == 4.236000 - 4.200000
+(time since start 55.658000, totalEditDuration 51.422000, diff 4.236000)
+track data OK
+duration 11200 (1.400000) -> currentTrackPosition 445600 (55.700000)
+outOfSync: 0.028000 == 5.628000 - 5.600000
+(time since start 57.050000, totalEditDuration 51.422000, diff 5.628000)
+track data OK
+duration 3200 (0.400000) -> currentTrackPosition 448800 (56.100000)
+outOfSync: -0.002000 == 5.998000 - 6.000000
+(time since start 57.420000, totalEditDuration 51.422000, diff 5.998000)
+track data OK
+duration 12800 (1.600000) -> currentTrackPosition 461600 (57.700000)
+outOfSync: 0.031000 == 7.631000 - 7.600000
+(time since start 59.053000, totalEditDuration 51.422000, diff 7.631000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 469600 (58.700000)
+outOfSync: 0.022000 == 8.622000 - 8.600000
+(time since start 60.044000, totalEditDuration 51.422000, diff 8.622000)
+track data OK
+duration 16800 (2.100000) -> currentTrackPosition 486400 (60.800000)
+outOfSync: 0.065000 == 10.765000 - 10.700000
+(time since start 62.187000, totalEditDuration 51.422000, diff 10.765000)
+track data OK
+duration 15200 (1.900000) -> currentTrackPosition 501600 (62.700000)
+outOfSync: 0.018000 == 12.618000 - 12.600000
+(time since start 64.040000, totalEditDuration 51.422000, diff 12.618000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 509600 (63.700000)
+outOfSync: 0.019000 == 13.619000 - 13.600000
+(time since start 65.041000, totalEditDuration 51.422000, diff 13.619000)
+track data OK
+duration 4800 (0.600000) -> currentTrackPosition 514400 (64.300000)
+outOfSync: -0.020000 == 14.180000 - 14.200000
+(time since start 65.602000, totalEditDuration 51.422000, diff 14.180000)
+track data OK
+duration 6400 (0.800000) -> currentTrackPosition 520800 (65.100000)
+outOfSync: 0.001000 == 15.001000 - 15.000000
+(time since start 66.423000, totalEditDuration 51.422000, diff 15.001000)
+track data OK
+duration 8800 (1.100000) -> currentTrackPosition 529600 (66.200000)
+outOfSync: -0.037000 == 16.063000 - 16.100000
+(time since start 67.485000, totalEditDuration 51.422000, diff 16.063000)
+track data OK
+duration 12000 (1.500000) -> currentTrackPosition 541600 (67.700000)
+outOfSync: 0.005000 == 17.605000 - 17.600000
+(time since start 69.027000, totalEditDuration 51.422000, diff 17.605000)
+track data OK
+duration 4800 (0.600000) -> currentTrackPosition 546400 (68.300000)
+outOfSync: -0.014000 == 18.186000 - 18.200000
+(time since start 69.608000, totalEditDuration 51.422000, diff 18.186000)
+track data OK
+duration 12000 (1.500000) -> currentTrackPosition 558400 (69.800000)
+outOfSync: 0.058000 == 19.758000 - 19.700000
+(time since start 71.180000, totalEditDuration 51.422000, diff 19.758000)
+track data OK
+duration 4000 (0.500000) -> currentTrackPosition 562400 (70.300000)
+outOfSync: -0.001000 == 20.199000 - 20.200000
+(time since start 71.621000, totalEditDuration 51.422000, diff 20.199000)
+track data OK
+duration 11200 (1.400000) -> currentTrackPosition 573600 (71.700000)
+outOfSync: 0.001000 == 21.601000 - 21.600000
+(time since start 73.023000, totalEditDuration 51.422000, diff 21.601000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 581600 (72.700000)
+outOfSync: -0.008000 == 22.592000 - 22.600000
+(time since start 74.014000, totalEditDuration 51.422000, diff 22.592000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 589600 (73.700000)
+outOfSync: 0.004000 == 23.604000 - 23.600000
+(time since start 75.026000, totalEditDuration 51.422000, diff 23.604000)
+track data OK
+duration 5600 (0.700000) -> currentTrackPosition 595200 (74.400000)
+outOfSync: -0.005000 == 24.295000 - 24.300000
+(time since start 75.717000, totalEditDuration 51.422000, diff 24.295000)
+track data OK
+duration 11200 (1.400000) -> currentTrackPosition 606400 (75.800000)
+outOfSync: -0.003000 == 25.697000 - 25.700000
+(time since start 77.119000, totalEditDuration 51.422000, diff 25.697000)
+track data OK
+duration 7200 (0.900000) -> currentTrackPosition 613600 (76.700000)
+outOfSync: -0.012000 == 26.588000 - 26.600000
+(time since start 78.010000, totalEditDuration 51.422000, diff 26.588000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 621600 (77.700000)
+outOfSync: -0.011000 == 27.589000 - 27.600000
+(time since start 79.011000, totalEditDuration 51.422000, diff 27.589000)
+track data OK
+duration 5600 (0.700000) -> currentTrackPosition 627200 (78.400000)
+outOfSync: -0.010000 == 28.290000 - 28.300000
+(time since start 79.712000, totalEditDuration 51.422000, diff 28.290000)
+track data OK
+duration 7200 (0.900000) -> currentTrackPosition 634400 (79.300000)
+outOfSync: -0.058000 == 29.142000 - 29.200000
+(time since start 80.564000, totalEditDuration 51.422000, diff 29.142000)
+track data OK
+duration 11200 (1.400000) -> currentTrackPosition 645600 (80.700000)
+outOfSync: -0.026000 == 30.574000 - 30.600000
+(time since start 81.996000, totalEditDuration 51.422000, diff 30.574000)
+track data OK
+duration 9600 (1.200000) -> currentTrackPosition 655200 (81.900000)
+outOfSync: -0.025000 == 31.775000 - 31.800000
+(time since start 83.197000, totalEditDuration 51.422000, diff 31.775000)
+track data OK
+duration 6400 (0.800000) -> currentTrackPosition 661600 (82.700000)
+outOfSync: -0.023000 == 32.577000 - 32.600000
+(time since start 83.999000, totalEditDuration 51.422000, diff 32.577000)
+track data OK
+duration 8000 (1.000000) -> currentTrackPosition 669600 (83.700000)
+after loop
+addEdit1(33.600000->3024000,400800)
+totalEditDuration: 85.022000 (7651979)
+checking chunks (time scale 600)
+outOfSync: 0.000000 == 0.000000 - 0.000000
+(time since start 0.000000, totalEditDuration 0.000000, diff 0.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 600 (1.000000)
+outOfSync: 0.000000 == 1.000000 - 1.000000
+(time since start 1.000000, totalEditDuration 0.000000, diff 1.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 1200 (2.000000)
+outOfSync: 0.000000 == 2.000000 - 2.000000
+(time since start 2.000000, totalEditDuration 0.000000, diff 2.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 1800 (3.000000)
+outOfSync: 0.000000 == 3.000000 - 3.000000
+(time since start 3.000000, totalEditDuration 0.000000, diff 3.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 2400 (4.000000)
+outOfSync: 0.000000 == 4.000000 - 4.000000
+(time since start 4.000000, totalEditDuration 0.000000, diff 4.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 3000 (5.000000)
+outOfSync: 0.000001 == 5.000001 - 5.000000
+(time since start 5.000001, totalEditDuration 0.000000, diff 5.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 3600 (6.000000)
+outOfSync: 0.000001 == 6.000001 - 6.000000
+(time since start 6.000001, totalEditDuration 0.000000, diff 6.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 4200 (7.000000)
+outOfSync: 0.000001 == 7.000001 - 7.000000
+(time since start 7.000001, totalEditDuration 0.000000, diff 7.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 4800 (8.000000)
+outOfSync: 0.000001 == 8.000001 - 8.000000
+(time since start 8.000001, totalEditDuration 0.000000, diff 8.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 5400 (9.000000)
+outOfSync: 0.000001 == 9.000001 - 9.000000
+(time since start 9.000001, totalEditDuration 0.000000, diff 9.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 6000 (10.000000)
+outOfSync: 0.000001 == 10.000001 - 10.000000
+(time since start 10.000001, totalEditDuration 0.000000, diff 10.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 6600 (11.000000)
+outOfSync: 0.000001 == 11.000001 - 11.000000
+(time since start 11.000001, totalEditDuration 0.000000, diff 11.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 7200 (12.000000)
+outOfSync: 0.000001 == 12.000001 - 12.000000
+(time since start 12.000001, totalEditDuration 0.000000, diff 12.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 7800 (13.000000)
+outOfSync: 0.000001 == 13.000001 - 13.000000
+(time since start 13.000001, totalEditDuration 0.000000, diff 13.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 8400 (14.000000)
+outOfSync: 0.000001 == 14.000001 - 14.000000
+(time since start 14.000001, totalEditDuration 0.000000, diff 14.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 9000 (15.000000)
+outOfSync: 0.000001 == 15.000001 - 15.000000
+(time since start 15.000001, totalEditDuration 0.000000, diff 15.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 9600 (16.000000)
+outOfSync: 0.000001 == 16.000001 - 16.000000
+(time since start 16.000001, totalEditDuration 0.000000, diff 16.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 10200 (17.000000)
+outOfSync: 0.000001 == 17.000001 - 17.000000
+(time since start 17.000001, totalEditDuration 0.000000, diff 17.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 10800 (18.000000)
+outOfSync: 0.000001 == 18.000001 - 18.000000
+(time since start 18.000001, totalEditDuration 0.000000, diff 18.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 11400 (19.000000)
+outOfSync: 0.000001 == 19.000001 - 19.000000
+(time since start 19.000001, totalEditDuration 0.000000, diff 19.000001)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 12000 (20.000000)
+outOfSync: 0.000000 == 20.000000 - 20.000000
+(time since start 20.000000, totalEditDuration 0.000000, diff 20.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 12600 (21.000000)
+outOfSync: 0.000000 == 21.000000 - 21.000000
+(time since start 21.000000, totalEditDuration 0.000000, diff 21.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 13200 (22.000000)
+outOfSync: 0.000000 == 22.000000 - 22.000000
+(time since start 22.000000, totalEditDuration 0.000000, diff 22.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 13800 (23.000000)
+outOfSync: 0.000000 == 23.000000 - 23.000000
+(time since start 23.000000, totalEditDuration 0.000000, diff 23.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 14400 (24.000000)
+outOfSync: 0.000000 == 24.000000 - 24.000000
+(time since start 24.000000, totalEditDuration 0.000000, diff 24.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 15000 (25.000000)
+outOfSync: 0.000000 == 25.000000 - 25.000000
+(time since start 25.000000, totalEditDuration 0.000000, diff 25.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 15600 (26.000000)
+outOfSync: 0.000000 == 26.000000 - 26.000000
+(time since start 26.000000, totalEditDuration 0.000000, diff 26.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 16200 (27.000000)
+outOfSync: 0.000000 == 27.000000 - 27.000000
+(time since start 27.000000, totalEditDuration 0.000000, diff 27.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 16800 (28.000000)
+outOfSync: 0.000000 == 28.000000 - 28.000000
+(time since start 28.000000, totalEditDuration 0.000000, diff 28.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 17400 (29.000000)
+outOfSync: 0.000000 == 29.000000 - 29.000000
+(time since start 29.000000, totalEditDuration 0.000000, diff 29.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 18000 (30.000000)
+outOfSync: 0.000000 == 30.000000 - 30.000000
+(time since start 30.000000, totalEditDuration 0.000000, diff 30.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 18600 (31.000000)
+outOfSync: 0.000000 == 31.000000 - 31.000000
+(time since start 31.000000, totalEditDuration 0.000000, diff 31.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 19200 (32.000000)
+outOfSync: 0.000000 == 32.000000 - 32.000000
+(time since start 32.000000, totalEditDuration 0.000000, diff 32.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 19800 (33.000000)
+outOfSync: 0.000000 == 33.000000 - 33.000000
+(time since start 33.000000, totalEditDuration 0.000000, diff 33.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 20400 (34.000000)
+outOfSync: 0.000000 == 34.000000 - 34.000000
+(time since start 34.000000, totalEditDuration 0.000000, diff 34.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 21000 (35.000000)
+outOfSync: 0.000000 == 35.000000 - 35.000000
+(time since start 35.000000, totalEditDuration 0.000000, diff 35.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 21600 (36.000000)
+outOfSync: 0.000000 == 36.000000 - 36.000000
+(time since start 36.000000, totalEditDuration 0.000000, diff 36.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 22200 (37.000000)
+outOfSync: 0.000000 == 37.000000 - 37.000000
+(time since start 37.000000, totalEditDuration 0.000000, diff 37.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 22800 (38.000000)
+outOfSync: 0.000000 == 38.000000 - 38.000000
+(time since start 38.000000, totalEditDuration 0.000000, diff 38.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 23400 (39.000000)
+outOfSync: 0.000000 == 39.000000 - 39.000000
+(time since start 39.000000, totalEditDuration 0.000000, diff 39.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 24000 (40.000000)
+outOfSync: 0.000000 == 40.000000 - 40.000000
+(time since start 40.000000, totalEditDuration 0.000000, diff 40.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 24600 (41.000000)
+outOfSync: 0.000000 == 41.000000 - 41.000000
+(time since start 41.000000, totalEditDuration 0.000000, diff 41.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 25200 (42.000000)
+outOfSync: 0.000000 == 42.000000 - 42.000000
+(time since start 42.000000, totalEditDuration 0.000000, diff 42.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 25800 (43.000000)
+outOfSync: 0.000000 == 43.000000 - 43.000000
+(time since start 43.000000, totalEditDuration 0.000000, diff 43.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 26400 (44.000000)
+outOfSync: 0.000000 == 44.000000 - 44.000000
+(time since start 44.000000, totalEditDuration 0.000000, diff 44.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 27000 (45.000000)
+outOfSync: 0.000000 == 45.000000 - 45.000000
+(time since start 45.000000, totalEditDuration 0.000000, diff 45.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 27600 (46.000000)
+outOfSync: 0.000000 == 46.000000 - 46.000000
+(time since start 46.000000, totalEditDuration 0.000000, diff 46.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 28200 (47.000000)
+outOfSync: 0.000000 == 47.000000 - 47.000000
+(time since start 47.000000, totalEditDuration 0.000000, diff 47.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 28800 (48.000000)
+outOfSync: 0.000000 == 48.000000 - 48.000000
+(time since start 48.000000, totalEditDuration 0.000000, diff 48.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 29400 (49.000000)
+outOfSync: 0.000000 == 49.000000 - 49.000000
+(time since start 49.000000, totalEditDuration 0.000000, diff 49.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 30000 (50.000000)
+outOfSync: 0.000000 == 50.000000 - 50.000000
+(time since start 50.000000, totalEditDuration 0.000000, diff 50.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 30600 (51.000000)
+outOfSync: 0.000000 == 51.000000 - 51.000000
+(time since start 51.000000, totalEditDuration 0.000000, diff 51.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 31200 (52.000000)
+outOfSync: 0.000000 == 52.000000 - 52.000000
+(time since start 52.000000, totalEditDuration 0.000000, diff 52.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 31800 (53.000000)
+outOfSync: 0.000000 == 53.000000 - 53.000000
+(time since start 53.000000, totalEditDuration 0.000000, diff 53.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 32400 (54.000000)
+outOfSync: 0.000000 == 54.000000 - 54.000000
+(time since start 54.000000, totalEditDuration 0.000000, diff 54.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 33000 (55.000000)
+outOfSync: 0.000000 == 55.000000 - 55.000000
+(time since start 55.000000, totalEditDuration 0.000000, diff 55.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 33600 (56.000000)
+outOfSync: 0.000000 == 56.000000 - 56.000000
+(time since start 56.000000, totalEditDuration 0.000000, diff 56.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 34200 (57.000000)
+outOfSync: 0.000000 == 57.000000 - 57.000000
+(time since start 57.000000, totalEditDuration 0.000000, diff 57.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 34800 (58.000000)
+outOfSync: 0.000000 == 58.000000 - 58.000000
+(time since start 58.000000, totalEditDuration 0.000000, diff 58.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 35400 (59.000000)
+outOfSync: 0.000000 == 59.000000 - 59.000000
+(time since start 59.000000, totalEditDuration 0.000000, diff 59.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 36000 (60.000000)
+outOfSync: 0.000000 == 60.000000 - 60.000000
+(time since start 60.000000, totalEditDuration 0.000000, diff 60.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 36600 (61.000000)
+outOfSync: 0.000000 == 61.000000 - 61.000000
+(time since start 61.000000, totalEditDuration 0.000000, diff 61.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 37200 (62.000000)
+outOfSync: 0.000000 == 62.000000 - 62.000000
+(time since start 62.000000, totalEditDuration 0.000000, diff 62.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 37800 (63.000000)
+outOfSync: 0.000000 == 63.000000 - 63.000000
+(time since start 63.000000, totalEditDuration 0.000000, diff 63.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 38400 (64.000000)
+outOfSync: 0.000000 == 64.000000 - 64.000000
+(time since start 64.000000, totalEditDuration 0.000000, diff 64.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 39000 (65.000000)
+outOfSync: 0.000000 == 65.000000 - 65.000000
+(time since start 65.000000, totalEditDuration 0.000000, diff 65.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 39600 (66.000000)
+outOfSync: 0.000000 == 66.000000 - 66.000000
+(time since start 66.000000, totalEditDuration 0.000000, diff 66.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 40200 (67.000000)
+outOfSync: 0.000000 == 67.000000 - 67.000000
+(time since start 67.000000, totalEditDuration 0.000000, diff 67.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 40800 (68.000000)
+outOfSync: 0.000000 == 68.000000 - 68.000000
+(time since start 68.000000, totalEditDuration 0.000000, diff 68.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 41400 (69.000000)
+outOfSync: 0.000000 == 69.000000 - 69.000000
+(time since start 69.000000, totalEditDuration 0.000000, diff 69.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 42000 (70.000000)
+outOfSync: 0.000000 == 70.000000 - 70.000000
+(time since start 70.000000, totalEditDuration 0.000000, diff 70.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 42600 (71.000000)
+outOfSync: 0.000000 == 71.000000 - 71.000000
+(time since start 71.000000, totalEditDuration 0.000000, diff 71.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 43200 (72.000000)
+outOfSync: 0.000000 == 72.000000 - 72.000000
+(time since start 72.000000, totalEditDuration 0.000000, diff 72.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 43800 (73.000000)
+outOfSync: 0.000000 == 73.000000 - 73.000000
+(time since start 73.000000, totalEditDuration 0.000000, diff 73.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 44400 (74.000000)
+outOfSync: 0.000000 == 74.000000 - 74.000000
+(time since start 74.000000, totalEditDuration 0.000000, diff 74.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 45000 (75.000000)
+outOfSync: 0.000000 == 75.000000 - 75.000000
+(time since start 75.000000, totalEditDuration 0.000000, diff 75.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 45600 (76.000000)
+outOfSync: 0.000000 == 76.000000 - 76.000000
+(time since start 76.000000, totalEditDuration 0.000000, diff 76.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 46200 (77.000000)
+outOfSync: 0.000000 == 77.000000 - 77.000000
+(time since start 77.000000, totalEditDuration 0.000000, diff 77.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 46800 (78.000000)
+outOfSync: 0.000000 == 78.000000 - 78.000000
+(time since start 78.000000, totalEditDuration 0.000000, diff 78.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 47400 (79.000000)
+outOfSync: 0.000000 == 79.000000 - 79.000000
+(time since start 79.000000, totalEditDuration 0.000000, diff 79.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 48000 (80.000000)
+outOfSync: 0.000000 == 80.000000 - 80.000000
+(time since start 80.000000, totalEditDuration 0.000000, diff 80.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 48600 (81.000000)
+outOfSync: 0.000000 == 81.000000 - 81.000000
+(time since start 81.000000, totalEditDuration 0.000000, diff 81.000000)
+track data OK
+duration 600 (1.000000) -> currentTrackPosition 49200 (82.000000)
+after loop
+addEdit1(82.000000->7380000,0)
+totalEditDuration: 82.000000 (7380000)
