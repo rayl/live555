@@ -255,6 +255,18 @@ void OnDemandServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
   }
 }
 
+void OnDemandServerMediaSubsession::setStreamScale(unsigned /*clientSessionId*/,
+						   void* streamToken, float scale) {
+  // Changing the scale factor isn't allowed if multiple clients are receiving data
+  // from the same source:
+  if (fReuseFirstSource) return;
+
+  StreamState* streamState = (StreamState*)streamToken; 
+  if (streamState != NULL && streamState->mediaSource() != NULL) {
+    setStreamSourceScale(streamState->mediaSource(), scale);
+  }
+}
+
 void OnDemandServerMediaSubsession::deleteStream(unsigned clientSessionId,
 						 void*& streamToken) {
   // Look up (and remove) the destinations for this client session:
@@ -290,6 +302,11 @@ char const* OnDemandServerMediaSubsession
 
 void OnDemandServerMediaSubsession::seekStreamSource(FramedSource* /*inputSource*/,
 						     float /*seekNPT*/) {
+  // Default implementation: Do nothing
+}
+
+void OnDemandServerMediaSubsession
+::setStreamSourceScale(FramedSource* /*inputSource*/, float /*scale*/) {
   // Default implementation: Do nothing
 }
 

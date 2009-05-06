@@ -738,13 +738,57 @@ static Boolean parseRangeHeader(char const* buf, float& rangeStart, float& range
   return True;
 }
 
+static Boolean parseScaleHeader(char const* buf, float& scale) {
+  // Initialize the result parameter to a default value:
+  scale = 1.0;
+
+  // First, find "Scale:"
+  while (1) {
+    if (*buf == '\0') return False; // not found
+    if (_strncasecmp(buf, "Scale: ", 7) == 0) break;
+    ++buf;
+  }
+
+  // Then, run through each of the fields, looking for ones we handle:
+  char const* fields = buf + 7;
+  while (*fields == ' ') ++fields;
+  float sc;
+  if (sscanf(fields, "%f", &sc) == 1) {
+    scale = sc;
+  } else {
+    return False; // The header is malformed
+  }
+
+  return True;
+}
+
 void RTSPServer::RTSPClientSession
   ::handleCmd_PLAY(ServerMediaSubsession* subsession, char const* cseq,
 		   char const* fullRequestStr) {
   char* rtspURL = fOurServer.rtspURL(fOurServerMediaSession);
   unsigned rtspURLSize = strlen(rtspURL);
 
-  // Parse the client's "Range:" header, if any: 
+  //// Parse the client's "Scale:" header, if any: 
+  float scale;
+  Boolean sawScaleHeader = parseScaleHeader(fullRequestStr, scale);
+
+  // Try to set the stream's scale factor to this value:
+  if (subsession == NULL /*aggregate op*/) {
+    fOurServerMediaSession->testScaleFactor(scale);
+  } else {
+    subsession->testScaleFactor(scale);
+  }
+
+  char buf[100];
+  char* scaleHeader;
+  if (!sawScaleHeader) {
+    buf[0] = '\0'; // Because we didn't see a Scale: header, don't send one back
+  } else {
+    sprintf(buf, "Scale: %f\r\n", scale);
+  }
+  scaleHeader = strDup(buf);
+
+  //// Parse the client's "Range:" header, if any: 
   float rangeStart, rangeEnd;
   Boolean sawRangeHeader = parseRangeHeader(fullRequestStr, rangeStart, rangeEnd);
 
@@ -761,15 +805,14 @@ void RTSPServer::RTSPClientSession
   if (rangeEnd < 0.0 || rangeEnd > duration) rangeEnd = duration;
   if (rangeStart < 0.0) {
     rangeStart = 0.0;
-  } else if (rangeEnd > 0.0 && rangeStart > rangeEnd) {
+  } else if (rangeEnd > 0.0 && scale > 0.0 && rangeStart > rangeEnd) {
     rangeStart = rangeEnd;
   }
 
-  char buf[100];
   char* rangeHeader;
   if (!sawRangeHeader) {
     buf[0] = '\0'; // Because we didn't see a Range: header, don't send one back
-  } else if (rangeEnd == 0.0) {
+  } else if (rangeEnd == 0.0 && scale >= 0.0) {
     sprintf(buf, "Range: npt=%.3f-\r\n", rangeStart);
   } else {
     sprintf(buf, "Range: npt=%.3f-%.3f\r\n", rangeStart, rangeEnd);
@@ -795,6 +838,11 @@ void RTSPServer::RTSPClientSession
 	|| subsession == fStreamStates[i].subsession) {
       unsigned short rtpSeqNum = 0;
       unsigned rtpTimestamp = 0;
+      if (sawScaleHeader) {
+	fStreamStates[i].subsession->setStreamScale(fOurSessionId,
+						    fStreamStates[i].streamToken,
+						    scale);
+      }
       if (sawRangeHeader) {
 	fStreamStates[i].subsession->seekStream(fOurSessionId,
 						fStreamStates[i].streamToken,
@@ -842,14 +890,16 @@ void RTSPServer::RTSPClientSession
 	   "CSeq: %s\r\n"
 	   "%s"
 	   "%s"
+	   "%s"
 	   "Session: %d\r\n"
 	   "%s\r\n",
 	   cseq,
 	   dateHeader(),
+	   scaleHeader,
 	   rangeHeader,
 	   fOurSessionId,
 	   rtpInfo);
-  delete[] rtpInfo; delete[] rangeHeader;
+  delete[] rtpInfo; delete[] rangeHeader; delete[] scaleHeader;
 }
 
 void RTSPServer::RTSPClientSession

@@ -64,6 +64,10 @@ float MP3FileSource::filePlayTime() const {
   return fStreamState->filePlayTime();
 }
 
+void MP3FileSource::setPresentationTimeScale(unsigned scale) {
+  fStreamState->setPresentationTimeScale(scale);
+}
+
 void MP3FileSource::seekWithinFile(float seekNPT) {
   fStreamState->seekWithinFile(seekNPT);
 }

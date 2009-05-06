@@ -57,6 +57,7 @@ public:
 		   char const* fileName);
 
   float filePlayTime() const; // in seconds
+  void setPresentationTimeScale(unsigned scale) { fPresentationTimeScale = scale; }
   void seekWithinFile(float seekNPT);
 
   void checkForXingHeader(); // hack for Xing VBR files
@@ -76,6 +77,8 @@ private:
   Boolean fFidIsReallyASocket;
   unsigned fFileSize;
   unsigned fNumFramesInFile;
+  unsigned fPresentationTimeScale;
+    // used if we're streaming at other than the normal rate
   Boolean fIsVBR, fHasXingTOC;
   u_int8_t fXingTOC[XING_TOC_LENGTH]; // set iff "fHasXingTOC" is True
 

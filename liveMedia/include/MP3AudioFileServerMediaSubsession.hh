@@ -34,29 +34,31 @@ class MP3AudioFileServerMediaSubsession: public FileServerMediaSubsession{
 public:
   static MP3AudioFileServerMediaSubsession*
   createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource,
-	    Boolean useADUs, Interleaving* interleaving);
-      // Note: "interleaving" is used only if "useADUs" is True,
+	    Boolean generateADUs, Interleaving* interleaving);
+      // Note: "interleaving" is used only if "generateADUs" is True,
       // (and a value of NULL means 'no interleaving')
 
 private:
   MP3AudioFileServerMediaSubsession(UsageEnvironment& env,
 				    char const* fileName, Boolean reuseFirstSource,
-				    Boolean useADUs,
+				    Boolean generateADUs,
 				    Interleaving* interleaving);
       // called only by createNew();
   virtual ~MP3AudioFileServerMediaSubsession();
 
 private: // redefined virtual functions
   virtual void seekStreamSource(FramedSource* inputSource, float seekNPT);
+  virtual void setStreamSourceScale(FramedSource* inputSource, float scale);
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
 					      unsigned& estBitrate);
   virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
                                     unsigned char rtpPayloadTypeIfDynamic,
 				    FramedSource* inputSource);
+  virtual void testScaleFactor(float& scale);
   virtual float duration() const;
 
 private:
-  Boolean fUseADUs;
+  Boolean fGenerateADUs;
   Interleaving* fInterleaving;
   float fFileDuration;
 };

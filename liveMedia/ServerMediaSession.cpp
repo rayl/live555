@@ -23,6 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "ServerMediaSession.hh"
 #include <GroupsockHelper.hh>
+#include <math.h>
 
 ////////// ServerMediaSession //////////
 
@@ -100,23 +101,85 @@ ServerMediaSession::addSubsession(ServerMediaSubsession* subsession) {
   return True;
 }
 
+void ServerMediaSession::testScaleFactor(float& scale) {
+  // First, try setting all subsessions to the desired scale.
+  // If the subsessions' actual scales differ from each other, choose the
+  // value that's closest to 1, and then try re-setting all subsessions to that
+  // value.  If the subsessions' actual scales still differ, re-set them all to 1.
+  float minSSScale = 1.0;
+  float maxSSScale = 1.0;
+  float bestSSScale = 1.0;
+  float bestDistanceTo1 = 0.0;
+  ServerMediaSubsession* subsession;
+  for (subsession = fSubsessionsHead; subsession != NULL;
+       subsession = subsession->fNext) {
+    float ssscale = scale;
+    subsession->testScaleFactor(ssscale);
+    if (subsession == fSubsessionsHead) { // this is the first subsession
+      minSSScale = maxSSScale = bestSSScale = ssscale;
+      bestDistanceTo1 = fabsf(ssscale - 1.0f);
+    } else {
+      if (ssscale < minSSScale) {
+	minSSScale = ssscale;
+      } else if (ssscale > maxSSScale) {
+	maxSSScale = ssscale;
+      }
+
+      float distanceTo1 = fabsf(ssscale - 1.0f);
+      if (distanceTo1 < bestDistanceTo1) {
+	bestSSScale = ssscale;
+	bestDistanceTo1 = distanceTo1;
+      }
+    }
+  }
+  if (minSSScale == maxSSScale) {
+    // All subsessions are at the same scale: minSSScale == bestSSScale == maxSSScale
+    scale = minSSScale;
+    return;
+  }
+
+  // The scales for each subsession differ.  Try to set each one to the value
+  // that's closest to 1:
+  for (subsession = fSubsessionsHead; subsession != NULL;
+       subsession = subsession->fNext) {
+    float ssscale = bestSSScale;
+    subsession->testScaleFactor(ssscale);
+    if (ssscale != bestSSScale) break; // no luck
+  }
+  if (subsession == NULL) {
+    // All subsessions are at the same scale: bestSSScale
+    scale = bestSSScale;
+    return;
+  }
+
+  // Still no luck.  Set each subsession's scale to 1:
+  for (subsession = fSubsessionsHead; subsession != NULL;
+       subsession = subsession->fNext) {
+    float ssscale = 1;
+    subsession->testScaleFactor(ssscale);
+  }
+  scale = 1;
+}
+
 float ServerMediaSession::duration() const {
-  float firstSubsessionDuration = 0.0;
+  float minSubsessionDuration = 0.0;
   float maxSubsessionDuration = 0.0;
   for (ServerMediaSubsession* subsession = fSubsessionsHead; subsession != NULL;
        subsession = subsession->fNext) {
     float ssduration = subsession->duration();
     if (subsession == fSubsessionsHead) { // this is the first subsession
-      maxSubsessionDuration = firstSubsessionDuration = ssduration;
+      minSubsessionDuration = maxSubsessionDuration = ssduration;
+    } else if (ssduration < minSubsessionDuration) {
+	minSubsessionDuration = ssduration;
     } else if (ssduration > maxSubsessionDuration) {
-      maxSubsessionDuration = ssduration;
+	maxSubsessionDuration = ssduration;
     }
   }
 
-  if (maxSubsessionDuration != firstSubsessionDuration) {
+  if (maxSubsessionDuration != minSubsessionDuration) {
     return -maxSubsessionDuration; // because subsession durations differ
   } else {
-    return firstSubsessionDuration; // all subsession durations are the same
+    return maxSubsessionDuration; // all subsession durations are the same
   }
 }
 
@@ -286,9 +349,18 @@ void ServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
 				       void* /*streamToken*/, float /*seekNPT*/) {
   // default implementation: do nothing
 }
+void ServerMediaSubsession::setStreamScale(unsigned /*clientSessionId*/,
+					   void* /*streamToken*/, float /*scale*/) {
+  // default implementation: do nothing
+}
 void ServerMediaSubsession::deleteStream(unsigned /*clientSessionId*/,
 					 void*& /*streamToken*/) {
   // default implementation: do nothing
+}
+
+void ServerMediaSubsession::testScaleFactor(float& scale) {
+  // default implementation: Support scale = 1 only
+  scale = 1;
 }
 
 float ServerMediaSubsession::duration() const {

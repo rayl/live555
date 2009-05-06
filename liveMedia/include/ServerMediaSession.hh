@@ -55,6 +55,7 @@ public:
 
   Boolean addSubsession(ServerMediaSubsession* subsession);
 
+  void testScaleFactor(float& scale); // sets "scale" to the actual supported scale
   float duration() const;
     // a result == 0 means an unbounded session (the default)
     // a result < 0 means: subsession durations differ; the result is -(the largest)
@@ -133,8 +134,10 @@ public:
 			   unsigned& rtpTimestamp) = 0;
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
   virtual void seekStream(unsigned clientSessionId, void* streamToken, float seekNPT);
+  virtual void setStreamScale(unsigned clientSessionId, void* streamToken, float scale);
   virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 
+  virtual void testScaleFactor(float& scale); // sets "scale" to the actual supported scale
   virtual float duration() const;
     // returns 0 for an unbounded session (the default)
     // returns > 0 for a bounded session

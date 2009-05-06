@@ -37,6 +37,8 @@ public:
       // MP3 frame data within our queue to be discarded, so that it does not
       // erroneously get used by backpointers from the new MP3 frames.
 
+  Boolean setScaleFactor(int scale);
+
 protected:
   ADUFromMP3Source(UsageEnvironment& env,
 		   FramedSource* inputSource,
@@ -57,6 +59,8 @@ private:
   class SegmentQueue* fSegments;
   Boolean fIncludeADUdescriptors;
   unsigned fTotalDataSizeBeforePreviousRead;
+  int fScale;
+  unsigned fFrameCounter;
 };
 
 class MP3FromADUSource: public FramedFilter {

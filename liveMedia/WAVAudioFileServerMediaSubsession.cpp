@@ -59,6 +59,21 @@ void WAVAudioFileServerMediaSubsession
   wavSource->seekToPCMByte(seekByteNumber);
 }
 
+void WAVAudioFileServerMediaSubsession
+::setStreamSourceScale(FramedSource* inputSource, float scale) {
+  int iScale = (int)scale;
+  WAVAudioFileSource* wavSource;
+  if (fBitsPerSample == 16) {
+    // "inputSource" is a filter; its input source is the original WAV file source:
+    wavSource = (WAVAudioFileSource*)(((FramedFilter*)inputSource)->inputSource());
+  } else {
+    // "inputSource" is the original WAV file source:
+    wavSource = (WAVAudioFileSource*)inputSource;
+  }
+
+  wavSource->setScaleFactor(iScale);
+}
+
 FramedSource* WAVAudioFileServerMediaSubsession
 ::createNewStreamSource(unsigned /*clientSessionId*/, unsigned& estBitrate) {
   FramedSource* resultSource = NULL;
@@ -146,6 +161,19 @@ RTPSink* WAVAudioFileServerMediaSubsession
 
   // An error occurred:
   return NULL;
+}
+
+void WAVAudioFileServerMediaSubsession::testScaleFactor(float& scale) {
+  if (fFileDuration <= 0.0) {
+    // The file is non-seekable, so is probably a live input source.
+    // We don't support scale factors other than 1
+    scale = 1;
+  } else {
+    // We support any integral scale, other than 0
+    int iScale = scale < 0.0 ? (int)(scale - 0.5) : (int)(scale + 0.5); // round
+    if (iScale == 0) iScale = 1;
+    scale = (float)iScale;
+  }
 }
 
 float WAVAudioFileServerMediaSubsession::duration() const {

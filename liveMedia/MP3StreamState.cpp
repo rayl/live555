@@ -28,7 +28,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #define MILLION 1000000
 
 MP3StreamState::MP3StreamState(UsageEnvironment& env)
-  : fEnv(env), fFid(NULL) {
+  : fEnv(env), fFid(NULL), fPresentationTimeScale(1) {
 }
 
 MP3StreamState::~MP3StreamState() {
@@ -135,6 +135,14 @@ unsigned MP3StreamState::findNextHeader(struct timeval& presentationTime) {
 
   // From this frame, figure out the *next* frame's presentation time:
   struct timeval framePlayTime = currentFramePlayTime();
+  if (fPresentationTimeScale > 1) {
+    // Scale this value
+    unsigned secondsRem = framePlayTime.tv_sec % fPresentationTimeScale;
+    framePlayTime.tv_sec -= secondsRem;
+    framePlayTime.tv_usec += secondsRem*MILLION;
+    framePlayTime.tv_sec /= fPresentationTimeScale;
+    framePlayTime.tv_usec /= fPresentationTimeScale;
+  }
   fNextFramePresentationTime.tv_usec += framePlayTime.tv_usec;
   fNextFramePresentationTime.tv_sec
     += framePlayTime.tv_sec + fNextFramePresentationTime.tv_usec/MILLION;

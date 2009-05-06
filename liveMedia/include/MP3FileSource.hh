@@ -32,6 +32,7 @@ public:
   static MP3FileSource* createNew(UsageEnvironment& env, char const* fileName);
 
   float filePlayTime() const;
+  void setPresentationTimeScale(unsigned scale);
   void seekWithinFile(float seekNPT);
 
 protected:

@@ -116,7 +116,7 @@ ADUFromMP3Source::ADUFromMP3Source(UsageEnvironment& env,
     fSegments(new SegmentQueue(True /* because we're MP3->ADU */,
 			       False /*no descriptors in incoming frames*/)),
     fIncludeADUdescriptors(includeADUdescriptors),
-    fTotalDataSizeBeforePreviousRead(0) {
+    fTotalDataSizeBeforePreviousRead(0), fScale(1), fFrameCounter(0) {
 }
 
 ADUFromMP3Source::~ADUFromMP3Source() {
@@ -142,6 +142,12 @@ ADUFromMP3Source* ADUFromMP3Source::createNew(UsageEnvironment& env,
 
 void ADUFromMP3Source::resetInput() {
   fSegments->reset();
+}
+
+Boolean ADUFromMP3Source::setScaleFactor(int scale) {
+  if (scale < 1) return False;
+  fScale = scale;
+  return True;
 }
 
 void ADUFromMP3Source::doGetNextFrame() {
@@ -250,9 +256,14 @@ Boolean ADUFromMP3Source::doGetNextFrame1() {
   }
 
 
-  // Call our own 'after getting' function.  Because we're not a 'leaf'
-  // source, we can call this directly, without risking infinite recursion.
-  afterGetting(this);
+  if (fFrameCounter++%fScale == 0) {
+    // Call our own 'after getting' function.  Because we're not a 'leaf'
+    // source, we can call this directly, without risking infinite recursion.
+    afterGetting(this);
+  } else {
+    // Don't use this frame; get another one:
+    doGetNextFrame();
+  }
 
   return True;
 }

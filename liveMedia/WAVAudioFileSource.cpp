@@ -49,6 +49,18 @@ unsigned WAVAudioFileSource::numPCMBytes() const {
   return fFileSize - fWAVHeaderSize;
 }
 
+void WAVAudioFileSource::setScaleFactor(int scale) {
+  fScaleFactor = scale;
+
+  if (fScaleFactor < 0 && ftell(fFid) > 0) {
+    // Because we're reading backwards, seek back one sample, to ensure that
+    // (i)  we start reading the last sample before the start point, and
+    // (ii) we don't hit end-of-file on the first read.
+    int const bytesPerSample = (fNumChannels*fBitsPerSample)/8;
+    fseek(fFid, -bytesPerSample, SEEK_CUR);
+  }
+}
+
 void WAVAudioFileSource::seekToPCMByte(unsigned byteNumber) {
   byteNumber += fWAVHeaderSize;
   if (byteNumber > fFileSize) byteNumber = fFileSize;
@@ -83,7 +95,7 @@ static Boolean skipBytes(FILE* fid, int num) {
 
 WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
   : AudioInputDevice(env, 0, 0, 0, 0)/* set the real parameters later */,
-    fFid(fid), fLastPlayTime(0), fWAVHeaderSize(0), fFileSize(0) {
+    fFid(fid), fLastPlayTime(0), fWAVHeaderSize(0), fFileSize(0), fScaleFactor(1) {
   // Check the WAV file header for validity.
   // Note: The following web pages contain info about the WAV format:
   // http://www.technology.niagarac.on.ca/courses/comp630/WavFileFormat.html
@@ -196,7 +208,23 @@ void WAVAudioFileSource::doGetNextFrame() {
   }
   unsigned const bytesPerSample = (fNumChannels*fBitsPerSample)/8;
   unsigned bytesToRead = fMaxSize - fMaxSize%bytesPerSample;
-  fFrameSize = fread(fTo, 1, bytesToRead, fFid);
+  if (fScaleFactor == 1) {
+    // Common case - read samples in bulk:
+    fFrameSize = fread(fTo, 1, bytesToRead, fFid);
+  } else {
+    // We read every 'fScaleFactor'th sample:
+    fFrameSize = 0; 
+    while (bytesToRead > 0) {
+      size_t bytesRead = fread(fTo, 1, bytesPerSample, fFid);
+      if (bytesRead <= 0) break;
+      fTo += bytesRead;
+      fFrameSize += bytesRead;
+      bytesToRead -= bytesRead;
+
+      // Seek to the appropriate place for the next sample:
+      fseek(fFid, (fScaleFactor-1)*bytesPerSample, SEEK_CUR);
+    }
+  }
 
   // Set the 'presentation time' and 'duration' of this frame:
   if (fPresentationTime.tv_sec == 0 && fPresentationTime.tv_usec == 0) {
