@@ -91,8 +91,8 @@ void* BasicHashTable::Lookup(char const* key) const {
   return entry->value;
 }
 
-Boolean BasicHashTable::IsEmpty() const {
-  return (fNumEntries == 0);
+unsigned BasicHashTable::numEntries() const {
+  return fNumEntries;
 }
 
 BasicHashTable::Iterator::Iterator(BasicHashTable& table)

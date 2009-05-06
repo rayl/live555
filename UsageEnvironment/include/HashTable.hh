@@ -37,7 +37,8 @@ class HashTable {
 	virtual Boolean Remove(char const* key) = 0;
 	virtual void* Lookup(char const* key) const = 0;
 		// Returns 0 if not found
-	virtual Boolean IsEmpty() const = 0;
+        virtual unsigned numEntries() const = 0;
+        Boolean IsEmpty() const { return numEntries() == 0; }
 
 	// Used to iterate through the members of the table:
         class Iterator {

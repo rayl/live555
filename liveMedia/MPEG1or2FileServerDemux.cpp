@@ -249,12 +249,12 @@ static void afterPlayingDummySink(DummySink* sink) {
 }
 
 static float computeSCRTimeCode(MPEG1or2Demux::SCR const& scr) {
-  float result = (float)(scr.remainingBits/90000.0 + scr.extension/300.0);
+  double result = scr.remainingBits/90000.0 + scr.extension/300.0;
   if (scr.highBit) {
     // Add (2^32)/90000 == (2^28)/5625
-    float const highBitValue = (float)((256*1024*1024)/5625.0);
+    double const highBitValue = (256*1024*1024)/5625.0;
     result += highBitValue;
   }
 
-  return result;
+  return (float)result;
 }

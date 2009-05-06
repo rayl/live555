@@ -58,7 +58,7 @@ private: // implementation of inherited pure virtual functions
   virtual Boolean Remove(char const* key);
   virtual void* Lookup(char const* key) const;
   // Returns 0 if not found
-  virtual Boolean IsEmpty() const;
+  virtual unsigned numEntries() const;
   
 private:
   class TableEntry {

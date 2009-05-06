@@ -90,8 +90,7 @@ ADTSAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
 ADTSAudioFileSource
 ::ADTSAudioFileSource(UsageEnvironment& env, FILE* fid, u_int8_t profile,
 		      u_int8_t samplingFrequencyIndex, u_int8_t channelConfiguration)
-  : FramedSource(env),
-    fFid(fid) {
+  : FramedFileSource(env, fid) {
   fSamplingFrequency = samplingFrequencyTable[samplingFrequencyIndex];
   fNumChannels = channelConfiguration == 0 ? 2 : channelConfiguration;
   fuSecsPerFrame

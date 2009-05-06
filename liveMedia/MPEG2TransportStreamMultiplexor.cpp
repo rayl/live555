@@ -137,7 +137,8 @@ void MPEG2TransportStreamMultiplexor
     fNumTruncatedBytes = TRANSPORT_PACKET_SIZE;
   } else {
     fFrameSize = TRANSPORT_PACKET_SIZE;
-    Boolean willAddPCR = pid == fPCR_PID && startPositionInBuffer == 0;
+    Boolean willAddPCR = pid == fPCR_PID && startPositionInBuffer == 0
+      && !(fPCR.highBit == 0 && fPCR.remainingBits == 0 && fPCR.extension == 0);
     unsigned const numBytesAvailable = bufferSize - startPositionInBuffer;
     unsigned numHeaderBytes = 4; // by default
     unsigned numPCRBytes = 0; // by default

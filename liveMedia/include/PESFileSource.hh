@@ -15,42 +15,45 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2005 Live Networks, Inc.  All rights reserved.
-// A source object for AAC audio files in ADTS format
+// A source object for a file stream of MPEG PES packets
 // C++ header
 
-#ifndef _ADTS_AUDIO_FILE_SOURCE_HH
-#define _ADTS_AUDIO_FILE_SOURCE_HH
+#ifndef _PES_FILE_SOURCE_HH
+#define _PES_FILE_SOURCE_HH
 
 #ifndef _FRAMED_FILE_SOURCE_HH
 #include "FramedFileSource.hh"
 #endif
 
-class ADTSAudioFileSource: public FramedFileSource {
-public:
-  static ADTSAudioFileSource* createNew(UsageEnvironment& env,
-				       char const* fileName);
+#ifndef _MPEG_1OR2_DEMUX_HH
+#include "MPEG1or2Demux.hh" // for SCR
+#endif
 
-  unsigned samplingFrequency() const { return fSamplingFrequency; }
-  unsigned numChannels() const { return fNumChannels; }
-  char const* configStr() const { return fConfigStr; }
-      // returns the 'AudioSpecificConfig' for this stream (in ASCII form)
+class PESFileSource: public FramedFileSource {
+public:
+  static PESFileSource* createNew(UsageEnvironment& env,
+				  char const* fileName,
+				  unsigned char mpegVersion = 2);
+
+  MPEG1or2Demux::SCR lastSeenSCR(u_int8_t stream_id) const {
+    return fLastSeenSCR[stream_id];
+  }
+
+  unsigned char mpegVersion() const { return fMPEGVersion; }
 
 private:
-  ADTSAudioFileSource(UsageEnvironment& env, FILE* fid, u_int8_t profile,
-		      u_int8_t samplingFrequencyIndex, u_int8_t channelConfiguration);
+  PESFileSource(UsageEnvironment& env, FILE* fid, unsigned char mpegVersion);
 	// called only by createNew()
 
-  virtual ~ADTSAudioFileSource();
+  virtual ~PESFileSource();
 
 private:
   // redefined virtual functions:
   virtual void doGetNextFrame();
 
 private:
-  unsigned fSamplingFrequency;
-  unsigned fNumChannels;
-  unsigned fuSecsPerFrame;
-  char fConfigStr[5];
+  unsigned char fMPEGVersion;
+  MPEG1or2Demux::SCR fLastSeenSCR[256]; // indexed by the "stream_id" field
 };
 
 #endif
