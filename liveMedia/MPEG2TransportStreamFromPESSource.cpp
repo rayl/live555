@@ -43,7 +43,10 @@ MPEG2TransportStreamFromPESSource
     fPIDState[i].counter = 0;
     fPIDState[i].streamType = 0;
   }
+
   fInputBuffer = new unsigned char[MAX_PES_PACKET_SIZE];
+
+  for (unsigned j = 0; j < sizeof fProgramStreamMap; ++j) fProgramStreamMap[j] = 0;
 }
 
 MPEG2TransportStreamFromPESSource::~MPEG2TransportStreamFromPESSource() {
@@ -105,23 +108,32 @@ void MPEG2TransportStreamFromPESSource
     u_int8_t stream_id = fInputBuffer[3];
     // Use this stream_id directly as our PID.
     // Also, figure out the Program Map 'stream type' from this.
-    // However, ignore "padding_stream" data
-    if (stream_id == 0xBE) {
+    if (stream_id == 0xBE) { // padding_stream; ignore
+      frameSize = 0;
+    } else if (stream_id == 0xBC) { // program_stream_map
+      setProgramStreamMap(frameSize);
       frameSize = 0;
     } else {
       fCurrentPID = stream_id;
       if (fPCR_PID == 0) fPCR_PID = fCurrentPID; // use this stream's SCR for PCR
 
-      // Set the stream's type based on whether it's audio or video, and MPEG 1 or 2:
       MPEG1or2DemuxedElementaryStream* source
 	= (MPEG1or2DemuxedElementaryStream*)fInputSource;
+
+      // Set the stream's type:
       u_int8_t& streamType = fPIDState[fCurrentPID].streamType; // alias
-      if ((stream_id&0xE0) == 0xC0) { // audio
-	streamType = source->mpegVersion() == 1 ? 3 : 4;
-      } else if ((stream_id&0xF0) == 0xE0) { // video
-	streamType = source->mpegVersion() == 1 ? 1 : 2;
-      } else { // something else, e.g., AC-3 uses private_stream1 (0xBD)
-	streamType = 0x81; // private 
+      streamType = fProgramStreamMap[stream_id];
+
+      if (streamType == 0) {
+	// Instead, set the stream's type to default values, based on whether
+	// the stream is audio or video, and whether it's MPEG-1 or MPEG-2:
+	if ((stream_id&0xE0) == 0xC0) { // audio
+	  streamType = source->mpegVersion() == 1 ? 3 : 4;
+	} else if ((stream_id&0xF0) == 0xE0) { // video
+	  streamType = source->mpegVersion() == 1 ? 1 : 2;
+	} else { // something else, e.g., AC-3 uses private_stream1 (0xBD)
+	  streamType = 0x81; // private 
+	}
       }
 
       if (fCurrentPID == fPCR_PID) {
@@ -313,6 +325,38 @@ void MPEG2TransportStreamFromPESSource::deliverPMTPacket(Boolean hasChanged) {
   
   // Finally, remove the new buffer:
   delete[] pmtBuffer;
+}
+
+void MPEG2TransportStreamFromPESSource::setProgramStreamMap(unsigned frameSize) {
+  if (frameSize <= 16) return; // program_stream_map is too small to be useful
+  if (frameSize > 0xFF) return; // program_stream_map is too large
+
+  u_int16_t program_stream_map_length = (fInputBuffer[4]<<8) | fInputBuffer[5];
+  if ((u_int16_t)frameSize > 6+program_stream_map_length) {
+    frameSize = 6+program_stream_map_length;
+  }
+  
+  u_int16_t program_stream_info_length = (fInputBuffer[8]<<8) | fInputBuffer[9];
+  unsigned offset = 10 + program_stream_info_length; // skip over 'descriptors'
+
+  u_int16_t elementary_stream_map_length
+    = (fInputBuffer[offset]<<8) | fInputBuffer[offset+1];
+  offset += 2;
+  frameSize -= 4; // sizeof CRC_32
+  if (frameSize > offset + elementary_stream_map_length) {
+    frameSize = offset + elementary_stream_map_length;
+  } 
+
+  while (offset + 4 <= frameSize) {
+    u_int8_t stream_type = fInputBuffer[offset];
+    u_int8_t elementary_stream_id = fInputBuffer[offset+1];
+
+    fProgramStreamMap[elementary_stream_id] = stream_type;
+
+    u_int16_t elementary_stream_info_length
+      = (fInputBuffer[offset+2]<<8) | fInputBuffer[offset+3];
+    offset += 4 + elementary_stream_info_length;
+  }
 }
 
 static u_int32_t CRC32[256] = {

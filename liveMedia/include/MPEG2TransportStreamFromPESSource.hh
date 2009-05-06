@@ -61,6 +61,8 @@ private:
   void deliverPATPacket();
   void deliverPMTPacket(Boolean hasChanged);
 
+  void setProgramStreamMap(unsigned frameSize);
+
 private:
   unsigned fOutgoingPacketCounter;
   unsigned fProgramMapVersion;
@@ -75,6 +77,7 @@ private:
   u_int16_t fPCRExtension;
   unsigned char* fInputBuffer;
   unsigned fInputBufferSize, fInputBufferBytesUsed;
+  u_int8_t fProgramStreamMap[256]; // maps elementary_stream_id -> stream_type
 };
 
 #endif
