@@ -29,7 +29,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class FileServerMediaSubsession: public OnDemandServerMediaSubsession {
 protected: // we're a virtual base class
   FileServerMediaSubsession(UsageEnvironment& env, char const* fileName,
-			    Boolean reuseFirstSource = False);
+			    Boolean reuseFirstSource);
   virtual ~FileServerMediaSubsession();
 
 protected:

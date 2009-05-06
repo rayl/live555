@@ -29,14 +29,14 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class WAVAudioFileServerMediaSubsession: public FileServerMediaSubsession{
 public:
   static WAVAudioFileServerMediaSubsession*
-  createNew(UsageEnvironment& env, char const* fileName,
+  createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource,
 	    Boolean convertToULaw = False);
       // If "convertToULaw" is True, 16-bit audio streams are converted to
       // 8-bit u-law audio prior to streaming.
 
 private:
   WAVAudioFileServerMediaSubsession(UsageEnvironment& env, char const* fileName,
-				    Boolean convertToULaw);
+				    Boolean reuseFirstSource, Boolean convertToULaw);
       // called only by createNew();
   virtual ~WAVAudioFileServerMediaSubsession();
 

@@ -31,7 +31,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class MPEG1or2FileServerDemux: public Medium {
 public:
   static MPEG1or2FileServerDemux*
-  createNew(UsageEnvironment& env, char const* fileName);
+  createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource);
 
   ServerMediaSubsession* newAudioServerMediaSubsession(); // MPEG-1 or 2 audio
   ServerMediaSubsession* newVideoServerMediaSubsession(Boolean iFramesOnly = False,
@@ -41,7 +41,8 @@ public:
   ServerMediaSubsession* newAC3AudioServerMediaSubsession(); // AC-3 audio (from VOB)
 
 private:
-  MPEG1or2FileServerDemux(UsageEnvironment& env, char const* fileName);
+  MPEG1or2FileServerDemux(UsageEnvironment& env, char const* fileName,
+			  Boolean reuseFirstSource);
       // called only by createNew();
   virtual ~MPEG1or2FileServerDemux();
 
@@ -52,6 +53,7 @@ private:
 
 private:
   char const* fFileName;
+  Boolean fReuseFirstSource;
   MPEG1or2Demux* fSession0Demux;
   MPEG1or2Demux* fLastCreatedDemux;
   u_int8_t fLastClientSessionId;

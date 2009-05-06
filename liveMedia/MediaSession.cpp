@@ -125,14 +125,6 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
       return False;
     }
 
-    // Insert this subsession at the end of the list:
-    if (fSubsessionsTail == NULL) {
-      fSubsessionsHead = fSubsessionsTail = subsession;
-    } else {
-      fSubsessionsTail->setNext(subsession);
-      fSubsessionsTail = subsession;
-    }
-
     // Parse the line as "m=<medium_name> <client_portNum> RTP/AVP <fmt>"
     // or "m=<medium_name> <client_portNum>/<num_ports> RTP/AVP <fmt>"
     // (Should we be checking for >1 payload format number here?)#####
@@ -143,6 +135,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
 	 sscanf(sdpLine, "m=%s %hu/%*u RTP/AVP %u",
 		mediumName, &subsession->fClientPortNum, &payloadFormat) != 3)
 	|| payloadFormat > 127) {
+      // This "m=" line is bad; output an error message saying so:
       char* sdpLineStr;
       if (nextSDPLine == NULL) {
 	sdpLineStr = (char*)sdpLine;
@@ -150,11 +143,31 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
 	sdpLineStr = strDup(sdpLine);
 	sdpLineStr[nextSDPLine-sdpLine] = '\0';
       }
-      envir().setResultMsg("Bad SDP \"m=\" line: ", sdpLineStr);
+      envir() << "Bad SDP \"m=\" line: " <<  sdpLineStr << "\n";
       if (sdpLineStr != (char*)sdpLine) delete[] sdpLineStr;
+
       delete[] mediumName;
-      return False;
+      delete subsession;
+
+      // Skip the following SDP lines, up until the next "m=":
+      while (1) {
+	sdpLine = nextSDPLine;
+	if (sdpLine == NULL) break; // we've reached the end
+	if (!parseSDPLine(sdpLine, nextSDPLine)) return False;
+
+	if (sdpLine[0] == 'm') break; // we've reached the next subsession
+      }
+      continue;
     }
+
+    // Insert this subsession at the end of the list:
+    if (fSubsessionsTail == NULL) {
+      fSubsessionsHead = fSubsessionsTail = subsession;
+    } else {
+      fSubsessionsTail->setNext(subsession);
+      fSubsessionsTail = subsession;
+    }
+
     subsession->serverPortNum = subsession->fClientPortNum; // by default
 
     char const* mStart = sdpLine;

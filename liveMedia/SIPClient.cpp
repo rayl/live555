@@ -19,9 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "SIPClient.hh"
-#include "our_md5.h"
 #include "GroupsockHelper.hh"
-#include <stdlib.h>
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
 #define _strncasecmp _strnicmp
@@ -49,7 +47,7 @@ SIPClient::SIPClient(UsageEnvironment& env,
     fDesiredAudioRTPPayloadFormat(desiredAudioRTPPayloadFormat),
     fVerbosityLevel(verbosityLevel),
     fCSeq(0), fURL(NULL), fURLSize(0),
-    fToTagStr(NULL), fToTagStrSize(0), fValidAuthenticator(NULL),
+    fToTagStr(NULL), fToTagStrSize(0),
     fUserName(NULL), fUserNameSize(0),
     fInviteSDPDescription(NULL), fInviteCmd(NULL), fInviteCmdSize(0){
   if (mimeSubtype == NULL) mimeSubtype = "";
@@ -136,7 +134,7 @@ void SIPClient::reset() {
   delete[] (char*)fUserName; fUserName = strDup(fApplicationName);
   fUserNameSize = strlen(fUserName);
 
-  resetValidAuthenticator();
+  fValidAuthenticator.reset();
 
   delete[] (char*)fToTagStr; fToTagStr = NULL; fToTagStrSize = 0;
   fServerPortNum = 0;
@@ -168,7 +166,7 @@ static char* getLine(char* startOfLine) {
   return NULL;
 }
 
-char* SIPClient::invite(char const* url, AuthRecord* authenticator) {
+char* SIPClient::invite(char const* url, Authenticator* authenticator) {
   // First, check whether "url" contains a username:password to be used:
   fInviteStatusCode = 0;
   char* username; char* password;
@@ -190,12 +188,12 @@ char* SIPClient::invite(char const* url, AuthRecord* authenticator) {
   return invite1(authenticator);
 }
 
-char* SIPClient::invite1(AuthRecord* authenticator) {
+char* SIPClient::invite1(Authenticator* authenticator) {
   do {
     // Send the INVITE command:
 
     // First, construct an authenticator string:
-    resetValidAuthenticator();
+    fValidAuthenticator.reset();
     fWorkingAuthenticator = authenticator;
     char* authenticatorStr
       = createAuthenticatorString(fWorkingAuthenticator, "INVITE", fURL);
@@ -491,6 +489,7 @@ unsigned SIPClient::getResponseCode() {
 	  // ##### Check for the format of "Proxy-Authenticate:" lines from
 	  // ##### known server types.
 	  // ##### This is a crock! We should make the parsing more general
+          Boolean foundAuthenticateHeader = False;
 	  if (
 	      // Asterisk #####
 	      sscanf(lineStart, "Proxy-Authenticate: Digest realm=\"%[^\"]\", nonce=\"%[^\"]\"",
@@ -498,12 +497,11 @@ unsigned SIPClient::getResponseCode() {
 	      // Cisco ATA #####
 	      sscanf(lineStart, "Proxy-Authenticate: Digest algorithm=MD5,domain=\"%*[^\"]\",nonce=\"%[^\"]\", realm=\"%[^\"]\"",
 		     nonce, realm) == 2) {
-	    fWorkingAuthenticator->realm = realm;
-	    fWorkingAuthenticator->nonce = nonce;
-	    break;
-	  } else {
-	    delete[] realm; delete[] nonce;
-	  }
+            fWorkingAuthenticator->setRealmAndNonce(realm, nonce);
+            foundAuthenticateHeader = True;
+          }
+          delete[] realm; delete[] nonce;
+          if (foundAuthenticateHeader) break;
 	} 
       }
       envir().setResultMsg("cannot handle INVITE response: ", firstLine);
@@ -605,41 +603,13 @@ unsigned SIPClient::getResponseCode() {
   return responseCode;
 }
 
-static char* computeDigestResponse(AuthRecord const& authenticator,
-				   char const* cmd, char const* url) {
-  // The "response" field is computed as:
-  //    md5(md5(<username>:<realm>:<password>):<nonce>:md5(<cmd>:<url>))
-  unsigned const ha1DataLen = strlen(authenticator.username) + 1
-    + strlen(authenticator.realm) + 1 + strlen(authenticator.password);
-  unsigned char* ha1Data = new unsigned char[ha1DataLen+1];
-  sprintf((char*)ha1Data, "%s:%s:%s",
-	  authenticator.username, authenticator.realm,
-	  authenticator.password);
-  char ha1Buf[33];
-  our_MD5Data(ha1Data, ha1DataLen, ha1Buf);
-
-  unsigned const ha2DataLen = strlen(cmd) + 1 + strlen(url);
-  unsigned char* ha2Data = new unsigned char[ha2DataLen+1];
-  sprintf((char*)ha2Data, "%s:%s", cmd, url);
-  char ha2Buf[33];
-  our_MD5Data(ha2Data, ha2DataLen, ha2Buf);
-
-  unsigned const digestDataLen
-    = 32 + 1 + strlen(authenticator.nonce) + 1 + 32;
-  unsigned char* digestData = new unsigned char[digestDataLen+1];
-  sprintf((char*)digestData, "%s:%s:%s",
-	  ha1Buf, authenticator.nonce, ha2Buf);
-  return our_MD5Data(digestData, digestDataLen, NULL);
-}
-
 char* SIPClient::inviteWithPassword(char const* url, char const* username,
 				    char const* password) {
   delete[] (char*)fUserName; fUserName = strDup(username);
   fUserNameSize = strlen(fUserName);
 
-  AuthRecord authenticator;
-  authenticator.realm = authenticator.nonce = NULL;
-  authenticator.username = username; authenticator.password = password;
+  Authenticator authenticator;
+  authenticator.setUsernameAndPassword(username, password);
   char* inviteResult = invite(url, &authenticator);
   if (inviteResult != NULL) {
     // We are already authorized
@@ -647,7 +617,7 @@ char* SIPClient::inviteWithPassword(char const* url, char const* username,
   }
 
   // The "realm" and "nonce" fields should have been filled in:
-  if (authenticator.realm == NULL || authenticator.nonce == NULL) {
+  if (authenticator.realm() == NULL || authenticator.nonce() == NULL) {
     // We haven't been given enough information to try again, so fail:
     return NULL;
   }
@@ -656,13 +626,8 @@ char* SIPClient::inviteWithPassword(char const* url, char const* username,
   inviteResult = invite1(&authenticator);
   if (inviteResult != NULL) {
     // The authenticator worked, so use it in future requests:
-    useAuthenticator(&authenticator);
+    fValidAuthenticator = authenticator;
   }
-
-  // The "realm" and "nonce" fields were dynamically
-  // allocated; free them now:
-  delete[] (char*)authenticator.realm;
-  delete[] (char*)authenticator.nonce;
 
   return inviteResult;
 }
@@ -886,51 +851,27 @@ Boolean SIPClient::parseSIPURLUsernamePassword(char const* url,
 }
 
 char*
-SIPClient::createAuthenticatorString(AuthRecord const* authenticator,
+SIPClient::createAuthenticatorString(Authenticator const* authenticator,
 				      char const* cmd, char const* url) {
-  if (authenticator != NULL && authenticator->realm != NULL
-      && authenticator->nonce != NULL && authenticator->username != NULL
-      && authenticator->password != NULL) {
+  if (authenticator != NULL && authenticator->realm() != NULL
+      && authenticator->nonce() != NULL && authenticator->username() != NULL
+      && authenticator->password() != NULL) {
     // We've been provided a filled-in authenticator, so use it:
     char* const authFmt = "Proxy-Authorization: Digest username=\"%s\", realm=\"%s\", nonce=\"%s\", response=\"%s\", uri=\"%s\"\r\n";
-    char const* response = computeDigestResponse(*authenticator, cmd, url);
+    char const* response = authenticator->computeDigestResponse(cmd, url);
     unsigned authBufSize = strlen(authFmt)
-      + strlen(authenticator->username) + strlen(authenticator->realm)
-      + strlen(authenticator->nonce) + strlen(url) + strlen(response);
+      + strlen(authenticator->username()) + strlen(authenticator->realm())
+      + strlen(authenticator->nonce()) + strlen(url) + strlen(response);
     char* authenticatorStr = new char[authBufSize];
     sprintf(authenticatorStr, authFmt,
-	    authenticator->username, authenticator->realm,
-	    authenticator->nonce, response, url);
-    free((char*)response); // NOT delete, because it was malloc-allocated
+	    authenticator->username(), authenticator->realm(),
+	    authenticator->nonce(), response, url);
+    authenticator->reclaimDigestResponse(response);
 
     return authenticatorStr;
   }
 
   return strDup("");
-}
-
-void SIPClient::useAuthenticator(AuthRecord const* authenticator) {
-  resetValidAuthenticator();
-  if (authenticator != NULL && authenticator->realm != NULL
-      && authenticator->nonce != NULL && authenticator->username != NULL
-      && authenticator->password != NULL) {
-    fValidAuthenticator = new AuthRecord;
-    fValidAuthenticator->realm = strDup(authenticator->realm);
-    fValidAuthenticator->nonce = strDup(authenticator->nonce);
-    fValidAuthenticator->username = strDup(authenticator->username);
-    fValidAuthenticator->password = strDup(authenticator->password);
-  }
-}
-
-void SIPClient::resetValidAuthenticator() {
-  if (fValidAuthenticator == NULL) return;
-
-  delete[] (char*)fValidAuthenticator->realm;
-  delete[] (char*)fValidAuthenticator->nonce;
-  delete[] (char*)fValidAuthenticator->username;
-  delete[] (char*)fValidAuthenticator->password;
-
-  delete fValidAuthenticator; fValidAuthenticator = NULL;
 }
 
 Boolean SIPClient::sendRequest(char const* requestString,

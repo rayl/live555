@@ -230,6 +230,17 @@ void RTCPInstance::setStreamSocket(int sockNum,
   fRTCPInterface.startNetworkReading(handler);
 }
 
+void RTCPInstance::addStreamSocket(int sockNum,
+				   unsigned char streamChannelId) {
+  // Add the RTCP-over-TCP interface:
+  fRTCPInterface.setStreamSocket(sockNum, streamChannelId);
+
+  // Turn on background reading for this socket (in case it's not on already):
+  TaskScheduler::BackgroundHandlerProc* handler
+    = (TaskScheduler::BackgroundHandlerProc*)&incomingReportHandler;
+  fRTCPInterface.startNetworkReading(handler);
+}
+
 static unsigned const IP_UDP_HDR_SIZE = 28;
     // overhead (bytes) of IP and UDP hdrs
 

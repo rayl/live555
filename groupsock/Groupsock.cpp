@@ -87,6 +87,19 @@ Boolean OutputSocket
 }
 
 
+///////// destRecord //////////
+
+destRecord
+::destRecord(struct in_addr const& addr, Port const& port, u_int8_t ttl,
+	     destRecord* next)
+  : fNext(next), fGroupEId(addr, port.num(), ttl), fPort(port) {
+}
+
+destRecord::~destRecord() {
+  delete fNext;
+}
+
+
 ///////// Groupsock //////////
 
 NetInterfaceTrafficStats Groupsock::statsIncoming;
@@ -99,9 +112,9 @@ Groupsock::Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
 		     Port port, u_int8_t ttl)
   : OutputSocket(env, port),
     deleteIfNoMembers(False), isSlave(False),
-    fIncomingGroupEId(groupAddr, port.num(), ttl),
-    fOutgoingGroupEId(groupAddr, port.num(), ttl),
-    fDestPort(port) {
+    fIncomingGroupEId(groupAddr, port.num(), ttl), fDests(NULL), fTTL(ttl) {
+  addDestination(groupAddr, port);
+
   if (!socketJoinGroup(env, socketNum(), groupAddr.s_addr)) {
     if (DebugLevel >= 1) {
       env << *this << ": failed to join group: "
@@ -127,8 +140,9 @@ Groupsock::Groupsock(UsageEnvironment& env, struct in_addr const& groupAddr,
   : OutputSocket(env, port),
     deleteIfNoMembers(False), isSlave(False),
     fIncomingGroupEId(groupAddr, sourceFilterAddr, port.num()),
-    fOutgoingGroupEId(groupAddr, sourceFilterAddr, port.num()),
-    fDestPort(port) {
+    fDests(NULL), fTTL(255) {
+  addDestination(groupAddr, port);
+
   // First try a SSM join.  If that fails, try a regular join:
   if (!socketJoinGroupSSM(env, socketNum(), groupAddr.s_addr,
 			  sourceFilterAddr.s_addr)) {
@@ -158,44 +172,87 @@ Groupsock::~Groupsock() {
     socketLeaveGroup(env(), socketNum(), groupAddress().s_addr);
   }
   
+  delete fDests;
+
   if (DebugLevel >= 2) env() << *this << ": deleting\n";
 }
 
 void
 Groupsock::changeDestinationParameters(struct in_addr const& newDestAddr,
 				       Port newDestPort, int newDestTTL) {
-  struct in_addr destAddr = fOutgoingGroupEId.groupAddress();
+  if (fDests == NULL) return;
+
+  struct in_addr destAddr = fDests->fGroupEId.groupAddress();
   if (newDestAddr.s_addr != 0 && newDestAddr.s_addr != destAddr.s_addr) {
     socketLeaveGroup(env(), socketNum(), destAddr.s_addr);
     destAddr.s_addr = newDestAddr.s_addr;
     socketJoinGroup(env(), socketNum(), destAddr.s_addr);
   }
 
-  portNumBits destPortNum = fOutgoingGroupEId.portNum();
+  portNumBits destPortNum = fDests->fGroupEId.portNum();
   if (newDestPort.num() != 0) {
     destPortNum = newDestPort.num();
-    fDestPort = newDestPort;
+    fDests->fPort = newDestPort;
   }
 
   u_int8_t destTTL = ttl();
   if (newDestTTL != ~0) destTTL = (u_int8_t)newDestTTL;
 
-  fOutgoingGroupEId = GroupEId(destAddr, destPortNum, destTTL);
+  fDests->fGroupEId = GroupEId(destAddr, destPortNum, destTTL);
+}
+
+void Groupsock::addDestination(struct in_addr const& addr, Port const& port) {
+  // Check whether this destination is already known:
+  for (destRecord* dests = fDests; dests != NULL; dests = dests->fNext) {
+    if (addr.s_addr == dests->fGroupEId.groupAddress().s_addr
+	&& port.num() == dests->fPort.num()) {
+      return;
+    }
+  }
+
+  fDests = new destRecord(addr, port, ttl(), fDests);
+}
+
+void Groupsock::removeDestination(struct in_addr const& addr, Port const& port) {
+  for (destRecord** destsPtr = &fDests; *destsPtr != NULL;
+       destsPtr = &((*destsPtr)->fNext)) {
+    if (addr.s_addr == (*destsPtr)->fGroupEId.groupAddress().s_addr
+	&& port.num() == (*destsPtr)->fPort.num()) {
+      // Remove the record pointed to by *destsPtr :
+      destRecord* next = (*destsPtr)->fNext;
+      (*destsPtr)->fNext = NULL;
+      delete (*destsPtr);
+      *destsPtr = next;
+      return;
+    }
+  }
+}
+
+void Groupsock::removeAllDestinations() {
+  delete fDests; fDests = NULL;
 }
 
 void Groupsock::multicastSendOnly() {
-  socketLeaveGroup(env(), socketNum(),
-		   fOutgoingGroupEId.groupAddress().s_addr);
+  socketLeaveGroup(env(), socketNum(), fIncomingGroupEId.groupAddress().s_addr);
+  for (destRecord* dests = fDests; dests != NULL; dests = dests->fNext) {
+    socketLeaveGroup(env(), socketNum(), dests->fGroupEId.groupAddress().s_addr);
+  }
 }
 
 Boolean Groupsock::output(UsageEnvironment& env, u_int8_t ttlToSend,
 			  unsigned char* buffer, unsigned bufferSize,
 			  DirectedNetInterface* interfaceNotToFwdBackTo) {
   do {
-    // First, do the datagram send:
-    if (!write(destAddress().s_addr, destPort(), ttlToSend,
-	       buffer, bufferSize))
-      break;
+    // First, do the datagram send, to each destination:
+    Boolean writeSuccess = True;
+    for (destRecord* dests = fDests; dests != NULL; dests = dests->fNext) {
+      if (!write(dests->fGroupEId.groupAddress().s_addr, dests->fPort, ttlToSend,
+		 buffer, bufferSize)) {
+	writeSuccess = False;
+	break;
+      }
+    }
+    if (!writeSuccess) break;
     statsOutgoing.countPacket(bufferSize);
     statsGroupOutgoing.countPacket(bufferSize);
     
@@ -351,8 +408,10 @@ int Groupsock::outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
       }
       trailer += trailerOffset;
       
-      trailer->address() = destAddress().s_addr;
-      trailer->port() = destPort(); // structure copy, outputs in network order
+      if (fDests != NULL) {
+	trailer->address() = fDests->fGroupEId.groupAddress().s_addr;
+	trailer->port() = fDests->fPort; // structure copy, outputs in network order
+      }
       trailer->ttl() = ttlToFwd;
       trailer->command() = tunnelCmd;
       

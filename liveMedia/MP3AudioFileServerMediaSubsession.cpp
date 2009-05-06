@@ -27,18 +27,18 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MP3ADU.hh"
 
 MP3AudioFileServerMediaSubsession* MP3AudioFileServerMediaSubsession
-::createNew(UsageEnvironment& env, char const* fileName,
+::createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource,
 	    Boolean useADUs, Interleaving* interleaving) {
-  return new MP3AudioFileServerMediaSubsession(env, fileName,
+  return new MP3AudioFileServerMediaSubsession(env, fileName, reuseFirstSource,
 					       useADUs, interleaving);
 }
 
 MP3AudioFileServerMediaSubsession
 ::MP3AudioFileServerMediaSubsession(UsageEnvironment& env,
-				    char const* fileName,
+				    char const* fileName, Boolean reuseFirstSource,
 				    Boolean useADUs,
 				    Interleaving* interleaving)
-  : FileServerMediaSubsession(env, fileName),
+  : FileServerMediaSubsession(env, fileName, reuseFirstSource),
     fUseADUs(useADUs), fInterleaving(interleaving) {
 }
 

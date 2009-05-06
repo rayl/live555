@@ -33,14 +33,14 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class MP3AudioFileServerMediaSubsession: public FileServerMediaSubsession{
 public:
   static MP3AudioFileServerMediaSubsession*
-  createNew(UsageEnvironment& env, char const* fileName,
+  createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource,
 	    Boolean useADUs, Interleaving* interleaving);
       // Note: "interleaving" is used only if "useADUs" is True,
       // (and a value of NULL means 'no interleaving')
 
 private:
   MP3AudioFileServerMediaSubsession(UsageEnvironment& env,
-				    char const* fileName,
+				    char const* fileName, Boolean reuseFirstSource,
 				    Boolean useADUs,
 				    Interleaving* interleaving);
       // called only by createNew();

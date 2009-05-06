@@ -29,7 +29,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class MPEG1or2VideoFileServerMediaSubsession: public FileServerMediaSubsession{
 public:
   static MPEG1or2VideoFileServerMediaSubsession*
-  createNew(UsageEnvironment& env, char const* fileName,
+  createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource,
 	    Boolean iFramesOnly = False,
 	    double vshPeriod = 5.0
 	    /* how often (in seconds) to inject a Video_Sequence_Header,
@@ -38,6 +38,7 @@ public:
 private:
   MPEG1or2VideoFileServerMediaSubsession(UsageEnvironment& env,
 					 char const* fileName,
+					 Boolean reuseFirstSource,
 					 Boolean iFramesOnly,
 					 double vshPeriod); 
       // called only by createNew();

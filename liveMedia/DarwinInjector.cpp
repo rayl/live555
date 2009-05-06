@@ -94,13 +94,16 @@ void DarwinInjector::addStream(RTPSink* rtpSink, RTCPInstance* rtcpInstance) {
   fSubstreamSDPSizes += strlen(newDescriptor->sdpLines());
 }
 
-Boolean DarwinInjector::setDestination(char const* remoteRTSPServerNameOrAddress,
-				       char const* remoteFileName,
-				       char const* sessionName,
-				       char const* sessionInfo,
-				       portNumBits remoteRTSPServerPortNumber,
-				       char const* remoteUserName,
-				       char const* remotePassword) {
+Boolean DarwinInjector
+::setDestination(char const* remoteRTSPServerNameOrAddress,
+		 char const* remoteFileName,
+		 char const* sessionName,
+		 char const* sessionInfo,
+		 portNumBits remoteRTSPServerPortNumber,
+		 char const* remoteUserName,
+		 char const* remotePassword,
+		 char const* sessionAuthor,
+		 char const* sessionCopyright) {
   char* sdp = NULL;
   char* url = NULL;
   MediaSession* session = NULL;
@@ -131,7 +134,9 @@ Boolean DarwinInjector::setDestination(char const* remoteRTSPServerNameOrAddress
       "t=0 0\r\n"
       "a=x-qt-text-nam:%s\r\n"
       "a=x-qt-text-inf:%s\r\n"
-      "a=x-qt-text-cmt:%s\r\n";
+      "a=x-qt-text-cmt:%s\r\n"
+      "a=x-qt-text-aut:%s\r\n"
+      "a=x-qt-text-cpy:%s\r\n";
       // plus, %s for each substream SDP
     unsigned sdpLen = strlen(sdpFmt)
       + 20 /* max int len */ + 20 /* max int len */
@@ -141,10 +146,12 @@ Boolean DarwinInjector::setDestination(char const* remoteRTSPServerNameOrAddress
       + strlen(sessionName)
       + strlen(sessionInfo)
       + strlen(fApplicationName)
+      + strlen(sessionAuthor)
+      + strlen(sessionCopyright)
       + fSubstreamSDPSizes;
     unsigned const sdpSessionId = our_random();
     unsigned const sdpVersion = sdpSessionId;
-    char* sdp = new char[sdpLen];
+    sdp = new char[sdpLen];
     sprintf(sdp, sdpFmt,
 	    sdpSessionId, sdpVersion, // o= line
 	    sessionName, // s= line
@@ -152,7 +159,9 @@ Boolean DarwinInjector::setDestination(char const* remoteRTSPServerNameOrAddress
 	    remoteRTSPServerAddressStr, // c= line
 	    sessionName, // a=x-qt-text-nam: line
 	    sessionInfo, // a=x-qt-text-inf: line
-	    fApplicationName // a=x-qt-text-cmt: line
+	    fApplicationName, // a=x-qt-text-cmt: line
+	    sessionAuthor, // a=x-qt-text-aut: line
+	    sessionCopyright // a=x-qt-text-cpy: line
 	    );
     char* p = &sdp[strlen(sdp)];
     SubstreamDescriptor* ss;
@@ -165,7 +174,7 @@ Boolean DarwinInjector::setDestination(char const* remoteRTSPServerNameOrAddress
     char const* const urlFmt = "rtsp://%s:%u/%s";
     unsigned urlLen
       = strlen(urlFmt) + strlen(remoteRTSPServerNameOrAddress) + 5 /* max short len */ + strlen(remoteFileName);
-    char* url = new char[urlLen];
+    url = new char[urlLen];
     sprintf(url, urlFmt, remoteRTSPServerNameOrAddress, remoteRTSPServerPortNumber, remoteFileName);
 
     // Do a RTSP "ANNOUNCE" with this SDP description:

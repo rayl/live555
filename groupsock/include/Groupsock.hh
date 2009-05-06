@@ -59,6 +59,18 @@ private:
   u_int8_t fLastSentTTL;
 };
 
+class destRecord {
+public:
+  destRecord(struct in_addr const& addr, Port const& port, u_int8_t ttl,
+	     destRecord* next);
+  virtual ~destRecord();
+
+public:
+  destRecord* fNext;
+  GroupEId fGroupEId;
+  Port fPort;
+};
+
 // A "Groupsock" is used to both send and receive packets.
 // As the name suggests, it was originally designed to send/receive
 // multicast, but it can send/receive unicast as well.
@@ -83,26 +95,24 @@ public:
       // number, at least, to be different from the source port.
       // (If a parameter is 0 (or ~0 for ttl), then no change made.)
 
+  // As a special case, we also allow multiple destinations (addresses & ports)
+  // (This can be used to implement multi-unicast.)
+  void addDestination(struct in_addr const& addr, Port const& port);
+  void removeDestination(struct in_addr const& addr, Port const& port);
+  void removeAllDestinations();
+
   struct in_addr const& groupAddress() const {
     return fIncomingGroupEId.groupAddress();
   }
   struct in_addr const& sourceFilterAddress() const {
     return fIncomingGroupEId.sourceFilterAddress();
   }
-  struct in_addr const& destAddress() const {
-    return fOutgoingGroupEId.groupAddress();
-  }
-  Port destPort() const {
-    return fDestPort;
-  }
   
   Boolean isSSM() const {
     return fIncomingGroupEId.isSSM();
   }
   
-  u_int8_t ttl() const {
-    return fOutgoingGroupEId.scope().ttl();
-  }
+  u_int8_t ttl() const { return fTTL; }
   
   void multicastSendOnly(); // send, but don't receive any multicast packets
 
@@ -141,9 +151,9 @@ private:
 			       netAddressBits sourceAddr);
   
 private:
-  GroupEId fIncomingGroupEId, fOutgoingGroupEId;
-      // for multicast, these two "GroupEId"s will usually be the same
-  Port fDestPort;
+  GroupEId fIncomingGroupEId;
+  destRecord* fDests;
+  u_int8_t fTTL;
   DirectedNetInterfaceSet fMembers;
 };
 

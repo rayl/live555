@@ -39,7 +39,8 @@ public:
 				       char const* streamName = NULL,
 				       char const* info = NULL,
 				       char const* description = NULL,
-				       Boolean isSSM = False);
+				       Boolean isSSM = False,
+				       char const* miscSDPLines = NULL);
 			       
 
   static Boolean lookupByName(UsageEnvironment& env,
@@ -58,7 +59,7 @@ public:
 private:
   ServerMediaSession(UsageEnvironment& env, char const* streamName,
 		     char const* info, char const* description,
-		     Boolean isSSM);
+		     Boolean isSSM, char const* miscSDPLines);
   // called only by "createNew()"
 
 private: // redefined virtual functions
@@ -76,6 +77,7 @@ private:
   char* fStreamName;
   char* fInfoSDPString;
   char* fDescriptionSDPString;
+  char* fMiscSDPLines;
   struct timeval fCreationTime;
 };
 

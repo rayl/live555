@@ -71,7 +71,9 @@ public:
 			 char const* sessionInfo = "",
 			 portNumBits remoteRTSPServerPortNumber = 554,
 			 char const* remoteUserName = "",
-			 char const* remotePassword = "");
+			 char const* remotePassword = "",
+			 char const* sessionAuthor = "",
+			 char const* sessionCopyright = "");
 
 private: // redefined virtual functions
   virtual Boolean isDarwinInjector() const;

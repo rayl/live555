@@ -26,14 +26,15 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 MPEG2TransportFileServerMediaSubsession*
 MPEG2TransportFileServerMediaSubsession::createNew(UsageEnvironment& env,
-					       char const* fileName) {
-  return new MPEG2TransportFileServerMediaSubsession(env, fileName);
+						   char const* fileName,
+						   Boolean reuseFirstSource) {
+  return new MPEG2TransportFileServerMediaSubsession(env, fileName, reuseFirstSource);
 }
 
 MPEG2TransportFileServerMediaSubsession
 ::MPEG2TransportFileServerMediaSubsession(UsageEnvironment& env,
-                                      char const* fileName)
-  : FileServerMediaSubsession(env, fileName) {
+                                      char const* fileName, Boolean reuseFirstSource)
+  : FileServerMediaSubsession(env, fileName, reuseFirstSource) {
 }
 
 MPEG2TransportFileServerMediaSubsession

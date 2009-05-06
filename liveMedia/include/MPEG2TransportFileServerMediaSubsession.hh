@@ -29,11 +29,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class MPEG2TransportFileServerMediaSubsession: public FileServerMediaSubsession{
 public:
   static MPEG2TransportFileServerMediaSubsession*
-  createNew(UsageEnvironment& env, char const* fileName);
+  createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource);
 
 private:
   MPEG2TransportFileServerMediaSubsession(UsageEnvironment& env,
-					  char const* fileName);
+					  char const* fileName,
+					  Boolean reuseFirstSource);
       // called only by createNew();
   virtual ~MPEG2TransportFileServerMediaSubsession();
 

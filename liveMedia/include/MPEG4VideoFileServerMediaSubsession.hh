@@ -29,14 +29,14 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class MPEG4VideoFileServerMediaSubsession: public FileServerMediaSubsession{
 public:
   static MPEG4VideoFileServerMediaSubsession*
-  createNew(UsageEnvironment& env, char const* fileName);
+  createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource);
 
   void setDoneFlag() { fDoneFlag = ~0; }
   void checkForAuxSDPLine1();
 
 private:
   MPEG4VideoFileServerMediaSubsession(UsageEnvironment& env,
-				      char const* fileName);
+				      char const* fileName, Boolean reuseFirstSource);
       // called only by createNew();
   virtual ~MPEG4VideoFileServerMediaSubsession();
 

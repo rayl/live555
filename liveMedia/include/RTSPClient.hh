@@ -27,15 +27,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _NET_ADDRESS_HH
 #include "NetAddress.hh"
 #endif
-
-// A structure used for (optional) digest authentication.
-// The "realm", and "nonce" fields are supplied by the server
-// (in a "401 Unauthorized" response).
-// The "username" and "password" fields are supplied by the client.
-struct AuthRecord {
-  char const* realm; char const* nonce;
-  char const* username; char const* password;
-};
+#ifndef _DIGEST_AUTHENTICATION_HH
+#include "DigestAuthentication.hh"
+#endif
 
 class RTSPClient: public Medium {
 public:
@@ -49,7 +43,7 @@ public:
 			      char const* sourceName,
 			      RTSPClient*& resultClient);
 
-  char* describeURL(char const* url, AuthRecord* authenticator = NULL);
+  char* describeURL(char const* url, Authenticator* authenticator = NULL);
       // Issues a RTSP "DESCRIBE" command
       // Returns the SDP description of a session, or NULL if none
       // (This is dynamically allocated, and must later be freed
@@ -62,7 +56,7 @@ public:
 
   Boolean announceSDPDescription(char const* url,
 				 char const* sdpDescription,
-				 AuthRecord* authenticator = NULL);
+				 Authenticator* authenticator = NULL);
       // Issues a RTSP "ANNOUNCE" command
       // Returns True iff this command succeeds
   Boolean announceWithPassword(char const* url, char const* sdpDescription,
@@ -144,10 +138,11 @@ private:
   void reset();
 
   Boolean openConnectionFromURL(char const* url);
-  char* createAuthenticatorString(AuthRecord const* authenticator,
+  char* createAuthenticatorString(Authenticator const* authenticator,
 				  char const* cmd, char const* url);
-  void useAuthenticator(AuthRecord const* authenticator); // in future reqs
-  void resetCurrentAuthenticator();
+  static void checkForAuthenticationFailure(unsigned responseCode,
+					    char*& nextLineStart,
+					    Authenticator* authenticator);
   Boolean sendRequest(char const* requestString);
   unsigned getResponse(char*& responseBuffer, unsigned responseBufferSize);
   Boolean parseResponseCode(char const* line, unsigned& responseCode);
@@ -169,9 +164,12 @@ private:
       unsigned fUserAgentHeaderStrSize;
   int fSocketNum;
   unsigned fServerAddress;
-  unsigned fCSeq; // sequence number, used in consecutive requests
+  static unsigned fCSeq; // sequence number, used in consecutive requests
+      // Note: it's static, to ensure that it differs if more than one
+      // connection is made to the same server, using the same URL.
+      // Some servers (e.g., DSS) may have problems with this otherwise.
   char* fBaseURL;
-  AuthRecord* fCurrentAuthenticator; // if any
+  Authenticator fCurrentAuthenticator;
   unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
   char* fLastSessionId;
 #ifdef SUPPORT_REAL_RTSP

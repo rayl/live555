@@ -25,14 +25,15 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 AMRAudioFileServerMediaSubsession*
 AMRAudioFileServerMediaSubsession::createNew(UsageEnvironment& env,
-					     char const* fileName) {
-  return new AMRAudioFileServerMediaSubsession(env, fileName);
+					     char const* fileName,
+					     Boolean reuseFirstSource) {
+  return new AMRAudioFileServerMediaSubsession(env, fileName, reuseFirstSource);
 }
 
 AMRAudioFileServerMediaSubsession
 ::AMRAudioFileServerMediaSubsession(UsageEnvironment& env,
-				    char const* fileName)
-  : FileServerMediaSubsession(env, fileName) {
+				    char const* fileName, Boolean reuseFirstSource)
+  : FileServerMediaSubsession(env, fileName, reuseFirstSource) {
 }
 
 AMRAudioFileServerMediaSubsession

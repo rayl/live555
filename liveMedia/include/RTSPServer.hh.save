@@ -27,36 +27,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _NET_ADDRESS_HH
 #include <NetAddress.hh>
 #endif
-#ifndef _DIGEST_AUTHENTICATION_HH
-#include "DigestAuthentication.hh"
-#endif
-
-// A data structure used for optional user/password authentication:
-
-class UserAuthenticationDatabase {
-public:
-  UserAuthenticationDatabase(char const* realm = NULL);
-  virtual ~UserAuthenticationDatabase();
-
-  void addUserRecord(char const* username, char const* password);
-  void removeUserRecord(char const* username);
-
-  char const* lookupPassword(char const* username);
-      // returns NULL if the user name was not present
-
-  char const* realm() { return fRealm; }
-
-private:
-  HashTable* fTable;
-  char* fRealm;
-};
 
 class RTSPServer: public Medium {
 public:
-  static RTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554,
-			       UserAuthenticationDatabase* authDatabase = NULL);
+  static RTSPServer* createNew(UsageEnvironment& env, Port ourPort = 554);
       // if ourPort.num() == 0, we'll choose the port number
-      // Note: The caller is responsible for reclaiming "authDatabase"
 
   static Boolean lookupByName(UsageEnvironment& env, char const* name,
 			      RTSPServer*& resultServer);
@@ -71,8 +46,7 @@ public:
 
 protected:
   RTSPServer(UsageEnvironment& env,
-	     int ourSocket, Port ourPort,
-	     UserAuthenticationDatabase* authDatabase);
+	     int ourSocket, Port ourPort);
       // called only by createNew();
   virtual ~RTSPServer();
 
@@ -101,8 +75,7 @@ private:
     void handleCmd_notFound(char const* cseq);
     void handleCmd_unsupportedTransport(char const* cseq);
     void handleCmd_OPTIONS(char const* cseq);
-    void handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix,
-			    char const* fullRequestStr);
+    void handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix);
     void handleCmd_SETUP(char const* cseq,
 			 char const* urlPreSuffix, char const* urlSuffix,
 			 char const* fullRequestStr);
@@ -115,8 +88,6 @@ private:
 			char const* cseq);
     void handleCmd_PAUSE(ServerMediaSubsession* subsession,
 			 char const* cseq);
-    Boolean authenticationOK(char const* cmdName, char const* cseq,
-			     char const* fullRequestStr);
     Boolean parseRequestString(char const *reqStr, unsigned reqStrSize,
 			       char *resultCmdName,
 			       unsigned resultCmdNameMaxSize, 
@@ -135,7 +106,6 @@ private:
     struct sockaddr_in fClientAddr;
     unsigned char fBuffer[10000];
     Boolean fSessionIsActive;
-    Authenticator fCurrentAuthenticator; // used if access control is needed
     unsigned fNumStreamStates; 
     struct streamState {
       ServerMediaSubsession* subsession;
@@ -147,7 +117,6 @@ private:
   friend class RTSPClientSession;
   int fServerSocket;
   Port fServerPort;
-  UserAuthenticationDatabase* fAuthDB;
   HashTable* fServerMediaSessions;
   unsigned fSessionIdCounter;
 };

@@ -26,14 +26,15 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 MPEG4VideoFileServerMediaSubsession*
 MPEG4VideoFileServerMediaSubsession::createNew(UsageEnvironment& env,
-					       char const* fileName) {
-  return new MPEG4VideoFileServerMediaSubsession(env, fileName);
+					       char const* fileName,
+					       Boolean reuseFirstSource) {
+  return new MPEG4VideoFileServerMediaSubsession(env, fileName, reuseFirstSource);
 }
 
 MPEG4VideoFileServerMediaSubsession
 ::MPEG4VideoFileServerMediaSubsession(UsageEnvironment& env,
-                                      char const* fileName)
-  : FileServerMediaSubsession(env, fileName),
+                                      char const* fileName, Boolean reuseFirstSource)
+  : FileServerMediaSubsession(env, fileName, reuseFirstSource),
     fDoneFlag(0) {
 }
 

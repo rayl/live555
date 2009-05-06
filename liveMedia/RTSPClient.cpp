@@ -23,8 +23,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifdef SUPPORT_REAL_RTSP
 #include "../RealRTSP/include/RealRTSP.hh"
 #endif
-#include "our_md5.h"
-#include <stdlib.h>
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
 #define _strncasecmp _strnicmp
@@ -57,12 +55,13 @@ Boolean RTSPClient::lookupByName(UsageEnvironment& env,
   return True;
 }
 
+unsigned RTSPClient::fCSeq = 0;
+
 RTSPClient::RTSPClient(UsageEnvironment& env,
 		       int verbosityLevel, char const* applicationName)
   : Medium(env),
     fVerbosityLevel(verbosityLevel), fSocketNum(-1), fServerAddress(0),
-    fCSeq(0), fBaseURL(NULL), fCurrentAuthenticator(NULL),
-    fTCPStreamIdCount(0), fLastSessionId(NULL)
+    fBaseURL(NULL), fTCPStreamIdCount(0), fLastSessionId(NULL)
 #ifdef SUPPORT_REAL_RTSP
   , fRealChallengeStr(NULL), fRealETagStr(NULL)
 #endif
@@ -105,7 +104,7 @@ void RTSPClient::reset() {
 
   delete[] fBaseURL; fBaseURL = NULL;
 
-  resetCurrentAuthenticator();
+  fCurrentAuthenticator.reset();
 
 #ifdef SUPPORT_REAL_RTSP
   delete[] fRealChallengeStr; fRealChallengeStr = NULL;
@@ -128,7 +127,7 @@ static char* getLine(char* startOfLine) {
   return NULL;
 }
 
-char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
+char* RTSPClient::describeURL(char const* url, Authenticator* authenticator) {
   char* cmd = NULL;
   fDescribeStatusCode = 0;
   do {  
@@ -146,7 +145,7 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
     // Send the DESCRIBE command:
 
     // First, construct an authenticator string:
-    resetCurrentAuthenticator();
+    fCurrentAuthenticator.reset();
     char* authenticatorStr
       = createAuthenticatorString(authenticator, "DESCRIBE", url);
 
@@ -203,31 +202,7 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
       wantRedirection = True;
       redirectionURL = new char[readBufSize]; // ensures enough space
     } else if (responseCode != 200) {
-      if (responseCode == 401 && authenticator != NULL) {
-	// We have an authentication failure, so fill in "authenticator"
-	// using the contents of a following "WWW-Authenticate:" line.
-	// (Once we compute a 'response' for "authenticator", it can be
-	//  used in a subsequent request - that will hopefully succeed.)
-	char* lineStart;
-	while (1) {
-	  lineStart = nextLineStart;
-	  if (lineStart == NULL) break;
-
-	  nextLineStart = getLine(lineStart);
-	  if (lineStart[0] == '\0') break; // this is a blank line
-
-	  char* realm = strDupSize(lineStart);
-	  char* nonce = strDupSize(lineStart);
-	  if (sscanf(lineStart, "WWW-Authenticate: Digest realm=\"%[^\"]\", nonce=\"%[^\"]\"",
-		     realm, nonce) == 2) {
-	    authenticator->realm = realm;
-	    authenticator->nonce = nonce;
-	    break;
-	  } else {
-	    delete[] realm; delete[] nonce;
-	  }
-	} 
-      }
+      checkForAuthenticationFailure(responseCode, nextLineStart, authenticator);
       envir().setResultMsg("cannot handle DESCRIBE response: ", firstLine);
       break;
     }
@@ -355,9 +330,8 @@ char* RTSPClient::describeURL(char const* url, AuthRecord* authenticator) {
 char* RTSPClient
 ::describeWithPassword(char const* url,
 		       char const* username, char const* password) {
-  AuthRecord authenticator;
-  authenticator.realm = authenticator.nonce = NULL;
-  authenticator.username = username; authenticator.password = password;
+  Authenticator authenticator;
+  authenticator.setUsernameAndPassword(username, password);
   char* describeResult = describeURL(url, &authenticator);
   if (describeResult != NULL) {
     // We are already authorized
@@ -365,7 +339,7 @@ char* RTSPClient
   }
 
   // The "realm" and "nonce" fields should have been filled in:
-  if (authenticator.realm == NULL || authenticator.nonce == NULL) {
+  if (authenticator.realm() == NULL || authenticator.nonce() == NULL) {
     // We haven't been given enough information to try again, so fail:
     return NULL;
   }
@@ -374,13 +348,8 @@ char* RTSPClient
   describeResult = describeURL(url, &authenticator);
   if (describeResult != NULL) {
     // The authenticator worked, so use it in future requests:
-    useAuthenticator(&authenticator);
+    fCurrentAuthenticator = authenticator;
   }
-
-  // The "realm" and "nonce" fields were dynamically
-  // allocated; free them now:
-  delete[] (char*)authenticator.realm;
-  delete[] (char*)authenticator.nonce;
 
   return describeResult;
 }
@@ -498,7 +467,7 @@ void RTSPClient::constructSubsessionURL(MediaSubsession const& subsession,
 
 Boolean RTSPClient::announceSDPDescription(char const* url,
 					   char const* sdpDescription,
-					   AuthRecord* authenticator) {
+					   Authenticator* authenticator) {
   char* cmd = NULL;
   do {
     if (!openConnectionFromURL(url)) break;
@@ -506,7 +475,7 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
     // Send the ANNOUNCE command:
 
     // First, construct an authenticator string:
-    resetCurrentAuthenticator();
+    fCurrentAuthenticator.reset();
     char* authenticatorStr
       = createAuthenticatorString(authenticator, "ANNOUNCE", url);
 
@@ -554,31 +523,7 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
     unsigned responseCode;
     if (!parseResponseCode(firstLine, responseCode)) break;
     if (responseCode != 200) {
-      if (responseCode == 401 && authenticator != NULL) {
-	// We have an authentication failure, so fill in "authenticator"
-	// using the contents of a following "WWW-Authenticate:" line.
-	// (Once we compute a 'response' for "authenticator", it can be
-	//  used in a subsequent request - that will hopefully succeed.)
-	char* lineStart;
-	while (1) {
-	  lineStart = nextLineStart;
-	  if (lineStart == NULL) break;
-
-	  nextLineStart = getLine(lineStart);
-	  if (lineStart[0] == '\0') break; // this is a blank line
-
-	  char* realm = strDupSize(lineStart);
-	  char* nonce = strDupSize(lineStart);
-	  if (sscanf(lineStart, "WWW-Authenticate: Digest realm=\"%[^\"]\", nonce=\"%[^\"]\"",
-		     realm, nonce) == 2) {
-	    authenticator->realm = realm;
-	    authenticator->nonce = nonce;
-	    break;
-	  } else {
-	    delete[] realm; delete[] nonce;
-	  }
-	} 
-      }
+      checkForAuthenticationFailure(responseCode, nextLineStart, authenticator);
       envir().setResultMsg("cannot handle ANNOUNCE response: ", firstLine);
       break;
     }
@@ -592,46 +537,18 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
   return False;
 }
 
-static char* computeDigestResponse(AuthRecord const& authenticator,
-				   char const* cmd, char const* url) {
-  // The "response" field is computed as:
-  //    md5(md5(<username>:<realm>:<password>):<nonce>:md5(<cmd>:<url>))
-  unsigned const ha1DataLen = strlen(authenticator.username) + 1
-    + strlen(authenticator.realm) + 1 + strlen(authenticator.password);
-  unsigned char* ha1Data = new unsigned char[ha1DataLen+1];
-  sprintf((char*)ha1Data, "%s:%s:%s",
-	  authenticator.username, authenticator.realm,
-	  authenticator.password);
-  char ha1Buf[33];
-  our_MD5Data(ha1Data, ha1DataLen, ha1Buf);
-
-  unsigned const ha2DataLen = strlen(cmd) + 1 + strlen(url);
-  unsigned char* ha2Data = new unsigned char[ha2DataLen+1];
-  sprintf((char*)ha2Data, "%s:%s", cmd, url);
-  char ha2Buf[33];
-  our_MD5Data(ha2Data, ha2DataLen, ha2Buf);
-
-  unsigned const digestDataLen
-    = 32 + 1 + strlen(authenticator.nonce) + 1 + 32;
-  unsigned char* digestData = new unsigned char[digestDataLen+1];
-  sprintf((char*)digestData, "%s:%s:%s",
-	  ha1Buf, authenticator.nonce, ha2Buf);
-  return our_MD5Data(digestData, digestDataLen, NULL);
-}
-
 Boolean RTSPClient
 ::announceWithPassword(char const* url, char const* sdpDescription,
 		       char const* username, char const* password) {
-  AuthRecord authenticator;
-  authenticator.realm = authenticator.nonce = NULL;
-  authenticator.username = username; authenticator.password = password;
+  Authenticator authenticator;
+  authenticator.setUsernameAndPassword(username, password);
   if (announceSDPDescription(url, sdpDescription, &authenticator)) {
     // We are already authorized
     return True;
   }
 
   // The "realm" and "nonce" fields should have been filled in:
-  if (authenticator.realm == NULL || authenticator.nonce == NULL) {
+  if (authenticator.realm() == NULL || authenticator.nonce() == NULL) {
     // We haven't been given enough information to try again, so fail:
     return False;
   }
@@ -642,13 +559,8 @@ Boolean RTSPClient
 
   if (secondTrySuccess) {
     // The authenticator worked, so use it in future requests:
-    useAuthenticator(&authenticator);
+    fCurrentAuthenticator = authenticator;
   }
-
-  // The "realm" and "nonce" fields were dynamically
-  // allocated; free them now:
-  delete[] (char*)authenticator.realm;
-  delete[] (char*)authenticator.nonce;
 
   return secondTrySuccess;
 }
@@ -662,7 +574,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
 
     // First, construct an authenticator string:
     char* authenticatorStr
-      = createAuthenticatorString(fCurrentAuthenticator,
+      = createAuthenticatorString(&fCurrentAuthenticator,
 				  "SETUP", fBaseURL);
 
     // When sending more than one "SETUP" request, include a "Session:"
@@ -890,7 +802,7 @@ Boolean RTSPClient::playMediaSession(MediaSession& session,
 
     // First, construct an authenticator string:
     char* authenticatorStr
-      = createAuthenticatorString(fCurrentAuthenticator, "PLAY", fBaseURL);
+      = createAuthenticatorString(&fCurrentAuthenticator, "PLAY", fBaseURL);
     // And then a "Range:" string:
     char* rangeStr = createRangeString(start, end);
 
@@ -969,7 +881,7 @@ Boolean RTSPClient::playMediaSubsession(MediaSubsession& subsession,
 
     // First, construct an authenticator string:
     char* authenticatorStr
-      = createAuthenticatorString(fCurrentAuthenticator, "PLAY", fBaseURL);
+      = createAuthenticatorString(&fCurrentAuthenticator, "PLAY", fBaseURL);
     // And then a "Range:" string:
     char* rangeStr = createRangeString(start, end);
 
@@ -1073,7 +985,7 @@ Boolean RTSPClient::pauseMediaSession(MediaSession& session) {
 
     // First, construct an authenticator string:
     char* authenticatorStr
-      = createAuthenticatorString(fCurrentAuthenticator, "PAUSE", fBaseURL);
+      = createAuthenticatorString(&fCurrentAuthenticator, "PAUSE", fBaseURL);
 
     char* const cmdFmt =
       "PAUSE %s RTSP/1.0\r\n"
@@ -1144,7 +1056,7 @@ Boolean RTSPClient::pauseMediaSubsession(MediaSubsession& subsession) {
     
     // First, construct an authenticator string:
     char* authenticatorStr
-      = createAuthenticatorString(fCurrentAuthenticator, "PAUSE", fBaseURL);
+      = createAuthenticatorString(&fCurrentAuthenticator, "PAUSE", fBaseURL);
     
     char* const cmdFmt =
       "PAUSE %s%s%s RTSP/1.0\r\n"
@@ -1217,7 +1129,7 @@ Boolean RTSPClient::recordMediaSubsession(MediaSubsession& subsession) {
 
     // First, construct an authenticator string:
     char* authenticatorStr
-      = createAuthenticatorString(fCurrentAuthenticator,
+      = createAuthenticatorString(&fCurrentAuthenticator,
 				  "RECORD", fBaseURL);
 
     char* const cmdFmt =
@@ -1295,7 +1207,7 @@ Boolean RTSPClient::setMediaSessionParameter(MediaSession& session,
 
     // First, construct an authenticator string:
     char* authenticatorStr
-      = createAuthenticatorString(fCurrentAuthenticator,
+      = createAuthenticatorString(&fCurrentAuthenticator,
 				  "SET_PARAMETER", fBaseURL);
 
     char* const cmdFmt =
@@ -1370,7 +1282,7 @@ Boolean RTSPClient::teardownMediaSession(MediaSession& session) {
 
     // First, construct an authenticator string:
     char* authenticatorStr
-      = createAuthenticatorString(fCurrentAuthenticator,
+      = createAuthenticatorString(&fCurrentAuthenticator,
 				  "TEARDOWN", fBaseURL);
 
     char* const cmdFmt =
@@ -1445,7 +1357,7 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
 
     // First, construct an authenticator string:
     char* authenticatorStr
-      = createAuthenticatorString(fCurrentAuthenticator,
+      = createAuthenticatorString(&fCurrentAuthenticator,
 				  "TEARDOWN", fBaseURL);
 
     char* const cmdFmt =
@@ -1659,22 +1571,22 @@ Boolean RTSPClient::parseRTSPURLUsernamePassword(char const* url,
 }
 
 char*
-RTSPClient::createAuthenticatorString(AuthRecord const* authenticator,
+RTSPClient::createAuthenticatorString(Authenticator const* authenticator,
 				      char const* cmd, char const* url) {
-  if (authenticator != NULL && authenticator->realm != NULL
-      && authenticator->nonce != NULL && authenticator->username != NULL
-      && authenticator->password != NULL) {
+  if (authenticator != NULL
+      && authenticator->realm() != NULL  && authenticator->nonce() != NULL
+      && authenticator->username() != NULL && authenticator->password() != NULL) {
     // We've been provided a filled-in authenticator, so use it:
     char* const authFmt = "Authorization: Digest username=\"%s\", realm=\"%s\", nonce=\"%s\", uri=\"%s\", response=\"%s\"\r\n";
-    char const* response = computeDigestResponse(*authenticator, cmd, url);
+    char const* response = authenticator->computeDigestResponse(cmd, url);
     unsigned authBufSize = strlen(authFmt)
-      + strlen(authenticator->username) + strlen(authenticator->realm)
-      + strlen(authenticator->nonce) + strlen(url) + strlen(response);
+      + strlen(authenticator->username()) + strlen(authenticator->realm())
+      + strlen(authenticator->nonce()) + strlen(url) + strlen(response);
     char* authenticatorStr = new char[authBufSize];
     sprintf(authenticatorStr, authFmt,
-	    authenticator->username, authenticator->realm,
-	    authenticator->nonce, url, response);
-    free((char*)response); // NOT delete, because it was malloc-allocated
+	    authenticator->username(), authenticator->realm(),
+	    authenticator->nonce(), url, response);
+    authenticator->reclaimDigestResponse(response);
 
     return authenticatorStr;
   }
@@ -1682,28 +1594,34 @@ RTSPClient::createAuthenticatorString(AuthRecord const* authenticator,
   return strDup("");
 }
 
-void RTSPClient::useAuthenticator(AuthRecord const* authenticator) {
-  resetCurrentAuthenticator();
-  if (authenticator != NULL && authenticator->realm != NULL
-      && authenticator->nonce != NULL && authenticator->username != NULL
-      && authenticator->password != NULL) {
-    fCurrentAuthenticator = new AuthRecord;
-    fCurrentAuthenticator->realm = strDup(authenticator->realm);
-    fCurrentAuthenticator->nonce = strDup(authenticator->nonce);
-    fCurrentAuthenticator->username = strDup(authenticator->username);
-    fCurrentAuthenticator->password = strDup(authenticator->password);
+void RTSPClient::checkForAuthenticationFailure(unsigned responseCode,
+					       char*& nextLineStart,
+					       Authenticator* authenticator) {
+  if (responseCode == 401 && authenticator != NULL) {
+    // We have an authentication failure, so fill in "authenticator"
+    // using the contents of a following "WWW-Authenticate:" line.
+    // (Once we compute a 'response' for "authenticator", it can be
+    //  used in a subsequent request - that will hopefully succeed.)
+    char* lineStart;
+    while (1) {
+      lineStart = nextLineStart;
+      if (lineStart == NULL) break;
+
+      nextLineStart = getLine(lineStart);
+      if (lineStart[0] == '\0') break; // this is a blank line
+
+      char* realm = strDupSize(lineStart);
+      char* nonce = strDupSize(lineStart);
+      Boolean foundAuthenticateHeader = False;
+      if (sscanf(lineStart, "WWW-Authenticate: Digest realm=\"%[^\"]\", nonce=\"%[^\"]\"",
+		 realm, nonce) == 2) {
+	authenticator->setRealmAndNonce(realm, nonce);
+	foundAuthenticateHeader = True;
+      }
+      delete[] realm; delete[] nonce;
+      if (foundAuthenticateHeader) break;
+    } 
   }
-}
-
-void RTSPClient::resetCurrentAuthenticator() {
-  if (fCurrentAuthenticator == NULL) return;
-
-  delete[] (char*)fCurrentAuthenticator->realm;
-  delete[] (char*)fCurrentAuthenticator->nonce;
-  delete[] (char*)fCurrentAuthenticator->username;
-  delete[] (char*)fCurrentAuthenticator->password;
-
-  delete fCurrentAuthenticator; fCurrentAuthenticator = NULL;
 }
 
 Boolean RTSPClient::sendRequest(char const* requestString) {

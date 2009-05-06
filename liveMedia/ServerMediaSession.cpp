@@ -29,9 +29,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ServerMediaSession* ServerMediaSession
 ::createNew(UsageEnvironment& env,
 	    char const* streamName, char const* info,
-	    char const* description, Boolean isSSM) {
+	    char const* description, Boolean isSSM, char const* miscSDPLines) {
   return new ServerMediaSession(env, streamName, info, description,
-				isSSM);
+				isSSM, miscSDPLines);
 }
 
 Boolean ServerMediaSession
@@ -64,13 +64,14 @@ ServerMediaSession::ServerMediaSession(UsageEnvironment& env,
 				       char const* streamName,
 				       char const* info,
 				       char const* description,
-				       Boolean isSSM)
+				       Boolean isSSM, char const* miscSDPLines)
   : Medium(env), fIsSSM(isSSM), fSubsessionsHead(NULL),
     fSubsessionsTail(NULL), fSubsessionCounter(0) {
   fStreamName = strDup(streamName == NULL ? "" : streamName);
   fInfoSDPString = strDup(info == NULL ? libNameStr : info);
   fDescriptionSDPString
     = strDup(description == NULL ? libNameStr : description);
+  fMiscSDPLines = strDup(miscSDPLines == NULL ? "" : miscSDPLines);
 
   gettimeofday(&fCreationTime, &Idunno);
 }
@@ -80,6 +81,7 @@ ServerMediaSession::~ServerMediaSession() {
   delete[] fStreamName;
   delete[] fInfoSDPString;
   delete[] fDescriptionSDPString;
+  delete[] fMiscSDPLines;
 }
 
 Boolean
@@ -138,7 +140,8 @@ char* ServerMediaSession::generateSDPDescription() {
     "%s"
     "t=0 0\r\n"
     "a=x-qt-text-nam:%s\r\n"
-    "a=x-qt-text-inf:%s\r\n";
+    "a=x-qt-text-inf:%s\r\n"
+    "%s";
   unsigned sdpLength = strlen(sdpPrefixFmt)
     + 20 + 6 + 20 + ourIPAddressStrSize
     + strlen(fDescriptionSDPString)
@@ -146,7 +149,8 @@ char* ServerMediaSession::generateSDPDescription() {
     + strlen(libNameStr) + strlen(libVersionStr)
     + sourceFilterLineSize
     + strlen(fDescriptionSDPString)
-    + strlen(fInfoSDPString);
+    + strlen(fInfoSDPString)
+    + strlen(fMiscSDPLines);
 
   // Add in the lengths of each subsession's media-level SDP lines: 
   ServerMediaSubsession* subsession;
@@ -170,7 +174,8 @@ char* ServerMediaSession::generateSDPDescription() {
 	  libNameStr, libVersionStr, // a=tool:
 	  sourceFilterLine, // a=source-filter: incl (if a SSM session)
 	  fDescriptionSDPString, // a=x-qt-text-nam: line
-	  fInfoSDPString); // a=x-qt-text-inf: line
+	  fInfoSDPString, // a=x-qt-text-inf: line
+	  fMiscSDPLines); // miscellaneous session SDP lines (if any)
   delete[] sourceFilterLine; delete[] ourIPAddressStr;
 
   // Then, add the (media-level) lines for each subsession:

@@ -27,18 +27,20 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 MPEG1or2VideoFileServerMediaSubsession*
 MPEG1or2VideoFileServerMediaSubsession::createNew(UsageEnvironment& env,
 						  char const* fileName,
+						  Boolean reuseFirstSource,
 						  Boolean iFramesOnly,
 						  double vshPeriod) {
-  return new MPEG1or2VideoFileServerMediaSubsession(env, fileName,
+  return new MPEG1or2VideoFileServerMediaSubsession(env, fileName, reuseFirstSource,
 						    iFramesOnly, vshPeriod);
 }
 
 MPEG1or2VideoFileServerMediaSubsession
 ::MPEG1or2VideoFileServerMediaSubsession(UsageEnvironment& env,
 					 char const* fileName,
+					 Boolean reuseFirstSource,
 					 Boolean iFramesOnly,
 					 double vshPeriod)
-  : FileServerMediaSubsession(env, fileName),
+  : FileServerMediaSubsession(env, fileName, reuseFirstSource),
     fIFramesOnly(iFramesOnly), fVSHPeriod(vshPeriod) {
 }
 

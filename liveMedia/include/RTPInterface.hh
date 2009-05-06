@@ -35,17 +35,28 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 typedef void AuxHandlerFunc(void* clientData, unsigned char* packet,
 			    unsigned packetSize);
 
+class tcpStreamRecord {
+public:
+  tcpStreamRecord(int streamSocketNum, unsigned char streamChannelId,
+		  tcpStreamRecord* next);
+  virtual ~tcpStreamRecord();
+
+public:
+  tcpStreamRecord* fNext;
+  int fStreamSocketNum;
+  unsigned char fStreamChannelId;
+};
+
 class RTPInterface {
 public:
   RTPInterface(Medium* owner, Groupsock* gs);
   virtual ~RTPInterface();
 
-  Groupsock* gs() const { return fPrimaryGS; }
-
-  void addDestination(Groupsock* gs);
-  void removeDestination(Groupsock* gs);
+  Groupsock* gs() const { return fGS; }
 
   void setStreamSocket(int sockNum, unsigned char streamChannelId);
+  void addStreamSocket(int sockNum, unsigned char streamChannelId);
+  void removeStreamSocket(int sockNum, unsigned char streamChannelId);
 
   void sendPacket(unsigned char* packet, unsigned packetSize);
   void startNetworkReading(TaskScheduler::BackgroundHandlerProc*
@@ -66,14 +77,13 @@ public:
 private:
   friend class SocketDescriptor;
   Medium* fOwner;
-  Groupsock* fPrimaryGS;
-  class GroupsockList* fDestinationGSs;
-
-  int fStreamSocketNum;
-  unsigned char fStreamChannelId;
+  Groupsock* fGS;
+  tcpStreamRecord* fTCPStreams; // optional, for RTP-over-TCP streaming/receiving
 
   unsigned short fNextTCPReadSize;
     // how much data (if any) is available to be read from the TCP stream
+  int fNextTCPReadStreamSocketNum;
+  unsigned char fNextTCPReadStreamChannelId;
   TaskScheduler::BackgroundHandlerProc* fReadHandlerProc; // if any
   
   AuxHandlerFunc* fAuxReadHandlerFunc;

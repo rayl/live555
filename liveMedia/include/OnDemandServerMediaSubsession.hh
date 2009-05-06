@@ -71,7 +71,7 @@ private:
 
 private:
   Boolean fReuseFirstSource;
-  HashTable* fGroupsockHashTable; // indexed by client session id
+  HashTable* fDestinationsHashTable; // indexed by client session id
   void* fLastStreamToken;
   char* fSDPLines;
   char fCNAME[100]; // for RTCP

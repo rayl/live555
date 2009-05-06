@@ -27,7 +27,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _NET_ADDRESS_HH
 #include "NetAddress.hh"
 #endif
-#include "RTSPClient.hh" // for AuthRecord #####
+#ifndef _DIGEST_AUTHENTICATION_HH
+#include "DigestAuthentication.hh"
+#endif
 
 // Possible states in the "INVITE" transition diagram (RFC 3261, Figure 5)
 enum inviteClientState { Calling, Proceeding, Completed, Terminated };
@@ -47,7 +49,7 @@ public:
     fClientStartPortNum = clientStartPortNum;
   }
 
-  char* invite(char const* url, AuthRecord* authenticator = NULL);
+  char* invite(char const* url, Authenticator* authenticator = NULL);
       // Issues a SIP "INVITE" command
       // Returns the session SDP description if this command succeeds
   char* inviteWithPassword(char const* url,
@@ -82,7 +84,7 @@ private:
   void reset();
 
   // Routines used to implement invite*():
-  char* invite1(AuthRecord* authenticator);
+  char* invite1(Authenticator* authenticator);
   Boolean processURL(char const* url);
   Boolean sendINVITE();
   static void inviteResponseHandler(void* clientData, int mask);
@@ -97,11 +99,8 @@ private:
   unsigned fTimerACount;
 
   // Routines used to implement all commands:
-  char* createAuthenticatorString(AuthRecord const* authenticator,
+  char* createAuthenticatorString(Authenticator const* authenticator,
 				  char const* cmd, char const* url);
-  void useAuthenticator(AuthRecord const* authenticator);
-      // in future reqs
-  void resetValidAuthenticator();
   Boolean sendRequest(char const* requestString, unsigned requestLength);
   unsigned getResponseCode();
   unsigned getResponse(char*& responseBuffer, unsigned responseBufferSize);
@@ -132,14 +131,14 @@ private:
   unsigned fCallId, fFromTag; // set by us
   char const* fToTagStr; // set by the responder
       unsigned fToTagStrSize;
-  AuthRecord* fValidAuthenticator; // if any
+  Authenticator fValidAuthenticator;
   char const* fUserName; // 'user' name used in "From:" & "Contact:" lines
       unsigned fUserNameSize;
 
   char* fInviteSDPDescription;
   char* fInviteCmd;
       unsigned fInviteCmdSize;
-  AuthRecord* fWorkingAuthenticator;
+  Authenticator* fWorkingAuthenticator;
   inviteClientState fInviteClientState;
   char fEventLoopStopFlag;
   unsigned fInviteStatusCode;

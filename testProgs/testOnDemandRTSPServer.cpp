@@ -23,6 +23,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 UsageEnvironment* env;
 
+// To make the second and subsequent client for each stream reuse the same
+// input stream as the first client (rather than playing the file from the start
+// for each client), change the following "False" to "True":
+Boolean reuseFirstSource = False;
+
 // To stream *only* MPEG-1 or 2 video "I" frames
 // (e.g., to reduce network bandwidth),
 // change the following "False" to "True":
@@ -33,12 +38,22 @@ int main(int argc, char** argv) {
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
   env = BasicUsageEnvironment::createNew(*scheduler);
 
+  UserAuthenticationDatabase* authDB = NULL;
+#ifdef ACCESS_CONTROL
+  // To implement client access control to the RTSP server, do the following:
+  authDB = new UserAuthenticationDatabase;
+  authDB->addUserRecord("username1", "password1"); // replace these with real strings
+  // Repeat the above with each <username>, <password> that you wish to allow
+  // access to the server.
+#endif
+
   // Create the RTSP server:
-  RTSPServer* rtspServer = RTSPServer::createNew(*env, 7070);
+  RTSPServer* rtspServer = RTSPServer::createNew(*env, 7070, authDB);
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
     exit(1);
   }
+
   char const* descriptionString
     = "Session streamed by \"testOnDemandRTSPServer\"";
 
@@ -55,7 +70,7 @@ int main(int argc, char** argv) {
       = ServerMediaSession::createNew(*env, streamName, streamName,
 				      descriptionString);
     sms->addSubsession(MPEG4VideoFileServerMediaSubsession
-		       ::createNew(*env, inputFileName));
+		       ::createNew(*env, inputFileName, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
     char* url = rtspServer->rtspURL(sms);
@@ -74,7 +89,7 @@ int main(int argc, char** argv) {
       = ServerMediaSession::createNew(*env, streamName, streamName,
 				      descriptionString);
     MPEG1or2FileServerDemux* demux
-      = MPEG1or2FileServerDemux::createNew(*env, inputFileName);
+      = MPEG1or2FileServerDemux::createNew(*env, inputFileName, reuseFirstSource);
     sms->addSubsession(demux->newVideoServerMediaSubsession(iFramesOnly));
     sms->addSubsession(demux->newAudioServerMediaSubsession());
     rtspServer->addServerMediaSession(sms);
@@ -95,7 +110,7 @@ int main(int argc, char** argv) {
       = ServerMediaSession::createNew(*env, streamName, streamName,
 				      descriptionString);
     sms->addSubsession(MPEG1or2VideoFileServerMediaSubsession
-		       ::createNew(*env, inputFileName, iFramesOnly));
+	       ::createNew(*env, inputFileName, reuseFirstSource, iFramesOnly));
     rtspServer->addServerMediaSession(sms);
 
     char* url = rtspServer->rtspURL(sms);
@@ -130,7 +145,7 @@ int main(int argc, char** argv) {
 #endif
 #endif
     sms->addSubsession(MP3AudioFileServerMediaSubsession
-		       ::createNew(*env, inputFileName,
+		       ::createNew(*env, inputFileName, reuseFirstSource,
 				   useADUs, interleaving));
     rtspServer->addServerMediaSession(sms);
 
@@ -152,7 +167,7 @@ int main(int argc, char** argv) {
     // change the following to True:
     Boolean convertToULaw = False;
     sms->addSubsession(WAVAudioFileServerMediaSubsession
-		       ::createNew(*env, inputFileName, convertToULaw));
+	       ::createNew(*env, inputFileName, reuseFirstSource, convertToULaw));
     rtspServer->addServerMediaSession(sms);
 
     char* url = rtspServer->rtspURL(sms);
@@ -170,7 +185,7 @@ int main(int argc, char** argv) {
       = ServerMediaSession::createNew(*env, streamName, streamName,
 				      descriptionString);
     sms->addSubsession(AMRAudioFileServerMediaSubsession
-		       ::createNew(*env, inputFileName));
+		       ::createNew(*env, inputFileName, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
     char* url = rtspServer->rtspURL(sms);
@@ -189,7 +204,7 @@ int main(int argc, char** argv) {
 				      descriptionString);
     // Note: VOB files are MPEG-2 Program Stream files, but using AC-3 audio
     MPEG1or2FileServerDemux* demux
-      = MPEG1or2FileServerDemux::createNew(*env, inputFileName);
+      = MPEG1or2FileServerDemux::createNew(*env, inputFileName, reuseFirstSource);
     sms->addSubsession(demux->newVideoServerMediaSubsession(iFramesOnly));
     sms->addSubsession(demux->newAC3AudioServerMediaSubsession());
     rtspServer->addServerMediaSession(sms);
@@ -209,7 +224,7 @@ int main(int argc, char** argv) {
       = ServerMediaSession::createNew(*env, streamName, streamName,
 				      descriptionString);
     sms->addSubsession(MPEG2TransportFileServerMediaSubsession
-		       ::createNew(*env, inputFileName));
+		       ::createNew(*env, inputFileName, reuseFirstSource));
     rtspServer->addServerMediaSession(sms);
 
     char* url = rtspServer->rtspURL(sms);

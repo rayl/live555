@@ -45,8 +45,6 @@ public:
   // used by RTSP servers:
   Groupsock const& groupsockBeingUsed() const { return *(fRTPInterface.gs()); }
   Groupsock& groupsockBeingUsed() { return *(fRTPInterface.gs()); }
-  void addDestination(Groupsock* gs) {fRTPInterface.addDestination(gs);}
-  void removeDestination(Groupsock* gs) {fRTPInterface.removeDestination(gs);}
 
   unsigned char rtpPayloadType() const { return fRTPPayloadType; }
   unsigned rtpTimestampFrequency() const { return fTimestampFrequency; }
@@ -69,9 +67,15 @@ public:
   }
 
   void setStreamSocket(int sockNum, unsigned char streamChannelId) {
-    // hack to allow sending RTP over TCP (RFC 2236, section 10.12)
     fRTPInterface.setStreamSocket(sockNum, streamChannelId);
   }
+  void addStreamSocket(int sockNum, unsigned char streamChannelId) {
+    fRTPInterface.addStreamSocket(sockNum, streamChannelId);    
+  }
+  void removeStreamSocket(int sockNum, unsigned char streamChannelId) {
+    fRTPInterface.removeStreamSocket(sockNum, streamChannelId);    
+  }
+    // hacks to allow sending RTP over TCP (RFC 2236, section 10.12)
 
   void getTotalBitrate(unsigned& outNumBytes, double& outElapsedTime);
       // returns the number of bytes sent since the last time that we

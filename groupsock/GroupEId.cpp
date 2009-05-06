@@ -44,13 +44,16 @@ Scope::Scope(const Scope& orig) {
 }
 
 Scope& Scope::operator=(const Scope& rightSide) {
-  if (publicKey() == NULL
-      || strcmp(publicKey(), rightSide.publicKey()) != 0) {
-    clean();
-    assign(rightSide.ttl(), rightSide.publicKey());
-  } else { // need to assign TTL only
-    fTTL = rightSide.ttl();
+  if (&rightSide != this) {
+    if (publicKey() == NULL
+	|| strcmp(publicKey(), rightSide.publicKey()) != 0) {
+      clean();
+      assign(rightSide.ttl(), rightSide.publicKey());
+    } else { // need to assign TTL only
+      fTTL = rightSide.ttl();
+    }
   }
+
   return *this;
 }
 
