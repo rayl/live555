@@ -35,11 +35,12 @@ public:
 		/* how often (in seconds) to inject a Video_Sequence_Header,
 		   if one doesn't already appear in the stream */);
 
-private:
+protected:
   MPEG1or2VideoStreamFramer(UsageEnvironment& env,
 			    FramedSource* inputSource,
-			    Boolean iFramesOnly, double vshPeriod);
-      // called only by createNew()
+			    Boolean iFramesOnly, double vshPeriod,
+			    Boolean createParser = True);
+      // called only by createNew(), or by subclass constructors
   virtual ~MPEG1or2VideoStreamFramer();
 
 private:

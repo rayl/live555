@@ -64,7 +64,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "AC3AudioRTPSource.hh"
 #include "AC3AudioRTPSink.hh"
 #include "MPEG4GenericRTPSink.hh"
-#include "MPEG1or2VideoStreamFramer.hh"
+#include "MPEG1or2VideoStreamDiscreteFramer.hh"
 #include "MPEG4VideoStreamDiscreteFramer.hh"
 #include "DeviceSource.hh"
 #include "AudioInputDevice.hh"

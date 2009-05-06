@@ -82,12 +82,15 @@ private:
 ////////// MPEG1or2VideoStreamFramer implementation //////////
 
 MPEG1or2VideoStreamFramer::MPEG1or2VideoStreamFramer(UsageEnvironment& env,
-					     FramedSource* inputSource,
-					     Boolean iFramesOnly,
-					     double vshPeriod)
+						     FramedSource* inputSource,
+						     Boolean iFramesOnly,
+						     double vshPeriod,
+						     Boolean createParser)
   : MPEGVideoStreamFramer(env, inputSource) {
-  fParser = new MPEG1or2VideoStreamParser(this, inputSource,
-					  iFramesOnly, vshPeriod);
+  fParser = createParser
+    ? new MPEG1or2VideoStreamParser(this, inputSource,
+				    iFramesOnly, vshPeriod)
+    : NULL;
 }
 
 MPEG1or2VideoStreamFramer::~MPEG1or2VideoStreamFramer() {
