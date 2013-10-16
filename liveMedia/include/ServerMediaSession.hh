@@ -60,6 +60,7 @@ public:
   char const* streamName() const { return fStreamName; }
 
   Boolean addSubsession(ServerMediaSubsession* subsession);
+  unsigned numSubsessions() const { return fSubsessionCounter; }
 
   void testScaleFactor(float& scale); // sets "scale" to the actual supported scale
   float duration() const;

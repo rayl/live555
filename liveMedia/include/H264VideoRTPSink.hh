@@ -32,13 +32,17 @@ class H264FUAFragmenter;
 
 class H264VideoRTPSink: public VideoRTPSink {
 public:
-  static H264VideoRTPSink* createNew(UsageEnvironment& env,
-				     Groupsock* RTPgs,
-				     unsigned char rtpPayloadFormat);
+  static H264VideoRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat);
+  static H264VideoRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
+				     u_int8_t const* sps, unsigned spsSize, u_int8_t const* pps, unsigned ppsSize);
+    // an optional variant of "createNew()", useful if we know, in advance, the stream's SPS and PPL NAL units.
+  static H264VideoRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
+				     char const* sPropParameterSetsStr);
+    // an optional variant of "createNew()", useful if we know, in advance, the stream's SPS and PPL NAL units.
 
 protected:
-  H264VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		   unsigned char rtpPayloadFormat);
+  H264VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
+		   u_int8_t const* sps = NULL, unsigned spsSize = 0, u_int8_t const* pps = NULL, unsigned ppsSize = 0);
 	// called only by createNew()
 
   virtual ~H264VideoRTPSink();
@@ -63,6 +67,7 @@ protected:
 
 private:
   char* fFmtpSDPLine;
+  u_int8_t* fSPS; unsigned fSPSSize; u_int8_t* fPPS; unsigned fPPSSize;
 };
 
 

@@ -544,7 +544,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fPlayStartTime(0.0), fPlayEndTime(0.0),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f), fNPT_PTS_Offset(0.0f),
     fRTPSocket(NULL), fRTCPSocket(NULL),
-    fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL),
+    fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL), fReceiveRawMP3ADUs(False),
     fSessionId(NULL) {
   rtpInfo.seqNum = 0; rtpInfo.timestamp = 0; rtpInfo.infoIsNew = False;
 }
@@ -559,6 +559,11 @@ MediaSubsession::~MediaSubsession() {
   delete[] fSessionId;
 
   delete fNext;
+}
+
+void MediaSubsession::addFilter(FramedFilter* filter){
+  if (filter == NULL || filter->inputSource() != fReadSource) return; // sanity check
+  fReadSource = filter;
 }
 
 double MediaSubsession::playStartTime() const {
@@ -1123,18 +1128,20 @@ Boolean MediaSubsession::createSourceObjects(int useSpecialRTPoffset) {
 					      fRTPPayloadFormat,
 					      fRTPTimestampFrequency);
       } else if (strcmp(fCodecName, "MPA-ROBUST") == 0) { // robust MP3 audio
-	fRTPSource
+	fReadSource = fRTPSource
 	  = MP3ADURTPSource::createNew(env(), fRTPSocket, fRTPPayloadFormat,
 				       fRTPTimestampFrequency);
 	if (fRTPSource == NULL) break;
 	
-	// Add a filter that deinterleaves the ADUs after depacketizing them:
-	MP3ADUdeinterleaver* deinterleaver
-	  = MP3ADUdeinterleaver::createNew(env(), fRTPSource);
-	if (deinterleaver == NULL) break;
+	if (!fReceiveRawMP3ADUs) {
+	  // Add a filter that deinterleaves the ADUs after depacketizing them:
+	  MP3ADUdeinterleaver* deinterleaver
+	    = MP3ADUdeinterleaver::createNew(env(), fRTPSource);
+	  if (deinterleaver == NULL) break;
 	
-	// Add another filter that converts these ADUs to MP3 frames:
-	fReadSource = MP3FromADUSource::createNew(env(), deinterleaver);
+	  // Add another filter that converts these ADUs to MP3 frames:
+	  fReadSource = MP3FromADUSource::createNew(env(), deinterleaver);
+	}
       } else if (strcmp(fCodecName, "X-MP3-DRAFT-00") == 0) {
 	// a non-standard variant of "MPA-ROBUST" used by RealNetworks
 	// (one 'ADU'ized MP3 frame per packet; no headers)

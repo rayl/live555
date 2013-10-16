@@ -115,11 +115,11 @@ MPEG1or2VideoStreamFramer.$(CPP):	include/MPEG1or2VideoStreamFramer.hh MPEGVideo
 include/MPEG1or2VideoStreamFramer.hh:	include/MPEGVideoStreamFramer.hh
 MPEG1or2VideoStreamDiscreteFramer.$(CPP):	include/MPEG1or2VideoStreamDiscreteFramer.hh
 include/MPEG1or2VideoStreamDiscreteFramer.hh:	include/MPEG1or2VideoStreamFramer.hh
-MPEG4VideoStreamFramer.$(CPP):	include/MPEG4VideoStreamFramer.hh MPEGVideoStreamParser.hh
+MPEG4VideoStreamFramer.$(CPP):	include/MPEG4VideoStreamFramer.hh MPEGVideoStreamParser.hh include/MPEG4LATMAudioRTPSource.hh
 include/MPEG4VideoStreamFramer.hh:	include/MPEGVideoStreamFramer.hh
 MPEG4VideoStreamDiscreteFramer.$(CPP):	include/MPEG4VideoStreamDiscreteFramer.hh
 include/MPEG4VideoStreamDiscreteFramer.hh:	include/MPEG4VideoStreamFramer.hh
-H264VideoStreamFramer.$(CPP):	include/H264VideoStreamFramer.hh MPEGVideoStreamParser.hh BitVector.hh
+H264VideoStreamFramer.$(CPP):	include/H264VideoStreamFramer.hh MPEGVideoStreamParser.hh BitVector.hh include/H264VideoRTPSource.hh
 include/H264VideoStreamFramer.hh:	include/MPEGVideoStreamFramer.hh
 H264VideoStreamDiscreteFramer.$(CPP):	include/H264VideoStreamDiscreteFramer.hh
 include/H264VideoStreamDiscreteFramer.hh:	include/H264VideoStreamFramer.hh
@@ -218,13 +218,13 @@ MPEG1or2VideoRTPSink.$(CPP):	include/MPEG1or2VideoRTPSink.hh include/MPEG1or2Vid
 include/MPEG1or2VideoRTPSink.hh:	include/VideoRTPSink.hh
 MPEG4LATMAudioRTPSink.$(CPP):	include/MPEG4LATMAudioRTPSink.hh
 include/MPEG4LATMAudioRTPSink.hh:	include/AudioRTPSink.hh
-MPEG4GenericRTPSink.$(CPP):	include/MPEG4GenericRTPSink.hh
+MPEG4GenericRTPSink.$(CPP):	include/MPEG4GenericRTPSink.hh include/Locale.hh
 include/MPEG4GenericRTPSink.hh:	include/MultiFramedRTPSink.hh
-MPEG4ESVideoRTPSink.$(CPP):	include/MPEG4ESVideoRTPSink.hh include/MPEG4VideoStreamFramer.hh
+MPEG4ESVideoRTPSink.$(CPP):	include/MPEG4ESVideoRTPSink.hh include/MPEG4VideoStreamFramer.hh include/MPEG4LATMAudioRTPSource.hh
 include/MPEG4ESVideoRTPSink.hh: include/VideoRTPSink.hh
 H263plusVideoRTPSink.$(CPP):	include/H263plusVideoRTPSink.hh
 include/H263plusVideoRTPSink.hh:	include/VideoRTPSink.hh
-H264VideoRTPSink.$(CPP):	include/H264VideoRTPSink.hh include/H264VideoStreamFramer.hh include/Base64.hh
+H264VideoRTPSink.$(CPP):	include/H264VideoRTPSink.hh include/H264VideoStreamFramer.hh include/Base64.hh include/H264VideoRTPSource.hh
 include/H264VideoRTPSink.hh:	include/VideoRTPSink.hh include/FramedFilter.hh
 DVVideoRTPSink.$(CPP):	include/DVVideoRTPSink.hh
 include/DVVideoRTPSink.hh:	include/VideoRTPSink.hh include/DVVideoStreamFramer.hh
@@ -270,7 +270,7 @@ include/RTSPServerSupportingHTTPStreaming.hh:	include/RTSPServer.hh include/Byte
 SIPClient.$(CPP):	include/SIPClient.hh
 include/SIPClient.hh:		include/MediaSession.hh include/DigestAuthentication.hh
 MediaSession.$(CPP):	include/liveMedia.hh include/Locale.hh
-include/MediaSession.hh:	include/RTCP.hh
+include/MediaSession.hh:	include/RTCP.hh include/FramedFilter.hh
 ServerMediaSession.$(CPP):	include/ServerMediaSession.hh
 PassiveServerMediaSubsession.$(CPP):	include/PassiveServerMediaSubsession.hh
 include/PassiveServerMediaSubsession.hh:	include/ServerMediaSession.hh include/RTPSink.hh include/RTCP.hh

@@ -27,9 +27,10 @@ VorbisAudioRTPSink::VorbisAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 				       unsigned numChannels,
 				       u_int8_t* identificationHeader, unsigned identificationHeaderSize,
 				       u_int8_t* commentHeader, unsigned commentHeaderSize,
-				       u_int8_t* setupHeader, unsigned setupHeaderSize)
+				       u_int8_t* setupHeader, unsigned setupHeaderSize,
+				       u_int32_t identField)
   : AudioRTPSink(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency, "VORBIS", numChannels),
-    fIdent(0xFACADE), fFmtpSDPLine(NULL) {
+    fIdent(identField), fFmtpSDPLine(NULL) {
   // Create packed configuration headers, and encode this data into a "a=fmtp:" SDP line that we'll use to describe it:
   
   // First, count how many headers (<=3) are included, and how many bytes will be used to encode these headers' sizes:
@@ -93,9 +94,9 @@ VorbisAudioRTPSink::VorbisAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
     }
   }
   // Copy each header:
-  memmove(p, identificationHeader, identificationHeaderSize); p += identificationHeaderSize;
-  memmove(p, commentHeader, commentHeaderSize); p += commentHeaderSize;
-  memmove(p, setupHeader, setupHeaderSize);
+  if (identificationHeader != NULL) memmove(p, identificationHeader, identificationHeaderSize); p += identificationHeaderSize;
+  if (commentHeader != NULL) memmove(p, commentHeader, commentHeaderSize); p += commentHeaderSize;
+  if (setupHeader != NULL) memmove(p, setupHeader, setupHeaderSize);
   
   // Having set up the 'packed configuration headers', Base-64-encode this, and put it in our "a=fmtp:" SDP line:
   char* base64PackedHeaders = base64Encode((char const*)packedHeaders, packedHeadersSize);
@@ -124,6 +125,93 @@ VorbisAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 				setupHeader, setupHeaderSize);
 }
 
+#define ADVANCE(n) do { p += (n); rem -= (n); } while (0)
+#define GET_ENCODED_VAL(n) do { u_int8_t byte; n = 0; do { if (rem == 0) break; byte = *p; n = n*128 + byte&0x7F; ADVANCE(1); } while (byte&0x80); } while (0); if (rem == 0) break
+
+VorbisAudioRTPSink*
+VorbisAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
+			      u_int8_t rtpPayloadFormat, u_int32_t rtpTimestampFrequency, unsigned numChannels,
+			      char const* configStr) {
+  u_int8_t* identificationHeader = NULL; unsigned identificationHeaderSize = 0;
+  u_int8_t* commentHeader = NULL; unsigned commentHeaderSize = 0;
+  u_int8_t* setupHeader = NULL; unsigned setupHeaderSize = 0;
+  VorbisAudioRTPSink* resultSink = NULL;
+
+  // Begin by Base64-decoding the configuration string:
+  unsigned configDataSize;
+  u_int8_t* configData = base64Decode(configStr, configDataSize);
+  u_int8_t* p = configData;
+  unsigned rem = configDataSize;
+
+  do {
+    if (rem < 4) break;
+    u_int32_t numPackedHeaders = (p[0]<<24)|(p[1]<<16)|(p[2]<<8)|p[3]; ADVANCE(4);
+
+    if (numPackedHeaders == 0) break;
+    // Use the first 'packed header' only.
+
+    if (rem < 3) break;
+    u_int32_t ident = (p[0]<<16)|(p[1]<<8)|p[2]; ADVANCE(3);
+
+    if (rem < 2) break;
+    u_int16_t length = (p[0]<<8)|p[1]; ADVANCE(2);
+
+    unsigned numHeaders;
+    GET_ENCODED_VAL(numHeaders);
+
+    Boolean success = False;
+    for (unsigned i = 0; i < numHeaders+1 && i < 3; ++i) {
+      success = False;
+      unsigned headerSize;
+      if (i < numHeaders) {
+	// The header size is encoded:
+	GET_ENCODED_VAL(headerSize);
+	if (headerSize > length) break;
+	length -= headerSize;
+      } else {
+	// The last header is implicit:
+	headerSize = length;
+      }
+
+      // Allocate space for the header bytes; we'll fill it in later
+      if (i == 0) {
+	identificationHeaderSize = headerSize;
+	identificationHeader = new u_int8_t[identificationHeaderSize];
+      } else if (i == 1) {
+	commentHeaderSize = headerSize;
+	commentHeader = new u_int8_t[commentHeaderSize];
+      } else { // i == 2
+	setupHeaderSize = headerSize;
+	setupHeader = new u_int8_t[setupHeaderSize];
+      }
+
+      success = True;
+    }
+    if (!success) break;
+
+    // Copy the remaining config bytes into the appropriate 'header' buffers:
+    if (identificationHeader != NULL) {
+      memmove(identificationHeader, p, identificationHeaderSize); ADVANCE(identificationHeaderSize);
+      if (commentHeader != NULL) {
+	memmove(commentHeader, p, commentHeaderSize); ADVANCE(commentHeaderSize);
+	if (setupHeader != NULL) {
+	  memmove(setupHeader, p, setupHeaderSize); ADVANCE(setupHeaderSize);
+	}
+      }
+    }
+
+    resultSink = new VorbisAudioRTPSink(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency, numChannels,
+					identificationHeader, identificationHeaderSize,
+					commentHeader, commentHeaderSize,
+					setupHeader, setupHeaderSize,
+					ident);
+  } while (0);
+
+  delete[] configData;
+  delete[] identificationHeader; delete[] commentHeader; delete[] setupHeader;
+  return resultSink;
+}
+
 char const* VorbisAudioRTPSink::auxSDPLine() {
   return fFmtpSDPLine;
 }
@@ -137,7 +225,7 @@ void VorbisAudioRTPSink
   // Set the 4-byte "payload header", as defined in RFC 5215, section 2.2:
   u_int8_t header[4];
 
-  // The three bytes of the header are out "Ident":
+  // The three bytes of the header are our "Ident":
   header[0] = fIdent>>16; header[1] = fIdent>>8; header[2] = fIdent;
 
   // The final byte contains the "F", "VDT", and "numPkts" fields:

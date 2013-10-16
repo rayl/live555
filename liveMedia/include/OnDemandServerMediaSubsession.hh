@@ -75,7 +75,7 @@ protected: // new virtual functions, possibly redefined by subclasses
   virtual void seekStreamSource(FramedSource* inputSource, double& seekNPT, double streamDuration, u_int64_t& numBytes);
     // "streamDuration", if >0.0, specifies how much data to stream, past "seekNPT".  (If <=0.0, all remaining data is streamed.)
   virtual void setStreamSourceScale(FramedSource* inputSource, float scale);
-  virtual void closeStreamSource(FramedSource *inputSource);
+  virtual void closeStreamSource(FramedSource* inputSource);
 
 protected: // new virtual functions, defined by all subclasses
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,

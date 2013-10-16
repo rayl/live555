@@ -64,9 +64,16 @@ ServerMediaSession::ServerMediaSession(UsageEnvironment& env,
     fSubsessionsTail(NULL), fSubsessionCounter(0),
     fReferenceCount(0), fDeleteWhenUnreferenced(False) {
   fStreamName = strDup(streamName == NULL ? "" : streamName);
-  fInfoSDPString = strDup(info == NULL ? libNameStr : info);
-  fDescriptionSDPString
-    = strDup(description == NULL ? libNameStr : description);
+
+  char* libNamePlusVersionStr = NULL; // by default
+  if (info == NULL || description == NULL) {
+    libNamePlusVersionStr = new char[strlen(libNameStr) + strlen(libVersionStr) + 1];
+    sprintf(libNamePlusVersionStr, "%s%s", libNameStr, libVersionStr);
+  }
+  fInfoSDPString = strDup(info == NULL ? libNamePlusVersionStr : info);
+  fDescriptionSDPString = strDup(description == NULL ? libNamePlusVersionStr : description);
+  delete[] libNamePlusVersionStr;
+
   fMiscSDPLines = strDup(miscSDPLines == NULL ? "" : miscSDPLines);
 
   gettimeofday(&fCreationTime, NULL);

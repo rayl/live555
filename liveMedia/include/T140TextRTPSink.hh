@@ -89,6 +89,9 @@ private:
   Boolean deliverFromBuffer();
   void deliverEmptyFrame();
 
+  static void onSourceClosure(void* clientData);
+  void onSourceClosure();
+
 private:
   TaskToken fIdleTimerTask;
   unsigned fBufferSize, fNumBufferedBytes;

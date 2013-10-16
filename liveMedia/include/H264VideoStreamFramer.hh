@@ -43,6 +43,10 @@ public:
     saveCopyOfSPS(sps, spsSize);
     saveCopyOfPPS(pps, ppsSize);
   }
+  void setSPSandPPS(char const* sPropParameterSetsStr);
+    // As above, except that the SPS and PPS NAL units are decoded from the input string, which must be a Base-64 encoding of
+    // these NAL units (in either order), separated by a comma.  (This string is typically found in a SDP description, and
+    // accessed using "MediaSubsession::fmtp_spropparametersets()".
 
 protected:
   H264VideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource, Boolean createParser, Boolean includeStartCodeInOutput);

@@ -1870,8 +1870,8 @@ addAtom(avcC);
 
   size_t comma_pos = strcspn(psets, ",");
   psets[comma_pos] = '\0';
-  char* sps_b64 = psets;
-  char* pps_b64 = &psets[comma_pos+1];
+  char const* sps_b64 = psets;
+  char const* pps_b64 = &psets[comma_pos+1];
   unsigned sps_count;
   unsigned char* sps_data = base64Decode(sps_b64, sps_count, false);
   unsigned pps_count;

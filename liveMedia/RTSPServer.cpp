@@ -367,12 +367,13 @@ void RTSPServer::RTSPClientSession::handleAlternativeRequestByte(void* instance,
 
 void RTSPServer::RTSPClientSession::handleAlternativeRequestByte1(u_int8_t requestByte) {
   // Add this character to our buffer; then try to handle the data that we have buffered so far:
-  if (fRequestBufferBytesLeft == 0|| fRequestBytesAlreadySeen >= RTSP_BUFFER_SIZE) return;
+  if (fRequestBufferBytesLeft == 0 || fRequestBytesAlreadySeen >= RTSP_BUFFER_SIZE) return;
   fRequestBuffer[fRequestBytesAlreadySeen] = requestByte;
   handleRequestBytes(1);
 }
 
 void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
+  int numBytesRemaining = 0;
   ++fRecursionCount;
 
   do {
@@ -392,7 +393,8 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
     unsigned char* ptr = &fRequestBuffer[fRequestBytesAlreadySeen];
 #ifdef DEBUG
     ptr[newBytesRead] = '\0';
-    fprintf(stderr, "RTSPClientSession[%p]::handleRequestBytes() read %d new bytes:%s\n", this, newBytesRead, ptr);
+    fprintf(stderr, "RTSPClientSession[%p]::handleRequestBytes() %s %d new bytes:%s\n",
+	    this, numBytesRemaining > 0 ? "processing" : "read", newBytesRead, ptr);
 #endif
     
     if (fClientOutputSocket != fClientInputSocket) {
@@ -404,7 +406,7 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
       if (numBytesToDecode > 0) {
 	ptr[newBytesRead] = '\0';
 	unsigned decodedSize;
-	unsigned char* decodedBytes = base64Decode((char*)(ptr-fBase64RemainderCount), decodedSize);
+	unsigned char* decodedBytes = base64Decode((char const*)(ptr-fBase64RemainderCount), decodedSize);
 #ifdef DEBUG
 	fprintf(stderr, "Base64-decoded %d input bytes into %d new bytes:", numBytesToDecode, decodedSize);
 	for (unsigned k = 0; k < decodedSize; ++k) fprintf(stderr, "%c", decodedBytes[k]);
@@ -451,12 +453,15 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
     char urlSuffix[RTSP_PARAM_STRING_MAX];
     char cseq[RTSP_PARAM_STRING_MAX];
     unsigned contentLength;
-    if (parseRTSPRequestString((char*)fRequestBuffer, fRequestBytesAlreadySeen,
-			       cmdName, sizeof cmdName,
-			       urlPreSuffix, sizeof urlPreSuffix,
-			       urlSuffix, sizeof urlSuffix,
-			       cseq, sizeof cseq,
-			       contentLength)) {
+    *fLastCRLF = '\0'; // temporarily, for parsing
+    Boolean parseSucceeded = parseRTSPRequestString((char*)fRequestBuffer, fRequestBytesAlreadySeen,
+						    cmdName, sizeof cmdName,
+						    urlPreSuffix, sizeof urlPreSuffix,
+						    urlSuffix, sizeof urlSuffix,
+						    cseq, sizeof cseq,
+						    contentLength);
+    *fLastCRLF = '\r';
+    if (parseSucceeded) {
 #ifdef DEBUG
       fprintf(stderr, "parseRTSPRequestString() succeeded, returning cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\", CSeq \"%s\", Content-Length %u, with %d bytes following the message.\n", cmdName, urlPreSuffix, urlSuffix, cseq, contentLength, ptr + newBytesRead - (tmpPtr + 2));
 #endif
@@ -485,10 +490,13 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
       // The request was not (valid) RTSP, but check for a special case: HTTP commands (for setting up RTSP-over-HTTP tunneling):
       char sessionCookie[RTSP_PARAM_STRING_MAX];
       char acceptStr[RTSP_PARAM_STRING_MAX];
-      if (parseHTTPRequestString(cmdName, sizeof cmdName,
-				 urlSuffix, sizeof urlPreSuffix,
-				 sessionCookie, sizeof sessionCookie,
-				 acceptStr, sizeof acceptStr)) {
+      *fLastCRLF = '\0'; // temporarily, for parsing
+      parseSucceeded = parseHTTPRequestString(cmdName, sizeof cmdName,
+					      urlSuffix, sizeof urlPreSuffix,
+					      sessionCookie, sizeof sessionCookie,
+					      acceptStr, sizeof acceptStr);
+      *fLastCRLF = '\r';
+      if (parseSucceeded) {
 #ifdef DEBUG
 	fprintf(stderr, "parseHTTPRequestString() succeeded, returning cmdName \"%s\", urlSuffix \"%s\", sessionCookie \"%s\", acceptStr \"%s\"\n", cmdName, urlSuffix, sessionCookie, acceptStr);
 #endif
@@ -540,8 +548,17 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
 			      (char const*)fRequestBuffer);
     }
     
+    // Check whether there are extra bytes remaining in the buffer, after the end of the request (a rare case).
+    // If so, move them to the front of our buffer, and keep processing it, because it might be a following, pipelined request.
+    unsigned requestSize = (fLastCRLF+4-fRequestBuffer) + contentLength;
+    numBytesRemaining = fRequestBytesAlreadySeen - requestSize;
     resetRequestBuffer(); // to prepare for any subsequent request
-  } while (0);
+
+    if (numBytesRemaining > 0) {
+      memmove(fRequestBuffer, &fRequestBuffer[requestSize], numBytesRemaining);
+      newBytesRead = numBytesRemaining;
+    }
+  } while (numBytesRemaining > 0);
 
   --fRecursionCount;
   if (!fSessionIsActive) {
@@ -689,6 +706,7 @@ static void parseTransportHeader(char const* buf,
   // First, find "Transport:"
   while (1) {
     if (*buf == '\0') return; // not found
+    if (*buf == '\r' && *(buf+1) == '\n' && *(buf+2) == '\r') return; // end of the headers => not found
     if (_strncasecmp(buf, "Transport: ", 11) == 0) break;
     ++buf;
   }
@@ -696,7 +714,7 @@ static void parseTransportHeader(char const* buf,
   // Then, run through each of the fields, looking for ones we handle:
   char const* fields = buf + 11;
   char* field = strDupSize(fields);
-  while (sscanf(fields, "%[^;]", field) == 1) {
+  while (sscanf(fields, "%[^;\r\n]", field) == 1) {
     if (strcmp(field, "RTP/AVP/TCP") == 0) {
       streamingMode = RTP_TCP;
     } else if (strcmp(field, "RAW/RAW/UDP") == 0 ||
@@ -754,7 +772,7 @@ void RTSPServer::RTSPClientSession
     // First, make sure the specified stream name exists:
     fOurServerMediaSession = fOurServer.lookupServerMediaSession(streamName);
     if (fOurServerMediaSession == NULL) {
-      // Check for the special case (noted above), before we up:
+      // Check for the special case (noted above), before we give up:
       if (urlPreSuffix[0] == '\0') {
 	streamName = urlSuffix;
       } else {
@@ -1133,10 +1151,11 @@ void RTSPServer::RTSPClientSession
   char* rtpInfo = strDup("RTP-Info: ");
   unsigned i, numRTPInfoItems = 0;
 
-  // Do any required seeking/scaling on each subsession, before starting streaming:
+  // Do any required seeking/scaling on each subsession, before starting streaming.
+  // (However, we don't do this if the "PLAY" request was for just a single subsession of a multiple-subsession stream;
+  //  for such streams, seeking/scaling can be done only with an aggregate "PLAY".)
   for (i = 0; i < fNumStreamStates; ++i) {
-    if (subsession == NULL /* means: aggregated operation */
-	|| subsession == fStreamStates[i].subsession) {
+    if (subsession == NULL /* means: aggregated operation */ || fNumStreamStates == 1) {
       if (sawScaleHeader) {
 	fStreamStates[i].subsession->setStreamScale(fOurSessionId,
 						    fStreamStates[i].streamToken,

@@ -68,7 +68,7 @@ private:
 
   void lookForNextBlock();
   void parseBlock();
-  void deliverFrameWithinBlock();
+  Boolean deliverFrameWithinBlock();
   void deliverFrameBytes();
 
   void getCommonFrameBytes(MatroskaTrack* track, u_int8_t* to, unsigned numBytesToGet, unsigned numBytesToSkip);

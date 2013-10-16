@@ -49,6 +49,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _RTCP_HH
 #include "RTCP.hh"
 #endif
+#ifndef _FRAMED_FILTER_HH
+#include "FramedFilter.hh"
+#endif
 
 class MediaSubsession; // forward
 
@@ -165,6 +168,8 @@ public:
   FramedSource* readSource() { return fReadSource; }
     // This is the source that client sinks read from.  It is usually
     // (but not necessarily) the same as "rtpSource()"
+  void addFilter(FramedFilter* filter);
+    // Changes "readSource()" to "filter" (which must have just been created with "readSource()" as its input)
 
   double playStartTime() const;
   double playEndTime() const;
@@ -181,12 +186,16 @@ public:
       // this subsession would use.  (By default, the client port number
       // is gotten from the original SDP description, or - if the SDP
       // description does not specfy a client port number - an ephemeral
-      // (even) port number is chosen.)  This routine should *not* be
+      // (even) port number is chosen.)  This routine must *not* be
       // called after initiate().
+  void receiveRawMP3ADUs() { fReceiveRawMP3ADUs = True; } // optional hack for audio/MPA-ROBUST; must not be called after Initiate()
   char*& connectionEndpointName() { return fConnectionEndpointName; }
   char const* connectionEndpointName() const {
     return fConnectionEndpointName;
   }
+
+  // 'Bandwidth' parameter, set in the "b=" SDP line:
+  unsigned bandwidth() const { return fBandwidth; }
 
   // Various parameters set in "a=fmtp:" SDP lines:
   unsigned fmtp_auxiliarydatasizelength() const { return fAuxiliarydatasizelength; }
@@ -311,10 +320,11 @@ protected:
   float fScale; // set from a RTSP "Scale:" header
   double fNPT_PTS_Offset; // set by "getNormalPlayTime()"; add this to a PTS to get NPT
 
-  // Fields set by initiate():
+  // Fields set or used by initiate():
   Groupsock* fRTPSocket; Groupsock* fRTCPSocket; // works even for unicast
   RTPSource* fRTPSource; RTCPInstance* fRTCPInstance;
   FramedSource* fReadSource;
+  Boolean fReceiveRawMP3ADUs;
 
   // Other fields:
   char* fSessionId; // used by RTSP

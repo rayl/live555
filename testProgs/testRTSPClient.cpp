@@ -186,7 +186,7 @@ void continueAfterDESCRIBE(RTSPClient* rtspClient, int resultCode, char* resultS
       break;
     }
 
-    char* sdpDescription = resultString;
+    char* const sdpDescription = resultString;
     env << *rtspClient << "Got a SDP description:\n" << sdpDescription << "\n";
 
     // Create a media session object from this SDP description:

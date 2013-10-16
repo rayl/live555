@@ -101,7 +101,7 @@ void T140IdleFilter::doGetNextFrame() {
   // But also set a timer to expire if this doesn't arrive promptly:
   fIdleTimerTask = envir().taskScheduler().scheduleDelayedTask(IDLE_TIMEOUT_MICROSECONDS, handleIdleTimeout, this);
   if (fInputSource != NULL && !fInputSource->isCurrentlyAwaitingData()) {
-    fInputSource->getNextFrame((unsigned char*)fBuffer, fBufferSize, afterGettingFrame, this, FramedSource::handleClosure, this);
+    fInputSource->getNextFrame((unsigned char*)fBuffer, fBufferSize, afterGettingFrame, this, onSourceClosure, this);
   }
 }
 
@@ -172,4 +172,15 @@ void T140IdleFilter::deliverEmptyFrame() {
   fFrameSize = fNumTruncatedBytes = 0;
   gettimeofday(&fPresentationTime, NULL);
   FramedSource::afterGetting(this); // complete delivery
+}
+
+void T140IdleFilter::onSourceClosure(void* clientData) {
+  ((T140IdleFilter*)clientData)->onSourceClosure();
+}
+
+void T140IdleFilter::onSourceClosure() {
+  envir().taskScheduler().unscheduleDelayedTask(fIdleTimerTask);
+  fIdleTimerTask = NULL;
+
+  FramedSource::handleClosure(this);
 }

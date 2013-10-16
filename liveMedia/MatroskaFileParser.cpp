@@ -157,7 +157,7 @@ Boolean MatroskaFileParser::parse() {
 	  break;
 	}
         case DELIVERING_FRAME_WITHIN_BLOCK: {
-	  deliverFrameWithinBlock();
+	  if (!deliverFrameWithinBlock()) return False;
 	  break;
 	}
         case DELIVERING_FRAME_BYTES: {
@@ -865,7 +865,7 @@ void MatroskaFileParser::parseBlock() {
   fCurrentParseState = LOOKING_FOR_BLOCK;
 }
 
-void MatroskaFileParser::deliverFrameWithinBlock() {
+Boolean MatroskaFileParser::deliverFrameWithinBlock() {
 #ifdef DEBUG
   fprintf(stderr, "delivering frame within SimpleBlock or Block\n");
 #endif
@@ -885,7 +885,7 @@ void MatroskaFileParser::deliverFrameWithinBlock() {
       fprintf(stderr, "\n");
 #endif
       restoreSavedParserState(); // so we read from the beginning next time
-      return;
+      return False;
     }
 
     unsigned frameSize = fFrameSizesWithinBlock[fNextFrameNumberToDeliver];
@@ -968,7 +968,7 @@ void MatroskaFileParser::deliverFrameWithinBlock() {
     // Next, deliver (and/or skip) bytes from the input file:
     fCurrentParseState = DELIVERING_FRAME_BYTES;
     setParseState();
-    return;
+    return True;
   } while (0);
 
   // An error occurred.  Try to recover:
@@ -976,6 +976,7 @@ void MatroskaFileParser::deliverFrameWithinBlock() {
   fprintf(stderr, "deliverFrameWithinBlock(): Error parsing data; trying to recover...\n");
 #endif
   fCurrentParseState = LOOKING_FOR_BLOCK;
+  return True;
 }
 
 void MatroskaFileParser::deliverFrameBytes() {

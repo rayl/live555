@@ -1365,215 +1365,250 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
   fResponseBuffer[fResponseBytesAlreadySeen] = '\0';
   if (fVerbosityLevel >= 1 && newBytesRead > 1) envir() << "Received " << newBytesRead << " new bytes of response data.\n";
   
-  // Data was read OK.  Look through the data that we've read so far, to see if it contains <CR><LF><CR><LF>.
-  // (If not, wait for more data to arrive.)
-  Boolean endOfHeaders = False;
-  if (fResponseBytesAlreadySeen > 3) {
-    char const* const ptrEnd = &fResponseBuffer[fResponseBytesAlreadySeen-3];
-    char const* ptr = fResponseBuffer;
-    while (ptr < ptrEnd) {
-      if (*ptr++ == '\r' && *ptr++ == '\n' && *ptr++ == '\r' && *ptr++ == '\n') {
-	// This is it
-        endOfHeaders = True;
-        break;
-      }
-    }
-  }
-
-  if (!endOfHeaders) return; // subsequent reads will be needed to get the complete response
-
-  // Now that we have the complete response headers (ending with <CR><LF><CR><LF>), parse them to get the response code, CSeq,
-  // and various other header parameters.  To do this, we first make a copy of the received header data, because we'll be modifying
-  // it by adding '\0' bytes.
-  char* headerDataCopy;
-  unsigned responseCode = 200;
-  char const* responseStr = NULL;
-  RequestRecord* foundRequest = NULL;
-  char const* sessionParamsStr = NULL;
-  char const* transportParamsStr = NULL;
-  char const* scaleParamsStr = NULL;
-  char const* rangeParamsStr = NULL;
-  char const* rtpInfoParamsStr = NULL;
-  char const* wwwAuthenticateParamsStr = NULL;
-  char const* publicParamsStr = NULL;
-  char* bodyStart = NULL;
-  unsigned numBodyBytes = 0;
-  Boolean responseSuccess = False; // by default
+  unsigned numExtraBytesAfterResponse = 0;
   do {
-    headerDataCopy = new char[responseBufferSize];
-    strncpy(headerDataCopy, fResponseBuffer, fResponseBytesAlreadySeen);
-    headerDataCopy[fResponseBytesAlreadySeen] = '\0';
-
-    char* lineStart = headerDataCopy;
-    char* nextLineStart = getLine(lineStart);
-    if (!parseResponseCode(lineStart, responseCode, responseStr)) {
-      // This does not appear to be a RTSP response; perhaps it's a RTSP request instead?
-      handleIncomingRequest();
-      break; // we're done with this data
-    }
-
-    // Scan through the headers, handling the ones that we're interested in:
-    Boolean reachedEndOfHeaders;
-    unsigned cseq = 0;
-    unsigned contentLength = 0;
-
-    while (1) {
-      reachedEndOfHeaders = True; // by default; may get changed below
-      lineStart = nextLineStart;
-      if (lineStart == NULL) break;
-
-      nextLineStart = getLine(lineStart);
-      if (lineStart[0] == '\0') break; // this is a blank line
-      reachedEndOfHeaders = False;
-
-      char const* headerParamsStr; 
-      if (checkForHeader(lineStart, "CSeq:", 5, headerParamsStr)) {
-        if (sscanf(headerParamsStr, "%u", &cseq) != 1 || cseq <= 0) {
-	  envir().setResultMsg("Bad \"CSeq:\" header: \"", lineStart, "\"");
+    // Data was read OK.  Look through the data that we've read so far, to see if it contains <CR><LF><CR><LF>.
+    // (If not, wait for more data to arrive.)
+    Boolean endOfHeaders = False;
+    char const* ptr = fResponseBuffer;
+    if (fResponseBytesAlreadySeen > 3) {
+      char const* const ptrEnd = &fResponseBuffer[fResponseBytesAlreadySeen-3];
+      while (ptr < ptrEnd) {
+	if (*ptr++ == '\r' && *ptr++ == '\n' && *ptr++ == '\r' && *ptr++ == '\n') {
+	  // This is it
+	  endOfHeaders = True;
 	  break;
 	}
-        // Find the handler function for "cseq":
-	RequestRecord* request;
-	while ((request = fRequestsAwaitingResponse.dequeue()) != NULL) {
-          if (request->cseq() < cseq) { // assumes that the CSeq counter will never wrap around
-            // We never received (and will never receive) a response for this handler, so delete it:
-            delete request;
-          } else if (request->cseq() == cseq) {
-            // This is the handler that we want. Remove its record, but remember it, so that we can later call its handler:
-            foundRequest = request;
-            break;
-          } else { // request->cseq() > cseq
-            // No handler was registered for this response, so ignore it.
-            break;
-          }
-        }
-      } else if (checkForHeader(lineStart, "Content-Length:", 15, headerParamsStr)) {
-        if (sscanf(headerParamsStr, "%u", &contentLength) != 1) {
-	  envir().setResultMsg("Bad \"Content-Length:\" header: \"", lineStart, "\"");
+      }
+    }
+    
+    if (!endOfHeaders) return; // subsequent reads will be needed to get the complete response
+    
+    // Now that we have the complete response headers (ending with <CR><LF><CR><LF>), parse them to get the response code, CSeq,
+    // and various other header parameters.  To do this, we first make a copy of the received header data, because we'll be
+    // modifying it by adding '\0' bytes.
+    char* headerDataCopy;
+    unsigned responseCode = 200;
+    char const* responseStr = NULL;
+    RequestRecord* foundRequest = NULL;
+    char const* sessionParamsStr = NULL;
+    char const* transportParamsStr = NULL;
+    char const* scaleParamsStr = NULL;
+    char const* rangeParamsStr = NULL;
+    char const* rtpInfoParamsStr = NULL;
+    char const* wwwAuthenticateParamsStr = NULL;
+    char const* publicParamsStr = NULL;
+    char* bodyStart = NULL;
+    unsigned numBodyBytes = 0;
+    Boolean responseSuccess = False; // by default
+    do {
+      headerDataCopy = new char[responseBufferSize];
+      strncpy(headerDataCopy, fResponseBuffer, fResponseBytesAlreadySeen);
+      headerDataCopy[fResponseBytesAlreadySeen] = '\0';
+      
+      char* lineStart = headerDataCopy;
+      char* nextLineStart = getLine(lineStart);
+      if (!parseResponseCode(lineStart, responseCode, responseStr)) {
+	// This does not appear to be a RTSP response; perhaps it's a RTSP request instead?
+	handleIncomingRequest();
+	break; // we're done with this data
+      }
+      
+      // Scan through the headers, handling the ones that we're interested in:
+      Boolean reachedEndOfHeaders;
+      unsigned cseq = 0;
+      unsigned contentLength = 0;
+      
+      while (1) {
+	reachedEndOfHeaders = True; // by default; may get changed below
+	lineStart = nextLineStart;
+	if (lineStart == NULL) break;
+	
+	nextLineStart = getLine(lineStart);
+	if (lineStart[0] == '\0') break; // this is a blank line
+	reachedEndOfHeaders = False;
+	
+	char const* headerParamsStr; 
+	if (checkForHeader(lineStart, "CSeq:", 5, headerParamsStr)) {
+	  if (sscanf(headerParamsStr, "%u", &cseq) != 1 || cseq <= 0) {
+	    envir().setResultMsg("Bad \"CSeq:\" header: \"", lineStart, "\"");
+	    break;
+	  }
+	  // Find the handler function for "cseq":
+	  RequestRecord* request;
+	  while ((request = fRequestsAwaitingResponse.dequeue()) != NULL) {
+	    if (request->cseq() < cseq) { // assumes that the CSeq counter will never wrap around
+	      // We never received (and will never receive) a response for this handler, so delete it:
+	      if (fVerbosityLevel >= 1) {
+		envir() << "WARNING: The server did not respond to our \"" << request->commandName() << "\" request (CSeq: "
+			<< request->cseq() << ").  The server appears to be buggy (perhaps not handling pipelined requests properly).\n";
+	      }
+	      delete request;
+	    } else if (request->cseq() == cseq) {
+	      // This is the handler that we want. Remove its record, but remember it, so that we can later call its handler:
+	      foundRequest = request;
+	      break;
+	    } else { // request->cseq() > cseq
+	      // No handler was registered for this response, so ignore it.
+	      break;
+	    }
+	  }
+	} else if (checkForHeader(lineStart, "Content-Length:", 15, headerParamsStr)) {
+	  if (sscanf(headerParamsStr, "%u", &contentLength) != 1) {
+	    envir().setResultMsg("Bad \"Content-Length:\" header: \"", lineStart, "\"");
+	    break;
+	  }
+	} else if (checkForHeader(lineStart, "Content-Base:", 13, headerParamsStr)) {
+	  setBaseURL(headerParamsStr);
+	} else if (checkForHeader(lineStart, "Session:", 8, sessionParamsStr)) {
+	} else if (checkForHeader(lineStart, "Transport:", 10, transportParamsStr)) {
+	} else if (checkForHeader(lineStart, "Scale:", 6, scaleParamsStr)) {
+	} else if (checkForHeader(lineStart, "Range:", 6, rangeParamsStr)) {
+	} else if (checkForHeader(lineStart, "RTP-Info:", 9, rtpInfoParamsStr)) {
+	} else if (checkForHeader(lineStart, "WWW-Authenticate:", 17, headerParamsStr)) {
+	  // If we've already seen a "WWW-Authenticate:" header, then we replace it with this new one only if
+	  // the new one specifies "Digest" authentication:
+	  if (wwwAuthenticateParamsStr == NULL || _strncasecmp(headerParamsStr, "Digest", 6) == 0) {
+	    wwwAuthenticateParamsStr = headerParamsStr;
+	  }
+	} else if (checkForHeader(lineStart, "Public:", 7, publicParamsStr)) {
+	} else if (checkForHeader(lineStart, "Allow:", 6, publicParamsStr)) {
+	  // Note: we accept "Allow:" instead of "Public:", so that "OPTIONS" requests made to HTTP servers will work.
+	} else if (checkForHeader(lineStart, "Location:", 9, headerParamsStr)) {
+	  setBaseURL(headerParamsStr);
+	}
+      }
+      if (!reachedEndOfHeaders) break; // an error occurred
+      
+      if (foundRequest == NULL) {
+	// Hack: The response didn't have a "CSeq:" header; assume it's for our most recent request:
+	foundRequest = fRequestsAwaitingResponse.dequeue();
+      }
+      
+      // If we saw a "Content-Length:" header, then make sure that we have the amount of data that it specified:
+      unsigned bodyOffset = nextLineStart - headerDataCopy;
+      bodyStart = &fResponseBuffer[bodyOffset];
+      numBodyBytes = fResponseBytesAlreadySeen - bodyOffset;
+      if (contentLength > numBodyBytes) {
+	// We need to read more data.  First, make sure we have enough space for it:
+	unsigned numExtraBytesNeeded = contentLength - numBodyBytes;
+	unsigned remainingBufferSize = responseBufferSize - fResponseBytesAlreadySeen;
+	if (numExtraBytesNeeded > remainingBufferSize) {
+	  char tmpBuf[200];
+	  sprintf(tmpBuf, "Response buffer size (%d) is too small for \"Content-Length:\" %d (need a buffer size of >= %d bytes\n",
+		  responseBufferSize, contentLength, fResponseBytesAlreadySeen + numExtraBytesNeeded);
+	  envir().setResultMsg(tmpBuf);
 	  break;
 	}
-      } else if (checkForHeader(lineStart, "Content-Base:", 13, headerParamsStr)) {
-        setBaseURL(headerParamsStr);
-      } else if (checkForHeader(lineStart, "Session:", 8, sessionParamsStr)) {
-      } else if (checkForHeader(lineStart, "Transport:", 10, transportParamsStr)) {
-      } else if (checkForHeader(lineStart, "Scale:", 6, scaleParamsStr)) {
-      } else if (checkForHeader(lineStart, "Range:", 6, rangeParamsStr)) {
-      } else if (checkForHeader(lineStart, "RTP-Info:", 9, rtpInfoParamsStr)) {
-      } else if (checkForHeader(lineStart, "WWW-Authenticate:", 17, headerParamsStr)) {
-	// If we've already seen a "WWW-Authenticate:" header, then we replace it with this new one only if
-	// the new one specifies "Digest" authentication:
-	if (wwwAuthenticateParamsStr == NULL || _strncasecmp(headerParamsStr, "Digest", 6) == 0) {
-	  wwwAuthenticateParamsStr = headerParamsStr;
+	
+	if (fVerbosityLevel >= 1) {
+	  envir() << "Have received " << fResponseBytesAlreadySeen << " total bytes of a "
+		  << (foundRequest != NULL ? foundRequest->commandName() : "(unknown)")
+		  << " RTSP response; awaiting " << numExtraBytesNeeded << " bytes more.\n";
 	}
-      } else if (checkForHeader(lineStart, "Public:", 7, publicParamsStr)) {
-      } else if (checkForHeader(lineStart, "Allow:", 6, publicParamsStr)) {
-	// Note: we accept "Allow:" instead of "Public:", so that "OPTIONS" requests made to HTTP servers will work.
-      } else if (checkForHeader(lineStart, "Location:", 9, headerParamsStr)) {
-        setBaseURL(headerParamsStr);
+	delete[] headerDataCopy;
+	if (foundRequest != NULL) fRequestsAwaitingResponse.putAtHead(foundRequest);// put our request record back; we need it again
+	return; // We need to read more data
       }
-    }
-    if (!reachedEndOfHeaders) break; // an error occurred
-
-    if (foundRequest == NULL) {
-      // Hack: The response didn't have a "CSeq:" header; assume it's for our most recent request:
-      foundRequest = fRequestsAwaitingResponse.dequeue();
-    }
-
-    // If we saw a "Content-Length:" header, then make sure that we have the amount of data that it specified:
-    unsigned bodyOffset = nextLineStart - headerDataCopy;
-    bodyStart = &fResponseBuffer[bodyOffset];
-    numBodyBytes = fResponseBytesAlreadySeen - bodyOffset;
-    if (contentLength > numBodyBytes) {
-      // We need to read more data.  First, make sure we have enough space for it:
-      unsigned numExtraBytesNeeded = contentLength - numBodyBytes;
-      unsigned remainingBufferSize = responseBufferSize - fResponseBytesAlreadySeen;
-      if (numExtraBytesNeeded > remainingBufferSize) {
-        char tmpBuf[200];
-	sprintf(tmpBuf, "Response buffer size (%d) is too small for \"Content-Length:\" %d (need a buffer size of >= %d bytes\n",
-                responseBufferSize, contentLength, fResponseBytesAlreadySeen + numExtraBytesNeeded);
-	envir().setResultMsg(tmpBuf);
-        break;
-      }
+      
+      // We now have a complete response (including all bytes specified by the "Content-Length:" header, if any).
+      char* responseEnd = bodyStart + contentLength;
+      numExtraBytesAfterResponse = &fResponseBuffer[fResponseBytesAlreadySeen] - responseEnd;
 
       if (fVerbosityLevel >= 1) {
-        envir() << "Have received " << fResponseBytesAlreadySeen << " total bytes of a "
-                << (foundRequest != NULL ? foundRequest->commandName() : "(unknown)")
-                << " RTSP response; awaiting " << numExtraBytesNeeded << " bytes more.\n";
+	char saved = *responseEnd;
+	*responseEnd = '\0';
+	envir() << "Received a complete "
+		<< (foundRequest != NULL ? foundRequest->commandName() : "(unknown)")
+		<< " response:\n" << fResponseBuffer << "\n";
+	if (numExtraBytesAfterResponse > 0) envir() << "\t(plus " << numExtraBytesAfterResponse << " additional bytes)\n";
+	*responseEnd = saved;
       }
-      delete[] headerDataCopy;
-      if (foundRequest != NULL) fRequestsAwaitingResponse.putAtHead(foundRequest); // put back our request record; we need it again
-      return; // We need to read more data
-    }
-
-    // We now have a complete response (including all bytes specified by the "Content-Length:" header, if any).
-    if (fVerbosityLevel >= 1) {
-      envir() << "Received a complete "
-	      << (foundRequest != NULL ? foundRequest->commandName() : "(unknown)")
-	      << " response:\n" << fResponseBuffer << "\n";
-    }
-
-    if (foundRequest != NULL) {
-      Boolean needToResendCommand = False; // by default...
-      if (responseCode == 200) {
-	// Do special-case response handling for some commands:
-	if (strcmp(foundRequest->commandName(), "SETUP") == 0) {
-	  if (!handleSETUPResponse(*foundRequest->subsession(), sessionParamsStr, transportParamsStr, foundRequest->booleanFlags()&0x1)) break;
-	} else if (strcmp(foundRequest->commandName(), "PLAY") == 0) {
-	  if (!handlePLAYResponse(*foundRequest->session(), *foundRequest->subsession(), scaleParamsStr, rangeParamsStr, rtpInfoParamsStr)) break;
-	} else if (strcmp(foundRequest->commandName(), "TEARDOWN") == 0) {
-	  if (!handleTEARDOWNResponse(*foundRequest->session(), *foundRequest->subsession())) break;
-	} else if (strcmp(foundRequest->commandName(), "GET_PARAMETER") == 0) {
-	  if (!handleGET_PARAMETERResponse(foundRequest->contentStr(), bodyStart)) break;
+      
+      if (foundRequest != NULL) {
+	Boolean needToResendCommand = False; // by default...
+	if (responseCode == 200) {
+	  // Do special-case response handling for some commands:
+	  if (strcmp(foundRequest->commandName(), "SETUP") == 0) {
+	    if (!handleSETUPResponse(*foundRequest->subsession(), sessionParamsStr, transportParamsStr, foundRequest->booleanFlags()&0x1)) break;
+	  } else if (strcmp(foundRequest->commandName(), "PLAY") == 0) {
+	    if (!handlePLAYResponse(*foundRequest->session(), *foundRequest->subsession(), scaleParamsStr, rangeParamsStr, rtpInfoParamsStr)) break;
+	  } else if (strcmp(foundRequest->commandName(), "TEARDOWN") == 0) {
+	    if (!handleTEARDOWNResponse(*foundRequest->session(), *foundRequest->subsession())) break;
+	  } else if (strcmp(foundRequest->commandName(), "GET_PARAMETER") == 0) {
+	    if (!handleGET_PARAMETERResponse(foundRequest->contentStr(), bodyStart)) break;
+	  }
+	} else if (responseCode == 401 && handleAuthenticationFailure(wwwAuthenticateParamsStr)) {
+	  // We need to resend the command, with an "Authorization:" header:
+	  needToResendCommand = True;
+	  
+	  if (strcmp(foundRequest->commandName(), "GET") == 0) {
+	    // Note: If a HTTP "GET" command (for RTSP-over-HTTP tunneling) returns "401 Unauthorized", then we resend it
+	    // (with an "Authorization:" header), just as we would for a RTSP command.  However, we do so using a new TCP connection,
+	    // because some servers close the original connection after returning the "401 Unauthorized".
+	    resetTCPSockets(); // forces the opening of a new connection for the resent command
+	  }
+	} else if (responseCode == 301 || responseCode == 302) { // redirection
+	  resetTCPSockets(); // because we need to connect somewhere else next
+	  needToResendCommand = True;
 	}
-      } else if (responseCode == 401 && handleAuthenticationFailure(wwwAuthenticateParamsStr)) {
-	// We need to resend the command, with an "Authorization:" header:
-	needToResendCommand = True;
-
-	if (strcmp(foundRequest->commandName(), "GET") == 0) {
-	  // Note: If a HTTP "GET" command (for RTSP-over-HTTP tunneling) returns "401 Unauthorized", then we resend it
-	  // (with an "Authorization:" header), just as we would for a RTSP command.  However, we do so using a new TCP connection,
-	  // because some servers close the original connection after returning the "401 Unauthorized".
-	  resetTCPSockets(); // forces the opening of a new connection for the resent command
+	
+	if (needToResendCommand) {
+	  resetResponseBuffer();
+	  if (!resendCommand(foundRequest)) break;
+	  delete[] headerDataCopy;
+	  return; // without calling our response handler; the response to the resent command will do that
 	}
-      } else if (responseCode == 301 || responseCode == 302) { // redirection
-	resetTCPSockets(); // because we need to connect somewhere else next
-	needToResendCommand = True;
       }
-
-      if (needToResendCommand) {
-	resetResponseBuffer();
-	if (!resendCommand(foundRequest)) break;
-	delete[] headerDataCopy;
-	return; // without calling our response handler; the response to the resent command will do that
+      
+      responseSuccess = True;
+    } while (0);
+    
+    // If we have a handler function for this response, call it.
+    // But first, reset our response buffer, in case the handler goes to the event loop, and we end up getting called recursively:
+    if (numExtraBytesAfterResponse > 0) {
+      // An unusual case; usually due to having received pipelined responses.  Move the extra bytes to the front of the buffer:
+      char* responseEnd = &fResponseBuffer[fResponseBytesAlreadySeen - numExtraBytesAfterResponse];
+      
+      // But first: A hack to save a copy of the response 'body', in case it's needed below for "resultString":
+      numBodyBytes -= numExtraBytesAfterResponse;
+      if (numBodyBytes > 0) {
+	char saved = *responseEnd;
+	*responseEnd = '\0';
+	bodyStart = strDup(bodyStart);
+	*responseEnd = saved;
       }
-    }
-
-    responseSuccess = True;
-  } while (0);
-
-  // If we have a handler function for this response, call it:
-  resetResponseBuffer(); // in preparation for our next response.  Do this now, in case the handler function goes to the event loop.
-  if (foundRequest != NULL && foundRequest->handler() != NULL) {
-    int resultCode;
-    char* resultString;
-    if (responseSuccess) {
-      if (responseCode == 200) {
-        resultCode = 0;
-        resultString = numBodyBytes != 0 ? strDup(bodyStart) : strDup(publicParamsStr);
-          // Note: The "strDup(bodyStart)" call assumes that the body is encoded without interior '\0' bytes
-      } else {
-        resultCode = responseCode;
-        resultString = strDup(responseStr);
-        envir().setResultMsg(responseStr);
-      }
-      (*foundRequest->handler())(this, resultCode, resultString);
+      
+      memmove(fResponseBuffer, responseEnd, numExtraBytesAfterResponse);
+      fResponseBytesAlreadySeen = numExtraBytesAfterResponse;
+      fResponseBufferBytesLeft = responseBufferSize - numExtraBytesAfterResponse;
+      fResponseBuffer[numExtraBytesAfterResponse] = '\0';
     } else {
-      // An error occurred parsing the response, so call the handler, indicating an error:
-      handleRequestError(foundRequest);
+      resetResponseBuffer();
     }
-  }
-  delete foundRequest;
-  delete[] headerDataCopy;
+    if (foundRequest != NULL && foundRequest->handler() != NULL) {
+      int resultCode;
+      char* resultString;
+      if (responseSuccess) {
+	if (responseCode == 200) {
+	  resultCode = 0;
+	  resultString = numBodyBytes > 0 ? strDup(bodyStart) : strDup(publicParamsStr);
+          // Note: The "strDup(bodyStart)" call assumes that the body is encoded without interior '\0' bytes
+	} else {
+	  resultCode = responseCode;
+	  resultString = strDup(responseStr);
+	  envir().setResultMsg(responseStr);
+	}
+	(*foundRequest->handler())(this, resultCode, resultString);
+      } else {
+	// An error occurred parsing the response, so call the handler, indicating an error:
+	handleRequestError(foundRequest);
+      }
+    }
+    delete foundRequest;
+    delete[] headerDataCopy;
+    if (numExtraBytesAfterResponse > 0 && numBodyBytes > 0) delete[] bodyStart;
+  } while (numExtraBytesAfterResponse > 0);
 }
 
 

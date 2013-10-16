@@ -34,13 +34,19 @@ public:
 				       u_int8_t* identificationHeader, unsigned identificationHeaderSize,
 				       u_int8_t* commentHeader, unsigned commentHeaderSize,
 				       u_int8_t* setupHeader, unsigned setupHeaderSize);
-
+  static VorbisAudioRTPSink* createNew(UsageEnvironment& env,
+				       Groupsock* RTPgs,
+				       u_int8_t rtpPayloadFormat, u_int32_t rtpTimestampFrequency, unsigned numChannels,
+				       char const* configStr);
+    // an optional variant of "createNew()" that takes a Base-64-encoded 'configuration' string,
+    // rather than the raw configuration headers. as parameter.
 protected:
   VorbisAudioRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 		     u_int8_t rtpPayloadFormat, u_int32_t rtpTimestampFrequency, unsigned numChannels,
 		     u_int8_t* identificationHeader, unsigned identificationHeaderSize,
 		     u_int8_t* commentHeader, unsigned commentHeaderSize,
-		     u_int8_t* setupHeader, unsigned setupHeaderSize);
+		     u_int8_t* setupHeader, unsigned setupHeaderSize,
+		     u_int32_t identField = 0xFACADE);
 	// called only by createNew()
 
   virtual ~VorbisAudioRTPSink();

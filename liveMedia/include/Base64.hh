@@ -25,7 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "Boolean.hh"
 #endif
 
-unsigned char* base64Decode(char* in, unsigned& resultSize,
+unsigned char* base64Decode(char const* in, unsigned& resultSize,
 			    Boolean trimTrailingZeros = True);
     // returns a newly allocated array - of size "resultSize" - that
     // the caller is responsible for delete[]ing.

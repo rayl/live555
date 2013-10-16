@@ -21,26 +21,75 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "H264VideoRTPSink.hh"
 #include "H264VideoStreamFramer.hh"
 #include "Base64.hh"
+#include "H264VideoRTPSource.hh" // for "parseSPropParameterSets()"
 
 ////////// H264VideoRTPSink implementation //////////
 
 H264VideoRTPSink
-::H264VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		   unsigned char rtpPayloadFormat)
+::H264VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
+		   u_int8_t const* sps, unsigned spsSize, u_int8_t const* pps, unsigned ppsSize)
   : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 90000, "H264"),
     fOurFragmenter(NULL), fFmtpSDPLine(NULL) {
+  if (sps != NULL) {
+    fSPSSize = spsSize;
+    fSPS = new u_int8_t[fSPSSize];
+    memmove(fSPS, sps, fSPSSize);
+  } else {
+    fSPSSize = 0;
+    fSPS = NULL;
+  }
+  if (pps != NULL) {
+    fPPSSize = ppsSize;
+    fPPS = new u_int8_t[fPPSSize];
+    memmove(fPPS, pps, fPPSSize);
+  } else {
+    fPPSSize = 0;
+    fPPS = NULL;
+  }
 }
 
 H264VideoRTPSink::~H264VideoRTPSink() {
   fSource = fOurFragmenter; // hack: in case "fSource" had gotten set to NULL before we were called
   delete[] fFmtpSDPLine;
+  delete[] fSPS; delete[] fPPS;
   stopPlaying();
 }
 
 H264VideoRTPSink*
-H264VideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
-			    unsigned char rtpPayloadFormat) {
+H264VideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat) {
   return new H264VideoRTPSink(env, RTPgs, rtpPayloadFormat);
+}
+
+H264VideoRTPSink*
+H264VideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
+			    u_int8_t const* sps, unsigned spsSize, u_int8_t const* pps, unsigned ppsSize) {
+  return new H264VideoRTPSink(env, RTPgs, rtpPayloadFormat, sps, spsSize, pps, ppsSize);
+}
+
+H264VideoRTPSink*
+H264VideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
+			    char const* sPropParameterSetsStr) {
+  u_int8_t* sps = NULL; unsigned spsSize = 0;
+  u_int8_t* pps = NULL; unsigned ppsSize = 0;
+
+  unsigned numSPropRecords;
+  SPropRecord* sPropRecords = parseSPropParameterSets(sPropParameterSetsStr, numSPropRecords);
+  for (unsigned i = 0; i < numSPropRecords; ++i) {
+    if (sPropRecords[i].sPropLength == 0) continue; // bad data
+    u_int8_t nal_unit_type = (sPropRecords[i].sPropBytes[0])&0x1F;
+    if (nal_unit_type == 7/*SPS*/) {
+      sps = sPropRecords[i].sPropBytes;
+      spsSize = sPropRecords[i].sPropLength;
+    } else if (nal_unit_type == 8/*PPS*/) {
+      pps = sPropRecords[i].sPropBytes;
+      ppsSize = sPropRecords[i].sPropLength;
+    }
+  }
+
+  H264VideoRTPSink* result = new H264VideoRTPSink(env, RTPgs, rtpPayloadFormat, sps, spsSize, pps, ppsSize);
+  delete[] sPropRecords;
+
+  return result;
 }
 
 Boolean H264VideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
@@ -98,17 +147,20 @@ Boolean H264VideoRTPSink
 }
 
 char const* H264VideoRTPSink::auxSDPLine() {
-  // Generate a new "a=fmtp:" line each time, using parameters from
-  // our framer source (in case they've changed since the last time that
+  // Generate a new "a=fmtp:" line each time, using our SPS and PPS (if we have them),
+  // otherwise parameters from our framer source (in case they've changed since the last time that
   // we were called):
-  if (fOurFragmenter == NULL) return NULL; // we don't yet have a fragmenter (and therefore not a source)
-  H264VideoStreamFramer* framerSource = (H264VideoStreamFramer*)(fOurFragmenter->inputSource());
-  if (framerSource == NULL) return NULL; // we don't yet have a source
+  u_int8_t* sps = fSPS; unsigned spsSize = fSPSSize;
+  u_int8_t* pps = fPPS; unsigned ppsSize = fPPSSize;
+  if (sps == NULL || pps == NULL) {
+    // We need to get SPS and PPS from our framer source:
+    if (fOurFragmenter == NULL) return NULL; // we don't yet have a fragmenter (and therefore not a source)
+    H264VideoStreamFramer* framerSource = (H264VideoStreamFramer*)(fOurFragmenter->inputSource());
+    if (framerSource == NULL) return NULL; // we don't yet have a source
 
-  u_int8_t* sps; unsigned spsSize;
-  u_int8_t* pps; unsigned ppsSize;
-  framerSource->getSPSandPPS(sps, spsSize, pps, ppsSize);
-  if (sps == NULL || pps == NULL) return NULL; // our source isn't ready
+    framerSource->getSPSandPPS(sps, spsSize, pps, ppsSize);
+    if (sps == NULL || pps == NULL) return NULL; // our source isn't ready
+  }
 
   u_int32_t profile_level_id;
   if (spsSize < 4) { // sanity check
