@@ -484,11 +484,15 @@ void StreamState::pause() {
 }
 
 void StreamState::endPlaying(Destinations* dests) {
+#if 0
+  // The following code is temporarily disabled, because it erroneously sends RTCP "BYE"s to all clients if multiple
+  // clients are streaming from the samedata source (i.e., if "reuseFirstSource" is True).  It will be fixed for real later.
   if (fRTCPInstance != NULL) {
     // Hack: Explicitly send a RTCP "BYE" packet now, because the code below will prevent that from happening later,
     // when "fRTCPInstance" gets deleted:
     fRTCPInstance->sendBYE();
   }
+#endif
 
   if (dests->isTCP) {
     if (fRTPSink != NULL) {

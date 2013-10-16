@@ -305,67 +305,6 @@ private:
   char fSessionCookie[33];
   unsigned fSessionCookieCounter;
   Boolean fHTTPTunnelingConnectionIsPending;
-
-#ifdef RTSPCLIENT_SYNCHRONOUS_INTERFACE
-  // Old "RTSPClient" interface, which performs synchronous (blocking) operations.
-  // This will eventually go away, so new applications should not use it.
-public:
-  static RTSPClient* createNew(UsageEnvironment& env,
-                               int verbosityLevel = 0,
-                               char const* applicationName = NULL,
-                               portNumBits tunnelOverHTTPPortNum = 0);
-  char* describeURL(char const* url, Authenticator* authenticator = NULL,
-                    Boolean allowKasennaProtocol = False, int timeout = -1);
-  char* describeWithPassword(char const* url,
-			     char const* username, char const* password,
-			     Boolean allowKasennaProtocol = False, 
-			     int timeout = -1);
-  char* sendOptionsCmd(char const* url,
-		       char* username = NULL, char* password = NULL,
-		       Authenticator* authenticator = NULL,
-		       int timeout = -1);
-  Boolean announceSDPDescription(char const* url,
-				 char const* sdpDescription,
-				 Authenticator* authenticator = NULL,
-				 int timeout = -1);
-  Boolean announceWithPassword(char const* url, char const* sdpDescription,
-			       char const* username, char const* password, int timeout = -1);
-  Boolean setupMediaSubsession(MediaSubsession& subsession,
-			       Boolean streamOutgoing = False,
-			       Boolean streamUsingTCP = False,
-			       Boolean forceMulticastOnUnspecified = False);
-  Boolean playMediaSession(MediaSession& session,
-			   double start = 0.0f, double end = -1.0f,
-			   float scale = 1.0f);
-  Boolean playMediaSubsession(MediaSubsession& subsession,
-			      double start = 0.0f, double end = -1.0f,
-			      float scale = 1.0f,
-			      Boolean hackForDSS = False);
-  Boolean pauseMediaSession(MediaSession& session);
-  Boolean pauseMediaSubsession(MediaSubsession& subsession);
-  Boolean recordMediaSubsession(MediaSubsession& subsession);
-  Boolean setMediaSessionParameter(MediaSession& session,
-				   char const* parameterName,
-				   char const* parameterValue);
-  Boolean getMediaSessionParameter(MediaSession& session,
-				   char const* parameterName,
-				   char*& parameterValue);
-  Boolean teardownMediaSession(MediaSession& session);
-  Boolean teardownMediaSubsession(MediaSubsession& subsession);
-
-  static Boolean parseRTSPURLUsernamePassword(char const* url,
-					      char*& username, char*& password);
-private: // used to implement the old interface:
-  static void responseHandlerForSyncInterface(RTSPClient* rtspClient,
-					      int responseCode, char* responseString);
-  void responseHandlerForSyncInterface1(int responseCode, char* responseString);
-  static void timeoutHandlerForSyncInterface(void* rtspClient);
-  void timeoutHandlerForSyncInterface1();
-  TaskToken fTimeoutTask;
-  char fWatchVariableForSyncInterface;
-  char* fResultString;
-  int fResultCode;
-#endif
 };
 
 #endif

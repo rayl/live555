@@ -28,6 +28,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _MEDIA_SESSION_HH
 #include "MediaSession.hh"
 #endif
+#ifndef _RTSP_CLIENT_HH
+#include "RTSPClient.hh"
+#endif
 
 // A subclass of "RTSPClient", used to refer to the particular "ProxyServerMediaSession" object being used.
 // It is used only within the implementation of "ProxyServerMediaSession", but is defined here, in case developers wish to

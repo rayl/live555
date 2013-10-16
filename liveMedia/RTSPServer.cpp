@@ -20,9 +20,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "RTSPServer.hh"
 #include "RTSPCommon.hh"
+#include "ProxyServerMediaSession.hh"
 #include "Base64.hh"
 #include <GroupsockHelper.hh>
 
+#define DEBUG 1 //#####@@@@@
 ////////// RTSPServer implementation //////////
 
 RTSPServer*
@@ -108,6 +110,60 @@ void RTSPServer::deleteServerMediaSession(ServerMediaSession* serverMediaSession
 
 void RTSPServer::deleteServerMediaSession(char const* streamName) {
   deleteServerMediaSession((ServerMediaSession*)(fServerMediaSessions->Lookup(streamName)));
+}
+
+int RTSPServer::registerStream(ServerMediaSession* serverMediaSession,
+				    char const* remoteClientNameOrAddress, Port remotePort,
+				    responseHandlerForREGISTER* responseHandler) {
+  RegisterRequestRecord* registerRequest = new RegisterRequestRecord(*this, serverMediaSession, responseHandler);
+
+  do {
+    // Begin by resolving "remoteClientNameOrAddress" to an IP address (if it's not already one):
+    NetAddressList addresses(remoteClientNameOrAddress);
+    if (addresses.numAddresses() == 0) {
+      envir() << "Failed to find network address for \"" << remoteClientNameOrAddress << "\"";
+      break;
+    }
+    netAddressBits remoteAddress = *(unsigned*)(addresses.firstAddress()->data());
+
+    // Try to connect to this address, with the specified port:
+    int& sock = registerRequest->socketNum(); // alias
+    sock = setupStreamSocket(envir(), 0);
+    if (sock < 0) break;
+    ignoreSigPipeOnSocket(sock); // so that servers on the same host that get killed don't also kill us
+
+    MAKE_SOCKADDR_IN(remoteName, remoteAddress, remotePort.num());
+#ifdef DEBUG
+    fprintf(stderr, "REGISTER: connecting to %s (%s), port %u...\n",
+	    remoteClientNameOrAddress, AddressString(remoteAddress).val(), ntohs(remotePort.num()));
+#endif
+    if (connect(sock, (struct sockaddr*) &remoteName, sizeof remoteName) != 0) {
+      int const err = envir().getErrno();
+      if (err == EINPROGRESS || err == EWOULDBLOCK) {
+	// The connection is pending; we'll need to handle it later.  Wait for our socket to be 'writable', or have an exception.
+#ifdef DEBUG
+	fprintf(stderr, "...pending...\n");
+#endif
+	envir().taskScheduler().
+	  setBackgroundHandling(sock, SOCKET_WRITABLE|SOCKET_EXCEPTION,
+				(TaskScheduler::BackgroundHandlerProc*)&RegisterRequestRecord::connectionHandler, registerRequest);
+	return sock;
+      }
+
+      envir().setResultErrMsg("connect() failed: ");
+#ifdef DEBUG
+      fprintf(stderr, "...Failed:%s\n", envir().getResultMsg());
+#endif
+      break;
+    }
+
+    // Having connected to the remote site, use the socket to continue REGISTERing our stream:
+    return continueRegisterStream(registerRequest);
+  } while (0);
+
+  // An error occurred:
+  registerRequest->callResponseHandler(0, NULL);
+  return -1;
 }
 
 char* RTSPServer
@@ -230,6 +286,7 @@ RTSPServer::RTSPServer(UsageEnvironment& env,
     fClientConnections(HashTable::create(ONE_WORD_HASH_KEYS)),
     fClientConnectionsForHTTPTunneling(NULL), // will get created if needed
     fClientSessions(HashTable::create(STRING_HASH_KEYS)),
+    fPendingRegisterRequests(HashTable::create(ONE_WORD_HASH_KEYS)),
     fAuthDB(authDatabase), fReclamationTestSeconds(reclamationTestSeconds) {
   ignoreSigPipeOnSocket(ourSocket); // so that clients on the same host that are killed don't also kill us
 
@@ -267,6 +324,13 @@ RTSPServer::~RTSPServer() {
     removeServerMediaSession(serverMediaSession); // will delete it, because it no longer has any 'client session' objects using it
   }
   delete fServerMediaSessions;
+
+  // Delete any pending REGISTER requests:
+  RTSPServer::RegisterRequestRecord* registerRequest;
+  while ((registerRequest = (RTSPServer::RegisterRequestRecord*)fPendingRegisterRequests->getFirst()) != NULL) {
+    delete registerRequest;
+  }
+  delete fPendingRegisterRequests;
 }
 
 Boolean RTSPServer::isRTSPServer() const {
@@ -309,6 +373,31 @@ void RTSPServer::incomingConnectionHandler(int serverSocket) {
 
   // Create a new object for handling this RTSP connection:
   (void)createNewClientConnection(clientSocket, clientAddr);
+}
+
+int RTSPServer::continueRegisterStream(RegisterRequestRecord* registerRequest) {
+  // Now that a connection has been set up to the remote endpoint, construct and send the "REGISTER" command:
+  int& sock = registerRequest->socketNum(); // alias
+  char const* const formatStr =
+    "REGISTER %s RTSP/1.0\r\n"
+    "CSeq: 1\r\n\r\n";
+  char* ourURL = rtspURL(registerRequest->serverMediaSession(), sock);
+  char* cmdBuffer = new char[strlen(formatStr) + strlen(ourURL)]; // big enough to hold the command
+  sprintf(cmdBuffer, formatStr, ourURL);
+  delete[] ourURL;
+  
+#ifdef DEBUG
+  fprintf(stderr, "Sending command: %s", cmdBuffer);
+#endif
+  send(sock, (char const*)cmdBuffer, strlen(cmdBuffer), 0);
+  delete[] cmdBuffer;
+
+  // Having sent the "REGISTER" command, be prepared to handle a response:
+  envir().taskScheduler().
+    setBackgroundHandling(sock, SOCKET_READABLE|SOCKET_EXCEPTION,
+			  (TaskScheduler::BackgroundHandlerProc*)&RegisterRequestRecord::incomingResponseHandler, registerRequest);
+
+  return sock;
 }
 
 
@@ -449,6 +538,11 @@ static void lookForHeader(char const* headerName, char const* source, unsigned s
       }
     }
   }
+}
+
+void RTSPServer::RTSPClientConnection::handleCmd_REGISTER(char const* /*url*/, char const* urlSuffix, Boolean /*registerRemote*/) {
+  // By default, we don't handle "REGISTER" (or "REGISTER_REMOTE") commands; they are handled by proxies (or clients) only:
+  handleCmd_notSupported();
 }
 
 void RTSPServer::RTSPClientConnection::handleCmd_bad() {
@@ -793,6 +887,16 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
 	} else {
 	  clientSession->handleCmd_withinSession(this, cmdName, urlPreSuffix, urlSuffix, (char const*)fRequestBuffer);
 	}
+      } else if (strcmp(cmdName, "REGISTER") == 0 || strcmp(cmdName, "REGISTER_REMOTE") == 0) {
+	// Because - unlike other commands - an implementation of these commands needs the entire URL, we re-parse the
+	// command to get it:
+	char* url = strDupSize((char*)fRequestBuffer);
+	if (sscanf((char*)fRequestBuffer, "%*s %s", url) == 1) {
+	  handleCmd_REGISTER(url, urlSuffix, strcmp(cmdName, "REGISTER_REMOTE") == 0);
+	} else {
+	  handleCmd_bad();
+	}
+	delete[] url;
       } else {
 	// The command is one that we don't handle:
 	handleCmd_notSupported();
@@ -1912,4 +2016,162 @@ void UserAuthenticationDatabase::removeUserRecord(char const* username) {
 
 char const* UserAuthenticationDatabase::lookupPassword(char const* username) {
   return (char const*)(fTable->Lookup(username));
+}
+
+
+///////// RegisterRequestRecord implementation //////////
+
+RTSPServer::RegisterRequestRecord
+::RegisterRequestRecord(RTSPServer& ourServer, ServerMediaSession* serverMediaSession, responseHandlerForREGISTER* responseHandler)
+  : fSocketNum(-1), fOurServer(ourServer), fServerMediaSession(serverMediaSession), fHandler(responseHandler) {
+  // Add ourself to our 'pending REGISTER requests' table:
+  fOurServer.fPendingRegisterRequests->Add((char const*)this, this);
+}
+
+RTSPServer::RegisterRequestRecord::~RegisterRequestRecord() {
+  // Remove ourself from the server's 'pending REGISTER requests' hash table before we go:
+  fOurServer.fPendingRegisterRequests->Remove((char const*)this);
+
+  if (fSocketNum >= 0) {
+    envir().taskScheduler().disableBackgroundHandling(fSocketNum);
+    ::closeSocket(fSocketNum);
+  }
+}
+
+void RTSPServer::RegisterRequestRecord::connectionHandler(void* instance, int /*mask*/) {
+  RegisterRequestRecord* registerRequest = (RegisterRequestRecord*)instance;
+  registerRequest->connectionHandler1();
+}
+
+void RTSPServer::RegisterRequestRecord::connectionHandler1() {
+  // A connection to the remote endpoint has either been set up, or failed.
+  // Disable background handling on the socket for now, and check whether the connection succeeded.
+  // (If it did, continue to send the "REGISTER" command.)
+  envir().taskScheduler().disableBackgroundHandling(fSocketNum);
+
+  int err = 0;
+  SOCKLEN_T len = sizeof err;
+  if (getsockopt(fSocketNum, SOL_SOCKET, SO_ERROR, (char*)&err, &len) < 0 || err != 0) {
+    envir().setResultErrMsg("Connection to server failed: ", err);
+#ifdef DEBUG
+    fprintf(stderr, "...%s\n", envir().getResultMsg());
+#endif
+    callResponseHandler(0, NULL);
+    return;
+  }
+
+  // The connection succeeded, so continue to send the "REGISTER" command:
+  (void)fOurServer.continueRegisterStream(this);
+}
+
+void RTSPServer::RegisterRequestRecord::incomingResponseHandler(void* instance, int /*mask*/) {
+  RegisterRequestRecord* registerRequest = (RegisterRequestRecord*)instance;
+  registerRequest->incomingResponseHandler1();
+}
+
+#define REGISTER_RESPONSE_BUFFER_SIZE 1000
+
+void RTSPServer::RegisterRequestRecord::incomingResponseHandler1() {
+  struct sockaddr_in fromAddr;
+  unsigned char responseBuffer[REGISTER_RESPONSE_BUFFER_SIZE];
+  int resultCode = 0;
+  char* resultString = NULL;
+
+  int bytesRead = readSocket(envir(), fSocketNum, responseBuffer, REGISTER_RESPONSE_BUFFER_SIZE, fromAddr);
+  if (bytesRead > 0 && bytesRead < REGISTER_RESPONSE_BUFFER_SIZE) {
+    // We got the response OK.  Because we expect it to be short, assume that we got the whole thing.
+    // Parse it, looking for "RTSP/<vers> <resultCode> <resultMsg>\r\n"
+    responseBuffer[bytesRead] = '\0';
+#ifdef DEBUG
+    fprintf(stderr, "Received (%d-byte) REGISTER response:%s\n", bytesRead, responseBuffer);
+#endif
+    char resultMsg[REGISTER_RESPONSE_BUFFER_SIZE];
+    if (sscanf((char*)responseBuffer, "%*s %d %[^\r\n]", &resultCode, resultMsg) == 2) {
+      resultString = resultMsg;
+      if (resultCode == 200) {
+	// The REGISTER command succeeded, so use the still-open socket to await incoming commands from the remote endpoint:
+	int sock = fSocketNum; fSocketNum = -1; // so that the socket doesn't get closed when we delete ourself below
+	(void)fOurServer.createNewClientConnection(sock, fromAddr);
+      }
+    }
+  }
+
+  callResponseHandler(resultCode, resultString);
+}
+
+void RTSPServer::RegisterRequestRecord::callResponseHandler(int resultCode, char const* resultString) {
+  if (fHandler != NULL) {
+    // Call the specified response handler.  But first, make sure that we have a reasonable "resultCode" and "resultString":
+    if (resultCode == 0) {
+      resultCode = -envir().getErrno();
+      if (resultCode == 0) {
+	// Choose some generic error code instead:
+#if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
+	resultCode = -WSAENOTCONN;
+#else
+	resultCode = -ENOTCONN;
+#endif
+      }
+
+      resultString = envir().getResultMsg();
+    }
+
+    char* newResultString = strDup(resultString); // because the handler expects a result string that's been heap allocated
+    (*fHandler)(&fOurServer, fSocketNum, resultCode, newResultString);
+  }
+      
+  // We're completely done with the REGISTER command now, so delete ourself:
+  delete this;
+}
+
+
+///////// RTSPServerWithREGISTERProxying implementation /////////
+
+RTSPServerWithREGISTERProxying* RTSPServerWithREGISTERProxying
+::createNew(UsageEnvironment& env, Port ourPort, UserAuthenticationDatabase* authDatabase, unsigned reclamationTestSeconds) {
+  int ourSocket = setUpOurSocket(env, ourPort);
+  if (ourSocket == -1) return NULL;
+
+  return new RTSPServerWithREGISTERProxying(env, ourSocket, ourPort, authDatabase, reclamationTestSeconds);
+}
+
+RTSPServerWithREGISTERProxying
+::RTSPServerWithREGISTERProxying(UsageEnvironment& env, int ourSocket, Port ourPort,
+				 UserAuthenticationDatabase* authDatabase, unsigned reclamationTestSeconds)
+  : RTSPServer(env, ourSocket, ourPort, authDatabase, reclamationTestSeconds) {
+}
+
+RTSPServerWithREGISTERProxying::~RTSPServerWithREGISTERProxying() {
+}
+
+RTSPServerWithREGISTERProxying::RTSPClientConnection*
+RTSPServerWithREGISTERProxying::createNewClientConnection(int clientSocket, struct sockaddr_in clientAddr) {
+  return new RTSPClientConnectionWithREGISTERProxying(*this, clientSocket, clientAddr);
+}
+
+////////// RTSPServerWithREGISTERProxying::RTSPClientConnectionWithREGISTERProxying implementation //////////
+
+RTSPServerWithREGISTERProxying::RTSPClientConnectionWithREGISTERProxying
+::RTSPClientConnectionWithREGISTERProxying(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr)
+  : RTSPServer::RTSPClientConnection(ourServer, clientSocket, clientAddr) {
+}
+
+RTSPServerWithREGISTERProxying::RTSPClientConnectionWithREGISTERProxying
+::~RTSPClientConnectionWithREGISTERProxying() {
+}
+
+void RTSPServerWithREGISTERProxying::RTSPClientConnectionWithREGISTERProxying
+::handleCmd_REGISTER(char const* url, char const* urlSuffix, Boolean registerRemote) {
+  // We implement the "REGISTER" command by setting up proxying for the specified URL.
+  // By default:
+  //    - We use the "urlSuffix" as the (front-end) stream name.  (This means that if two or more REGISTERs are done for different
+  //      URLs that have the same "urlSuffix", then each new one will replace the previous one.)
+  //    - There is no 'username' and 'password' for the back-end stream.  (Thus, access-controlled back-end streams will fail.)
+  // To change this default behavior, you will need to subclass "RTSPClientConnectionWithREGISTERProxying",
+  // and reimplement this function.
+  fprintf(stderr, "#####@@@@@RTSPServerWithREGISTERProxying::RTSPServerWithREGISTERProxying::handleCmd_REGISTER(%s,%s,%d)\n", url, urlSuffix, registerRemote);
+  fOurServer.addServerMediaSession(ProxyServerMediaSession::createNew(envir(), &fOurServer, url, urlSuffix,
+								      NULL, NULL, 0, 2 //#####@@@@@
+));
+  //#####@@@@@ later add tunnelOverHTTPPortNum and verbosityLevel (parameters to "RTSPServerWithREGISTERProxying"?)
 }
