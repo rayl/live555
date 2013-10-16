@@ -42,7 +42,8 @@ MultiFramedRTPSink::MultiFramedRTPSink(UsageEnvironment& env,
 				       unsigned numChannels)
   : RTPSink(env, rtpGS, rtpPayloadType, rtpTimestampFrequency,
 	    rtpPayloadFormatName, numChannels),
-  fOutBuf(NULL), fCurFragmentationOffset(0), fPreviousFrameEndedFragmentation(False) {
+    fOutBuf(NULL), fCurFragmentationOffset(0), fPreviousFrameEndedFragmentation(False),
+    fOnSendErrorFunc(NULL), fOnSendErrorData(NULL) {
   setPacketSizes(1000, 1448);
       // Default max packet size (1500, minus allowance for IP, UDP, UMTP headers)
       // (Also, make it a multiple of 4 bytes, just in case that matters.)
@@ -56,12 +57,12 @@ void MultiFramedRTPSink
 ::doSpecialFrameHandling(unsigned /*fragmentationOffset*/,
 			 unsigned char* /*frameStart*/,
 			 unsigned /*numBytesInFrame*/,
-			 struct timeval frameTimestamp,
+			 struct timeval framePresentationTime,
 			 unsigned /*numRemainingBytes*/) {
   // default implementation: If this is the first frame in the packet,
   // use its timestamp for the RTP timestamp:
   if (isFirstFrameInPacket()) {
-    setTimestamp(frameTimestamp);
+    setTimestamp(framePresentationTime);
   }
 }
 
@@ -100,9 +101,9 @@ void MultiFramedRTPSink::setMarkerBit() {
   fOutBuf->insertWord(rtpHdr, 0);
 }
 
-void MultiFramedRTPSink::setTimestamp(struct timeval timestamp) {
-  // First, convert the timestamp to a 32-bit RTP timestamp:
-  fCurrentTimestamp = convertToRTPTimestamp(timestamp);
+void MultiFramedRTPSink::setTimestamp(struct timeval framePresentationTime) {
+  // First, convert the presentatoin time to a 32-bit RTP timestamp:
+  fCurrentTimestamp = convertToRTPTimestamp(framePresentationTime);
 
   // Then, insert it into the RTP packet:
   fOutBuf->insertWord(fCurrentTimestamp, fTimestampPosition);
@@ -165,7 +166,7 @@ void MultiFramedRTPSink::buildAndSendPacket(Boolean isFirstPacket) {
   fIsFirstPacket = isFirstPacket;
 
   // Set up the RTP header:
-  unsigned rtpHdr = 0x80000000; // RTP version 2
+  unsigned rtpHdr = 0x80000000; // RTP version 2; marker ('M') bit not set (by default; it can be set later)
   rtpHdr |= (fRTPPayloadType<<16);
   rtpHdr |= fSeqNo; // sequence number
   fOutBuf->enqueueWord(rtpHdr);
@@ -291,7 +292,7 @@ void MultiFramedRTPSink
     }
   }
 
-  if (numFrameBytesToUse == 0) {
+  if (numFrameBytesToUse == 0 && frameSize > 0) {
     // Send our packet now, because we have filled it up:
     sendPacketIfNecessary();
   } else {
@@ -354,7 +355,10 @@ void MultiFramedRTPSink::sendPacketIfNecessary() {
 #ifdef TEST_LOSS
     if ((our_random()%10) != 0) // simulate 10% packet loss #####
 #endif
-    fRTPInterface.sendPacket(fOutBuf->packet(), fOutBuf->curPacketSize());
+      if (!fRTPInterface.sendPacket(fOutBuf->packet(), fOutBuf->curPacketSize())) {
+	// if failure handler has been specified, call it
+	if (fOnSendErrorFunc != NULL) (*fOnSendErrorFunc)(fOnSendErrorData);
+      }
     ++fPacketCount;
     fTotalOctetCount += fOutBuf->curPacketSize();
     fOctetCount += fOutBuf->curPacketSize()

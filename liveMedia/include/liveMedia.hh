@@ -94,6 +94,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "AMRAudioFileServerMediaSubsession.hh"
 #include "AMRAudioFileSource.hh"
 #include "AMRAudioRTPSink.hh"
+#include "T140TextRTPSink.hh"
 #include "TCPStreamSink.hh"
 #include "MP3AudioFileServerMediaSubsession.hh"
 #include "MPEG1or2VideoFileServerMediaSubsession.hh"
@@ -103,6 +104,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "ADTSAudioFileServerMediaSubsession.hh"
 #include "DVVideoFileServerMediaSubsession.hh"
 #include "AC3AudioFileServerMediaSubsession.hh"
+#include "MatroskaFileServerDemux.hh"
 #include "DarwinInjector.hh"
 
 #endif

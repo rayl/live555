@@ -42,7 +42,7 @@ static void badDataSize(UsageEnvironment& env, unsigned numBytesInFrame) {
 void MP3ADURTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 					   unsigned char* frameStart,
 					   unsigned numBytesInFrame,
-					   struct timeval frameTimestamp,
+					   struct timeval framePresentationTime,
 					   unsigned numRemainingBytes) {
   // If this is the first (or only) fragment of an ADU, then
   // check the "ADU descriptor" (that should be at the front) for validity:
@@ -99,7 +99,7 @@ void MP3ADURTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
   // to set the packet's timestamp:
   MultiFramedRTPSink::doSpecialFrameHandling(fragmentationOffset,
 					     frameStart, numBytesInFrame,
-					     frameTimestamp,
+					     framePresentationTime,
 					     numRemainingBytes);
 }
 

@@ -50,7 +50,7 @@ void AC3AudioRTPSink
 ::doSpecialFrameHandling(unsigned fragmentationOffset,
 			 unsigned char* frameStart,
 			 unsigned numBytesInFrame,
-			 struct timeval frameTimestamp,
+			 struct timeval framePresentationTime,
 			 unsigned numRemainingBytes) {
   // Set the 2-byte "payload header", as defined in RFC 4184.
   unsigned char headers[2];
@@ -88,7 +88,7 @@ void AC3AudioRTPSink
   // to set the packet's timestamp:
   MultiFramedRTPSink::doSpecialFrameHandling(fragmentationOffset,
 					     frameStart, numBytesInFrame,
-					     frameTimestamp,
+					     framePresentationTime,
 					     numRemainingBytes);
 }
 

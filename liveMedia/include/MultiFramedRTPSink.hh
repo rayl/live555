@@ -30,6 +30,13 @@ class MultiFramedRTPSink: public RTPSink {
 public:
   void setPacketSizes(unsigned preferredPacketSize, unsigned maxPacketSize);
 
+  typedef void (onSendErrorFunc)(void* clientData);
+  void setOnSendErrorFunc(onSendErrorFunc* onSendErrorFunc, void* onSendErrorFuncData) {
+    // Can be used to set a callback function to be called if there's an error sending RTP packets on our socket.
+    fOnSendErrorFunc = onSendErrorFunc;
+    fOnSendErrorData = onSendErrorFuncData;
+  }
+
 protected:
   MultiFramedRTPSink(UsageEnvironment& env,
 		     Groupsock* rtpgs, unsigned char rtpPayloadType,
@@ -43,7 +50,7 @@ protected:
   virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
 				      unsigned char* frameStart,
 				      unsigned numBytesInFrame,
-				      struct timeval frameTimestamp,
+				      struct timeval framePresentationTime,
 				      unsigned numRemainingBytes);
       // perform any processing specific to the particular payload format
   virtual Boolean allowFragmentationAfterStart() const;
@@ -71,7 +78,7 @@ protected:
   Boolean isFirstFrameInPacket() const { return fNumFramesUsedSoFar == 0; }
   Boolean curFragmentationOffset() const { return fCurFragmentationOffset; }
   void setMarkerBit();
-  void setTimestamp(struct timeval timestamp);
+  void setTimestamp(struct timeval framePresentationTime);
   void setSpecialHeaderWord(unsigned word, /* 32 bits, in host order */
 			    unsigned wordPosition = 0);
   void setSpecialHeaderBytes(unsigned char const* bytes, unsigned numBytes,
@@ -125,6 +132,9 @@ private:
   unsigned fCurFrameSpecificHeaderSize; // size in bytes of cur frame-specific header
   unsigned fTotalFrameSpecificHeaderSizes; // size of all frame-specific hdrs in pkt
   unsigned fOurMaxPacketSize;
+
+  onSendErrorFunc* fOnSendErrorFunc;
+  void* fOnSendErrorData;
 };
 
 #endif

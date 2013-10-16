@@ -49,7 +49,7 @@ void JPEGVideoRTPSink
 ::doSpecialFrameHandling(unsigned fragmentationOffset,
 			 unsigned char* /*frameStart*/,
 			 unsigned /*numBytesInFrame*/,
-			 struct timeval frameTimestamp,
+			 struct timeval framePresentationTime,
 			 unsigned numRemainingBytes) {
   // Our source is known to be a JPEGVideoSource
   JPEGVideoSource* source = (JPEGVideoSource*)fSource;
@@ -115,7 +115,7 @@ void JPEGVideoRTPSink
   }
 
   // Also set the RTP timestamp:
-  setTimestamp(frameTimestamp);
+  setTimestamp(framePresentationTime);
 }
 
 

@@ -68,7 +68,7 @@ void MPEG1or2VideoRTPSink
 ::doSpecialFrameHandling(unsigned fragmentationOffset,
 			 unsigned char* frameStart,
 			 unsigned numBytesInFrame,
-			 struct timeval frameTimestamp,
+			 struct timeval framePresentationTime,
 			 unsigned numRemainingBytes) {
   Boolean thisFrameIsASlice = False; // until we learn otherwise
   if (isFirstFrameInPacket()) {
@@ -154,7 +154,7 @@ void MPEG1or2VideoRTPSink
 
   // Also set the RTP timestamp.  (As above, we do this for each frame
   // in the packet.)
-  setTimestamp(frameTimestamp);
+  setTimestamp(framePresentationTime);
 
   // Set the RTP 'M' (marker) bit iff this frame ends (i.e., is the last
   // slice of) a picture (and there are no fragments remaining).

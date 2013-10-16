@@ -25,8 +25,17 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _FILE_SERVER_MEDIA_SUBSESSION_HH
 #include "FileServerMediaSubsession.hh"
 #endif
-#ifndef _MPEG2_TRANSPORT_STREAM_INDEX_FILE_HH
-#include "MPEG2TransportStreamIndexFile.hh"
+#ifndef _MPEG2_TRANSPORT_STREAM_FRAMER_HH
+#include "MPEG2TransportStreamFramer.hh"
+#endif
+#ifndef _BYTE_STREAM_FILE_SOURCE_HH
+#include "ByteStreamFileSource.hh"
+#endif
+#ifndef _MPEG2_TRANSPORT_STREAM_TRICK_MODE_FILTER_HH
+#include "MPEG2TransportStreamTrickModeFilter.hh"
+#endif
+#ifndef _MPEG2_TRANSPORT_STREAM_FROM_ES_SOURCE_HH
+#include "MPEG2TransportStreamFromESSource.hh"
 #endif
 
 class ClientTrickPlayState; // forward
@@ -45,6 +54,8 @@ protected:
 					  Boolean reuseFirstSource);
       // called only by createNew();
   virtual ~MPEG2TransportFileServerMediaSubsession();
+
+  virtual ClientTrickPlayState* newClientTrickPlayState();
 
 private: // redefined virtual functions
   // Note that because - to implement 'trick play' operations - we're operating on
@@ -80,6 +91,41 @@ private:
   MPEG2TransportStreamIndexFile* fIndexFile;
   float fDuration;
   HashTable* fClientSessionHashTable; // indexed by client session id
+};
+
+
+// This class encapsulates the 'trick play' state for each current client (for
+// a given "MPEG2TransportFileServerMediaSubsession" - i.e., Transport Stream file).
+// It is used only within the implementation of "MPEG2TransportFileServerMediaSubsession", but is included here,
+// in case subclasses of "MPEG2TransportFileServerMediaSubsession" want to use it.
+
+class ClientTrickPlayState {
+public:
+  ClientTrickPlayState(MPEG2TransportStreamIndexFile* indexFile);
+
+  // Functions to bring "fNPT", "fTSRecordNum" and "fIxRecordNum" in sync:
+  unsigned long updateStateFromNPT(double npt, double seekDuration);
+  void updateStateOnScaleChange();
+  void updateStateOnPlayChange(Boolean reverseToPreviousVSH);
+
+  void handleStreamDeletion();
+  void setSource(MPEG2TransportStreamFramer* framer);
+
+  void setNextScale(float nextScale) { fNextScale = nextScale; }
+  Boolean areChangingScale() const { return fNextScale != fScale; }
+
+protected:
+  void updateTSRecordNum();
+  void reseekOriginalTransportStreamSource();
+
+protected:
+  MPEG2TransportStreamIndexFile* fIndexFile;
+  ByteStreamFileSource* fOriginalTransportStreamSource;
+  MPEG2TransportStreamTrickModeFilter* fTrickModeFilter;
+  MPEG2TransportStreamFromESSource* fTrickPlaySource;
+  MPEG2TransportStreamFramer* fFramer;
+  float fScale, fNextScale, fNPT;
+  unsigned long fTSRecordNum, fIxRecordNum;
 };
 
 #endif

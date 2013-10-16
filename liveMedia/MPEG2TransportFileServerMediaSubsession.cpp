@@ -21,47 +21,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "MPEG2TransportFileServerMediaSubsession.hh"
 #include "SimpleRTPSink.hh"
-#include "ByteStreamFileSource.hh"
-#include "MPEG2TransportStreamTrickModeFilter.hh"
-#include "MPEG2TransportStreamFromESSource.hh"
-#include "MPEG2TransportStreamFramer.hh"
-
-////////// ClientTrickPlayState definition //////////
-
-// This class encapsulates the 'trick play' state for each current client (for
-// a given "MPEG2TransportFileServerMediaSubsession" - i.e., Transport Stream file).
-
-class ClientTrickPlayState {
-public:
-  ClientTrickPlayState(MPEG2TransportStreamIndexFile* indexFile);
-
-  // Functions to bring "fNPT", "fTSRecordNum" and "fIxRecordNum" in sync:
-  unsigned long updateStateFromNPT(double npt, double seekDuration);
-  void updateStateOnScaleChange();
-  void updateStateOnPlayChange(Boolean reverseToPreviousVSH);
-
-  void handleStreamDeletion();
-  void setSource(MPEG2TransportStreamFramer* framer);
-
-  void setNextScale(float nextScale) { fNextScale = nextScale; }
-  Boolean areChangingScale() const { return fNextScale != fScale; }
-
-private:
-  void updateTSRecordNum();
-  void reseekOriginalTransportStreamSource();
-
-private:
-  MPEG2TransportStreamIndexFile* fIndexFile;
-  ByteStreamFileSource* fOriginalTransportStreamSource;
-  MPEG2TransportStreamTrickModeFilter* fTrickModeFilter;
-  MPEG2TransportStreamFromESSource* fTrickPlaySource;
-  MPEG2TransportStreamFramer* fFramer;
-  float fScale, fNextScale, fNPT;
-  unsigned long fTSRecordNum, fIxRecordNum;
-};
-
-
-////////// MPEG2TransportFileServerMediaSubsession implementation //////////
 
 MPEG2TransportFileServerMediaSubsession*
 MPEG2TransportFileServerMediaSubsession::createNew(UsageEnvironment& env,
@@ -192,6 +151,10 @@ void MPEG2TransportFileServerMediaSubsession
   OnDemandServerMediaSubsession::deleteStream(clientSessionId, streamToken);
 }
 
+ClientTrickPlayState* MPEG2TransportFileServerMediaSubsession::newClientTrickPlayState() {
+  return new ClientTrickPlayState(fIndexFile);
+}
+
 FramedSource* MPEG2TransportFileServerMediaSubsession
 ::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate) {
   // Create the video source:
@@ -218,7 +181,7 @@ FramedSource* MPEG2TransportFileServerMediaSubsession
     // Keep state for this client (if we don't already have it):
     ClientTrickPlayState* client = lookupClient(clientSessionId);
     if (client == NULL) {
-      client = new ClientTrickPlayState(fIndexFile);
+      client = newClientTrickPlayState();
       fClientSessionHashTable->Add((char const*)clientSessionId, client);
     }
     client->setSource(framer);

@@ -91,7 +91,7 @@ void MPEG4GenericRTPSink
 ::doSpecialFrameHandling(unsigned fragmentationOffset,
 			 unsigned char* frameStart,
 			 unsigned numBytesInFrame,
-			 struct timeval frameTimestamp,
+			 struct timeval framePresentationTime,
 			 unsigned numRemainingBytes) {
   // Set the "AU Header Section".  This is 4 bytes: 2 bytes for the
   // initial "AU-headers-length" field, and 2 bytes for the first
@@ -114,7 +114,7 @@ void MPEG4GenericRTPSink
   // to set the packet's timestamp:
   MultiFramedRTPSink::doSpecialFrameHandling(fragmentationOffset,
 					     frameStart, numBytesInFrame,
-					     frameTimestamp,
+					     framePresentationTime,
 					     numRemainingBytes);
 }
 

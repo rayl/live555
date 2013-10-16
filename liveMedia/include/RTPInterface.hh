@@ -64,7 +64,7 @@ public:
   void removeStreamSocket(int sockNum, unsigned char streamChannelId);
   void setServerRequestAlternativeByteHandler(int socketNum, ServerRequestAlternativeByteHandler* handler, void* clientData);
 
-  void sendPacket(unsigned char* packet, unsigned packetSize);
+  Boolean sendPacket(unsigned char* packet, unsigned packetSize);
   void startNetworkReading(TaskScheduler::BackgroundHandlerProc*
                            handlerProc);
   Boolean handleRead(unsigned char* buffer, unsigned bufferMaxSize,

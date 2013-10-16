@@ -32,7 +32,9 @@ H264VideoRTPSink
 }
 
 H264VideoRTPSink::~H264VideoRTPSink() {
+  fSource = fOurFragmenter; // hack: in case "fSource" had gotten set to NULL before we were called
   delete[] fFmtpSDPLine;
+  stopPlaying();
 }
 
 H264VideoRTPSink*
@@ -60,8 +62,7 @@ Boolean H264VideoRTPSink::continuePlaying() {
 }
 
 void H264VideoRTPSink::stopPlaying() {
-  // First, call the parent class's implementation, to stop our fragmenter object
-  // (and its source):
+  // First, call the parent class's implementation, to stop our fragmenter object (and its source):
   MultiFramedRTPSink::stopPlaying();
 
   // Then, close our 'fragmenter' object:
@@ -71,7 +72,7 @@ void H264VideoRTPSink::stopPlaying() {
 void H264VideoRTPSink::doSpecialFrameHandling(unsigned /*fragmentationOffset*/,
 					      unsigned char* /*frameStart*/,
 					      unsigned /*numBytesInFrame*/,
-					      struct timeval frameTimestamp,
+					      struct timeval framePresentationTime,
 					      unsigned /*numRemainingBytes*/) {
   // Set the RTP 'M' (marker) bit iff
   // 1/ The most recently delivered fragment was the end of (or the only fragment of) an NAL unit, and
@@ -87,7 +88,7 @@ void H264VideoRTPSink::doSpecialFrameHandling(unsigned /*fragmentationOffset*/,
     }
   }
 
-  setTimestamp(frameTimestamp);
+  setTimestamp(framePresentationTime);
 }
 
 Boolean H264VideoRTPSink
@@ -155,7 +156,7 @@ H264FUAFragmenter::H264FUAFragmenter(UsageEnvironment& env,
 
 H264FUAFragmenter::~H264FUAFragmenter() {
   delete[] fInputBuffer;
-  fInputSource = NULL; // so that the subsequent ~FramedFilter doesn't delete it
+  detachInputSource(); // so that the subsequent ~FramedFilter() doesn't delete it
 }
 
 void H264FUAFragmenter::doGetNextFrame() {

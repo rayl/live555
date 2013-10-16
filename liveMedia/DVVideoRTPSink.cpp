@@ -46,7 +46,7 @@ Boolean DVVideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
 void DVVideoRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 					      unsigned char* /*frameStart*/,
 					      unsigned /*numBytesInFrame*/,
-					      struct timeval frameTimestamp,
+					      struct timeval framePresentationTime,
 					      unsigned numRemainingBytes) {
   if (numRemainingBytes == 0) {
     // This packet contains the last (or only) fragment of the frame.
@@ -55,7 +55,7 @@ void DVVideoRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
   }
 
   // Also set the RTP timestamp:
-  setTimestamp(frameTimestamp);
+  setTimestamp(framePresentationTime);
 }
 
 unsigned DVVideoRTPSink::computeOverflowForNewFrame(unsigned newFrameSize) const {

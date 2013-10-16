@@ -48,7 +48,7 @@ void H263plusVideoRTPSink
 ::doSpecialFrameHandling(unsigned fragmentationOffset,
 			 unsigned char* frameStart,
 			 unsigned numBytesInFrame,
-			 struct timeval frameTimestamp,
+			 struct timeval framePresentationTime,
 			 unsigned numRemainingBytes) {
   if (fragmentationOffset == 0) {
     // This packet contains the first (or only) fragment of the frame.
@@ -80,7 +80,7 @@ void H263plusVideoRTPSink
   }
 
   // Also set the RTP timestamp:
-  setTimestamp(frameTimestamp);
+  setTimestamp(framePresentationTime);
 }
 
 

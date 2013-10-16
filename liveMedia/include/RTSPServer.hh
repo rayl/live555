@@ -217,7 +217,7 @@ protected:
     virtual ~ServerMediaSessionIterator();
     ServerMediaSession* next();
   private:
-    HashTable::Iterator *fOurIterator;
+    HashTable::Iterator* fOurIterator;
     ServerMediaSession* fNextPtr;
   };
 

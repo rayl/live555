@@ -57,7 +57,7 @@ protected: // redefined virtual functions
   virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
                                       unsigned char* frameStart,
                                       unsigned numBytesInFrame,
-                                      struct timeval frameTimestamp,
+                                      struct timeval framePresentationTime,
                                       unsigned numRemainingBytes);
   virtual
   Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,

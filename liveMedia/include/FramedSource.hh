@@ -59,13 +59,13 @@ public:
 
   Boolean isCurrentlyAwaitingData() const {return fIsCurrentlyAwaitingData;}
 
-protected:
-  FramedSource(UsageEnvironment& env); // abstract base class
-  virtual ~FramedSource();
-
   static void afterGetting(FramedSource* source);
       // doGetNextFrame() should arrange for this to be called after the
       // frame has been read (*iff* it is read successfully)
+
+protected:
+  FramedSource(UsageEnvironment& env); // abstract base class
+  virtual ~FramedSource();
 
   virtual void doStopGettingFrames();
 

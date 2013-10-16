@@ -63,7 +63,7 @@ SimpleRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 void SimpleRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 					   unsigned char* frameStart,
 					   unsigned numBytesInFrame,
-					   struct timeval frameTimestamp,
+					   struct timeval framePresentationTime,
 					   unsigned numRemainingBytes) {
   if (numRemainingBytes == 0) {
     // This packet contains the last (or only) fragment of the frame.
@@ -75,7 +75,7 @@ void SimpleRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
   // to set the packet's timestamp:
   MultiFramedRTPSink::doSpecialFrameHandling(fragmentationOffset,
 					     frameStart, numBytesInFrame,
-					     frameTimestamp,
+					     framePresentationTime,
 					     numRemainingBytes);
 }
 

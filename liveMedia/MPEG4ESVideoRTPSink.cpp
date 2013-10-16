@@ -52,7 +52,7 @@ void MPEG4ESVideoRTPSink
 ::doSpecialFrameHandling(unsigned fragmentationOffset,
 			 unsigned char* frameStart,
 			 unsigned numBytesInFrame,
-			 struct timeval frameTimestamp,
+			 struct timeval framePresentationTime,
 			 unsigned numRemainingBytes) {
   if (fragmentationOffset == 0) {
     // Begin by inspecting the 4-byte code at the start of the frame:
@@ -76,7 +76,7 @@ void MPEG4ESVideoRTPSink
   // Also set the RTP timestamp.  (We do this for each frame
   // in the packet, to ensure that the timestamp of the VOP (if present)
   // gets used.)
-  setTimestamp(frameTimestamp);
+  setTimestamp(framePresentationTime);
 }
 
 Boolean MPEG4ESVideoRTPSink::allowFragmentationAfterStart() const {

@@ -36,6 +36,13 @@ Boolean iFramesOnly = False;
 static void announceStream(RTSPServer* rtspServer, ServerMediaSession* sms,
 			   char const* streamName, char const* inputFileName); // fwd
 
+static char newMatroskaDemuxWatchVariable;
+static MatroskaFileServerDemux* demux;
+static void onMatroskaDemuxCreation(MatroskaFileServerDemux* newDemux, void* /*clientData*/) {
+  demux = newDemux;
+  newMatroskaDemuxWatchVariable = 1;
+}
+
 int main(int argc, char** argv) {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
@@ -263,6 +270,32 @@ int main(int argc, char** argv) {
 		       ::createNew(*env, inputFileName, reuseFirstSource));
 
     rtspServer->addServerMediaSession(sms);
+
+    announceStream(rtspServer, sms, streamName, inputFileName);
+  }
+
+  // A Matroska ('.mkv') file, with video+audio+subtitle streams:
+  {
+    char const* streamName = "matroskaFileTest";
+    char const* inputFileName = "test.mkv";
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, streamName, streamName,
+				      descriptionString);
+
+    newMatroskaDemuxWatchVariable = 0;
+    MatroskaFileServerDemux::createNew(*env, inputFileName, onMatroskaDemuxCreation, NULL);
+    env->taskScheduler().doEventLoop(&newMatroskaDemuxWatchVariable);
+
+    Boolean sessionHasTracks = False;
+    ServerMediaSubsession* smss;
+    while ((smss = demux->newServerMediaSubsession()) != NULL) {
+      sms->addSubsession(smss);
+      sessionHasTracks = True;
+    }
+    if (sessionHasTracks) {
+      rtspServer->addServerMediaSession(sms);
+    }
+    // otherwise, because the stream has no tracks, we don't add a ServerMediaSession to the server.
 
     announceStream(rtspServer, sms, streamName, inputFileName);
   }

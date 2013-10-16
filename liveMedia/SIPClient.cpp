@@ -528,7 +528,7 @@ unsigned SIPClient::getResponseCode() {
       delete[] toTagStr;
 
       if (sscanf(lineStart, "Content-Length: %d", &contentLength) == 1
-          || sscanf(lineStart, "Content-Length: %d", &contentLength) == 1) {
+          || sscanf(lineStart, "Content-length: %d", &contentLength) == 1) {
         if (contentLength < 0) {
           envir().setResultMsg("Bad \"Content-Length:\" header: \"",
                                lineStart, "\"");
