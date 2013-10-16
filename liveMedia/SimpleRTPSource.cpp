@@ -44,8 +44,7 @@ SimpleRTPSource
   : MultiFramedRTPSource(env, RTPgs,
 			 rtpPayloadFormat, rtpTimestampFrequency),
     fMIMEtypeString(strDup(mimeTypeString)), fOffset(offset) {
-  fUseMBitForFrameEnd
-    = strncmp(mimeTypeString, "video/", 6) == 0 && doNormalMBitRule;
+  fUseMBitForFrameEnd = doNormalMBitRule && strncmp(mimeTypeString, "audio/", 6) != 0;
 }
 
 SimpleRTPSource::~SimpleRTPSource() {

@@ -35,8 +35,7 @@ SimpleRTPSink::SimpleRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
     fAllowMultipleFramesPerPacket(allowMultipleFramesPerPacket) {
   fSDPMediaTypeString
     = strDup(sdpMediaTypeString == NULL ? "unknown" : sdpMediaTypeString);
-  fSetMBitOnLastFrames
-    = strcmp(fSDPMediaTypeString, "video") == 0 && doNormalMBitRule;
+  fSetMBitOnLastFrames = doNormalMBitRule && strcmp(fSDPMediaTypeString, "audio") != 0;
 }
 
 SimpleRTPSink::~SimpleRTPSink() {

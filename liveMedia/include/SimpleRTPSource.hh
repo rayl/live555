@@ -37,9 +37,9 @@ public:
 				    char const* mimeTypeString,
 				    unsigned offset = 0,
 				    Boolean doNormalMBitRule = True);
-  // "doNormalMBitRule" means: If the medium is video, use the RTP "M"
+  // "doNormalMBitRule" means: If the medium is not audio, use the RTP "M"
   // bit on each incoming packet to indicate the last (or only) fragment
-  // of a frame.  (Otherwise, ignore the "M" bit.)
+  // of a frame.  Otherwise (i.e., if "doNormalMBitRule" is False, or the medium is "audio"), the "M" bit is ignored.
 
 protected:
   virtual ~SimpleRTPSource();

@@ -1,0 +1,27 @@
+diff -ru live/liveMedia/RTSPClient.cpp live-patched/liveMedia/RTSPClient.cpp
+--- live/liveMedia/RTSPClient.cpp	2012-09-07 18:07:07.000000000 -0400
++++ live-patched/liveMedia/RTSPClient.cpp	2012-09-11 10:37:22.556128766 -0400
+@@ -794,11 +794,20 @@
+       break;
+     }
+ 
+-    // The command send succeeded, so enqueue the request record, so that its response (when it comes) can be handled:
+-    fRequestsAwaitingResponse.enqueue(request);
++    int cseq = request->cseq();
++
++    // The command send succeeded, so enqueue the request record, so
++    // that its response (when it comes) can be handled.  However,
++    // note that we do not expect a response to a POST command with
++    // RTSP-over-HTTP, so don't enqueue that.
++    if (fTunnelOverHTTPPortNum == 0 || strcmp(request->commandName(), "POST") != 0) {
++      fRequestsAwaitingResponse.enqueue(request);
++    } else {
++      delete request;
++    }
+ 
+     delete[] cmd;
+-    return request->cseq();
++    return cseq;
+   } while (0);
+ 
+   // An error occurred, so call the response handler immediately (indicating the error):

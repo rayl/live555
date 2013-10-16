@@ -114,6 +114,7 @@ public:
   unsigned dataSize() const { return fTail-fHead; }
   Boolean rtpMarkerBit() const { return fRTPMarkerBit; }
   Boolean& isFirstPacket() { return fIsFirstPacket; }
+  unsigned bytesAvailable() const { return fPacketSize - fTail; }
 
 protected:
   virtual void reset();

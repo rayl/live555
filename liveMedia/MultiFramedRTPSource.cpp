@@ -232,7 +232,12 @@ void MultiFramedRTPSource::networkReadHandler1() {
   Boolean readSuccess = False;
   do {
     Boolean packetReadWasIncomplete = fPacketReadInProgress != NULL;
-    if (!bPacket->fillInData(fRTPInterface, packetReadWasIncomplete)) break;
+    if (!bPacket->fillInData(fRTPInterface, packetReadWasIncomplete)) {
+      if (bPacket->bytesAvailable() == 0) {
+	envir() << "MultiFramedRTPSource error: Hit limit when reading incoming packet over TCP. Increase \"MAX_PACKET_SIZE\"\n";
+      }
+      break;
+    }
     if (packetReadWasIncomplete) {
       // We need additional read(s) before we can process the incoming packet:
       fPacketReadInProgress = bPacket;
@@ -322,7 +327,7 @@ void MultiFramedRTPSource::networkReadHandler1() {
 
 ////////// BufferedPacket and BufferedPacketFactory implementation /////
 
-#define MAX_PACKET_SIZE 10000
+#define MAX_PACKET_SIZE 20000
 
 BufferedPacket::BufferedPacket()
   : fPacketSize(MAX_PACKET_SIZE),
@@ -370,7 +375,9 @@ Boolean BufferedPacket::fillInData(RTPInterface& rtpInterface, Boolean& packetRe
 
   unsigned numBytesRead;
   struct sockaddr_in fromAddress;
-  if (!rtpInterface.handleRead(&fBuf[fTail], fPacketSize-fTail, numBytesRead, fromAddress, packetReadWasIncomplete)) {
+  unsigned const maxBytesToRead = bytesAvailable();
+  if (maxBytesToRead == 0) return False; // exceeded buffer size when reading over TCP
+  if (!rtpInterface.handleRead(&fBuf[fTail], maxBytesToRead, numBytesRead, fromAddress, packetReadWasIncomplete)) {
     return False;
   }
   fTail += numBytesRead;

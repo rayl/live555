@@ -94,8 +94,8 @@ Boolean parseRTSPRequestString(char const* reqStr,
 
       // ASSERT: At this point
       //   i: first space or slash after "host" or "host:port"
-      //   k: first non-space before "RTSP/"
-      //   k1: first slash before k
+      //   k: last non-space before "RTSP/"
+      //   k1: last slash in the range [i,k]
 
       // The URL suffix comes from [k1+1,k]
       // Copy "resultURLSuffix":

@@ -37,9 +37,9 @@ public:
 	    unsigned numChannels = 1,
 	    Boolean allowMultipleFramesPerPacket = True,
 	    Boolean doNormalMBitRule = True);
-  // "doNormalMBitRule" means: If the medium is video, set the RTP "M"
-  // bit on each outgoing packet iff it contains the last (or only)
-  // fragment of a frame.  (Otherwise, leave the "M" bit unset.)
+  // "doNormalMBitRule" means: If the medium (i.e., "sdpMediaTypeString") is other than "audio", set the RTP "M" bit
+  // on each outgoing packet iff it contains the last (or only) fragment of a frame.
+  // Otherwise (i.e., if "doNormalMBitRule" is False, or the medium is "audio"), leave the "M" bit unset.
 protected:
   SimpleRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 		unsigned char rtpPayloadFormat,

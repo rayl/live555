@@ -794,11 +794,18 @@ unsigned RTSPClient::sendRequest(RequestRecord* request) {
       break;
     }
 
-    // The command send succeeded, so enqueue the request record, so that its response (when it comes) can be handled:
-    fRequestsAwaitingResponse.enqueue(request);
+    // The command send succeeded, so enqueue the request record, so that its response (when it comes) can be handled.
+    // However, note that we do not expect a response to a POST command with RTSP-over-HTTP, so don't enqueue that.
+    int cseq = request->cseq();
+
+    if (fTunnelOverHTTPPortNum == 0 || strcmp(request->commandName(), "POST") != 0) {
+      fRequestsAwaitingResponse.enqueue(request);
+    } else {
+      delete request;
+    }
 
     delete[] cmd;
-    return request->cseq();
+    return cseq;
   } while (0);
 
   // An error occurred, so call the response handler immediately (indicating the error):
