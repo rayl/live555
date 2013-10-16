@@ -136,6 +136,8 @@ RTPInterface::~RTPInterface() {
 void RTPInterface::setStreamSocket(int sockNum,
 				   unsigned char streamChannelId) {
   fGS->removeAllDestinations();
+  envir().taskScheduler().disableBackgroundHandling(fGS->socketNum()); // turn off any reading on our datagram socket
+  fGS->reset(); // and close our datagram socket, because we won't be using it anymore
   addStreamSocket(sockNum, streamChannelId);
 }
 

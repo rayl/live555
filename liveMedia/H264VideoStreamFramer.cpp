@@ -595,7 +595,9 @@ unsigned H264VideoStreamParser::parse() {
       }
     }
 
+#ifdef DEBUG
     u_int8_t nal_ref_idc = (fFirstByteOfNALUnit&0x60)>>5;
+#endif
     u_int8_t nal_unit_type = fFirstByteOfNALUnit&0x1F;
     fHaveSeenFirstByteOfNALUnit = False; // for the next NAL unit that we parse
 #ifdef DEBUG

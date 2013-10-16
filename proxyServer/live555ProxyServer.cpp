@@ -34,7 +34,7 @@ Boolean proxyREGISTERRequests = False;
 
 static RTSPServer* createRTSPServer(Port port) {
   if (proxyREGISTERRequests) {
-    return RTSPServerWithREGISTERProxying::createNew(*env, port, authDB);
+    return RTSPServerWithREGISTERProxying::createNew(*env, port, authDB, 65, streamRTPOverTCP, verbosityLevel);
   } else {
     return RTSPServer::createNew(*env, port, authDB);
   }

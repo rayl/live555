@@ -622,14 +622,18 @@ void ProxyServerMediaSubsession::subsessionByeHandler(void* clientData) {
 
 void ProxyServerMediaSubsession::subsessionByeHandler() {
   if (verbosityLevel() > 0) {
-    envir() << *this << ": received RTCP \"BYE\"\n";
+    envir() << *this << ": received RTCP \"BYE\".  (The back-end stream has ended.)\n";
   }
 
-  // This "BYE" signals that our input source has (effectively) closed, so handle this accordingly:
+  // This "BYE" signals that our input source has (effectively) closed, so pass this onto the front-end clients:
+  fHaveSetupStream = False; // hack to stop "PAUSE" getting sent by:
   FramedSource::handleClosure(fClientMediaSubsession.readSource());
 
-  // Then, close our input source for real:
-  fClientMediaSubsession.deInitiate();
+  // And then treat this as if we had lost connection to the back-end server,
+  // and can reestablish streaming from it only by sending another "DESCRIBE":
+  ProxyServerMediaSession* const sms = (ProxyServerMediaSession*)fParentSession;
+  ProxyRTSPClient* const proxyRTSPClient = sms->fProxyRTSPClient;
+  proxyRTSPClient->continueAfterLivenessCommand(1/*hack*/, proxyRTSPClient->fServerSupportsGetParameter);
 }
 
 

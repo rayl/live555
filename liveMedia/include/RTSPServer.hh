@@ -206,6 +206,7 @@ public: // should be protected, but some old compilers complain otherwise
 					   char* acceptStr, unsigned acceptStrMaxSize);
     virtual void handleHTTPCmd_notSupported();
     virtual void handleHTTPCmd_notFound();
+    virtual void handleHTTPCmd_OPTIONS();
     virtual void handleHTTPCmd_TunnelingGET(char const* sessionCookie);
     virtual Boolean handleHTTPCmd_TunnelingPOST(char const* sessionCookie, unsigned char const* extraData, unsigned extraDataSize);
     virtual void handleHTTPCmd_StreamingGET(char const* urlSuffix, char const* fullRequestStr);
@@ -388,11 +389,14 @@ class RTSPServerWithREGISTERProxying: public RTSPServer {
 public:
   static RTSPServerWithREGISTERProxying* createNew(UsageEnvironment& env, Port ourPort = 554,
 						   UserAuthenticationDatabase* authDatabase = NULL,
-						   unsigned reclamationTestSeconds = 65);
+						   unsigned reclamationTestSeconds = 65,
+						   Boolean streamRTPOverTCP = False,
+						   int verbosityLevelForProxying = 0);
 
 protected:
   RTSPServerWithREGISTERProxying(UsageEnvironment& env, int ourSocket, Port ourPort,
-				 UserAuthenticationDatabase* authDatabase, unsigned reclamationTestSeconds);
+				 UserAuthenticationDatabase* authDatabase, unsigned reclamationTestSeconds,
+				 Boolean streamRTPOverTCP, int verbosityLevelForProxying);
   // called only by createNew();
   virtual ~RTSPServerWithREGISTERProxying();
 
@@ -402,6 +406,9 @@ protected: // redefined virtual functions
   virtual void implementCmd_REGISTER(char const* url, char const* urlSuffix, int socketToRemoteServer); // ditto
 
 private:
+  Boolean fStreamRTPOverTCP;
+  int fVerbosityLevelForProxying;
+  unsigned fRegisteredProxyCounter;
   char* fAllowedCommandNames;
 }; 
 
