@@ -27,6 +27,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _MEDIA_HH
 #include "Media.hh"
 #endif
+#ifndef _FRAMED_SOURCE_HH
+#include "FramedSource.hh"
+#endif
 #ifndef _GROUPEID_HH
 #include "GroupEId.hh"
 #endif
@@ -140,9 +143,11 @@ public:
 			   ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
 			   void* serverRequestAlternativeByteHandlerClientData) = 0;
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
-  virtual void seekStream(unsigned clientSessionId, void* streamToken, double seekNPT, double streamDuration);
+  virtual void seekStream(unsigned clientSessionId, void* streamToken, double seekNPT, double streamDuration, u_int64_t& numBytes);
      // "streamDuration", if >0.0, specifies how much data to stream, past "seekNPT".  (If <=0.0, all remaining data is streamed.)
+     // "numBytes" returns the size (in bytes) of the data to be streamed, or 0 if unknown or unlimited.
   virtual void setStreamScale(unsigned clientSessionId, void* streamToken, float scale);
+  virtual FramedSource* getStreamSource(void* streamToken);
   virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 
   virtual void testScaleFactor(float& scale); // sets "scale" to the actual supported scale

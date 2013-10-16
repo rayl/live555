@@ -41,7 +41,7 @@ protected:
   virtual ~WAVAudioFileServerMediaSubsession();
 
 protected: // redefined virtual functions
-  virtual void seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration);
+  virtual void seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration, u_int64_t& numBytes);
   virtual void setStreamSourceScale(FramedSource* inputSource, float scale);
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
 					      unsigned& estBitrate);

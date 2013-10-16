@@ -48,7 +48,7 @@ MP3AudioFileServerMediaSubsession
 }
 
 void MP3AudioFileServerMediaSubsession
-::seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration) {
+::seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration, u_int64_t& /*numBytes*/) {
   MP3FileSource* mp3Source;
   if (fGenerateADUs) {
     // "inputSource" is a filter; use its input source instead.

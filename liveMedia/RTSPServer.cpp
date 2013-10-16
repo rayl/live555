@@ -1148,9 +1148,10 @@ void RTSPServer::RTSPClientSession
 	  streamDuration = rangeEnd - rangeStart;
 	  if (streamDuration < 0.0) streamDuration = -streamDuration; // should happen only if scale < 0.0
 	}
+	u_int64_t numBytes;
 	fStreamStates[i].subsession->seekStream(fOurSessionId,
 						fStreamStates[i].streamToken,
-						rangeStart, streamDuration);
+						rangeStart, streamDuration, numBytes);
       }
     }
   }

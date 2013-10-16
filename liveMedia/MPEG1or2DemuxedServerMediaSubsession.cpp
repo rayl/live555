@@ -94,7 +94,7 @@ RTPSink* MPEG1or2DemuxedServerMediaSubsession
 }
 
 void MPEG1or2DemuxedServerMediaSubsession
-::seekStreamSource(FramedSource* inputSource, double seekNPT, double /*streamDuration*/) {
+::seekStreamSource(FramedSource* inputSource, double seekNPT, double /*streamDuration*/, u_int64_t& /*numBytes*/) {
   float const dur = duration();
   unsigned const size = fOurDemux.fileSize();
   unsigned absBytePosition = dur == 0.0 ? 0 : (unsigned)((seekNPT/dur)*size);

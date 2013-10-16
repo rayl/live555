@@ -36,7 +36,7 @@ public:
   ClientTrickPlayState(MPEG2TransportStreamIndexFile* indexFile);
 
   // Functions to bring "fNPT", "fTSRecordNum" and "fIxRecordNum" in sync:
-  void updateStateFromNPT(double npt, double seekDuration);
+  unsigned long updateStateFromNPT(double npt, double seekDuration);
   void updateStateOnScaleChange();
   void updateStateOnPlayChange(Boolean reverseToPreviousVSH);
 
@@ -152,16 +152,18 @@ void MPEG2TransportFileServerMediaSubsession
 }
 
 void MPEG2TransportFileServerMediaSubsession
-::seekStream(unsigned clientSessionId, void* streamToken, double seekNPT, double streamDuration) {
+::seekStream(unsigned clientSessionId, void* streamToken, double seekNPT, double streamDuration, u_int64_t& numBytes) {
+  // Begin by calling the original, default version of this routine:
+  OnDemandServerMediaSubsession::seekStream(clientSessionId, streamToken, seekNPT, streamDuration, numBytes);
+
+  // Then, special handling specific to indexed Transport Stream files:
   if (fIndexFile != NULL) { // we support 'trick play'
     ClientTrickPlayState* client = lookupClient(clientSessionId);
     if (client != NULL) {
-      client->updateStateFromNPT(seekNPT, streamDuration);
+      unsigned long numTSPacketsToStream = client->updateStateFromNPT(seekNPT, streamDuration);
+      numBytes = numTSPacketsToStream*TRANSPORT_PACKET_SIZE;
     }
   }
-
-  // Call the original, default version of this routine:
-  OnDemandServerMediaSubsession::seekStream(clientSessionId, streamToken, seekNPT, streamDuration);
 }
 
 void MPEG2TransportFileServerMediaSubsession
@@ -266,7 +268,7 @@ ClientTrickPlayState::ClientTrickPlayState(MPEG2TransportStreamIndexFile* indexF
     fTSRecordNum(0), fIxRecordNum(0) {
 }
 
-void ClientTrickPlayState::updateStateFromNPT(double npt, double streamDuration) {
+unsigned long ClientTrickPlayState::updateStateFromNPT(double npt, double streamDuration) {
   fNPT = (float)npt;
   // Map "fNPT" to the corresponding Transport Stream and Index record numbers:
   unsigned long tsRecordNum, ixRecordNum;
@@ -286,6 +288,9 @@ void ClientTrickPlayState::updateStateFromNPT(double npt, double streamDuration)
     fFramer->clearPIDStatusTable();
   }
 
+  // NPT might have changed when we looked it up in the index file.  Adjust "streamDuration" accordingly:
+  streamDuration += npt - (double)fNPT;
+
   unsigned long numTSRecordsToStream = 0;
   if (streamDuration > 0.0) {
     // Use the index file to figure out how many Transport Packets we get to stream:
@@ -297,6 +302,8 @@ void ClientTrickPlayState::updateStateFromNPT(double npt, double streamDuration)
     }
   }
   fFramer->setNumTSPacketsToStream(numTSRecordsToStream);
+
+  return numTSRecordsToStream;
 }
 
 void ClientTrickPlayState::updateStateOnScaleChange() {

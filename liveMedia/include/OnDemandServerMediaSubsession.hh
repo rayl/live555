@@ -65,14 +65,15 @@ public://#####@@@@@
 			   ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
                            void* serverRequestAlternativeByteHandlerClientData);
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
-  virtual void seekStream(unsigned clientSessionId, void* streamToken, double seekNPT, double streamDuration);
+  virtual void seekStream(unsigned clientSessionId, void* streamToken, double seekNPT, double streamDuration, u_int64_t& numBytes);
   virtual void setStreamScale(unsigned clientSessionId, void* streamToken, float scale);
+  virtual FramedSource* getStreamSource(void* streamToken);
   virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 
 protected: // new virtual functions, possibly redefined by subclasses
   virtual char const* getAuxSDPLine(RTPSink* rtpSink,
 				    FramedSource* inputSource);
-  virtual void seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration);
+  virtual void seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration, u_int64_t& numBytes);
     // "streamDuration", if >0.0, specifies how much data to stream, past "seekNPT".  (If <=0.0, all remaining data is streamed.)
   virtual void setStreamSourceScale(FramedSource* inputSource, float scale);
   virtual void closeStreamSource(FramedSource *inputSource);
