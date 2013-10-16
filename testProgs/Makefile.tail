@@ -11,6 +11,7 @@ UNICAST_APPS = $(UNICAST_STREAMER_APPS) $(UNICAST_RECEIVER_APPS)
 
 MISC_APPS = testMPEG1or2Splitter$(EXE) testMPEG1or2ProgramToTransportStream$(EXE) testH264VideoToTransportStream$(EXE) MPEG2TransportStreamIndexer$(EXE) testMPEG2TransportStreamTrickPlay$(EXE)
 
+PREFIX ?= /usr/local
 ALL = $(MULTICAST_APPS) $(UNICAST_APPS) $(MISC_APPS)
 all: $(ALL)
 
@@ -128,5 +129,9 @@ testGSMStreamer$(EXE):	$(GSM_STREAMER_OBJS) $(LOCAL_LIBS)
 
 clean:
 	-rm -rf *.$(OBJ) $(ALL) core *.core *~ include/*~
+
+install: $(ALL)
+	  install -d $(DESTDIR)$(PREFIX)/bin
+	  install -m 755 $(ALL) $(DESTDIR)$(PREFIX)/bin
 
 ##### Any additional, platform-specific rules come here:

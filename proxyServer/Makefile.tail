@@ -2,6 +2,7 @@
 
 PROXY_SERVER = live555ProxyServer$(EXE)
 
+PREFIX ?= /usr/local
 ALL = $(PROXY_SERVER)
 all: $(ALL)
 
@@ -30,5 +31,9 @@ live555ProxyServer$(EXE):	$(PROXY_SERVER_OBJS) $(LOCAL_LIBS)
 
 clean:
 	-rm -rf *.$(OBJ) $(ALL) core *.core *~ include/*~
+
+install: $(PROXY_SERVER)
+	  install -d $(DESTDIR)$(PREFIX)/bin
+	  install -m 755 $(PROXY_SERVER) $(DESTDIR)$(PREFIX)/bin
 
 ##### Any additional, platform-specific rules come here:
