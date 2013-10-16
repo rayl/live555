@@ -309,7 +309,7 @@ void WAVAudioFileSource::doReadFromFile() {
     gettimeofday(&fPresentationTime, NULL);
   } else {
     // Increment by the play time of the previous data:
-    unsigned uSeconds	= fPresentationTime.tv_usec + fLastPlayTime;
+    unsigned uSeconds = fPresentationTime.tv_usec + fLastPlayTime;
     fPresentationTime.tv_sec += uSeconds/1000000;
     fPresentationTime.tv_usec = uSeconds%1000000;
   }
