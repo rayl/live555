@@ -19,65 +19,31 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "playCommon.hh"
 
-Medium* createClient(UsageEnvironment& env,
-                     int verbosityLevel, char const* applicationName) {
+RTSPClient* ourRTSPClient = NULL;
+Medium* createClient(UsageEnvironment& env, char const* url, int verbosityLevel, char const* applicationName) {
   extern portNumBits tunnelOverHTTPPortNum;
-  return RTSPClient::createNew(env, verbosityLevel, applicationName,
-			       tunnelOverHTTPPortNum);
+  return ourRTSPClient = RTSPClient::createNew(env, url, verbosityLevel, applicationName, tunnelOverHTTPPortNum);
 }
 
-char* getOptionsResponse(Medium* client, char const* url,
-			 char* username, char* password) {
-  RTSPClient* rtspClient = (RTSPClient*)client;
-  return rtspClient->sendOptionsCmd(url, username, password);
+void getOptions(RTSPClient::responseHandler* afterFunc) { 
+  ourRTSPClient->sendOptionsCommand(afterFunc, ourAuthenticator);
 }
 
-char* getSDPDescriptionFromURL(Medium* client, char const* url,
-			       char const* username, char const* password,
-			       char const* /*proxyServerName*/,
-			       unsigned short /*proxyServerPortNum*/,
-			       unsigned short /*clientStartPort*/) {
-  RTSPClient* rtspClient = (RTSPClient*)client;
-  char* result;
-  if (username != NULL && password != NULL) {
-    result = rtspClient->describeWithPassword(url, username, password);
-  } else {
-    result = rtspClient->describeURL(url);
-  }
-
-  return result;
+void getSDPDescription(RTSPClient::responseHandler* afterFunc) {
+  ourRTSPClient->sendDescribeCommand(afterFunc, ourAuthenticator);
 }
 
-Boolean clientSetupSubsession(Medium* client, MediaSubsession* subsession,
-			      Boolean streamUsingTCP) {
-  if (client == NULL || subsession == NULL) return False;
-  RTSPClient* rtspClient = (RTSPClient*)client;
-  return rtspClient->setupMediaSubsession(*subsession,
-					  False, streamUsingTCP);
+void setupSubsession(MediaSubsession* subsession, Boolean streamUsingTCP, RTSPClient::responseHandler* afterFunc) {
+  Boolean forceMulticastOnUnspecified = False;
+  ourRTSPClient->sendSetupCommand(*subsession, afterFunc, False, streamUsingTCP, forceMulticastOnUnspecified, ourAuthenticator);
 }
 
-Boolean clientStartPlayingSession(Medium* client,
-				  MediaSession* session) {
-  extern double initialSeekTime, duration, scale;
-  double endTime = initialSeekTime;
-  if (scale > 0) {
-    if (duration <= 0) endTime = -1.0f;
-    else endTime = initialSeekTime + duration;
-  } else {
-    endTime = initialSeekTime - duration;
-    if (endTime < 0) endTime = 0.0f;
-  }
-
-  if (client == NULL || session == NULL) return False;
-  RTSPClient* rtspClient = (RTSPClient*)client;
-  return rtspClient->playMediaSession(*session, initialSeekTime, endTime, (float)scale);
+void startPlayingSession(MediaSession* session, double start, double end, float scale, RTSPClient::responseHandler* afterFunc) {
+  ourRTSPClient->sendPlayCommand(*session, afterFunc, start, end, scale, ourAuthenticator);
 }
 
-Boolean clientTearDownSession(Medium* client,
-			      MediaSession* session) {
-  if (client == NULL || session == NULL) return False;
-  RTSPClient* rtspClient = (RTSPClient*)client;
-  return rtspClient->teardownMediaSession(*session);
+void tearDownSession(MediaSession* session, RTSPClient::responseHandler* afterFunc) {
+  ourRTSPClient->sendTeardownCommand(*session, afterFunc, ourAuthenticator);
 }
 
 Boolean allowProxyServers = False;

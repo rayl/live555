@@ -29,9 +29,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 // Forward function definitions:
+void continueAfterOPTIONS(RTSPClient* client, int resultCode, char* resultString);
+void continueAfterDESCRIBE(RTSPClient* client, int resultCode, char* resultString);
+void continueAfterSETUP(RTSPClient* client, int resultCode, char* resultString);
+void continueAfterPLAY(RTSPClient* client, int resultCode, char* resultString);
+void continueAfterTEARDOWN(RTSPClient* client, int resultCode, char* resultString);
+
 void setupStreams();
-void startPlayingStreams();
-void tearDownStreams();
 void closeMediaSinks();
 void subsessionAfterPlaying(void* clientData);
 void subsessionByeHandler(void* clientData);
@@ -46,6 +50,8 @@ void beginQOSMeasurement();
 char const* progName;
 UsageEnvironment* env;
 Medium* ourClient = NULL;
+Authenticator* ourAuthenticator = NULL;
+char const* streamURL = NULL;
 MediaSession* session = NULL;
 TaskToken sessionTimerTask = NULL;
 TaskToken arrivalCheckTimerTask = NULL;
@@ -64,7 +70,8 @@ int verbosityLevel = 1; // by default, print verbose output
 double duration = 0;
 double durationSlop = -1.0; // extra seconds to play at the end
 double initialSeekTime = 0.0f;
-double scale = 1.0f;
+float scale = 1.0f;
+double endTime;
 unsigned interPacketGapMaxTime = 0;
 unsigned totNumPacketsReceived = ~0; // used if checking inter-packet gaps
 Boolean playContinuously = False;
@@ -74,6 +81,7 @@ Boolean sendOptionsRequestOnly = False;
 Boolean oneFilePerFrame = False;
 Boolean notifyOnPacketArrival = False;
 Boolean streamUsingTCP = False;
+unsigned short desiredPortNum = 0;
 portNumBits tunnelOverHTTPPortNum = 0;
 char* username = NULL;
 char* password = NULL;
@@ -106,7 +114,6 @@ void usage() {
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-M <mime-subtype-name>]" : "")
        << " [-s <initial-seek-time>] [-z <scale>]"
        << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] [-B <input-socket-buffer-size>] [-I <input-interface-ip-address>] [-m] <url> (or " << progName << " -o [-V] <url>)\n";
-  //##### Add "-R <dest-rtsp-url>" #####
   shutdown();
 }
 
@@ -124,8 +131,6 @@ int main(int argc, char** argv) {
   signal(SIGHUP, signalHandlerShutdown);
   signal(SIGUSR1, signalHandlerShutdown);
 #endif
-
-  unsigned short desiredPortNum = 0;
 
   // unfortunately we can't use getopt() here, as Windoze doesn't have it
   while (argc > 2) {
@@ -304,6 +309,9 @@ int main(int argc, char** argv) {
 	  ++argv; --argc;
 	}
       }
+
+      ourAuthenticator = new Authenticator;
+      ourAuthenticator->setUsernameAndPassword(username, password);
       break;
     }
 
@@ -481,10 +489,10 @@ int main(int argc, char** argv) {
     durationSlop = qosMeasurementIntervalMS > 0 ? 0.0 : 5.0;
   }
 
-  char* url = argv[1];
+  streamURL = argv[1];
 
   // Create our client object:
-  ourClient = createClient(*env, verbosityLevel, progName);
+  ourClient = createClient(*env, streamURL, verbosityLevel, progName);
   if (ourClient == NULL) {
     *env << "Failed to create " << clientProtocolName
 		<< " client: " << env->getResultMsg() << "\n";
@@ -493,34 +501,40 @@ int main(int argc, char** argv) {
 
   if (sendOptionsRequest) {
     // Begin by sending an "OPTIONS" command:
-    char* optionsResponse
-      = getOptionsResponse(ourClient, url, username, password);
-    if (sendOptionsRequestOnly) {
-      if (optionsResponse == NULL) {
-	*env << clientProtocolName << " \"OPTIONS\" request failed: "
-	     << env->getResultMsg() << "\n";
-      } else {
-	*env << clientProtocolName << " \"OPTIONS\" request returned: "
-	     << optionsResponse << "\n";
-      }
-      shutdown();
-    }
-    delete[] optionsResponse;
+    getOptions(continueAfterOPTIONS);
+  } else {
+    continueAfterOPTIONS(NULL, 0, NULL);
   }
 
-  // Open the URL, to get a SDP description:
-  char* sdpDescription
-    = getSDPDescriptionFromURL(ourClient, url, username, password,
-			       proxyServerName, proxyServerPortNum,
-			       desiredPortNum);
-  if (sdpDescription == NULL) {
-    *env << "Failed to get a SDP description from URL \"" << url
-		<< "\": " << env->getResultMsg() << "\n";
+  // All subsequent activity takes place within the event loop:
+  env->taskScheduler().doEventLoop(); // does not return
+
+  return 0; // only to prevent compiler warning
+}
+
+void continueAfterOPTIONS(RTSPClient*, int resultCode, char* resultString) {
+  if (sendOptionsRequestOnly) {
+    if (resultCode != 0) {
+      *env << clientProtocolName << " \"OPTIONS\" request failed: " << resultString << "\n";
+    } else {
+      *env << clientProtocolName << " \"OPTIONS\" request returned: " << resultString << "\n";
+    }
+    shutdown();
+  }
+  delete[] resultString;
+
+  // Next, get a SDP description for the stream:
+  getSDPDescription(continueAfterDESCRIBE);
+}
+
+void continueAfterDESCRIBE(RTSPClient*, int resultCode, char* resultString) {
+  if (resultCode != 0) {
+    *env << "Failed to get a SDP description from URL \"" << streamURL << "\": " << resultString << "\n";
     shutdown();
   }
 
-  *env << "Opened URL \"" << url
-	  << "\", returning a SDP description:\n" << sdpDescription << "\n";
+  char* sdpDescription = resultString;
+  *env << "Opened URL \"" << streamURL << "\", returning a SDP description:\n" << sdpDescription << "\n";
 
   // Create a media session object from this SDP description:
   session = MediaSession::createNew(*env, sdpDescription);
@@ -613,6 +627,41 @@ int main(int argc, char** argv) {
 
   // Perform additional 'setup' on each subsession, before playing them:
   setupStreams();
+}
+
+MediaSubsession *subsession;
+Boolean madeProgress = False;
+void continueAfterSETUP(RTSPClient*, int resultCode, char* resultString) {
+  if (resultCode == 0) {
+      *env << "Setup \"" << subsession->mediumName()
+	   << "/" << subsession->codecName()
+	   << "\" subsession (client ports " << subsession->clientPortNum()
+	   << "-" << subsession->clientPortNum()+1 << ")\n";
+      madeProgress = True;
+  } else {
+    *env << "Failed to setup \"" << subsession->mediumName()
+	 << "/" << subsession->codecName()
+	 << "\" subsession: " << env->getResultMsg() << "\n";
+  }
+
+  // Set up the next subsession, if any:
+  setupStreams();
+}
+
+void setupStreams() {
+  static MediaSubsessionIterator* setupIter = NULL;
+  if (setupIter == NULL) setupIter = new MediaSubsessionIterator(*session);
+  while ((subsession = setupIter->next()) != NULL) {
+    // We have another subsession left to set up:
+    if (subsession->clientPortNum() == 0) continue; // port # was not set
+
+    setupSubsession(subsession, streamUsingTCP, continueAfterSETUP);
+    return;
+  }
+
+  // We're done setting up subsessions.
+  delete setupIter;
+  if (!madeProgress) shutdown();
 
   // Create output files:
   if (createReceivers) {
@@ -648,7 +697,7 @@ int main(int argc, char** argv) {
     } else {
       // Create and start "FileSink"s for each subsession:
       madeProgress = False;
-      iter.reset();
+      MediaSubsessionIterator iter(*session);
       while ((subsession = iter.next()) != NULL) {
 	if (subsession->readSource() == NULL) continue; // was not initiated
 
@@ -728,47 +777,27 @@ int main(int argc, char** argv) {
   }
 
   // Finally, start playing each subsession, to start the data flow:
-
-  startPlayingStreams();
-
-  env->taskScheduler().doEventLoop(); // does not return
-
-  return 0; // only to prevent compiler warning
-}
-
-
-void setupStreams() {
-  MediaSubsessionIterator iter(*session);
-  MediaSubsession *subsession;
-  Boolean madeProgress = False;
-
-  while ((subsession = iter.next()) != NULL) {
-    if (subsession->clientPortNum() == 0) continue; // port # was not set
-
-    if (!clientSetupSubsession(ourClient, subsession, streamUsingTCP)) {
-      *env << "Failed to setup \"" << subsession->mediumName()
-		<< "/" << subsession->codecName()
-		<< "\" subsession: " << env->getResultMsg() << "\n";
-    } else {
-      *env << "Setup \"" << subsession->mediumName()
-		<< "/" << subsession->codecName()
-		<< "\" subsession (client ports " << subsession->clientPortNum()
-		<< "-" << subsession->clientPortNum()+1 << ")\n";
-      madeProgress = True;
-    }
-  }
-  if (!madeProgress) shutdown();
-}
-
-void startPlayingStreams() {
   if (duration == 0) {
     if (scale > 0) duration = session->playEndTime() - initialSeekTime; // use SDP end time
     else if (scale < 0) duration = initialSeekTime;
   }
   if (duration < 0) duration = 0.0;
 
-  if (!clientStartPlayingSession(ourClient, session)) {
-    *env << "Failed to start playing session: " << env->getResultMsg() << "\n";
+  endTime = initialSeekTime;
+  if (scale > 0) {
+    if (duration <= 0) endTime = -1.0f;
+    else endTime = initialSeekTime + duration;
+  } else {
+    endTime = initialSeekTime - duration;
+    if (endTime < 0) endTime = 0.0f;
+  }
+
+  startPlayingSession(session, initialSeekTime, endTime, scale, continueAfterPLAY);
+}
+
+void continueAfterPLAY(RTSPClient*, int resultCode, char* resultString) {
+  if (resultCode != 0) {
+    *env << "Failed to start playing session: " << resultString << "\n";
     shutdown();
   } else {
     *env << "Started playing session\n";
@@ -813,12 +842,6 @@ void startPlayingStreams() {
   // Watch for incoming packets (if desired):
   checkForPacketArrival(NULL);
   checkInterPacketGaps(NULL);
-}
-
-void tearDownStreams() {
-  if (session == NULL) return;
-
-  clientTearDownSession(ourClient, session);
 }
 
 void closeMediaSinks() {
@@ -871,7 +894,7 @@ void sessionAfterPlaying(void* /*clientData*/) {
     shutdown(0);
   } else {
     // We've been asked to play the stream(s) over again:
-    startPlayingStreams();
+    startPlayingSession(session, initialSeekTime, endTime, scale, continueAfterPLAY);
   }
 }
 
@@ -1088,7 +1111,9 @@ void printQOSData(int exitCode) {
   delete qosRecordHead;
 }
 
+int shutdownExitCode;
 void shutdown(int exitCode) {
+  shutdownExitCode = exitCode;
   if (env != NULL) {
     env->taskScheduler().unscheduleDelayedTask(sessionTimerTask);
     env->taskScheduler().unscheduleDelayedTask(arrivalCheckTimerTask);
@@ -1101,17 +1126,24 @@ void shutdown(int exitCode) {
   }
 
   // Teardown, then shutdown, any outstanding RTP/RTCP subsessions
-  tearDownStreams();
+  if (session != NULL) {
+    tearDownSession(session, continueAfterTEARDOWN);
+  } else {
+    continueAfterTEARDOWN(NULL, 0, NULL);
+  }
+}
 
+void continueAfterTEARDOWN(RTSPClient*, int /*resultCode*/, char* /*resultString*/) {
   // Now that we've stopped any more incoming data from arriving, close our output files:
   closeMediaSinks();
   Medium::close(session);
 
   // Finally, shut down our client:
+  delete ourAuthenticator;
   Medium::close(ourClient);
 
   // Adios...
-  exit(exitCode);
+  exit(shutdownExitCode);
 }
 
 void signalHandlerShutdown(int /*sig*/) {

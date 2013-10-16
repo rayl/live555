@@ -1,0 +1,8 @@
+Opening connection to 192.168.3.75, port 554...
+...Connection to server failed: No route to host
+Sending request: DESCRIBE rtsp://192.168.3.75/VideoInput/1/jpeg/1 RTSP/1.0
+CSeq: 3
+User-Agent: ./openRTSP (LIVE555 Streaming Media v2010.07.10)
+Accept: application/sdp
+
+

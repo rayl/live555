@@ -20,8 +20,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "playCommon.hh"
 #include "SIPClient.hh"
 
-Medium* createClient(UsageEnvironment& env,
-                     int verbosityLevel, char const* applicationName) {
+SIPClient* ourSIPClient = NULL;
+Medium* createClient(UsageEnvironment& env, char const* /*url*/, int verbosityLevel, char const* applicationName) {
   // First, trim any directory prefixes from "applicationName":
   char const* suffix = &applicationName[strlen(applicationName)];
   while (suffix != applicationName) {
@@ -34,74 +34,74 @@ Medium* createClient(UsageEnvironment& env,
 
   extern unsigned char desiredAudioRTPPayloadFormat;
   extern char* mimeSubtype;
-  return SIPClient::createNew(env,
-			      desiredAudioRTPPayloadFormat, mimeSubtype,
-			      verbosityLevel, applicationName);
+  return ourSIPClient = SIPClient::createNew(env, desiredAudioRTPPayloadFormat, mimeSubtype, verbosityLevel, applicationName);
 }
 
-char* getOptionsResponse(Medium* client, char const* url,
-			 char* username, char* password) {
-  SIPClient* sipClient = (SIPClient*)client;
-  sipClient->envir().setResultMsg("NOT SUPPORTED IN CLIENT");//#####
-  return NULL;//#####
+void getOptions(RTSPClient::responseHandler* afterFunc) { 
+  ourSIPClient->envir().setResultMsg("NOT SUPPORTED IN CLIENT");
+  afterFunc(NULL, -1, strDup(ourSIPClient->envir().getResultMsg()));
 }
 
-char* getSDPDescriptionFromURL(Medium* client, char const* url,
-			       char const* username, char const* password,
-			       char const* proxyServerName,
-			       unsigned short proxyServerPortNum,
-			       unsigned short clientStartPortNum) {
-  SIPClient* sipClient = (SIPClient*)client;
-
+void getSDPDescription(RTSPClient::responseHandler* afterFunc) {
+  extern char* proxyServerName;
   if (proxyServerName != NULL) {
     // Tell the SIP client about the proxy:
     NetAddressList addresses(proxyServerName);
     if (addresses.numAddresses() == 0) {
-      client->envir() << "Failed to find network address for \""
-		      << proxyServerName << "\"\n";
+      ourSIPClient->envir() << "Failed to find network address for \"" << proxyServerName << "\"\n";
     } else {
       NetAddress address = *(addresses.firstAddress());
       unsigned proxyServerAddress // later, allow for IPv6 #####
 	= *(unsigned*)(address.data());
+      extern unsigned short proxyServerPortNum;
       if (proxyServerPortNum == 0) proxyServerPortNum = 5060; // default
 
-      sipClient->setProxyServer(proxyServerAddress, proxyServerPortNum);
+      ourSIPClient->setProxyServer(proxyServerAddress, proxyServerPortNum);
     }
   }
 
+  extern unsigned short desiredPortNum;
+  unsigned short clientStartPortNum = desiredPortNum;
   if (clientStartPortNum == 0) clientStartPortNum = 8000; // default
-  sipClient->setClientStartPortNum(clientStartPortNum);
+  ourSIPClient->setClientStartPortNum(clientStartPortNum);
 
+  extern char const* streamURL;
+  char const* username = ourAuthenticator->username();
+  char const* password = ourAuthenticator->password();
   char* result;
   if (username != NULL && password != NULL) {
-    result = sipClient->inviteWithPassword(url, username, password);
+    result = ourSIPClient->inviteWithPassword(streamURL, username, password);
   } else {
-    result = sipClient->invite(url);
+    result = ourSIPClient->invite(streamURL);
   }
 
-  return result;
+  int resultCode = result == NULL ? -1 : 0;
+  afterFunc(NULL, resultCode, strDup(result));
 }
 
-Boolean clientSetupSubsession(Medium* client, MediaSubsession* subsession,
-			      Boolean streamUsingTCP) {
+void setupSubsession(MediaSubsession* subsession, Boolean /*streamUsingTCP*/, RTSPClient::responseHandler* afterFunc) {
   subsession->sessionId = "mumble"; // anything that's non-NULL will work
-  return True;
+
+  afterFunc(NULL, 0, NULL);
 }
 
-Boolean clientStartPlayingSession(Medium* client,
-				  MediaSession* /*session*/) {
-  SIPClient* sipClient = (SIPClient*)client;
-  return sipClient->sendACK();
-  //##### This isn't quite right, because we should really be allowing
-  //##### for the possibility of this ACK getting lost, by retransmitting
-  //##### it *each time* we get a 2xx response from the server.
+void startPlayingSession(MediaSession* /*session*/, double /*start*/, double /*end*/, float /*scale*/, RTSPClient::responseHandler* afterFunc) {
+  if (ourSIPClient->sendACK()) {
+    //##### This isn't quite right, because we should really be allowing
+    //##### for the possibility of this ACK getting lost, by retransmitting
+    //##### it *each time* we get a 2xx response from the server.
+    afterFunc(NULL, 0, NULL);
+  } else {
+    afterFunc(NULL, -1, strDup(ourSIPClient->envir().getResultMsg()));
+  }
 }
 
-Boolean clientTearDownSession(Medium* client,
-			      MediaSession* /*session*/) {
-  if (client == NULL) return False;
-  SIPClient* sipClient = (SIPClient*)client;
-  return sipClient->sendBYE();
+void tearDownSession(MediaSession* /*session*/, RTSPClient::responseHandler* afterFunc) {
+  if (ourSIPClient == NULL || ourSIPClient->sendBYE()) {
+    afterFunc(NULL, 0, NULL);
+  } else {
+    afterFunc(NULL, -1, strDup(ourSIPClient->envir().getResultMsg()));
+  }
 }
 
 Boolean allowProxyServers = True;

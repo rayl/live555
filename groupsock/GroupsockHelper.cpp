@@ -240,7 +240,7 @@ int readSocket(UsageEnvironment& env,
 	// it as if it were a read of zero bytes, and hope
 	// we don't have to do anything else to 'reset'
 	// this alleged error:
-	|| err == 0
+	|| err == 0 || err == EWOULDBLOCK
 #else
 	|| err == EAGAIN
 #endif
