@@ -59,6 +59,8 @@ public:
   u_int32_t lastReceivedSSRC() const { return fLastReceivedSSRC; }
   // Note: This is the SSRC in the most recently received RTP packet; not *our* SSRC
 
+  Boolean& enableRTCPReports() { return fEnableRTCPReports; }
+
   void setStreamSocket(int sockNum, unsigned char streamChannelId) {
     // hack to allow sending RTP over TCP (RFC 2236, section 10.12)
     fRTPInterface.setStreamSocket(sockNum, streamChannelId);
@@ -102,6 +104,7 @@ private:
   unsigned char fRTPPayloadFormat;
   unsigned fTimestampFrequency;
   u_int32_t fSSRC;
+  Boolean fEnableRTCPReports; // whether RTCP "RR" reports should be sent for this source (default: True)
 
   RTPReceptionStatsDB* fReceptionStatsDB;
 };

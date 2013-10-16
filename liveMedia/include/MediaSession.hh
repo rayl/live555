@@ -262,8 +262,6 @@ public:
     Boolean infoIsNew; // not part of the RTSP header; instead, set whenever this struct is filled in
   } rtpInfo;
 
-  Boolean deferRTCPSetup; // flag used by RTSP
-
   double getNormalPlayTime(struct timeval const& presentationTime);
   // Computes the stream's "Normal Play Time" (NPT) from the given "presentationTime".
   // (For the definition of "Normal Play Time", see RFC 2326, section 3.6.)
