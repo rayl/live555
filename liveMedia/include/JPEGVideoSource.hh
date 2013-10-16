@@ -39,6 +39,10 @@ public:
     // (The default implementation of this function just returns NULL.)
     // "precision" and "length" are as defined in RFC 2435, section 3.1.8.
 
+  virtual u_int16_t restartInterval();
+    // If restart intervals are being used (i.e., 64 <= type() <= 127), then this function must be
+    // redefined - by a subclass - to return a non-zero value.
+
 protected:
   JPEGVideoSource(UsageEnvironment& env); // abstract base class
   virtual ~JPEGVideoSource();

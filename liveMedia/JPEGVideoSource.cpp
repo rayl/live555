@@ -35,6 +35,11 @@ u_int8_t const* JPEGVideoSource::quantizationTables(u_int8_t& precision,
   return NULL;
 }
 
+u_int16_t JPEGVideoSource::restartInterval() {
+  // Default implementation
+  return 0;
+}
+
 Boolean JPEGVideoSource::isJPEGVideoSource() const {
   return True;
 }

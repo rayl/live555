@@ -56,16 +56,32 @@ void JPEGVideoRTPSink
   if (source == NULL) return; // sanity check
 
   u_int8_t mainJPEGHeader[8]; // the special header
+  u_int8_t const type = source->type();
 
   mainJPEGHeader[0] = 0; // Type-specific
   mainJPEGHeader[1] = fragmentationOffset >> 16;
   mainJPEGHeader[2] = fragmentationOffset >> 8;
   mainJPEGHeader[3] = fragmentationOffset;
-  mainJPEGHeader[4] = source->type();
+  mainJPEGHeader[4] = type;
   mainJPEGHeader[5] = source->qFactor();
   mainJPEGHeader[6] = source->width();
   mainJPEGHeader[7] = source->height();
   setSpecialHeaderBytes(mainJPEGHeader, sizeof mainJPEGHeader);
+
+  unsigned restartMarkerHeaderSize = 0; // by default
+  if (type >= 64 && type <= 127) {
+    // There is also a Restart Marker Header:
+    restartMarkerHeaderSize = 4;
+    u_int16_t const restartInterval = source->restartInterval(); // should be non-zero
+
+    u_int8_t restartMarkerHeader[4];
+    restartMarkerHeader[0] = restartInterval>>8;
+    restartMarkerHeader[1] = restartInterval&0xFF;
+    restartMarkerHeader[2] = restartMarkerHeader[3] = 0xFF; // F=L=1; Restart Count = 0x3FFF
+
+    setSpecialHeaderBytes(restartMarkerHeader, restartMarkerHeaderSize,
+                          sizeof mainJPEGHeader/* start position */);
+  }
 
   if (fragmentationOffset == 0 && source->qFactor() >= 128) {
     // There is also a Quantization Header:
@@ -88,7 +104,7 @@ void JPEGVideoRTPSink
     }
 
     setSpecialHeaderBytes(quantizationHeader, quantizationHeaderSize,
-			  sizeof mainJPEGHeader /* start position */);
+			  sizeof mainJPEGHeader + restartMarkerHeaderSize/* start position */);
     delete[] quantizationHeader;
   }
 
@@ -110,6 +126,12 @@ unsigned JPEGVideoRTPSink::specialHeaderSize() const {
 
   unsigned headerSize = 8; // by default
 
+  u_int8_t const type = source->type();
+  if (type >= 64 && type <= 127) {
+    // There is also a Restart Marker Header:
+    headerSize += 4;
+  }
+
   if (curFragmentationOffset() == 0 && source->qFactor() >= 128) {
     // There is also a Quantization Header:
     u_int8_t dummy;
@@ -118,8 +140,6 @@ unsigned JPEGVideoRTPSink::specialHeaderSize() const {
 
     headerSize += 4 + quantizationTablesSize;
   }
-
-  // Note: We assume that there are no 'restart markers'
 
   return headerSize;
 }
