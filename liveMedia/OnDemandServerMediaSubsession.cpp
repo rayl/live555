@@ -443,15 +443,6 @@ void StreamState
 	       ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
 	       void* serverRequestAlternativeByteHandlerClientData) {
   if (dests == NULL) return;
-  if (!fAreCurrentlyPlaying && fMediaSource != NULL) {
-    if (fRTPSink != NULL) {
-      fRTPSink->startPlaying(*fMediaSource, afterPlayingStreamState, this);
-      fAreCurrentlyPlaying = True;
-    } else if (fUDPSink != NULL) {
-      fUDPSink->startPlaying(*fMediaSource, afterPlayingStreamState, this);
-      fAreCurrentlyPlaying = True;
-    }
-  }
 
   if (fRTCPInstance == NULL && fRTPSink != NULL) {
     // Create (and start) a 'RTCP instance' for this RTP sink:
@@ -481,6 +472,16 @@ void StreamState
     if (fRTCPInstance != NULL) {
       fRTCPInstance->setSpecificRRHandler(dests->addr.s_addr, dests->rtcpPort,
 					  rtcpRRHandler, rtcpRRHandlerClientData);
+    }
+  }
+
+  if (!fAreCurrentlyPlaying && fMediaSource != NULL) {
+    if (fRTPSink != NULL) {
+      fRTPSink->startPlaying(*fMediaSource, afterPlayingStreamState, this);
+      fAreCurrentlyPlaying = True;
+    } else if (fUDPSink != NULL) {
+      fUDPSink->startPlaying(*fMediaSource, afterPlayingStreamState, this);
+      fAreCurrentlyPlaying = True;
     }
   }
 }
