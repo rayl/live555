@@ -109,7 +109,7 @@ void H264VideoMatroskaFileServerMediaSubsession
 FramedSource* H264VideoMatroskaFileServerMediaSubsession
 ::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate) {
   // Allow for the possibility of very large NAL units being fed to our "RTPSink" objects:
-  OutPacketBuffer::maxSize = 150000; // bytes
+  OutPacketBuffer::maxSize = 300000; // bytes
   estBitrate = 500; // kbps, estimate
 
   // Create the video source:

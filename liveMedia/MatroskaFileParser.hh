@@ -39,7 +39,8 @@ enum MatroskaParseState {
   LOOKING_FOR_CLUSTER,
   LOOKING_FOR_BLOCK,
   PARSING_BLOCK,
-  DELIVERING_FRAME_WITHIN_BLOCK
+  DELIVERING_FRAME_WITHIN_BLOCK,
+  DELIVERING_FRAME_BYTES
 };
 
 class MatroskaFileParser: public StreamParser {
@@ -68,8 +69,9 @@ private:
   void lookForNextBlock();
   void parseBlock();
   void deliverFrameWithinBlock();
+  void deliverFrameBytes();
 
-  void getFrameBytes(MatroskaTrack* track, u_int8_t* to, unsigned numBytesToGet, unsigned numBytesToSkip = 0);
+  void getCommonFrameBytes(MatroskaTrack* track, u_int8_t* to, unsigned numBytesToGet, unsigned numBytesToSkip);
 
   Boolean parseEBMLNumber(EBMLNumber& num);
   Boolean parseEBMLIdAndSize(EBMLId& id, EBMLDataSize& size);
@@ -118,6 +120,11 @@ private:
   double fPresentationTimeOffset;
   unsigned fNextFrameNumberToDeliver;
   unsigned fCurOffsetWithinFrame, fSavedCurOffsetWithinFrame; // used if track->haveSubframes()
+
+  // Parameters of the (sub)frame that's currently being delivered:
+  u_int8_t* fCurFrameTo;
+  unsigned fCurFrameNumBytesToGet;
+  unsigned fCurFrameNumBytesToSkip;
 };
 
 #endif

@@ -112,6 +112,10 @@ unsigned StreamParser::getBits(unsigned numBits) {
   }
 }
 
+unsigned StreamParser::bankSize() const {
+  return BANK_SIZE;
+}
+
 #define NO_MORE_BUFFERED_INPUT 1
 
 void StreamParser::ensureValidBytes1(unsigned numBytesNeeded) {
@@ -141,7 +145,7 @@ void StreamParser::ensureValidBytes1(unsigned numBytesNeeded) {
     // If this happens, it means that we have too much saved parser state.
     // To fix this, increase BANK_SIZE as appropriate.
     fInputSource->envir() << "StreamParser internal error ("
-			  << fCurParserIndex << "+ "
+			  << fCurParserIndex << " + "
 			  << numBytesNeeded << " > "
 			  << BANK_SIZE << ")\n";
     fInputSource->envir().internalError();

@@ -153,7 +153,11 @@ int RTSPServer::setUpOurSocket(UsageEnvironment& env, Port& ourPort) {
   int ourSocket = -1;
 
   do {
+    // The following statement is enabled by default.
+    // Don't disable it (by defining ALLOW_RTSP_SERVER_PORT_REUSE) unless you know what you're doing.
+#ifndef ALLOW_RTSP_SERVER_PORT_REUSE
     NoReuse dummy; // Don't use this socket if there's already a local server using it
+#endif
 
     ourSocket = setupStreamSocket(env, ourPort);
     if (ourSocket < 0) break;

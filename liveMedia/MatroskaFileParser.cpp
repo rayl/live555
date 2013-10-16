@@ -158,6 +158,10 @@ Boolean MatroskaFileParser::parse() {
 	}
         case DELIVERING_FRAME_WITHIN_BLOCK: {
 	  deliverFrameWithinBlock();
+	  break;
+	}
+        case DELIVERING_FRAME_BYTES: {
+	  deliverFrameBytes();
 	  return False; // Halt parsing for now.  A new 'read' from downstream will cause parsing to resume.
 	  break;
 	}
@@ -891,7 +895,11 @@ void MatroskaFileParser::deliverFrameWithinBlock() {
       unsigned subframeSize = 0;
       for (unsigned i = 0; i < track->subframeSizeSize; ++i) {
 	u_int8_t c;
-	getFrameBytes(track, &c, 1);
+	getCommonFrameBytes(track, &c, 1, 0);
+	if (fCurFrameNumBytesToGet > 0) { // it'll be 1
+	  c = get1Byte();
+	  ++fCurOffsetWithinFrame;
+	}
 	subframeSize = subframeSize*256 + c;
       }
       if (subframeSize == 0 || fCurOffsetWithinFrame + subframeSize > frameSize) break; // sanity check
@@ -921,6 +929,8 @@ void MatroskaFileParser::deliverFrameWithinBlock() {
 	durationInMicroseconds = 0;
       }
     }
+    demuxedTrack->presentationTime() = presentationTime;
+    demuxedTrack->durationInMicroseconds() = durationInMicroseconds;
 
     // Deliver the next block now:
     if (frameSize > demuxedTrack->maxSize()) {
@@ -930,14 +940,52 @@ void MatroskaFileParser::deliverFrameWithinBlock() {
       demuxedTrack->numTruncatedBytes() = 0;
       demuxedTrack->frameSize() = frameSize;
     }
-    getFrameBytes(track, demuxedTrack->to(), demuxedTrack->frameSize(), demuxedTrack->numTruncatedBytes());
-    demuxedTrack->presentationTime() = presentationTime;
-    demuxedTrack->durationInMicroseconds() = durationInMicroseconds;
+    getCommonFrameBytes(track, demuxedTrack->to(), demuxedTrack->frameSize(), demuxedTrack->numTruncatedBytes());
+
+    // Next, deliver (and/or skip) bytes from the input file:
+    fCurrentParseState = DELIVERING_FRAME_BYTES;
+    setParseState();
+    return;
+  } while (0);
+
+  // An error occurred.  Try to recover:
+#ifdef DEBUG
+  fprintf(stderr, "deliverFrameWithinBlock(): Error parsing data; trying to recover...\n");
+#endif
+  fCurrentParseState = LOOKING_FOR_BLOCK;
+}
+
+void MatroskaFileParser::deliverFrameBytes() {
+  do {
+    MatroskaTrack* track = fOurFile.lookup(fBlockTrackNumber);
+    if (track == NULL) break; // shouldn't happen
+
+    MatroskaDemuxedTrack* demuxedTrack = fOurDemux->lookupDemuxedTrack(fBlockTrackNumber);
+    if (demuxedTrack == NULL) break; // shouldn't happen
+
+    unsigned const BANK_SIZE = bankSize();
+    while (fCurFrameNumBytesToGet > 0) {
+      // Hack: We can get no more than BANK_SIZE bytes at a time:
+      unsigned numBytesToGet = fCurFrameNumBytesToGet > BANK_SIZE ? BANK_SIZE : fCurFrameNumBytesToGet;
+      getBytes(fCurFrameTo, numBytesToGet);
+      fCurFrameTo += numBytesToGet;
+      fCurFrameNumBytesToGet -= numBytesToGet;
+      fCurOffsetWithinFrame += numBytesToGet;
+      setParseState();
+    }
+    while (fCurFrameNumBytesToSkip > 0) {
+      // Hack: We can skip no more than BANK_SIZE bytes at a time:
+      unsigned numBytesToSkip = fCurFrameNumBytesToSkip > BANK_SIZE ? BANK_SIZE : fCurFrameNumBytesToSkip;
+      skipBytes(numBytesToSkip);
+      fCurFrameNumBytesToSkip -= numBytesToSkip;
+      fCurOffsetWithinFrame += numBytesToSkip;
+      setParseState();
+    }
 #ifdef DEBUG
     fprintf(stderr, "\tdelivered frame #%d: %d bytes", fNextFrameNumberToDeliver, demuxedTrack->frameSize());
     if (track->haveSubframes()) fprintf(stderr, "[offset %d]", fCurOffsetWithinFrame - track->subframeSizeSize - demuxedTrack->frameSize() - demuxedTrack->numTruncatedBytes());
     if (demuxedTrack->numTruncatedBytes() > 0) fprintf(stderr, " (%d bytes truncated)", demuxedTrack->numTruncatedBytes());
-    fprintf(stderr, " @%u.%06u (%.06f from start); duration %u us\n", demuxedTrack->presentationTime().tv_sec, demuxedTrack->presentationTime().tv_usec, pt-fPresentationTimeOffset, demuxedTrack->durationInMicroseconds());
+    fprintf(stderr, " @%u.%06u (%.06f from start); duration %u us\n", demuxedTrack->presentationTime().tv_sec, demuxedTrack->presentationTime().tv_usec, demuxedTrack->presentationTime().tv_sec+demuxedTrack->presentationTime().tv_usec/1000000.0-fPresentationTimeOffset, demuxedTrack->durationInMicroseconds());
 #endif
 
     if (!track->haveSubframes()
@@ -949,6 +997,8 @@ void MatroskaFileParser::deliverFrameWithinBlock() {
     if (fNextFrameNumberToDeliver == fNumFramesInBlock) {
       // We've delivered all of the frames from this block.  Look for another block next:
       fCurrentParseState = LOOKING_FOR_BLOCK;
+    } else {
+      fCurrentParseState = DELIVERING_FRAME_WITHIN_BLOCK;
     }
 
     setParseState();
@@ -958,13 +1008,13 @@ void MatroskaFileParser::deliverFrameWithinBlock() {
 
   // An error occurred.  Try to recover:
 #ifdef DEBUG
-  fprintf(stderr, "deliverFrameWithinBlock(): Error parsing data; trying to recover...\n");
+  fprintf(stderr, "deliverFrameBytes(): Error parsing data; trying to recover...\n");
 #endif
   fCurrentParseState = LOOKING_FOR_BLOCK;
 }
 
 void MatroskaFileParser
-::getFrameBytes(MatroskaTrack* track, u_int8_t* to, unsigned numBytesToGet, unsigned numBytesToSkip) {
+::getCommonFrameBytes(MatroskaTrack* track, u_int8_t* to, unsigned numBytesToGet, unsigned numBytesToSkip) {
   if (track->headerStrippedBytesSize > fCurOffsetWithinFrame) {
     // We have some common 'header stripped' bytes that remain to be prepended to the frame.  Use these first:
     unsigned numRemainingHeaderStrippedBytes = track->headerStrippedBytesSize - fCurOffsetWithinFrame;
@@ -989,10 +1039,9 @@ void MatroskaFileParser
     }
   }
 
-  // Apart from 'header stripped' bytes, all remaining bytes are just extracted from the file's block data:
-  if (numBytesToGet > 0) getBytes(to, numBytesToGet);
-  if (numBytesToSkip > 0) skipBytes(numBytesToSkip);
-  fCurOffsetWithinFrame += numBytesToGet + numBytesToSkip;
+  fCurFrameTo = to;
+  fCurFrameNumBytesToGet = numBytesToGet;
+  fCurFrameNumBytesToSkip = numBytesToSkip;
 }
 
 Boolean MatroskaFileParser::parseEBMLNumber(EBMLNumber& num) {
@@ -1116,6 +1165,11 @@ Boolean MatroskaFileParser::parseEBMLVal_binary(EBMLDataSize& size, u_int8_t*& r
 void MatroskaFileParser::skipHeader(EBMLDataSize const& size) {
   unsigned sv = (unsigned)size.val();
 
+  // Hack: To avoid tripping into a parser 'internal error' if we try to skip an excessively large distance.
+  // (Such large distances are likely caused by erroneous data.  We might not be able to recover from this, but at least we won't
+  //  generate a parser 'internal error'.)
+  if (sv > bankSize()-12) sv = bankSize()-12;
+  
   skipBytes(sv);
   fCurOffsetInFile += sv;
 }

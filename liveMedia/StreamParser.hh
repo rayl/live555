@@ -99,6 +99,8 @@ protected: // we're a virtual base class
 
   Boolean haveSeenEOF() const { return fHaveSeenEOF; }
 
+  unsigned bankSize() const;
+
 private:
   unsigned char* curBank() { return fCurBank; }
   unsigned char* nextToParse() { return &curBank()[fCurParserIndex]; }
