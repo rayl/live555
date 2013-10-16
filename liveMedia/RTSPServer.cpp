@@ -322,6 +322,7 @@ RTSPServer::RTSPClientSession::~RTSPClientSession() {
     if (fOurServerMediaSession->referenceCount() == 0
 	&& fOurServerMediaSession->deleteWhenUnreferenced()) {
       fOurServer.removeServerMediaSession(fOurServerMediaSession);
+      fOurServerMediaSession = NULL;
     }
   }
 }
@@ -399,7 +400,7 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
       unsigned decodedSize;
       unsigned char* decodedBytes = base64Decode((char*)(ptr-fBase64RemainderCount), decodedSize);
 #ifdef DEBUG
-      fprintf(stderr, "Base64-decided %d input bytes into %d new bytes:", numBytesToDecode, decodedSize);
+      fprintf(stderr, "Base64-decoded %d input bytes into %d new bytes:", numBytesToDecode, decodedSize);
       for (unsigned k = 0; k < decodedSize; ++k) fprintf(stderr, "%c", decodedBytes[k]);
       fprintf(stderr, "\n");
 #endif

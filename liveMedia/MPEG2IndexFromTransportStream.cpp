@@ -205,6 +205,12 @@ void MPEG2IFrameIndexFromTransportStream
     if (!fHaveSeenFirstPCR) {
       fFirstPCR = pcr;
       fHaveSeenFirstPCR = True;
+    } else if (pcr < fLastPCR) {
+      // The PCR timestamp has gone backwards.  DIsplay a warning about this (because it indicates buggy Transport Stream data),
+      // and compensate for it.
+      envir() << "\nWarning: At about " << fLastPCR-fFirstPCR << " seconds into the file, the PCR timestamp decreased - from "
+	      << fLastPCR << " to " << pcr << "\n";
+      fFirstPCR -= (fLastPCR - pcr);
     }
     fLastPCR = pcr;
   }
@@ -355,7 +361,8 @@ Boolean MPEG2IFrameIndexFromTransportStream::deliverIndexRecord() {
   if (head->recordType() == RECORD_JUNK) {
     // Don't actually deliver the data to the client:
     delete head;
-    return True;
+    // Try to deliver the next record instead:
+    return deliverIndexRecord();
   }
 
   // Deliver data from the head record:
@@ -415,7 +422,7 @@ Boolean MPEG2IFrameIndexFromTransportStream::parseFrame() {
     if (!parseToNextCode(nextCode)) return False;
 
     numInitialBadBytes = fParseBufferParseEnd - fParseBufferFrameStart;
-    //fprintf(stderr, "#####numInitialBadBytes: 0x%x\n", numInitialBadBytes);
+    //fprintf(stderr, "#####numInitialBadBytes: %d (0x%x)\n", numInitialBadBytes, numInitialBadBytes);
     fParseBufferFrameStart = fParseBufferParseEnd;
     fParseBufferParseEnd += 4; // skip over the code that we just saw
     p = &fParseBuffer[fParseBufferFrameStart];

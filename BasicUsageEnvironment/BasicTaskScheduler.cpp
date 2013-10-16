@@ -88,8 +88,6 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
       // To stop this from happening again, create a dummy socket:
       int dummySocketNum = socket(AF_INET, SOCK_DGRAM, 0);
       FD_SET((unsigned)dummySocketNum, &fReadSet);
-      FD_SET((unsigned)dummySocketNum, &fWriteSet);
-      FD_SET((unsigned)dummySocketNum, &fExceptionSet);
     }
     if (err != EINTR) {
 #else
