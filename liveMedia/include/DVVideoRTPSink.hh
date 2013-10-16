@@ -25,10 +25,14 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _VIDEO_RTP_SINK_HH
 #include "VideoRTPSink.hh"
 #endif
+#ifndef _DV_VIDEO_STREAM_FRAMER_HH
+#include "DVVideoStreamFramer.hh"
+#endif
 
 class DVVideoRTPSink: public VideoRTPSink {
 public:
   static DVVideoRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat);
+  char const* auxSDPLineFromFramer(DVVideoStreamFramer* framerSource);
 
 protected:
   DVVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat);

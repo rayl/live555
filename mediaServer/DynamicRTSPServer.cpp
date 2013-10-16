@@ -149,6 +149,13 @@ static ServerMediaSession* createNewSMS(UsageEnvironment& env,
     // change the following to True:
     Boolean convertToULaw = False;
     sms->addSubsession(WAVAudioFileServerMediaSubsession::createNew(env, fileName, reuseSource, convertToULaw));
+  } else if (strcmp(extension, ".dv") == 0) {
+    // Assumed to be a DV Video file
+    // First, make sure that the RTPSinks' buffers will be large enough to handle the huge size of DV frames (as big as 288000).
+    OutPacketBuffer::maxSize = 300000;
+
+    NEW_SMS("DV Video");
+    sms->addSubsession(DVVideoFileServerMediaSubsession::createNew(env, fileName, reuseSource));
   }
 
   return sms;

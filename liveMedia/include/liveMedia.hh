@@ -99,6 +99,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEG2TransportFileServerMediaSubsession.hh"
 #include "H263plusVideoFileServerMediaSubsession.hh"
 #include "ADTSAudioFileServerMediaSubsession.hh"
+#include "DVVideoFileServerMediaSubsession.hh"
 #include "DarwinInjector.hh"
 
 #endif

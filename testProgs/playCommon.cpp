@@ -565,39 +565,42 @@ int main(int argc, char** argv) {
 
     if (createReceivers) {
       if (!subsession->initiate(simpleRTPoffsetArg)) {
-		*env << "Unable to create receiver for \"" << subsession->mediumName()
-			<< "/" << subsession->codecName()
-			<< "\" subsession: " << env->getResultMsg() << "\n";
+	*env << "Unable to create receiver for \"" << subsession->mediumName()
+	     << "/" << subsession->codecName()
+	     << "\" subsession: " << env->getResultMsg() << "\n";
       } else {
-		*env << "Created receiver for \"" << subsession->mediumName()
-			<< "/" << subsession->codecName()
-			<< "\" subsession (client ports " << subsession->clientPortNum()
-			<< "-" << subsession->clientPortNum()+1 << ")\n";
-		madeProgress = True;
-
-		if (subsession->rtpSource() != NULL) {
-		  // Because we're saving the incoming data, rather than playing
-		  // it in real time, allow an especially large time threshold
-		  // (1 second) for reordering misordered incoming packets:
-		  unsigned const thresh = 1000000; // 1 second
-		  subsession->rtpSource()->setPacketReorderingThresholdTime(thresh);
-
-		  if (socketInputBufferSize > 0) {
-		    // Set the RTP source's input buffer size as specified:
-		    int socketNum
-		      = subsession->rtpSource()->RTPgs()->socketNum();
-		    unsigned curBufferSize
-		      = getReceiveBufferSize(*env, socketNum);
-		    unsigned newBufferSize
-		      = setReceiveBufferTo(*env, socketNum, socketInputBufferSize);
-		    *env << "Changed socket receive buffer size for the \""
-			 << subsession->mediumName()
-			 << "/" << subsession->codecName()
-			 << "\" subsession from "
-			 << curBufferSize << " to "
-			 << newBufferSize << " bytes\n";
-		  }
-		}
+	*env << "Created receiver for \"" << subsession->mediumName()
+	     << "/" << subsession->codecName()
+	     << "\" subsession (client ports " << subsession->clientPortNum()
+	     << "-" << subsession->clientPortNum()+1 << ")\n";
+	madeProgress = True;
+	
+	if (subsession->rtpSource() != NULL) {
+	  // Because we're saving the incoming data, rather than playing
+	  // it in real time, allow an especially large time threshold
+	  // (1 second) for reordering misordered incoming packets:
+	  unsigned const thresh = 1000000; // 1 second
+	  subsession->rtpSource()->setPacketReorderingThresholdTime(thresh);
+	  
+	  // Set the RTP source's OS socket buffer size as appropriate - either if we were explicitly asked (using -B),
+	  // or if the desired FileSink buffer size happens to be larger than the current OS socket buffer size.
+	  // (The latter case is a heuristic, on the assumption that if the user asked for a large FileSink buffer size,
+	  // then the input data rate may be large enough to justify increasing the OS socket buffer size also.)
+	  int socketNum = subsession->rtpSource()->RTPgs()->socketNum();
+	  unsigned curBufferSize = getReceiveBufferSize(*env, socketNum);
+	  if (socketInputBufferSize > 0 || fileSinkBufferSize > curBufferSize) {
+	    unsigned newBufferSize = socketInputBufferSize > 0 ? socketInputBufferSize : fileSinkBufferSize;
+	    newBufferSize = setReceiveBufferTo(*env, socketNum, newBufferSize);
+	    if (socketInputBufferSize > 0) { // The user explicitly asked for the new socket buffer size; announce it:
+	      *env << "Changed socket receive buffer size for the \""
+		   << subsession->mediumName()
+		   << "/" << subsession->codecName()
+		   << "\" subsession from "
+		   << curBufferSize << " to "
+		   << newBufferSize << " bytes\n";
+	    }
+	  }
+	}
       }
     } else {
       if (subsession->clientPortNum() == 0) {

@@ -17,7 +17,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
 // A filter that parses a DV input stream into DV frames to deliver to the downstream object
 // Implementation
-// (Thanks to Ben Hutchings for a prototype implementation.)
+// (Thanks to Ben Hutchings for his help, including a prototype implementation.)
 
 #include "DVVideoStreamFramer.hh"
 #include "GroupsockHelper.hh"
@@ -27,6 +27,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 DVVideoStreamFramer::DVVideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource)
   : FramedFilter(env, inputSource),
     fOurProfile(NULL), fInitialBlocksPresent(False) {
+  fTo = NULL; // hack used when reading "fSavedInitialBlocks"
   // Use the current wallclock time as the initial 'presentation time':
   gettimeofday(&fNextFramePresentationTime, NULL);
 }
@@ -46,7 +47,7 @@ struct DVVideoProfile {
   unsigned sType;
   unsigned sequenceCount;
   unsigned channelCount;
-  unsigned dvFrameSize; // in bytes (== sequenceCount*channelCount*150*80)
+  unsigned dvFrameSize; // in bytes (== sequenceCount*channelCount*(DV_NUM_BLOCKS_PER_SEQUENCE*DV_DIF_BLOCK_SIZE i.e. 12000))
   double frameDuration; // duration of the above, in microseconds.  (1000000/this == frame rate)
 };
 
@@ -66,20 +67,29 @@ static DVVideoProfile const profiles[] = {
 
 
 char const* DVVideoStreamFramer::profileName() {
-  fprintf(stderr, "#####@@@@@DVVideoStreamFramer::profileName()1: fOurProfile: %p\n", fOurProfile);
-  if (fOurProfile != NULL) return ((DVVideoProfile const*)fOurProfile)->name;
-  fprintf(stderr, "#####@@@@@DVVideoStreamFramer::profileName()2\n");
+  if (fOurProfile == NULL) getProfile();
 
+  return fOurProfile != NULL ? ((DVVideoProfile const*)fOurProfile)->name : NULL;
+}
+
+Boolean DVVideoStreamFramer::getFrameParameters(unsigned& frameSize, double& frameDuration) {
+  if (fOurProfile == NULL) getProfile();
+  if (fOurProfile == NULL) return False;
+
+  frameSize = ((DVVideoProfile const*)fOurProfile)->dvFrameSize;
+  frameDuration = ((DVVideoProfile const*)fOurProfile)->frameDuration;
+  return True;
+}
+
+void DVVideoStreamFramer::getProfile() {
+  //  fprintf(stderr, "#####@@@@@getProfile()1\n");
   // To determine the stream's profile, we need to first read a chunk of data that we can parse:
   fInputSource->getNextFrame(fSavedInitialBlocks, DV_SAVED_INITIAL_BLOCKS_SIZE,
 			     afterGettingFrame, this, FramedSource::handleClosure, this);
   
   // Handle events until the requested data arrives:
-  fprintf(stderr, "#####@@@@@DVVideoStreamFramer::profileName()3\n");
   envir().taskScheduler().doEventLoop(&fInitialBlocksPresent);
-  fprintf(stderr, "#####@@@@@DVVideoStreamFramer::profileName()4: fOurProfile: %p, profile name %s\n", fOurProfile, fOurProfile !=NULL ? ((DVVideoProfile const*)fOurProfile)->name : "");
-
-  return fOurProfile != NULL ? ((DVVideoProfile const*)fOurProfile)->name : "";
+  //  fprintf(stderr, "#####@@@@@getProfile()9\n");
 }
 
 Boolean DVVideoStreamFramer::isDVVideoStreamFramer() const {
@@ -87,7 +97,6 @@ Boolean DVVideoStreamFramer::isDVVideoStreamFramer() const {
 }
 
 void DVVideoStreamFramer::doGetNextFrame() {
-  fprintf(stderr, "#####@@@@@DVVideoStreamFramer::doGetNextFrame()1\n");
   fFrameSize = 0; // initially, until we deliver data
 
   // If we have saved initial blocks, use this data first.
@@ -100,18 +109,27 @@ void DVVideoStreamFramer::doGetNextFrame() {
     }
 
     memmove(fTo, fSavedInitialBlocks, DV_SAVED_INITIAL_BLOCKS_SIZE);
-    fTo += DV_SAVED_INITIAL_BLOCKS_SIZE;
+    //    fprintf(stderr, "#####@@@@@delivered initial blocks (%d bytes)\n", DV_SAVED_INITIAL_BLOCKS_SIZE);
     fFrameSize = DV_SAVED_INITIAL_BLOCKS_SIZE;
-    fMaxSize -= DV_SAVED_INITIAL_BLOCKS_SIZE;
+    fTo += DV_SAVED_INITIAL_BLOCKS_SIZE;
     fInitialBlocksPresent = False; // for the future
-    fprintf(stderr, "#####@@@@@DVVideoStreamFramer::doGetNextFrame()2\n");
   }
     
   // Arrange to read the (rest of the) requested data.
-  // (Make sure that we read an integral multiple of the DV block size.)
-  if (fMaxSize > DV_DIF_BLOCK_SIZE) fMaxSize -= fMaxSize%DV_DIF_BLOCK_SIZE;
-  fprintf(stderr, "#####@@@@@DVVideoStreamFramer::doGetNextFrame()3\n");
-  fInputSource->getNextFrame(fTo, fMaxSize, afterGettingFrame, this, FramedSource::handleClosure, this);
+  // (But first, make sure that we read an integral multiple of the DV block size.)
+  fMaxSize -= fMaxSize%DV_DIF_BLOCK_SIZE;
+  getAndDeliverData();
+}
+
+#define DV_SMALLEST_POSSIBLE_FRAME_SIZE 120000
+
+void DVVideoStreamFramer::getAndDeliverData() {
+  unsigned const totFrameSize
+    = fOurProfile != NULL ? ((DVVideoProfile const*)fOurProfile)->dvFrameSize : DV_SMALLEST_POSSIBLE_FRAME_SIZE;
+  unsigned totBytesToDeliver = totFrameSize < fMaxSize ? totFrameSize : fMaxSize;
+  unsigned numBytesToRead = totBytesToDeliver - fFrameSize;
+
+  fInputSource->getNextFrame(fTo, numBytesToRead, afterGettingFrame, this, FramedSource::handleClosure, this);
 }
 
 void DVVideoStreamFramer::afterGettingFrame(void* clientData, unsigned frameSize,
@@ -121,8 +139,8 @@ void DVVideoStreamFramer::afterGettingFrame(void* clientData, unsigned frameSize
   source->afterGettingFrame1(frameSize, numTruncatedBytes);
 }
 
-#define DVSectionId(n) fTo[(n)*DV_DIF_BLOCK_SIZE + 0]
-#define DVData(n,i) fTo[(n)*DV_DIF_BLOCK_SIZE + 3+(i)]
+#define DVSectionId(n) ptr[(n)*DV_DIF_BLOCK_SIZE + 0]
+#define DVData(n,i) ptr[(n)*DV_DIF_BLOCK_SIZE + 3+(i)]
 
 #define DV_SECTION_HEADER 0x1F
 #define DV_PACK_HEADER_10 0x3F
@@ -130,57 +148,74 @@ void DVVideoStreamFramer::afterGettingFrame(void* clientData, unsigned frameSize
 #define DV_SECTION_VAUX_MIN 0x50
 #define DV_SECTION_VAUX_MAX 0x5F
 #define DV_PACK_VIDEO_SOURCE 60
+#ifndef MILLION
 #define MILLION 1000000
+#endif
 
 void DVVideoStreamFramer::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes) {
-  fprintf(stderr, "#####@@@@@DVVideoStreamFramer::afterGettingFrame1(%d,%d)\n", frameSize, numTruncatedBytes);
-  if (fTo == fSavedInitialBlocks) {
-    fprintf(stderr, "#####@@@@@DVVideoStreamFramer::afterGettingFrame2(%d,%d) signalling saved initial blocks\n", frameSize, numTruncatedBytes);
-    // We read data into our special buffer; signal that it has arrived:
-    fInitialBlocksPresent = True;
-  }
-
   if (fOurProfile == NULL && frameSize >= DV_SAVED_INITIAL_BLOCKS_SIZE) {
-    // (Try to) parse this data enough to figure out its profile:
-    u_int8_t const sectionHeader = DVSectionId(0);
-    u_int8_t const sectionVAUX = DVSectionId(5);
-    u_int8_t const packHeaderNum = DVData(0,0);
+    // (Try to) parse this data enough to figure out its profile.
+    // We assume that the data begins on a (80-byte) block boundary, but not necessarily on a (150-block) sequence boundary.
+    // We therefore scan each 80-byte block, until we find the 6-block header that begins a sequence:
+    u_int8_t const* data = (fTo == NULL) ? fSavedInitialBlocks : fTo;
+    for (u_int8_t const* ptr = data; ptr + 6*DV_DIF_BLOCK_SIZE <= &data[DV_SAVED_INITIAL_BLOCKS_SIZE]; ptr += DV_DIF_BLOCK_SIZE) {
+      // Check whether "ptr" points to an appropriate header:
+      u_int8_t const sectionHeader = DVSectionId(0);
+      u_int8_t const sectionVAUX = DVSectionId(5);
+      u_int8_t const packHeaderNum = DVData(0,0);
 
-    // Check whether this data contains an appropriate header:
-    if (sectionHeader == DV_SECTION_HEADER
-	&& (packHeaderNum == DV_PACK_HEADER_10 || packHeaderNum == DV_PACK_HEADER_12)
-	&& (sectionVAUX >= DV_SECTION_VAUX_MIN && sectionVAUX <= DV_SECTION_VAUX_MAX)) {
-      u_int8_t const apt = DVData(0,1)&0x07;
-      u_int8_t const sType = DVData(5,48)&0x1F;
-      u_int8_t const sequenceCount = (packHeaderNum == DV_PACK_HEADER_10) ? 10 : 12;
+      if (sectionHeader == DV_SECTION_HEADER
+	  && (packHeaderNum == DV_PACK_HEADER_10 || packHeaderNum == DV_PACK_HEADER_12)
+	  && (sectionVAUX >= DV_SECTION_VAUX_MIN && sectionVAUX <= DV_SECTION_VAUX_MAX)) {
+	// This data begins a sequence; look up the DV profile from this:
+	u_int8_t const apt = DVData(0,1)&0x07;
+	u_int8_t const sType = DVData(5,48)&0x1F;
+	u_int8_t const sequenceCount = (packHeaderNum == DV_PACK_HEADER_10) ? 10 : 12;
 
-      // Use these three parameters (apt, sType, sequenceCount) to look up the DV profile:
-      for (DVVideoProfile const* profile = profiles; profile->name != NULL; ++profile) {
-	if (profile->apt == apt && profile->sType == sType && profile->sequenceCount == sequenceCount) {
-	  fOurProfile = profile;
-	  fprintf(stderr, "#####@@@@@DVVideoStreamFramer::afterGettingFrame3(%d,%d) parsed data -> profile name: %s\n", frameSize, numTruncatedBytes, ((DVVideoProfile const*)fOurProfile)->name);
-	  break;
+	// Use these three parameters (apt, sType, sequenceCount) to look up the DV profile:
+	for (DVVideoProfile const* profile = profiles; profile->name != NULL; ++profile) {
+	  if (profile->apt == apt && profile->sType == sType && profile->sequenceCount == sequenceCount) {
+	    fOurProfile = profile;
+	    break;
+	  }
 	}
+	break; // because we found a correct sequence header (even if we don't happen to define a profile for it)
       }
     }
   }
 
-  // Complete delivery to the downstream object:
-  fFrameSize += frameSize; // Note: +=, not =, in case we transfered saved initial blocks first
-  fNumTruncatedBytes = numTruncatedBytes;
-  if (fOurProfile != NULL) {
-    // Also set the presentation time, and increment it for next time,
-    // based on the length of this frame:
-    fPresentationTime = fNextFramePresentationTime;
+  if (fTo != NULL) { // There is a downstream object; complete delivery to it (or read more data, if necessary)
+    unsigned const totFrameSize
+      = fOurProfile != NULL ? ((DVVideoProfile const*)fOurProfile)->dvFrameSize : DV_SMALLEST_POSSIBLE_FRAME_SIZE;
+    fFrameSize += frameSize;
+    fTo += frameSize;
+    //    fprintf(stderr, "######@@@@@delivered %d bytes (%d bytes total so far; tot frame size %d, fMaxSize %d)\n", frameSize, fFrameSize, totFrameSize, fMaxSize);
 
-    DVVideoProfile const* ourProfile =(DVVideoProfile const*)fOurProfile;
-    double durationInMicroseconds = (fFrameSize*ourProfile->frameDuration)/ourProfile->dvFrameSize;
-    fDurationInMicroseconds = (unsigned)durationInMicroseconds;
-    fNextFramePresentationTime.tv_usec += fDurationInMicroseconds;
-    fNextFramePresentationTime.tv_sec += fNextFramePresentationTime.tv_usec/MILLION;
-    fNextFramePresentationTime.tv_usec %= MILLION;
-    fprintf(stderr, "#####@@@@@DVVideoStreamFramer::afterGettingFrame4(): fFrameSize %u (%u), profile name %s, frame duration %f, fPresentationTime %u.%06u, durationInMicroseconds %f=>%u\n", fFrameSize, ourProfile->dvFrameSize, ourProfile->name, ourProfile->frameDuration, fPresentationTime.tv_sec, fPresentationTime.tv_usec, durationInMicroseconds, fDurationInMicroseconds);
+    if (fFrameSize < totFrameSize && fFrameSize < fMaxSize && numTruncatedBytes == 0) {
+      // We have more data to deliver; get it now:
+      getAndDeliverData();
+    } else {
+      // We're done delivering this DV frame (but check for truncation):
+      fNumTruncatedBytes = totFrameSize - fFrameSize;
+
+      if (fOurProfile != NULL) {
+	// Also set the presentation time, and increment it for next time,
+	// based on the length of this frame:
+	fPresentationTime = fNextFramePresentationTime;
+
+	DVVideoProfile const* ourProfile =(DVVideoProfile const*)fOurProfile;
+	double durationInMicroseconds = (fFrameSize*ourProfile->frameDuration)/ourProfile->dvFrameSize;
+	fDurationInMicroseconds = (unsigned)durationInMicroseconds;
+	fNextFramePresentationTime.tv_usec += fDurationInMicroseconds;
+	fNextFramePresentationTime.tv_sec += fNextFramePresentationTime.tv_usec/MILLION;
+	fNextFramePresentationTime.tv_usec %= MILLION;
+      }
+      //      fprintf(stderr, "#####@@@@@completed delivery of %d bytes (%d truncated), duration %u us, presentation time %u.%08u\n", fFrameSize, fNumTruncatedBytes, fDurationInMicroseconds, fPresentationTime.tv_sec, fPresentationTime.tv_usec);
+
+      afterGetting(this);
+    }
+  } else {
+    // We read data into our special buffer; signal that it has arrived:
+    fInitialBlocksPresent = True;
   }
-
-  afterGetting(this);
 }

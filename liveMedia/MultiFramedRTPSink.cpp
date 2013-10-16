@@ -283,8 +283,7 @@ void MultiFramedRTPSink
         numFrameBytesToUse = 0;
       }
       fOutBuf->setOverflowData(fOutBuf->curPacketSize() + numFrameBytesToUse,
-          overflowBytes, presentationTime,
-          durationInMicroseconds);
+			       overflowBytes, presentationTime, durationInMicroseconds);
     } else if (fCurFragmentationOffset > 0) {
       // This is the last fragment of a frame that was fragmented over
       // more than one packet.  Do any special handling for this case:

@@ -354,8 +354,7 @@ void OnDemandServerMediaSubsession::closeStreamSource(FramedSource *inputSource)
 }
 
 void OnDemandServerMediaSubsession
-::setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource,
-			 unsigned estBitrate) {
+::setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource, unsigned estBitrate) {
   if (rtpSink == NULL) return;
 
   char const* mediaType = rtpSink->sdpMediaType();

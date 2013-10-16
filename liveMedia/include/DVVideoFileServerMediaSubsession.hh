@@ -16,33 +16,35 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // "liveMedia"
 // Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
 // A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
-// on demand, from a H.263 video file.
+// on demand, from a DV video file.
 // C++ header
 
-#ifndef _H263PLUS_VIDEO_FILE_SERVER_MEDIA_SUBSESSION_HH
-#define _H263PLUS_VIDEO_FILE_SERVER_MEDIA_SUBSESSION_HH
+#ifndef _DV_VIDEO_FILE_SERVER_MEDIA_SUBSESSION_HH
+#define _DV_VIDEO_FILE_SERVER_MEDIA_SUBSESSION_HH
 
 #ifndef _FILE_SERVER_MEDIA_SUBSESSION_HH
 #include "FileServerMediaSubsession.hh"
 #endif
 
-class H263plusVideoFileServerMediaSubsession: public FileServerMediaSubsession{
+class DVVideoFileServerMediaSubsession: public FileServerMediaSubsession{
 public:
-  static H263plusVideoFileServerMediaSubsession*
+  static DVVideoFileServerMediaSubsession*
   createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource);
 
 private:
-  H263plusVideoFileServerMediaSubsession(UsageEnvironment& env,
-					 char const* fileName, Boolean reuseFirstSource);
+  DVVideoFileServerMediaSubsession(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource);
       // called only by createNew();
-  virtual ~H263plusVideoFileServerMediaSubsession();
+  virtual ~DVVideoFileServerMediaSubsession();
 
 private: // redefined virtual functions
-  virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
-					      unsigned& estBitrate);
-  virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,
-                                    unsigned char rtpPayloadTypeIfDynamic,
-				                    FramedSource* inputSource);
+  virtual char const* getAuxSDPLine(RTPSink* rtpSink, FramedSource* inputSource);
+  virtual void seekStreamSource(FramedSource* inputSource, double seekNPT);
+  virtual FramedSource* createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate);
+  virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock, unsigned char rtpPayloadTypeIfDynamic, FramedSource* inputSource);
+  virtual float duration() const;
+
+private:
+  float fFileDuration; // in seconds
 };
 
 #endif

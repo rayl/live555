@@ -26,7 +26,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 #define DV_DIF_BLOCK_SIZE 80
-#define DV_SAVED_INITIAL_BLOCKS_SIZE (6*DV_DIF_BLOCK_SIZE) /* enough initial data to parse the profile */
+#define DV_NUM_BLOCKS_PER_SEQUENCE 150
+#define DV_SAVED_INITIAL_BLOCKS_SIZE ((DV_NUM_BLOCKS_PER_SEQUENCE+6-1)*DV_DIF_BLOCK_SIZE)
+    /* enough data to ensure that it contains an intact 6-block header (which occurs at the start of a 150-block sequence) */
 
 class DVVideoStreamFramer: public FramedFilter {
 public:
@@ -34,6 +36,7 @@ public:
   createNew(UsageEnvironment& env, FramedSource* inputSource);
 
   char const* profileName();
+  Boolean getFrameParameters(unsigned& frameSize/*bytes*/, double& frameDuration/*microseconds*/);
 
 protected:
   DVVideoStreamFramer(UsageEnvironment& env,
@@ -47,11 +50,13 @@ private:
   virtual void doGetNextFrame();
 
 private:
+  void getAndDeliverData(); // used to implement "doGetNextFrame()"
   static void afterGettingFrame(void* clientData, unsigned frameSize,
                                 unsigned numTruncatedBytes,
                                 struct timeval presentationTime,
                                 unsigned durationInMicroseconds);
   void afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes);
+  void getProfile();
 
 private:
   void const* fOurProfile;

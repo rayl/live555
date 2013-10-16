@@ -721,8 +721,8 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
       // and create our RTP source accordingly
       // (Later make this code more efficient, as this set grows #####)
       // (Also, add more fmts that can be implemented by SimpleRTPSource#####)
-      Boolean createSimpleRTPSource = False;
-      Boolean doNormalMBitRule = False; // used if "createSimpleRTPSource"
+      Boolean createSimpleRTPSource = False; // by default; can be changed below
+      Boolean doNormalMBitRule = False; // default behavior if "createSimpleRTPSource" is True
       if (strcmp(fCodecName, "QCELP") == 0) { // QCELP audio
 	fReadSource =
 	  QCELPAudioRTPSource::createNew(env(), fRTPSocket, fRTPSource,
@@ -853,6 +853,10 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	fRTPSource = NULL; // Note!
 	parentSession().isRealNetworksRDT = True;
 #endif
+      } else if (strcmp(fCodecName, "DV") == 0) {
+	createSimpleRTPSource = True;
+	useSpecialRTPoffset = 0;
+	doNormalMBitRule = True;
       } else if (  strcmp(fCodecName, "PCMU") == 0 // PCM u-law audio
 		   || strcmp(fCodecName, "GSM") == 0 // GSM audio
 		   || strcmp(fCodecName, "PCMA") == 0 // PCM a-law audio

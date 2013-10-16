@@ -20,7 +20,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "DVVideoRTPSink.hh"
-#include "DVVideoStreamFramer.hh"
 
 ////////// DVVideoRTPSink implementation //////////
 
@@ -77,7 +76,12 @@ char const* DVVideoRTPSink::auxSDPLine() {
   DVVideoStreamFramer* framerSource = (DVVideoStreamFramer*)fSource;
   if (framerSource == NULL) return NULL; // we don't yet have a source
 
+  return auxSDPLineFromFramer(framerSource);
+}
+
+char const* DVVideoRTPSink::auxSDPLineFromFramer(DVVideoStreamFramer* framerSource) {
   char const* const profileName = framerSource->profileName();
+  if (profileName == NULL) return NULL;
 
   char const* const fmtpSDPFmt = "a=fmtp:%d encode=%s;audio=bundled\r\n";
   unsigned fmtpSDPFmtSize = strlen(fmtpSDPFmt)

@@ -220,6 +220,23 @@ int main(int argc, char** argv) {
     announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
+  // A DV video stream:
+  {
+    // First, make sure that the RTPSinks' buffers will be large enough to handle the huge size of DV frames (as big as 288000).
+    OutPacketBuffer::maxSize = 300000;
+
+    char const* streamName = "dvVideoTest";
+    char const* inputFileName = "test.dv";
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, streamName, streamName,
+				      descriptionString);
+    sms->addSubsession(DVVideoFileServerMediaSubsession
+		       ::createNew(*env, inputFileName, reuseFirstSource));
+    rtspServer->addServerMediaSession(sms);
+
+    announceStream(rtspServer, sms, streamName, inputFileName);
+  }
+
   env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning
