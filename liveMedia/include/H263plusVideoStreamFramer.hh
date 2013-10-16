@@ -52,7 +52,7 @@ private:
   virtual Boolean isH263plusVideoStreamFramer() const;
 
 protected:
-  double   fFrameRate;    // Note: For MPEG-4, this is really a 'tick rate' ??
+  double   fFrameRate;
   unsigned fPictureCount; // hack used to implement doGetNextFrame() ??
   Boolean  fPictureEndMarker;
 

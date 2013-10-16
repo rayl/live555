@@ -1532,13 +1532,14 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
 	  if (!handleGET_PARAMETERResponse(foundRequest->contentStr(), bodyStart)) break;
 	}
       } else if (responseCode == 401 && handleAuthenticationFailure(wwwAuthenticateParamsStr)) {
+	// We need to resend the command, with an "Authorization:" header:
+	needToResendCommand = True;
+
 	if (strcmp(foundRequest->commandName(), "GET") == 0) {
-	  // Note: If a HTTP "GET" command (for RTSP-over-HTTP tunneling) returns "401 Unauthorized", then we don't resend it
-	  // (with an "Authorization:" header).  Instead, we continue, as normal, sending the subsequent HTTP "POST" (with an
-	  // "Authorization:" header).
-	  responseCode = 200;
-	} else {
-	  needToResendCommand = True;
+	  // Note: If a HTTP "GET" command (for RTSP-over-HTTP tunneling) returns "401 Unauthorized", then we resend it
+	  // (with an "Authorization:" header), just as we would for a RTSP command.  However, we do so using a new TCP connection,
+	  // because some servers close the original connection after returning the "401 Unauthorized".
+	  resetTCPSockets(); // forces the opening of a new connection for the resent command
 	}
       } else if (responseCode == 301 || responseCode == 302) { // redirection
 	resetTCPSockets(); // because we need to connect somewhere else next
