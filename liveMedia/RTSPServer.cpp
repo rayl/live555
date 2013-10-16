@@ -84,7 +84,7 @@ void RTSPServer::removeServerMediaSession(ServerMediaSession* serverMediaSession
 }
 
 void RTSPServer::removeServerMediaSession(char const* streamName) {
-  removeServerMediaSession(lookupServerMediaSession(streamName));
+  removeServerMediaSession((ServerMediaSession*)(fServerMediaSessions->Lookup(streamName)));
 }
 
 char* RTSPServer

@@ -20,6 +20,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "MPEG4GenericRTPSink.hh"
 #include "Locale.hh"
+#include <ctype.h> // needed on some systems to define "tolower()"
 
 MPEG4GenericRTPSink
 ::MPEG4GenericRTPSink(UsageEnvironment& env, Groupsock* RTPgs,

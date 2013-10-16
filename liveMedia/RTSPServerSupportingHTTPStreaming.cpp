@@ -195,7 +195,7 @@ void RTSPServerSupportingHTTPStreaming::RTSPClientSessionSupportingHTTPStreaming
     "#EXT-X-ENDLIST\r\n";
   unsigned const playlistSuffixFmt_maxLen = strlen(playlistSuffixFmt);
 
-  // Figure out the 'target duration' that will produce a paylist that will fit in our response buffer.  (But make it at least 10s.)
+  // Figure out the 'target duration' that will produce a playlist that will fit in our response buffer.  (But make it at least 10s.)
   unsigned const playlistMaxSize = 10000;
   unsigned const mediaFileSpecsMaxSize = playlistMaxSize - (playlistPrefixFmt_maxLen + playlistSuffixFmt_maxLen);
   unsigned const maxNumMediaFileSpecs = mediaFileSpecsMaxSize/playlistMediaFileSpecFmt_maxLen;
