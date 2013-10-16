@@ -376,7 +376,7 @@ int RTSPClient::openConnection() {
     if (fInputSocketNum < 0) break;
       
     // Connect to the remote endpoint:
-    fServerAddress = *(unsigned*)(destAddress.data());
+    fServerAddress = *(netAddressBits*)(destAddress.data());
     int connectResult = connectToServer(fInputSocketNum, destPortNum);
     if (connectResult < 0) break;
     else if (connectResult > 0) {

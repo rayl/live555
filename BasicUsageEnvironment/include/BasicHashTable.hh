@@ -23,6 +23,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _HASH_TABLE_HH
 #include "HashTable.hh"
 #endif
+#ifndef _NET_COMMON_H
+#include <NetCommon.h> // to ensure that "uintptr_t" is defined
+#endif
 
 // A simple hash table implementation, inspired by the hash table
 // implementation used in Tcl 7.6: <http://www.tcl.tk/>
@@ -87,8 +90,8 @@ private:
   unsigned hashIndexFromKey(char const* key) const;
     // used to implement many of the routines above
 
-  unsigned randomIndex(unsigned long i) const {
-    return (((i*1103515245) >> fDownShift) & fMask);
+  unsigned randomIndex(uintptr_t i) const {
+    return (unsigned)(((i*1103515245) >> fDownShift) & fMask);
   }
 
 private:

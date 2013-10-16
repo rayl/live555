@@ -30,7 +30,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // (Note that -DLOCALE_NOT_USED implies -DXLOCALE_NOT_USED; you do not need both.)
 // Also, for Windows systems, we define "XLOCALE_NOT_USED" by default, because at least some Windows systems
 // (or their development environments) don't have "newlocale()".  If, however, your Windows system *does* have "newlocale()",
-// then you can override this by defining "XLOCAL_USED" before #including this file.
+// then you can override this by defining "XLOCALE_USED" before #including this file.
 
 #ifdef XLOCALE_USED
 #undef LOCALE_NOT_USED

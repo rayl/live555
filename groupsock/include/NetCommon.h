@@ -21,10 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _NET_COMMON_H
 #define _NET_COMMON_H
 
-#if defined(IMN_PIM)
-#include "IMN_PIMNetCommon.h"
-
-#elif defined(__WIN32__) || defined(_WIN32) || defined(_WIN32_WCE)
+#if defined(__WIN32__) || defined(_WIN32) || defined(_WIN32_WCE)
 /* Windows */
 #if defined(WINNT) || defined(_WINNT) || defined(__BORLANDC__) || defined(__MINGW32__) || defined(_WIN32_WCE)
 #define _MSWSOCK_
@@ -50,6 +47,14 @@ typedef unsigned __int64 u_int64_t;
 typedef unsigned u_int32_t;
 typedef unsigned short u_int16_t;
 typedef unsigned char u_int8_t;
+// For "uintptr_t" and "intptr_t", we assume that if they're not already defined, then this must be
+// an old, 32-bit version of Windows:
+#if !defined(_MSC_STDINT_H_) && !defined(_UINTPTR_T_DEFINED) && !defined(_UINTPTR_T_DECLARED) && !defined(_UINTPTR_T)
+typedef unsigned uintptr_t;
+#endif
+#if !defined(_MSC_STDINT_H_) && !defined(_INTPTR_T_DEFINED) && !defined(_INTPTR_T_DECLARED) && !defined(_INTPTR_T)
+typedef int intptr_t;
+#endif
 
 #elif defined(VXWORKS)
 /* VxWorks */
@@ -79,6 +84,7 @@ typedef unsigned char u_int8_t;
 #include <errno.h>
 #include <strings.h>
 #include <ctype.h>
+#include <stdint.h>
 #if defined(_QNX4)
 #include <sys/select.h>
 #include <unix.h>

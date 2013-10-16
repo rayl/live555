@@ -263,10 +263,10 @@ unsigned BasicHashTable::hashIndexFromKey(char const* key) const {
     }
     result &= fMask;
   } else if (fKeyType == ONE_WORD_HASH_KEYS) {
-    result = randomIndex((unsigned long)key);
+    result = randomIndex((uintptr_t)key);
   } else {
     unsigned* k = (unsigned*)key;
-    unsigned long sum = 0;
+    uintptr_t sum = 0;
     for (int i = 0; i < fKeyType; ++i) {
       sum += k[i];
     }
@@ -275,4 +275,3 @@ unsigned BasicHashTable::hashIndexFromKey(char const* key) const {
 
   return result;
 }
-

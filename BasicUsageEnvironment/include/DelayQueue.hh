@@ -136,7 +136,7 @@ class DelayQueueEntry {
 public:
   virtual ~DelayQueueEntry();
 
-  long token() {
+  intptr_t token() {
     return fToken;
   }
 
@@ -151,8 +151,8 @@ private:
   DelayQueueEntry* fPrev;
   DelayInterval fDeltaTimeRemaining;
 
-  long fToken;
-  static long tokenCounter;
+  intptr_t fToken;
+  static intptr_t tokenCounter;
 };
 
 ///// DelayQueue /////
@@ -164,16 +164,16 @@ public:
 
   void addEntry(DelayQueueEntry* newEntry); // returns a token for the entry
   void updateEntry(DelayQueueEntry* entry, DelayInterval newDelay);
-  void updateEntry(long tokenToFind, DelayInterval newDelay);
+  void updateEntry(intptr_t tokenToFind, DelayInterval newDelay);
   void removeEntry(DelayQueueEntry* entry); // but doesn't delete it
-  DelayQueueEntry* removeEntry(long tokenToFind); // but doesn't delete it
+  DelayQueueEntry* removeEntry(intptr_t tokenToFind); // but doesn't delete it
 
   DelayInterval const& timeToNextAlarm();
   void handleAlarm();
 
 private:
   DelayQueueEntry* head() { return fNext; }
-  DelayQueueEntry* findEntryByToken(long token);
+  DelayQueueEntry* findEntryByToken(intptr_t token);
   void synchronize(); // bring the 'time remaining' fields up-to-date
 
   EventTime fLastSyncTime;

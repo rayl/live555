@@ -109,7 +109,7 @@ public:
 };
 
 
-#if (defined(__WIN32__) || defined(_WIN32)) && !defined(IMN_PIM)
+#if defined(__WIN32__) || defined(_WIN32)
 // For Windoze, we need to implement our own gettimeofday()
 extern int gettimeofday(struct timeval*, int*);
 #endif

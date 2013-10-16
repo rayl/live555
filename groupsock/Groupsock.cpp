@@ -398,7 +398,7 @@ int Groupsock::outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
 	= (TunnelEncapsulationTrailer*)&data[size];
       TunnelEncapsulationTrailer* trailer;
 
-      Boolean misaligned = ((unsigned long)trailerInPacket & 3) != 0;
+      Boolean misaligned = ((uintptr_t)trailerInPacket & 3) != 0;
       unsigned trailerOffset;
       u_int8_t tunnelCmd;
       if (isSSM()) {

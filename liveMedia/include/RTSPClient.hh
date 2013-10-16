@@ -269,7 +269,7 @@ private:
   char* fUserAgentHeaderStr;
   unsigned fUserAgentHeaderStrLen;
   int fInputSocketNum, fOutputSocketNum;
-  unsigned fServerAddress;
+  netAddressBits fServerAddress;
   unsigned fCSeq; // sequence number, used in consecutive requests
   char* fBaseURL;
   Authenticator fCurrentAuthenticator;

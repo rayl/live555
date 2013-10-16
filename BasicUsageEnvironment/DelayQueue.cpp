@@ -89,7 +89,7 @@ const DelayInterval ETERNITY(INT_MAX, MILLION-1);
 
 ///// DelayQueueEntry /////
 
-long DelayQueueEntry::tokenCounter = 0;
+intptr_t DelayQueueEntry::tokenCounter = 0;
 
 DelayQueueEntry::DelayQueueEntry(DelayInterval delay)
   : fDeltaTimeRemaining(delay) {
@@ -145,7 +145,7 @@ void DelayQueue::updateEntry(DelayQueueEntry* entry, DelayInterval newDelay) {
   addEntry(entry);
 }
 
-void DelayQueue::updateEntry(long tokenToFind, DelayInterval newDelay) {
+void DelayQueue::updateEntry(intptr_t tokenToFind, DelayInterval newDelay) {
   DelayQueueEntry* entry = findEntryByToken(tokenToFind);
   updateEntry(entry, newDelay);
 }
@@ -160,7 +160,7 @@ void DelayQueue::removeEntry(DelayQueueEntry* entry) {
   // in case we should try to remove it again
 }
 
-DelayQueueEntry* DelayQueue::removeEntry(long tokenToFind) {
+DelayQueueEntry* DelayQueue::removeEntry(intptr_t tokenToFind) {
   DelayQueueEntry* entry = findEntryByToken(tokenToFind);
   removeEntry(entry);
   return entry;
@@ -185,7 +185,7 @@ void DelayQueue::handleAlarm() {
   }
 }
 
-DelayQueueEntry* DelayQueue::findEntryByToken(long tokenToFind) {
+DelayQueueEntry* DelayQueue::findEntryByToken(intptr_t tokenToFind) {
   DelayQueueEntry* cur = head();
   while (cur != this) {
     if (cur->token() == tokenToFind) return cur;

@@ -24,6 +24,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <stddef.h>
 #include <stdio.h>
 #if defined(__WIN32__) || defined(_WIN32)
+#define USE_GETHOSTBYNAME 1 /*because at least some Windows don't have getaddrinfo()*/
 #else
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xFFFFFFFF
@@ -84,51 +85,77 @@ void NetAddress::clean() {
 
 NetAddressList::NetAddressList(char const* hostname)
   : fNumAddresses(0), fAddressArray(NULL) {
-    struct hostent* host;
+  // First, check whether "hostname" is an IP address string:
+  netAddressBits addr = our_inet_addr((char*)hostname);
+  if (addr != INADDR_NONE) {
+    // Yes, it was an IP address string.  Return a 1-element list with this address:
+    fNumAddresses = 1;
+    fAddressArray = new NetAddress*[fNumAddresses];
+    if (fAddressArray == NULL) return;
 
-    // Check first whether "hostname" is an IP address string:
-    netAddressBits addr = our_inet_addr((char*)hostname);
-    if (addr != INADDR_NONE) { // yes it was an IP address string
-      // For now at least, just return a 1-element list with this address:
-      fNumAddresses = 1;
-      fAddressArray = new NetAddress*[fNumAddresses];
-      if (fAddressArray == NULL) return;
-
-      fAddressArray[0] = new NetAddress((u_int8_t*)&addr, sizeof (netAddressBits));
-      return;
-    } else {
-      // "hostname" is not an IP address string; try resolving it as a real host name instead:
+    fAddressArray[0] = new NetAddress((u_int8_t*)&addr, sizeof (netAddressBits));
+    return;
+  }
+    
+  // "hostname" is not an IP address string; try resolving it as a real host name instead:
+#if defined(USE_GETHOSTBYNAME) || defined(VXWORKS)
+  struct hostent* host;
 #if defined(VXWORKS)
-      char hostentBuf[512];
-      host = (struct hostent*)resolvGetHostByName((char*)hostname,(char*)&hostentBuf,sizeof hostentBuf);
+  char hostentBuf[512];
+
+  host = (struct hostent*)resolvGetHostByName((char*)hostname, (char*)&hostentBuf, sizeof hostentBuf);
 #else
-      host = gethostbyname((char*)hostname);
+  host = gethostbyname((char*)hostname);
 #endif
-      if (host == NULL) {
-	// It was a host name, and we couldn't resolve it.  We're SOL.
-	return;
-      }
-    }
+  if (host == NULL || host->h_length != 4 || host->h_addr_list == NULL) return; // no luck
 
-    u_int8_t const** const hAddrPtr
-      = (u_int8_t const**)host->h_addr_list;
-    if (hAddrPtr != NULL) {
-      // First, count the number of addresses:
-      u_int8_t const** hAddrPtr1 = hAddrPtr;
-      while (*hAddrPtr1 != NULL) {
-	++fNumAddresses;
-	++hAddrPtr1;
-      }
+  u_int8_t const** const hAddrPtr = (u_int8_t const**)host->h_addr_list;
+  // First, count the number of addresses:
+  u_int8_t const** hAddrPtr1 = hAddrPtr;
+  while (*hAddrPtr1 != NULL) {
+    ++fNumAddresses;
+    ++hAddrPtr1;
+  }
 
-      // Next, set up the list:
-      fAddressArray = new NetAddress*[fNumAddresses];
-      if (fAddressArray == NULL) return;
+  // Next, set up the list:
+  fAddressArray = new NetAddress*[fNumAddresses];
+  if (fAddressArray == NULL) return;
 
-      for (unsigned i = 0; i < fNumAddresses; ++i) {
-	fAddressArray[i]
-	  = new NetAddress(hAddrPtr[i], host->h_length);
-      }
-    }
+  for (unsigned i = 0; i < fNumAddresses; ++i) {
+    fAddressArray[i] = new NetAddress(hAddrPtr[i], host->h_length);
+  }
+#else
+  // Use "getaddrinfo()" (rather than the older, deprecated "gethostbyname()"):
+  struct addrinfo addrinfoHints;
+  memset(&addrinfoHints, 0, sizeof addrinfoHints);
+  addrinfoHints.ai_family = AF_INET; // For now, we're interested in IPv4 addresses only
+  struct addrinfo* addrinfoResultPtr = NULL;
+  int result = getaddrinfo(hostname, NULL, &addrinfoHints, &addrinfoResultPtr);
+  if (result != 0 || addrinfoResultPtr == NULL) return; // no luck
+
+  // First, count the number of addresses:
+  const struct addrinfo* p = addrinfoResultPtr;
+  while (p != NULL) {
+    if (p->ai_addrlen < 4) continue; // sanity check: skip over addresses that are too small
+    ++fNumAddresses;
+    p = p->ai_next;
+  }
+
+  // Next, set up the list:
+  fAddressArray = new NetAddress*[fNumAddresses];
+  if (fAddressArray == NULL) return;
+
+  unsigned i = 0;
+  p = addrinfoResultPtr;
+  while (p != NULL) {
+    if (p->ai_addrlen < 4) continue;
+    fAddressArray[i++] = new NetAddress((u_int8_t const*)&(((struct sockaddr_in*)p->ai_addr)->sin_addr.s_addr), 4);
+    p = p->ai_next;
+  }
+
+  // Finally, free the data that we had allocated by calling "getaddrinfo()":
+  freeaddrinfo(addrinfoResultPtr);
+#endif
 }
 
 NetAddressList::NetAddressList(NetAddressList const& orig) {
@@ -254,9 +281,9 @@ Boolean IsMulticastAddress(netAddressBits address) {
   // Note: We return False for addresses in the range 224.0.0.0
   // through 224.0.0.255, because these are non-routable
   // Note: IPv4-specific #####
-  netAddressBits addressInHostOrder = ntohl(address);
-  return addressInHostOrder >  0xE00000FF &&
-         addressInHostOrder <= 0xEFFFFFFF;
+  netAddressBits addressInNetworkOrder = htonl(address);
+  return addressInNetworkOrder >  0xE00000FF &&
+         addressInNetworkOrder <= 0xEFFFFFFF;
 }
 
 

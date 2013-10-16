@@ -231,7 +231,7 @@ static u_int32_t calculateCRC(u_int8_t* data, unsigned dataLength); // forward
 
 #define PAT_PID 0
 #define OUR_PROGRAM_NUMBER 1
-#define OUR_PROGRAM_MAP_PID 0x10
+#define OUR_PROGRAM_MAP_PID 0x30
 
 void MPEG2TransportStreamMultiplexor::deliverPATPacket() {
   // First, create a new buffer for the PAT packet:

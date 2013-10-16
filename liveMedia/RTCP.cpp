@@ -74,22 +74,22 @@ private:
 
 void RTCPMemberDatabase::reapOldMembers(unsigned threshold) {
   Boolean foundOldMember;
-  unsigned oldSSRC = 0;
+  u_int32_t oldSSRC = 0;
 
   do {
     foundOldMember = False;
 
     HashTable::Iterator* iter
       = HashTable::Iterator::create(*fTable);
-    unsigned long timeCount;
+    uintptr_t timeCount;
     char const* key;
-    while ((timeCount = (unsigned long)(iter->next(key))) != 0) {
+    while ((timeCount = (uintptr_t)(iter->next(key))) != 0) {
 #ifdef DEBUG
       fprintf(stderr, "reap: checking SSRC 0x%lx: %ld (threshold %d)\n", (unsigned long)key, timeCount, threshold);
 #endif
-      if (timeCount < (unsigned long)threshold) { // this SSRC is old
-        unsigned long ssrc = (unsigned long)key;
-        oldSSRC = (unsigned)ssrc;
+      if (timeCount < (uintptr_t)threshold) { // this SSRC is old
+        uintptr_t ssrc = (uintptr_t)key;
+        oldSSRC = (u_int32_t)ssrc;
         foundOldMember = True;
       }
     }

@@ -23,7 +23,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #if defined(__WIN32__) || defined(_WIN32)
 #include <time.h>
 extern "C" int initializeWinsockIfNecessary();
-#define USE_GETHOSTBYNAME 1 /*because at least some Windows don't have getaddrinfo()*/
 #else
 #include <stdarg.h>
 #include <time.h>
@@ -37,7 +36,7 @@ netAddressBits SendingInterfaceAddr = INADDR_ANY;
 netAddressBits ReceivingInterfaceAddr = INADDR_ANY;
 
 static void socketErr(UsageEnvironment& env, char const* errorMsg) {
-	env.setResultErrMsg(errorMsg);
+  env.setResultErrMsg(errorMsg);
 }
 
 static int reuseFlag = 1;
@@ -50,13 +49,31 @@ NoReuse::~NoReuse() {
   reuseFlag = 1;
 }
 
+static int createSocket(int type) {
+  // Call "socket()" to create a (IPv4) socket of the specified type.
+  // But also set it to have the 'close on exec' property (if we can)
+  int sock;
+
+#ifdef SOCK_CLOEXEC
+  sock = socket(AF_INET, type|SOCK_CLOEXEC, 0);
+  if (sock != -1 || errno != EINVAL) return sock;
+  // An "errno" of EINVAL likely means that the system wasn't happy with the SOCK_CLOEXEC; fall through and try again without it:
+#endif
+
+  sock = socket(AF_INET, type, 0);
+#ifdef FD_CLOEXEC
+  if (sock != -1) fcntl(sock, F_SETFD, FD_CLOEXEC);
+#endif
+  return sock;
+}
+
 int setupDatagramSocket(UsageEnvironment& env, Port port) {
   if (!initializeWinsockIfNecessary()) {
     socketErr(env, "Failed to initialize 'winsock': ");
     return -1;
   }
 
-  int newSocket = socket(AF_INET, SOCK_DGRAM, 0);
+  int newSocket = createSocket(SOCK_DGRAM);
   if (newSocket < 0) {
     socketErr(env, "unable to create datagram socket: ");
     return newSocket;
@@ -130,7 +147,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port) {
 }
 
 Boolean makeSocketNonBlocking(int sock) {
-#if defined(__WIN32__) || defined(_WIN32) || defined(IMN_PIM)
+#if defined(__WIN32__) || defined(_WIN32)
   unsigned long arg = 1;
   return ioctlsocket(sock, FIONBIO, &arg) == 0;
 #elif defined(VXWORKS)
@@ -143,7 +160,7 @@ Boolean makeSocketNonBlocking(int sock) {
 }
 
 Boolean makeSocketBlocking(int sock) {
-#if defined(__WIN32__) || defined(_WIN32) || defined(IMN_PIM)
+#if defined(__WIN32__) || defined(_WIN32)
   unsigned long arg = 0;
   return ioctlsocket(sock, FIONBIO, &arg) == 0;
 #elif defined(VXWORKS)
@@ -162,7 +179,7 @@ int setupStreamSocket(UsageEnvironment& env,
     return -1;
   }
 
-  int newSocket = socket(AF_INET, SOCK_STREAM, 0);
+  int newSocket = createSocket(SOCK_STREAM);
   if (newSocket < 0) {
     socketErr(env, "unable to create stream socket: ");
     return newSocket;
@@ -480,12 +497,12 @@ Boolean getSourcePort(UsageEnvironment& env, int socket, Port& port) {
   return True;
 }
 
-static Boolean badAddress(netAddressBits addr) {
+static Boolean badAddressForUs(netAddressBits addr) {
   // Check for some possible erroneous addresses:
-  netAddressBits hAddr = ntohl(addr);
-  return (hAddr == 0x7F000001 /* 127.0.0.1 */
-	  || hAddr == 0
-	  || hAddr == (netAddressBits)(~0));
+  netAddressBits nAddr = htonl(addr);
+  return (nAddr == 0x7F000001 /* 127.0.0.1 */
+	  || nAddr == 0
+	  || nAddr == (netAddressBits)(~0));
 }
 
 Boolean loopbackWorks = 1;
@@ -544,6 +561,11 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
       loopbackWorks = 1;
     } while (0);
 
+    if (sock >= 0) {
+      socketLeaveGroup(env, sock, testAddr.s_addr);
+      closeSocket(sock);
+    }
+
     if (!loopbackWorks) do {
       // We couldn't find our address using multicast loopback,
       // so try instead to look it up directly - by first getting our host name, and then resolving this host name
@@ -555,85 +577,35 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
 	break;
       }
 
-#if defined(VXWORKS)
-#include <hostLib.h>
-      if (ERROR == (ourAddress = hostGetByName( hostname ))) break;
-#else
-      // Try to resolve "hostname" to an IP address
-#ifdef USE_GETHOSTBYNAME
-      struct hostent* hstent = (struct hostent*)gethostbyname(hostname);
-      if (hstent == NULL || hstent->h_length != 4) {
-	env.setResultErrMsg("gethostbyname() failed");
-	break;
-      }
+      // Try to resolve "hostname" to an IP address:
+      NetAddressList addresses(hostname);
+      NetAddressList::Iterator iter(addresses);
+      NetAddress const* address;
 
-      unsigned i = 0;
-#else
-      // Use "getaddrinfo()" (rather than the older, deprecated "gethostbyname()"):
-      struct addrinfo addrinfoHints;
-      memset(&addrinfoHints, 0, sizeof addrinfoHints);
-      addrinfoHints.ai_family = AF_INET; // For now, we're interested in IPv4 addresses only
-      struct addrinfo* addrinfoResultPtr = NULL;
-      result = getaddrinfo(hostname, NULL, &addrinfoHints, &addrinfoResultPtr);
-      if (result != 0 || addrinfoResultPtr == NULL) {
-	env.setResultErrMsg("getaddrinfo() failed");
-	break;
-      }
-
-      const struct addrinfo* p = addrinfoResultPtr;
-#endif
       // Take the first address that's not bad:
       netAddressBits addr = 0;
-      while (1) {
-	netAddressBits a;
-#ifdef USE_GETHOSTBYNAME
-	char* addrPtr = hstent->h_addr_list[i];
-	if (addrPtr == NULL) break;
-
-	a = *(netAddressBits*)addrPtr;
-	++i;
-#else
-	if (p == NULL) break;
-
-	a = ((struct sockaddr_in*)p->ai_addr)->sin_addr.s_addr;
-	p = p->ai_next;
-#endif
-	if (!badAddress(a)) {
+      while ((address = iter.nextAddress()) != NULL) {
+	netAddressBits a = *(netAddressBits*)(address->data());
+	if (!badAddressForUs(a)) {
 	  addr = a;
 	  break;
 	}
       }
-#ifdef USE_GETHOSTBYNAME
-#else
-      freeaddrinfo(addrinfoResultPtr);
-#endif
 
-      if (addr != 0) {
-	fromAddr.sin_addr.s_addr = addr;
-      } else {
-	env.setResultMsg("no address");
-	break;
-      }
+      // Assign the address that we found to "fromAddr" (as if the 'loopback' method had worked), to simplify the code below: 
+      fromAddr.sin_addr.s_addr = addr;
     } while (0);
 
     // Make sure we have a good address:
     netAddressBits from = fromAddr.sin_addr.s_addr;
-    if (badAddress(from)) {
+    if (badAddressForUs(from)) {
       char tmp[100];
-      sprintf(tmp,
-	      "This computer has an invalid IP address: 0x%x",
-	      (netAddressBits)(ntohl(from)));
+      sprintf(tmp, "This computer has an invalid IP address: %s", AddressString(from).val());
       env.setResultMsg(tmp);
       from = 0;
     }
 
     ourAddress = from;
-#endif
-
-    if (sock >= 0) {
-      socketLeaveGroup(env, sock, testAddr.s_addr);
-      closeSocket(sock);
-    }
 
     // Use our newly-discovered IP address, and the current time,
     // to initialize the random number generator's seed:
@@ -654,7 +626,7 @@ netAddressBits chooseRandomIPv4SSMAddress(UsageEnvironment& env) {
   netAddressBits const first = 0xE8000100, lastPlus1 = 0xE8FFFFFF;
   netAddressBits const range = lastPlus1 - first;
 
-  return htonl(first + ((netAddressBits)our_random())%range);
+  return ntohl(first + ((netAddressBits)our_random())%range);
 }
 
 char const* timestampString() {
@@ -685,7 +657,7 @@ char const* timestampString() {
   return (char const*)&timeString;
 }
 
-#if (defined(__WIN32__) || defined(_WIN32)) && !defined(IMN_PIM)
+#if defined(__WIN32__) || defined(_WIN32)
 // For Windoze, we need to implement our own gettimeofday()
 #if !defined(_WIN32_WCE)
 #include <sys/timeb.h>
