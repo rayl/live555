@@ -130,9 +130,13 @@ public:
   virtual void turnOnBackgroundWriteHandling(int socketNum,
 					     BackgroundHandlerProc* handlerProc,
 					     void* clientData) = 0;
-        // Note: If both of the above functions are called on the same socket, then "handlerProc" must be the same for both.
+  virtual void turnOnBackgroundExceptionHandling(int socketNum,
+						 BackgroundHandlerProc* handlerProc,
+						 void* clientData) = 0;
+        // Note: If more than one of the above functions are called on the same socket, then "handlerProc" must be the same for all.
   virtual void turnOffBackgroundReadHandling(int socketNum) = 0;
   virtual void turnOffBackgroundWriteHandling(int socketNum) = 0;
+  virtual void turnOffBackgroundExceptionHandling(int socketNum) = 0;
   virtual void moveSocketHandling(int oldSocketNum, int newSocketNum) = 0;
         // Changes any socket handling for "oldSocketNum" so that occurs with "newSocketNum" instead.
 

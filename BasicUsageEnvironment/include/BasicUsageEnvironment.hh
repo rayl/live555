@@ -59,8 +59,10 @@ protected:
 
   virtual void turnOnBackgroundReadHandling(int socketNum, BackgroundHandlerProc* handlerProc, void* clientData);
   virtual void turnOnBackgroundWriteHandling(int socketNum, BackgroundHandlerProc* handlerProc, void* clientData);
+  virtual void turnOnBackgroundExceptionHandling(int socketNum, BackgroundHandlerProc* handlerProc, void* clientData);
   virtual void turnOffBackgroundReadHandling(int socketNum);
   virtual void turnOffBackgroundWriteHandling(int socketNum);
+  virtual void turnOffBackgroundExceptionHandling(int socketNum);
   virtual void moveSocketHandling(int oldSocketNum, int newSocketNum);
 
 protected:
@@ -68,6 +70,7 @@ protected:
   int fMaxNumSockets;
   fd_set fReadSet;
   fd_set fWriteSet;
+  fd_set fExceptionSet;
 };
 
 #endif
