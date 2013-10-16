@@ -44,6 +44,12 @@ public:
 
   char const* url() const;
 
+  char describeCompletedFlag;
+    // initialized to 0; set to 1 when the back-end "DESCRIBE" completes.
+    // (This can be used as a 'watch variable' in "doEventLoop()".)
+  Boolean describeCompletedSuccessfully() const { return fClientMediaSession != NULL; }
+    // This can be used - along with "describeCompletdFlag" - to check whether the back-end "DESCRIBE" completed *successfully*.
+
 protected:
   ProxyServerMediaSession(UsageEnvironment& env, char const* inputStreamURL, char const* streamName,
 			  char const* username, char const* password, portNumBits tunnelOverHTTPPortNum, int verbosityLevel);

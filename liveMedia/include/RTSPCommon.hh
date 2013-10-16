@@ -54,4 +54,6 @@ Boolean parseRangeHeader(char const* buf, double& rangeStart, double& rangeEnd);
 
 char const* dateHeader(); // A "Date:" header that can be used in a RTSP (or HTTP) response 
 
+void ignoreSigPipeOnSocket(int socketNum);
+
 #endif

@@ -109,7 +109,7 @@ ProxyServerMediaSession::ProxyServerMediaSession(UsageEnvironment& env, char con
 						 char const* username, char const* password,
 						 portNumBits tunnelOverHTTPPortNum, int verbosityLevel)
   : ServerMediaSession(env, streamName, NULL, NULL, False, NULL),
-    fVerbosityLevel(verbosityLevel) {
+    describeCompletedFlag(0), fVerbosityLevel(verbosityLevel) {
 
   // Open a RTSP connection to the input stream, and send a "DESCRIBE" command.
   // We'll use the SDP description in the response to set ourselves up.
@@ -128,6 +128,8 @@ char const* ProxyServerMediaSession::url() const {
 }
 
 void ProxyServerMediaSession::continueAfterDESCRIBE(char const* sdpDescription) {
+  describeCompletedFlag = 1;
+
   // Create a (client) "MediaSession" object from the stream's SDP description ("resultString"), then iterate through its
   // "MediaSubsession" objects, to set up corresponding "ServerMediaSubsession" objects that we'll use to serve the stream's tracks.
   do {

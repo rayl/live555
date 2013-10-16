@@ -24,6 +24,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <stdio.h>
 #include <time.h> // for "strftime()" and "gmtime()"
 
+#if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
+#else
+#include <signal.h>
+#define USE_SIGNALS 1
+#endif
+
 Boolean parseRTSPRequestString(char const* reqStr,
 			       unsigned reqStrSize,
 			       char* resultCmdName,
@@ -211,4 +217,15 @@ char const* dateHeader() {
   wcstombs(buf, inBuf, wcslen(inBuf));
 #endif
   return buf;
+}
+
+void ignoreSigPipeOnSocket(int socketNum) {
+#ifdef USE_SIGNALS
+#ifdef SO_NOSIGPIPE
+  int set_option = 1;
+  setsockopt(socketNum, SOL_SOCKET, SO_NOSIGPIPE, &set_option, sizeof set_option);
+#else
+  signal(SIGPIPE, SIG_IGN);
+#endif
+#endif
 }

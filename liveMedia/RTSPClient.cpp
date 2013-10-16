@@ -374,6 +374,7 @@ int RTSPClient::openConnection() {
     // We don't yet have a TCP socket (or we used to have one, but it got closed).  Set it up now.
     fInputSocketNum = fOutputSocketNum = setupStreamSocket(envir(), 0);
     if (fInputSocketNum < 0) break;
+    ignoreSigPipeOnSocket(fInputSocketNum); // so that servers on the same host that killed don't also kill us
       
     // Connect to the remote endpoint:
     fServerAddress = *(netAddressBits*)(destAddress.data());
@@ -1219,6 +1220,7 @@ void RTSPClient::responseHandlerForHTTP_GET1(int responseCode, char* responseStr
     // (to the same server & port as before) for the client->server link.  All future output will be to this new socket.
     fOutputSocketNum = setupStreamSocket(envir(), 0);
     if (fOutputSocketNum < 0) break;
+    ignoreSigPipeOnSocket(fOutputSocketNum); // so that servers on the same host that killed don't also kill us
 
     fHTTPTunnelingConnectionIsPending = True;
     int connectResult = connectToServer(fOutputSocketNum, fTunnelOverHTTPPortNum);

@@ -23,12 +23,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "Base64.hh"
 #include <GroupsockHelper.hh>
 
-#if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
-#else
-#include <signal.h>
-#define USE_SIGNALS 1
-#endif
-
 ////////// RTSPServer implementation //////////
 
 RTSPServer*
@@ -198,16 +192,7 @@ RTSPServer::RTSPServer(UsageEnvironment& env,
     fHTTPServerSocket(-1), fHTTPServerPort(0), fClientSessionsForHTTPTunneling(NULL),
     fAuthDB(authDatabase), fReclamationTestSeconds(reclamationTestSeconds),
     fServerMediaSessions(HashTable::create(STRING_HASH_KEYS)) {
-#ifdef USE_SIGNALS
-  // Ignore the SIGPIPE signal, so that clients on the same host that are killed
-  // don't also kill us:
-#ifdef SO_NOSIGPIPE
-  int set_option = 1;
-  setsockopt(ourSocket, SOL_SOCKET, SO_NOSIGPIPE, &set_option, sizeof set_option);
-#else
-  signal(SIGPIPE, SIG_IGN);
-#endif
-#endif
+  ignoreSigPipeOnSocket(ourSocket); // so that clients on the same host that are killed don't also kill us
 
   // Arrange to handle connections from others:
   env.taskScheduler().turnOnBackgroundReadHandling(fRTSPServerSocket,
