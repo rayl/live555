@@ -33,7 +33,7 @@ int Timeval::operator>=(const Timeval& arg2) const {
 
 void Timeval::operator+=(const DelayInterval& arg2) {
   secs() += arg2.seconds(); usecs() += arg2.useconds();
-  if (usecs() >= MILLION) {
+  if (useconds() >= MILLION) {
     usecs() -= MILLION;
     ++secs();
   }
@@ -41,23 +41,24 @@ void Timeval::operator+=(const DelayInterval& arg2) {
 
 void Timeval::operator-=(const DelayInterval& arg2) {
   secs() -= arg2.seconds(); usecs() -= arg2.useconds();
-  if (usecs() < 0) {
+  if ((int)useconds() < 0) {
     usecs() += MILLION;
     --secs();
   }
-  if (secs() < 0)
+  if ((int)seconds() < 0)
     secs() = usecs() = 0;
+
 }
 
 DelayInterval operator-(const Timeval& arg1, const Timeval& arg2) {
   time_base_seconds secs = arg1.seconds() - arg2.seconds();
   time_base_seconds usecs = arg1.useconds() - arg2.useconds();
 
-  if (usecs < 0) {
+  if ((int)usecs < 0) {
     usecs += MILLION;
     --secs;
   }
-  if (secs < 0)
+  if ((int)secs < 0)
     return DELAY_ZERO;
   else
     return DelayInterval(secs, usecs);

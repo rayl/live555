@@ -35,7 +35,7 @@ FILE* OpenInputFile(UsageEnvironment& env, char const* fileName) {
   // Check for a special case file name: "stdin"
   if (strcmp(fileName, "stdin") == 0) {
     fid = stdin;
-#if defined(__WIN32__) || defined(_WIN32)
+#if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
     _setmode(_fileno(stdin), _O_BINARY); // convert to binary mode
 #endif
   } else {

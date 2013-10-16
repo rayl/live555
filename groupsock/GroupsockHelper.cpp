@@ -728,7 +728,7 @@ char const* timestampString() {
 int gettimeofday(struct timeval* tp, int* /*tz*/) {
 #if defined(_WIN32_WCE)
   /* FILETIME of Jan 1 1970 00:00:00. */
-  static const unsigned __int64 epoch = 116444736000000000L;
+  static const unsigned __int64 epoch = 116444736000000000LL;
 
   FILETIME    file_time;
   SYSTEMTIME  system_time;
