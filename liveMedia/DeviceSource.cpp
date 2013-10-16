@@ -53,7 +53,7 @@ DeviceSource::DeviceSource(UsageEnvironment& env,
   //     envir().taskScheduler().turnOnBackgroundReadHandling( ... )
   // (See examples of this call in the "liveMedia" directory.)
   //
-  // If, however, the device *cannot* be accessed as a readable socket, then instead we can implement is using 'event triggers':
+  // If, however, the device *cannot* be accessed as a readable socket, then instead we can implement it using 'event triggers':
   // Create an 'event trigger' for this device (if it hasn't already been done):
   if (eventTriggerId == 0) {
     eventTriggerId = envir().taskScheduler().createEventTrigger(deliverFrame0);

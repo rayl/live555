@@ -41,6 +41,7 @@ public:
   void changeInputSource(FramedSource* newInputSource) { fInputSource = newInputSource; }
 
   void clearPIDStatusTable();
+  void setNumTSPacketsToStream(unsigned long numTSRecordsToStream);
 
 protected:
   MPEG2TransportStreamFramer(UsageEnvironment& env, FramedSource* inputSource);
@@ -68,7 +69,7 @@ private:
   HashTable* fPIDStatusTable;
   unsigned long fTSPCRCount;
   Boolean fLimitNumTSPacketsToStream;
-  unsigned fNumTSPacketsToStream; // used iff "fLimitNumTSPacketsToStream" is True
+  unsigned long fNumTSPacketsToStream; // used iff "fLimitNumTSPacketsToStream" is True
 };
 
 #endif

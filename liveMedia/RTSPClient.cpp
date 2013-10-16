@@ -1865,23 +1865,15 @@ Boolean RTSPClient::getMediaSessionParameter(MediaSession& session,
 Boolean RTSPClient::teardownMediaSession(MediaSession& session) {
   fWatchVariableForSyncInterface = 0;
   fTimeoutTask = NULL;
-  (void)sendTeardownCommand(session, responseHandlerForSyncInterface);
-
-  // Now block (but handling events) until we get a response (or a timeout):
-  envir().taskScheduler().doEventLoop(&fWatchVariableForSyncInterface);
-  delete[] fResultString;
-  return fResultCode == 0;
+  (void)sendTeardownCommand(session, NULL);
+  return True; // we don't wait for a response to the "TEARDOWN"
 }
 
 Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
   fWatchVariableForSyncInterface = 0;
   fTimeoutTask = NULL;
-  (void)sendTeardownCommand(subsession, responseHandlerForSyncInterface);
-
-  // Now block (but handling events) until we get a response (or a timeout):
-  envir().taskScheduler().doEventLoop(&fWatchVariableForSyncInterface);
-  delete[] fResultString;
-  return fResultCode == 0;
+  (void)sendTeardownCommand(subsession, NULL);
+  return True; // we don't wait for a response to the "TEARDOWN"
 }
 
 Boolean RTSPClient::parseRTSPURLUsernamePassword(char const* url,

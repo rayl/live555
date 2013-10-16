@@ -73,7 +73,8 @@ MPEG2TransportStreamFramer* MPEG2TransportStreamFramer
 MPEG2TransportStreamFramer
 ::MPEG2TransportStreamFramer(UsageEnvironment& env, FramedSource* inputSource)
   : FramedFilter(env, inputSource),
-    fTSPacketCount(0), fTSPacketDurationEstimate(0.0), fTSPCRCount(0) {
+    fTSPacketCount(0), fTSPacketDurationEstimate(0.0), fTSPCRCount(0),
+    fLimitNumTSPacketsToStream(False), fNumTSPacketsToStream(0) {
   fPIDStatusTable = HashTable::create(ONE_WORD_HASH_KEYS);
 }
 
@@ -89,7 +90,22 @@ void MPEG2TransportStreamFramer::clearPIDStatusTable() {
   }
 }
 
+void MPEG2TransportStreamFramer::setNumTSPacketsToStream(unsigned long numTSRecordsToStream) {
+  fNumTSPacketsToStream = numTSRecordsToStream;
+  fLimitNumTSPacketsToStream = numTSRecordsToStream > 0;
+}
+
 void MPEG2TransportStreamFramer::doGetNextFrame() {
+  if (fLimitNumTSPacketsToStream) {
+    if (fNumTSPacketsToStream == 0) {
+      handleClosure(this);
+      return;
+    }
+    if (fNumTSPacketsToStream*TRANSPORT_PACKET_SIZE < fMaxSize) {
+      fMaxSize = fNumTSPacketsToStream*TRANSPORT_PACKET_SIZE;
+    }
+  }
+
   // Read directly from our input source into our client's buffer:
   fFrameSize = 0;
   fInputSource->getNextFrame(fTo, fMaxSize,
@@ -120,6 +136,7 @@ void MPEG2TransportStreamFramer::afterGettingFrame1(unsigned frameSize,
 						    struct timeval presentationTime) {
   fFrameSize += frameSize;
   unsigned const numTSPackets = fFrameSize/TRANSPORT_PACKET_SIZE;
+  fNumTSPacketsToStream -= numTSPackets;
   fFrameSize = numTSPackets*TRANSPORT_PACKET_SIZE; // an integral # of TS packets
   if (fFrameSize == 0) {
     // We didn't read a complete TS packet; assume that the input source has closed.

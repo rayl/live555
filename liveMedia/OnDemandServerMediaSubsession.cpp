@@ -329,7 +329,6 @@ void OnDemandServerMediaSubsession::deleteStream(unsigned clientSessionId,
     if (streamState->referenceCount() > 0) --streamState->referenceCount();
     if (streamState->referenceCount() == 0) {
       delete streamState;
-      if (fLastStreamToken == streamToken) fLastStreamToken = NULL;
       streamToken = NULL;
     }
   }
@@ -520,6 +519,7 @@ void StreamState::reclaim() {
   Medium::close(fUDPSink); fUDPSink = NULL;
 
   fMaster.closeStreamSource(fMediaSource); fMediaSource = NULL;
+  if (fMaster.fLastStreamToken == this) fMaster.fLastStreamToken = NULL;
 
   delete fRTPgs; fRTPgs = NULL;
   delete fRTCPgs; fRTCPgs = NULL;
