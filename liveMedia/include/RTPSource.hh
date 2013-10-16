@@ -60,6 +60,7 @@ public:
   // Note: This is the SSRC in the most recently received RTP packet; not *our* SSRC
 
   Boolean& enableRTCPReports() { return fEnableRTCPReports; }
+  Boolean const& enableRTCPReports() const { return fEnableRTCPReports; }
 
   void setStreamSocket(int sockNum, unsigned char streamChannelId) {
     // hack to allow sending RTP over TCP (RFC 2236, section 10.12)

@@ -708,6 +708,10 @@ Boolean RTCPInstance::addReport(Boolean alwaysAdd) {
 
     addSR();
   } else if (fSource != NULL) {
+    if (!alwaysAdd) {
+      if (!fSource->enableRTCPReports()) return False;
+    }
+
     addRR();
   }
 
