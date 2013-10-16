@@ -42,6 +42,7 @@ protected:
   void handleNewBuffer(unsigned char* buffer, unsigned bufferSize,
 		       int mpegVersion, MPEG1or2Demux::SCR scr);
   // called by "awaitNewBuffer()"
+  // Note: For MPEG-4 video, set "mpegVersion" to 4; for H.264 video, set "mpegVersion" to 5. 
 
 private:
   // Redefined virtual functions:

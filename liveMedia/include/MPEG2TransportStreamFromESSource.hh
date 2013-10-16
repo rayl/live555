@@ -31,6 +31,7 @@ public:
   static MPEG2TransportStreamFromESSource* createNew(UsageEnvironment& env);
 
   void addNewVideoSource(FramedSource* inputSource, int mpegVersion);
+      // Note: For MPEG-4 video, set "mpegVersion" to 4; for H.264 video, set "mpegVersion"to 5.
   void addNewAudioSource(FramedSource* inputSource, int mpegVersion);
 
 protected:

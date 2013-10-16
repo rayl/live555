@@ -17,7 +17,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Basic Usage Environment: for a simple, non-scripted, console application
 // Implementation
 
-#ifndef IMN_PIM
 #include "BasicUsageEnvironment.hh"
 #include <stdio.h>
 
@@ -78,5 +77,3 @@ UsageEnvironment& BasicUsageEnvironment::operator<<(void* p) {
 	fprintf(stderr, "%p", p);
 	return *this;
 }
-#endif
-

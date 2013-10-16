@@ -109,7 +109,7 @@ void MPEG2TransportStreamMultiplexor
       // Instead, set the stream's type to default values, based on whether
       // the stream is audio or video, and whether it's MPEG-1 or MPEG-2:
       if ((stream_id&0xF0) == 0xE0) { // video
-	streamType = mpegVersion == 1 ? 1 : mpegVersion == 2 ? 2 : 0x10;
+	streamType = mpegVersion == 1 ? 1 : mpegVersion == 2 ? 2 : mpegVersion == 4 ? 0x10 : 0x1B;
       } else if ((stream_id&0xE0) == 0xC0) { // audio
 	streamType = mpegVersion == 1 ? 3 : mpegVersion == 2 ? 4 : 0xF;
       } else if (stream_id == 0xBD) { // private_stream1 (usually AC-3)
@@ -121,7 +121,7 @@ void MPEG2TransportStreamMultiplexor
 
     if (fPCR_PID == 0) { // set it to this stream, if it's appropriate:
       if ((!fHaveVideoStreams && (streamType == 3 || streamType == 4 || streamType == 0xF))/* audio stream */ ||
-	  (streamType == 1 || streamType == 2 || streamType == 0x10)/* video stream */) {
+	  (streamType == 1 || streamType == 2 || streamType == 0x10 || streamType == 0x1B)/* video stream */) {
 	fPCR_PID = fCurrentPID; // use this stream's SCR for PCR
       }
     }

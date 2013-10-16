@@ -654,7 +654,8 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	if ((fClientPortNum&1) != 0) { // it's odd
 	  // Record this socket in our table, and keep trying:
 	  unsigned key = (unsigned)fClientPortNum;
-	  socketHashTable->Add((char const*)key, fRTPSocket);
+	  Groupsock* existing = (Groupsock*)socketHashTable->Add((char const*)key, fRTPSocket);
+	  delete existing; // in case it wasn't NULL
 	  continue;
 	}
 
@@ -666,22 +667,26 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	  fRTCPSocket = new Groupsock(env(), tempAddr, rtcpPortNum, 255);
 	}
 	if (fRTCPSocket != NULL) {
-	  // Success! Use these two sockets (and delete any others that we've created):
-	  Groupsock* oldGS;
-	  while ((oldGS = (Groupsock*)socketHashTable->RemoveNext()) != NULL) {
-	    delete oldGS;
-	  }
-	  delete socketHashTable;
+	  // Success! Use these two sockets.
 	  success = True;
 	  break;
 	} else {
 	  // We couldn't create the RTCP socket (perhaps that port number's already in use elsewhere?).
 	  // Record the first socket in our table, and keep trying:
 	  unsigned key = (unsigned)fClientPortNum;
-	  socketHashTable->Add((char const*)key, fRTPSocket);
+	  Groupsock* existing = (Groupsock*)socketHashTable->Add((char const*)key, fRTPSocket);
+	  delete existing; // in case it wasn't NULL
 	  continue;
 	}
       }
+
+      // Clean up the socket hash table (and contents):
+      Groupsock* oldGS;
+      while ((oldGS = (Groupsock*)socketHashTable->RemoveNext()) != NULL) {
+	delete oldGS;
+      }
+      delete socketHashTable;
+
       if (!success) break; // a fatal error occurred trying to create the RTP and RTCP sockets; we can't continue
     }
 

@@ -89,6 +89,11 @@ unsigned MultiFramedRTPSink::frameSpecificHeaderSize() const {
   return 0;
 }
 
+unsigned MultiFramedRTPSink::computeOverflowForNewFrame(unsigned newFrameSize) const {
+  // default implementation: Just call numOverflowBytes()
+  return fOutBuf->numOverflowBytes(newFrameSize);
+}
+
 void MultiFramedRTPSink::setMarkerBit() {
   unsigned rtpHdr = fOutBuf->extractWord(0);
   rtpHdr |= 0x00800000;
@@ -269,7 +274,7 @@ void MultiFramedRTPSink
       if (isTooBigForAPacket(frameSize)
           && (fNumFramesUsedSoFar == 0 || allowFragmentationAfterStart())) {
         // We need to fragment this frame, and use some of it now:
-        overflowBytes = fOutBuf->numOverflowBytes(frameSize);
+        overflowBytes = computeOverflowForNewFrame(frameSize);
         numFrameBytesToUse -= overflowBytes;
         fCurFragmentationOffset += numFrameBytesToUse;
       } else {
@@ -386,11 +391,11 @@ void MultiFramedRTPSink::sendPacketIfNecessary() {
     struct timeval timeNow;
     gettimeofday(&timeNow, NULL);
     int uSecondsToGo;
-    if (fNextSendTime.tv_sec < timeNow.tv_sec) {
+    if (fNextSendTime.tv_sec < timeNow.tv_sec
+	|| (fNextSendTime.tv_sec == timeNow.tv_sec && fNextSendTime.tv_usec < timeNow.tv_usec)) {
       uSecondsToGo = 0; // prevents integer underflow if too far behind
     } else {
-      uSecondsToGo = (fNextSendTime.tv_sec - timeNow.tv_sec)*1000000
-	+ (fNextSendTime.tv_usec - timeNow.tv_usec);
+      uSecondsToGo = (fNextSendTime.tv_sec - timeNow.tv_sec)*1000000 + (fNextSendTime.tv_usec - timeNow.tv_usec);
     }
 
     // Delay this amount of time:

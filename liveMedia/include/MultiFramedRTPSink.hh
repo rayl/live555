@@ -60,8 +60,13 @@ protected:
   virtual unsigned frameSpecificHeaderSize() const;
       // returns the size of any frame-specific header used (before each frame
       // within the packet)
+  virtual unsigned computeOverflowForNewFrame(unsigned newFrameSize) const;
+      // returns the number of overflow bytes that would be produced by adding a new
+      // frame of size "newFrameSize" to the current RTP packet.
+      // (By default, this just calls "numOverflowBytes()", but subclasses can redefine
+      // this to (e.g.) impose a granularity upon RTP payload fragments.)
 
-  // Functions that might be called by doSpecialFrameHandling():
+  // Functions that might be called by doSpecialFrameHandling(), or other subclass virtual functions:
   Boolean isFirstPacket() const { return fIsFirstPacket; }
   Boolean isFirstFrameInPacket() const { return fNumFramesUsedSoFar == 0; }
   Boolean curFragmentationOffset() const { return fCurFragmentationOffset; }
@@ -77,7 +82,6 @@ protected:
 				   unsigned bytePosition = 0);
   void setFramePadding(unsigned numPaddingBytes);
   unsigned numFramesUsedSoFar() const { return fNumFramesUsedSoFar; }
-
   unsigned ourMaxPacketSize() const { return fOurMaxPacketSize; }
 
 public: // redefined virtual functions:
