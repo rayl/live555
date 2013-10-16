@@ -91,6 +91,11 @@ public:
       // each session's "rtsp://" URL.
       // This string is dynamically allocated; caller should delete[]
 
+  Boolean setUpTunnelingOverHTTP(Port httpPort);
+      // (Attempts to) enable RTSP-over-HTTP tunneling on the specified port.
+      // Returns True iff the specified port can be used in this way (i.e., it's not already being used for a separate HTTP server).
+  portNumBits httpServerPortNum() const; // in host byte order.  (Returns 0 if not present.)
+
 protected:
   RTSPServer(UsageEnvironment& env,
 	     int ourSocket, Port ourPort,
@@ -141,6 +146,14 @@ protected:
 					 char const* cseq, char const* fullRequestStr);
     virtual void handleCmd_SET_PARAMETER(ServerMediaSubsession* subsession,
 					 char const* cseq, char const* fullRequestStr);
+    // Support for optional RTSP-over-HTTP tunneling:
+    virtual Boolean parseHTTPRequestString(char* resultCmdName, unsigned resultCmdNameMaxSize,
+					   char* sessionCookie, unsigned sessionCookieMaxSize,
+					   char* acceptStr, unsigned acceptStrMaxSize,
+					   char* contentTypeStr, unsigned contentTypeStrMaxSize);
+    virtual void handleHTTPCmd_notSupported();
+    virtual void handleHTTPCmd_GET(char const* sessionCookie);
+    virtual Boolean handleHTTPCmd_POST(char const* sessionCookie);
   protected:
     UsageEnvironment& envir() { return fOurServer.envir(); }
     void reclaimStreamStates();
@@ -157,16 +170,19 @@ protected:
     void noteLiveness();
     static void noteClientLiveness(RTSPClientSession* clientSession);
     static void livenessTimeoutTask(RTSPClientSession* clientSession);
+    void changeClientInputSocket(int newSocketNum);
   protected:
     RTSPServer& fOurServer;
     unsigned fOurSessionId;
     ServerMediaSession* fOurServerMediaSession;
-    int fClientSocket;
+    int fClientInputSocket, fClientOutputSocket;
     struct sockaddr_in fClientAddr;
+    char* fSessionCookie; // used for optional RTSP-over-HTTP tunneling
     TaskToken fLivenessCheckTask;
     unsigned char fRequestBuffer[RTSP_BUFFER_SIZE];
     unsigned fRequestBytesAlreadySeen, fRequestBufferBytesLeft;
     unsigned char* fLastCRLF;
+    unsigned fBase64RemainderCount; // used for optional RTSP-over-HTTP tunneling (possible values: 0,1,2,3)
     unsigned char fResponseBuffer[RTSP_BUFFER_SIZE];
     Boolean fIsMulticast, fSessionIsActive, fStreamAfterSETUP;
     Authenticator fCurrentAuthenticator; // used if access control is needed
@@ -195,14 +211,22 @@ protected:
   };
 
 private:
-  static void incomingConnectionHandler(void*, int /*mask*/);
-  void incomingConnectionHandler1();
+  static void incomingConnectionHandlerRTSP(void*, int /*mask*/);
+  void incomingConnectionHandlerRTSP1();
+
+  static void incomingConnectionHandlerHTTP(void*, int /*mask*/);
+  void incomingConnectionHandlerHTTP1();
+
+  void incomingConnectionHandler(int serverSocket);
 
 private:
   friend class RTSPClientSession;
   friend class ServerMediaSessionIterator;
-  int fServerSocket;
-  Port fServerPort;
+  int fRTSPServerSocket;
+  Port fRTSPServerPort;
+  int fHTTPServerSocket; // for optional RTSP-over-HTTP tunneling
+  Port fHTTPServerPort; // ditto
+  HashTable* fClientSessionsForHTTPTunneling; // ditto (maps 'session cookie' strings to "RTSPClientSession"s)
   UserAuthenticationDatabase* fAuthDB;
   unsigned fReclamationTestSeconds;
   HashTable* fServerMediaSessions;

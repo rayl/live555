@@ -237,6 +237,16 @@ int main(int argc, char** argv) {
     announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
+  // Also, attempt to create a HTTP server for RTSP-over-HTTP tunneling.
+  // Try first with the default HTTP port (80), and then with the alternative HTTP
+  // port numbers (8000 and 8080).
+
+  if (rtspServer->setUpTunnelingOverHTTP(80) || rtspServer->setUpTunnelingOverHTTP(8000) || rtspServer->setUpTunnelingOverHTTP(8080)) {
+    *env << "\n(We use port " << rtspServer->httpServerPortNum() << " for optional RTSP-over-HTTP tunneling.)\n";
+  } else {
+    *env << "\n(RTSP-over-HTTP tunneling is not available.)\n";
+  }
+
   env->taskScheduler().doEventLoop(); // does not return
 
   return 0; // only to prevent compiler warning
