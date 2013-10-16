@@ -251,7 +251,8 @@ void MatroskaFileParser::lookForNextTrack() {
 	if (parseEBMLVal_unsigned(size, timecodeScale) && timecodeScale > 0) {
 	  fOurFile.fTimecodeScale = timecodeScale;
 #ifdef DEBUG
-	  fprintf(stderr, "\tTimecode Scale %u ns (=> Segment Duration == %f seconds)\n", fOurFile.timecodeScale(), fOurFile.fileDuration());
+	  fprintf(stderr, "\tTimecode Scale %u ns (=> Segment Duration == %f seconds)\n",
+		  fOurFile.timecodeScale(), fOurFile.segmentDuration()*(fOurFile.fTimecodeScale/1000000000.0f));
 #endif
 	}
 	break;
@@ -259,7 +260,8 @@ void MatroskaFileParser::lookForNextTrack() {
       case MATROSKA_ID_DURATION: { // 'Segment Duration' header: get this value
 	if (parseEBMLVal_float(size, fOurFile.fSegmentDuration)) {
 #ifdef DEBUG
-	  fprintf(stderr, "\tSegment Duration %f (== %f seconds)\n", fOurFile.segmentDuration(), fOurFile.fileDuration());
+	  fprintf(stderr, "\tSegment Duration %f (== %f seconds)\n",
+		  fOurFile.segmentDuration(), fOurFile.segmentDuration()*(fOurFile.fTimecodeScale/1000000000.0f));
 #endif
 	}
 	break;
@@ -481,6 +483,15 @@ Boolean MatroskaFileParser::parseTrack() {
 	}
 	break;
       }
+      case MATROSKA_ID_DISPLAY_UNIT: {
+	unsigned displayUnit;
+	if (parseEBMLVal_unsigned(size, displayUnit)) {
+#ifdef DEBUG
+	  fprintf(stderr, "\tDisplay Unit %d\n", displayUnit);
+#endif
+	}
+	break;
+      }
       case MATROSKA_ID_AUDIO: { // 'Audio settings' header: enter this
 	break;
       }
@@ -512,6 +523,15 @@ Boolean MatroskaFileParser::parseTrack() {
 	  fprintf(stderr, "\tChannels %d\n", numChannels);
 #endif
 	  if (track != NULL) track->numChannels = numChannels;
+	}
+	break;
+      }
+      case MATROSKA_ID_BIT_DEPTH: {
+	unsigned bitDepth;
+	if (parseEBMLVal_unsigned(size, bitDepth)) {
+#ifdef DEBUG
+	  fprintf(stderr, "\tBit Depth %d\n", bitDepth);
+#endif
 	}
 	break;
       }
@@ -1130,12 +1150,29 @@ Boolean MatroskaFileParser::parseEBMLVal_unsigned(EBMLDataSize& size, unsigned& 
 }
 
 Boolean MatroskaFileParser::parseEBMLVal_float(EBMLDataSize& size, float& result) {
-  unsigned resultAsUnsigned;
-  if (!parseEBMLVal_unsigned(size, resultAsUnsigned)) return False;
+  if (size.val() == 4) {
+    // Normal case.  Read the value as if it were a 4-byte integer, then copy it to the 'float' result:
+    unsigned resultAsUnsigned;
+    if (!parseEBMLVal_unsigned(size, resultAsUnsigned)) return False;
 
-  if (sizeof result != sizeof resultAsUnsigned) return False;
-  memcpy(&result, &resultAsUnsigned, sizeof result);
-  return True;
+    if (sizeof result != sizeof resultAsUnsigned) return False;
+    memcpy(&result, &resultAsUnsigned, sizeof result);
+    return True;
+  } else if (size.val() == 8) {
+    // Read the value as if it were an 8-byte integer, then copy it to a 'double', the convert that to the 'float' result:
+    u_int64_t resultAsUnsigned64;
+    if (!parseEBMLVal_unsigned64(size, resultAsUnsigned64)) return False;
+
+    double resultDouble;
+    if (sizeof resultDouble != sizeof resultAsUnsigned64) return False;
+    memcpy(&resultDouble, &resultAsUnsigned64, sizeof resultDouble);
+
+    result = (float)resultDouble;
+    return True;
+  } else {
+    // Unworkable size
+    return False;
+  }
 }
 
 Boolean MatroskaFileParser::parseEBMLVal_string(EBMLDataSize& size, char*& result) {

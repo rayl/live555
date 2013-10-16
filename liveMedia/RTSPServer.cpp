@@ -1705,7 +1705,7 @@ void RTSPServer::RTSPClientSession
     }
   }
 
-  ourClientConnection->setRTSPResponse("200 OK");
+  setRTSPResponse(ourClientConnection, "200 OK");
 
   // Optimization: If all subsessions have now been torn down, then we know that we can reclaim our object now.
   // (Without this optimization, however, this object would still get reclaimed later, as a result of a 'liveness' timeout.)
@@ -1938,7 +1938,7 @@ void RTSPServer::RTSPClientSession
     }
   }
 
-  ourClientConnection->setRTSPResponse("200 OK", fOurSessionId);
+  setRTSPResponse(ourClientConnection, "200 OK", fOurSessionId);
 }
 
 void RTSPServer::RTSPClientSession
@@ -1947,7 +1947,7 @@ void RTSPServer::RTSPClientSession
   // By default, we implement "GET_PARAMETER" just as a 'keep alive', and send back a dummy response.
   // (If you want to handle "GET_PARAMETER" properly, you can do so by defining a subclass of "RTSPServer"
   // and "RTSPServer::RTSPClientSession", and then reimplement this virtual function in your subclass.)
-  ourClientConnection->setRTSPResponse("200 OK", fOurSessionId, LIVEMEDIA_LIBRARY_VERSION_STRING);
+  setRTSPResponse(ourClientConnection, "200 OK", fOurSessionId, LIVEMEDIA_LIBRARY_VERSION_STRING);
 }
 
 void RTSPServer::RTSPClientSession
@@ -1956,7 +1956,7 @@ void RTSPServer::RTSPClientSession
   // By default, we implement "SET_PARAMETER" just as a 'keep alive', and send back an empty response.
   // (If you want to handle "SET_PARAMETER" properly, you can do so by defining a subclass of "RTSPServer"
   // and "RTSPServer::RTSPClientSession", and then reimplement this virtual function in your subclass.)
-  ourClientConnection->setRTSPResponse("200 OK", fOurSessionId);
+  setRTSPResponse(ourClientConnection, "200 OK", fOurSessionId);
 }
 
 RTSPServer::RTSPClientConnection*

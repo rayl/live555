@@ -107,10 +107,12 @@ char const* EBMLId::stringName() const {
     case MATROSKA_ID_PIXEL_HEIGHT: { return "Pixel Height"; }
     case MATROSKA_ID_DISPLAY_WIDTH: { return "Display Width"; }
     case MATROSKA_ID_DISPLAY_HEIGHT: { return "Display Height"; }
+    case MATROSKA_ID_DISPLAY_UNIT: { return "Display Unit"; }
     case MATROSKA_ID_AUDIO: { return "Audio Settings"; }
     case MATROSKA_ID_SAMPLING_FREQUENCY: { return "Sampling Frequency"; }
     case MATROSKA_ID_OUTPUT_SAMPLING_FREQUENCY: { return "Output Sampling Frequency"; }
     case MATROSKA_ID_CHANNELS: { return "Channels"; }
+    case MATROSKA_ID_BIT_DEPTH: { return "Bit Depth"; }
     case MATROSKA_ID_CONTENT_ENCODINGS: { return "Content Encodings"; }
     case MATROSKA_ID_CONTENT_ENCODING: { return "Content Encoding"; }
     case MATROSKA_ID_CONTENT_COMPRESSION: { return "Content Compression"; }
