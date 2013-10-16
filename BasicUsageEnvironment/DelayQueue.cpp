@@ -113,7 +113,11 @@ DelayQueue::DelayQueue()
 }
 
 DelayQueue::~DelayQueue() {
-  while (fNext != this) removeEntry(fNext);
+  while (fNext != this) {
+    DelayQueueEntry* entryToRemove = fNext;
+    removeEntry(entryToRemove);
+    delete entryToRemove;
+  }
 }
 
 void DelayQueue::addEntry(DelayQueueEntry* newEntry) {

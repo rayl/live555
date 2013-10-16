@@ -761,7 +761,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	  = MPEG4LATMAudioRTPSource::createNew(env(), fRTPSocket,
 					       fRTPPayloadFormat,
 					       fRTPTimestampFrequency);
-      } else if (strcmp(fCodecName, "AC3") == 0) { // AC3 audio
+      } else if (strcmp(fCodecName, "AC3") == 0 || strcmp(fCodecName, "EAC3") == 0) { // AC3 audio
 	fReadSource = fRTPSource
 	  = AC3AudioRTPSource::createNew(env(), fRTPSocket,
 					 fRTPPayloadFormat,

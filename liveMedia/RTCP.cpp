@@ -340,7 +340,9 @@ void RTCPInstance::incomingReportHandler1() {
     if (!readResult) break;
 
     // Ignore the packet if it was looped-back from ourself:
+    Boolean packetWasFromOurHost = False;
     if (RTCPgs()->wasLoopedBackFromUs(envir(), fromAddress)) {
+      packetWasFromOurHost = True;
       // However, we still want to handle incoming RTCP packets from
       // *other processes* on the same machine.  To distinguish this
       // case from a true loop-back, check whether we've just sent a
@@ -354,13 +356,22 @@ void RTCPInstance::incomingReportHandler1() {
     }
 
     unsigned char* pkt = fInBuf;
-    if (fIsSSMSource) {
-      // This packet was received via unicast.  'Reflect' it by resending
-      // it to the multicast group.
+    if (fIsSSMSource && !packetWasFromOurHost) {
+      // This packet is assumed to have been received via unicast (because we're a SSM source, and SSM receivers send back RTCP "RR"
+      // packets via unicast).  'Reflect' the packet by resending it to the multicast group, so that any other receivers can also
+      // get to see it.
+
       // NOTE: Denial-of-service attacks are possible here.
       // Users of this software may wish to add their own,
       // application-specific mechanism for 'authenticating' the
       // validity of this packet before reflecting it.
+
+      // NOTE: The test for "!packetWasFromOurHost" means that we won't reflect RTCP packets that come from other processes on
+      // the same host as us.  The reason for this is that the 'packet size' test above is not 100% reliable; some packets
+      // that were truly looped back from us might not be detected as such, and this might lead to infinite forwarding/receiving
+      // of some packets.  To avoid this possibility, we only reflect RTCP packets that we know for sure originated elsewhere.
+      // (Note, though, that if we ever re-enable the code in "Groupsock::multicastSendOnly()", then we could remove the test for
+      // "!packetWasFromOurHost".)
       fRTCPInterface.sendPacket(pkt, packetSize);
       fHaveJustSentPacket = True;
       fLastPacketSentSize = packetSize;

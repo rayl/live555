@@ -88,6 +88,9 @@ ByteStreamFileSource::ByteStreamFileSource(UsageEnvironment& env, FILE* fid,
     fPlayTimePerFrame(playTimePerFrame), fLastPlayTime(0), fFileSize(0),
     fDeleteFidOnClose(deleteFidOnClose), fHaveStartedReading(False),
     fLimitNumBytesToStream(False), fNumBytesToStream(0) {
+#ifndef READ_FROM_FILES_SYNCHRONOUSLY
+  makeSocketNonBlocking(fileno(fFid));
+#endif
 }
 
 ByteStreamFileSource::~ByteStreamFileSource() {
@@ -141,7 +144,11 @@ void ByteStreamFileSource::doReadFromFile() {
   if (fPreferredFrameSize > 0 && fPreferredFrameSize < fMaxSize) {
     fMaxSize = fPreferredFrameSize;
   }
+#ifdef READ_FROM_FILES_SYNCHRONOUSLY
   fFrameSize = fread(fTo, 1, fMaxSize, fFid);
+#else
+  fFrameSize = read(fileno(fFid), fTo, fMaxSize);
+#endif
   if (fFrameSize == 0) {
     handleClosure(this);
     return;
