@@ -131,7 +131,7 @@ unsigned BitVector::get_expGolomb() {
   unsigned numLeadingZeroBits = 0;
   unsigned codeStart = 1;
 
-  while (get1Bit() == 0) {
+  while (get1Bit() == 0 && fCurBitIndex < fTotNumBits) {
     ++numLeadingZeroBits;
     codeStart *= 2;
   }

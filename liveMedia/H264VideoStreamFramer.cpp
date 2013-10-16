@@ -52,7 +52,7 @@ private:
 			    Boolean& field_pic_flag, Boolean& bottom_field_flag);
 
 private:
-  Boolean fIncludeStartCodeInOutput;
+  unsigned fOutputStartCodeSize;
   Boolean fHaveSeenFirstStartCode;
 
   // Fields in H.264 headers, used in parsing:
@@ -112,7 +112,7 @@ Boolean H264VideoStreamFramer::isH264VideoStreamFramer() const {
 H264VideoStreamParser
 ::H264VideoStreamParser(H264VideoStreamFramer* usingSource, FramedSource* inputSource, Boolean includeStartCodeInOutput)
   : MPEGVideoStreamParser(usingSource, inputSource),
-    fIncludeStartCodeInOutput(includeStartCodeInOutput), fHaveSeenFirstStartCode(False),
+    fOutputStartCodeSize(includeStartCodeInOutput ? 4 : 0), fHaveSeenFirstStartCode(False),
     // Default values for our parser variables (in case they're not set explicitly in headers that we parse:
     log2_max_frame_num(5), separate_colour_plane_flag(False), frame_mbs_only_flag(True) {
 }
@@ -121,15 +121,16 @@ H264VideoStreamParser::~H264VideoStreamParser() {
 }
 
 void H264VideoStreamParser::removeEmulationBytes(u_int8_t* nalUnitCopy, unsigned maxSize, unsigned& nalUnitCopySize) {
-  nalUnitCopySize = 0;
-  unsigned const NumBytesInNALunit = fTo - fStartOfFrame;
+  u_int8_t* nalUnitOrig = fStartOfFrame + fOutputStartCodeSize;
+  unsigned const NumBytesInNALunit = fTo - nalUnitOrig;
   if (NumBytesInNALunit > maxSize) return;
+  nalUnitCopySize = 0;
   for (unsigned i = 0; i < NumBytesInNALunit; ++i) {
-    if (i+2 < NumBytesInNALunit && fStartOfFrame[i] == 0 && fStartOfFrame[i+1] == 0 && fStartOfFrame[i+2] == 3) {
-      nalUnitCopy[nalUnitCopySize++] = fStartOfFrame[i++];
-      nalUnitCopy[nalUnitCopySize++] = fStartOfFrame[i++];
+    if (i+2 < NumBytesInNALunit && nalUnitOrig[i] == 0 && nalUnitOrig[i+1] == 0 && nalUnitOrig[i+2] == 3) {
+      nalUnitCopy[nalUnitCopySize++] = nalUnitOrig[i++];
+      nalUnitCopy[nalUnitCopySize++] = nalUnitOrig[i++];
     } else {
-      nalUnitCopy[nalUnitCopySize++] = fStartOfFrame[i];
+      nalUnitCopy[nalUnitCopySize++] = nalUnitOrig[i];
     }
   }
 }
@@ -559,7 +560,8 @@ unsigned H264VideoStreamParser::parse() {
       fHaveSeenFirstStartCode = True; // from now on
     }
     
-    if (fIncludeStartCodeInOutput) {
+    if (fOutputStartCodeSize > 0) {
+      // Include a start code in the output:
       save4Bytes(0x00000001);
     }
 
@@ -569,7 +571,7 @@ unsigned H264VideoStreamParser::parse() {
     u_int8_t firstByte = next4Bytes>>24;
     u_int8_t nal_ref_idc = (firstByte&0x60)>>5;
     u_int8_t nal_unit_type = firstByte&0x1F;
-    while (next4Bytes != 0x00000001 & (next4Bytes&0xFFFFFF00) != 0x00000100) {
+    while (next4Bytes != 0x00000001 && (next4Bytes&0xFFFFFF00) != 0x00000100) {
       // We save at least some of "next4Bytes".
       if ((unsigned)(next4Bytes&0xFF) > 1) {
         // Common case: 0x00000001 or 0x000001 definitely doesn't begin anywhere in "next4Bytes", so we save all of it:
@@ -591,7 +593,7 @@ unsigned H264VideoStreamParser::parse() {
     }
 #ifdef DEBUG
     fprintf(stderr, "Parsed %d-byte NAL-unit (nal_ref_idc: %d, nal_unit_type: %d (\"%s\"))\n",
-	    curFrameSize(), nal_ref_idc, nal_unit_type, nal_unit_type_description[nal_unit_type]);
+	    curFrameSize()-fOutputStartCodeSize, nal_ref_idc, nal_unit_type, nal_unit_type_description[nal_unit_type]);
 #endif
 
     switch (nal_unit_type) {
@@ -602,7 +604,7 @@ unsigned H264VideoStreamParser::parse() {
       }
       case 7: { // Sequence parameter set
 	// First, save a copy of this NAL unit, in case the downstream object wants to see it:
-	usingSource()->saveCopyOfSPS(fStartOfFrame, fTo - fStartOfFrame);
+	usingSource()->saveCopyOfSPS(fStartOfFrame + fOutputStartCodeSize, fTo - fStartOfFrame - fOutputStartCodeSize);
 
 	// Parse this NAL unit to check whether frame rate information is present:
 	unsigned num_units_in_tick, time_scale, fixed_frame_rate_flag;
@@ -624,7 +626,7 @@ unsigned H264VideoStreamParser::parse() {
       }
       case 8: { // Picture parameter set
 	// Save a copy of this NAL unit, in case the downstream object wants to see it:
-	usingSource()->saveCopyOfPPS(fStartOfFrame, fTo - fStartOfFrame);
+	usingSource()->saveCopyOfPPS(fStartOfFrame + fOutputStartCodeSize, fTo - fStartOfFrame - fOutputStartCodeSize);
       }
     }
 
@@ -676,7 +678,7 @@ unsigned H264VideoStreamParser::parse() {
 	  // Current NAL unit's "slice_header":
 	  unsigned frame_num, pic_parameter_set_id, idr_pic_id;
 	  Boolean field_pic_flag, bottom_field_flag;
-	  analyze_slice_header(fStartOfFrame, fTo, nal_unit_type,
+	  analyze_slice_header(fStartOfFrame + fOutputStartCodeSize, fTo, nal_unit_type,
 			       frame_num, pic_parameter_set_id, idr_pic_id, field_pic_flag, bottom_field_flag);
 	  
 	  // Next NAL unit's "slice_header":

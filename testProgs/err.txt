@@ -1,0 +1,5512 @@
+Play this stream using the URL "rtsp://4.79.217.242:8554/testStream"
+Beginning streaming...
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561004.623105
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561004.623105
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561004.623105
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561004.663105
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561004.703105
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561004.743105
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561004.783105
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561004.823105
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561004.863105
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561004.903105
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561004.943105
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561004.983105
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.023104
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.063103
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.103103
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.143103
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.183103
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.223103
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.263103
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.303102
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.343101
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.383100
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.423100
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.463099
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.503098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4280-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.543098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4407-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.583098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4656-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.623098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3539-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.663098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3702-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.703098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3475-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.743098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3172-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.783098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3152-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.823098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3237-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.863098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3588-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.903098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3370-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.943098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561005.983098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2989-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.023098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3060-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.063098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2979-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.103098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2892-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.143098
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+...done reading from file
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561006.186487
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561006.186487
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561006.186487
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.226487
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.266487
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.306486
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.346485
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.386484
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.426484
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.466483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.506483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.546483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.586483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.626483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.666483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.706483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.746483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.786483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.826483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.866483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.906483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.946483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561006.986483
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.026483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.066483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4280-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.106483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4407-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.146483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4656-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.186483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3539-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.226483
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3702-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.266482
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3475-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.306482
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3172-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.346481
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3152-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.386480
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3237-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.426479
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3588-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.466479
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3370-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.506479
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.546479
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2989-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.586479
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3060-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.626479
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2979-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.666479
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2892-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.706479
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+...done reading from file
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561007.748471
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561007.748471
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561007.748471
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.788471
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.828471
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.868471
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.908471
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.948471
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561007.988471
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.028470
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.068470
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.108470
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.148470
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.188470
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.228470
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.268470
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.308469
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.348469
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.388468
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.428467
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.468466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.508466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.548466
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.588466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.628466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4280-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.668466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4407-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.708466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4656-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.748466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3539-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.788466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3702-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.828466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3475-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.868466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3172-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.908466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3152-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.948466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3237-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561008.988466
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3588-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.028465
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3370-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.068465
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.108465
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2989-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.148465
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3060-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.188465
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2979-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.228465
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2892-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.268465
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+...done reading from file
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561009.310496
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561009.310496
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561009.310496
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.350496
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.390495
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.430494
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.470493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.510493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.550493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.590493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.630493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.670493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.710493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.750493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.790493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.830493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.870493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.910493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.950493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561009.990493
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.030492
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.070492
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.110492
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.150492
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.190492
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4280-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.230492
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4407-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.270492
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4656-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.310492
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3539-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.350491
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3702-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.390491
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3475-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.430490
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3172-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.470489
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3152-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.510488
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3237-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.550488
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3588-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.590488
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3370-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.630488
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.670488
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2989-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.710488
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3060-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.750488
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2979-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.790488
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2892-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.830488
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+...done reading from file
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561010.872515
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561010.872515
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561010.872515
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.912515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.952515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561010.992515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.032515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.072515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.112515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.152515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.192515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.232515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.272515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.312515
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.352514
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.392514
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.432513
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.472512
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.512511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.552511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.592511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.632511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.672511
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.712511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.752511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4280-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.792511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4407-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.832511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4656-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.872511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3539-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.912511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3702-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.952511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3475-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561011.992511
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3172-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.032510
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3152-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.072509
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3237-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.112509
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3588-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.152509
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3370-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.192509
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.232509
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2989-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.272509
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3060-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.312509
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2979-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.352508
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2892-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.392507
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+...done reading from file
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561012.434536
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561012.434536
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561012.434536
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.474535
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.514534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.554534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.594534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.634534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.674534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.714534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.754534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.794534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.834534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.874534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.914534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.954534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561012.994534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.034534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.074534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.114534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.154534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.194534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.234534
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.274534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.314534
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4280-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.354533
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4407-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.394532
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4656-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.434532
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3539-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.474531
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3702-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.514530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3475-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.554530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3172-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.594530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3152-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.634530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3237-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.674530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3588-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.714530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3370-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.754530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.794530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2989-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.834530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3060-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.874530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2979-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.914530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2892-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561013.954530
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+...done reading from file
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561013.996559
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561013.996559
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561013.996559
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.036559
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.076559
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.116559
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.156559
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.196559
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.236559
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.276559
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.316559
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.356558
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.396557
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.436557
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.476556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.516556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.556556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.596556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.636556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.676556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.716556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.756556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.796556
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.836556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.876556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4280-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.916556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4407-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.956556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4656-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561014.996556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3539-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.036556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3702-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.076556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3475-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.116556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3172-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.156556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3152-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.196556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3237-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.236556
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3588-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.276555
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3370-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.316555
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.356554
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2989-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.396553
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3060-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.436552
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2979-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.476552
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2892-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.516552
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+...done reading from file
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561015.558608
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561015.558608
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561015.558608
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.598608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.638608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.678608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.718608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.758608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.798608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.838608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.878608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.918608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.958608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561015.998608
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.038607
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.078607
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.118606
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.158606
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.198606
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.238606
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.278606
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.318606
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.358606
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.398605
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.438604
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4280-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.478604
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4407-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.518603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4656-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.558603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3539-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.598603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3702-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.638603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3475-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.678603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3172-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.718603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3152-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.758603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3237-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.798603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3588-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.838603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3370-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.878603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.918603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2989-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.958603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3060-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561016.998603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2979-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.038602
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2892-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.078602
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+...done reading from file
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561017.120607
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561017.120607
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561017.120607
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.160607
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.200607
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.240607
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.280607
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.320607
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.360606
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.400605
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.440604
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.480604
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.520603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.560603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.600603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.640603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.680603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.720603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.760603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.800603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.840603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.880603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.920603
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561017.960603
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.000602
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4280-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.040602
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4407-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.080602
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4656-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.120601
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3539-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.160601
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3702-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.200601
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3475-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.240601
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3172-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.280601
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3152-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.320600
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3237-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.360600
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3588-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.400599
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3370-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.440598
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.480597
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2989-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.520597
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3060-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.560597
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2979-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.600597
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2892-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.640597
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+...done reading from file
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561018.682654
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561018.682654
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561018.682654
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.722654
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.762654
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.802654
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.842654
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.882654
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.922654
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561018.962654
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.002653
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.042653
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.082653
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.122653
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.162653
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.202653
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.242653
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.282653
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.322652
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.362652
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.402651
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.442650
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.482649
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.522649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.562649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4280-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.602649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4407-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.642649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4656-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.682649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3539-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.722649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3702-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.762649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3475-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.802649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3172-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.842649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3152-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.882649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3237-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.922649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3588-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561019.962649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3370-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.002648
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.042648
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2989-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.082648
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3060-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.122648
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2979-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.162648
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2892-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.202648
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+...done reading from file
+Beginning to read from file...
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+H264VideoStreamParser::parse() EXCEPTION (This is normal behavior - *not* an error)
+Parsed 8-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 7 ("Sequence parameter set"))
+	profile_idc: 66
+	constraint_setN_flag: 128
+	level_idc: 30
+	seq_parameter_set_id: 0
+	log2_max_frame_num_minus4: 0
+	pic_order_cnt_type: 2
+	max_num_ref_frames: 1
+	gaps_in_frame_num_value_allowed_flag: 0
+	pic_width_in_mbs_minus1: 21
+	pic_height_in_map_units_minus1: 14
+	frame_mbs_only_flag: 1
+	frame_cropping_flag: 0
+	vui_parameters_present_flag: 0
+	This "Sequence Parameter Set" NAL unit contained no frame rate information, so we use a default frame rate of 25.000000 fps
+	Presentation time: 1295561020.244652
+Parsed 4-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 8 ("Picture parameter set"))
+	Presentation time: 1295561020.244652
+Parsed 17372-byte NAL-unit (nal_ref_idc: 3, nal_unit_type: 5 ("Coded slice of an IDR picture"))
+	Presentation time: 1295561020.244652
+	(IdrPicFlag differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2572-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.284652
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2497-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.324652
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2626-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.364652
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2758-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.404651
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2552-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.444650
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2496-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.484649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2041-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.524649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1573-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.564649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 8
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1558-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.604649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 9
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1741-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.644649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 10
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1644-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.684649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 11
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1693-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.724649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 12
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1543-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.764649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 13
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1138-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.804649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 14
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1255-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.844649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 15
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1512-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.884649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 0
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 1791-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.924649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 1
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 2299-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561020.964649
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 2
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 3067-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561021.004648
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 3
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 17533-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561021.044648
+	first_mb_in_slice: 0
+	slice_type: 2
+	pic_parameter_set_id: 0
+	frame_num: 4
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4372-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561021.084648
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 5
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
+Parsed 4550-byte NAL-unit (nal_ref_idc: 2, nal_unit_type: 1 ("Coded slice of a non-IDR picture"))
+	Presentation time: 1295561021.124648
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 6
+    Next NAL unit's slice_header:
+	first_mb_in_slice: 0
+	slice_type: 0
+	pic_parameter_set_id: 0
+	frame_num: 7
+	(frame_num differs in value)
+	*****This NAL unit ends the current access unit*****
