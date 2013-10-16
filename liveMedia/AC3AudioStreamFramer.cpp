@@ -44,9 +44,8 @@ public:
   virtual ~AC3AudioStreamParser();
 
 public:
-  Boolean testStreamCode(unsigned char ourStreamCode,
-			 unsigned char* ptr, unsigned size);
-     // returns True iff the initial stream code is ours
+  void testStreamCode(unsigned char ourStreamCode,
+		      unsigned char* ptr, unsigned size);
   unsigned parseFrame(unsigned& numTruncatedBytes);
      // returns the size of the frame that was acquired, or 0 if none was
 
@@ -151,13 +150,8 @@ void AC3AudioStreamFramer
 
 void AC3AudioStreamFramer
 ::handleNewData(unsigned char* ptr, unsigned size) {
-  if (!fParser->testStreamCode(fOurStreamCode, ptr, size)) {
-    // This block of data is not for us; try again:
-    parseNextFrame();
-    return;
-  }
+  fParser->testStreamCode(fOurStreamCode, ptr, size);
 
-  // Now that we know that this data is for us, get the next frame:
   parseNextFrame();
 }
 
@@ -238,23 +232,21 @@ void AC3AudioStreamParser::registerReadInterest(unsigned char* to,
   fMaxSize = maxSize;
 }
 
-Boolean AC3AudioStreamParser
+void AC3AudioStreamParser
 ::testStreamCode(unsigned char ourStreamCode,
 		 unsigned char* ptr, unsigned size) {
-  if (size < 4) return False; // shouldn't happen
+  if (ourStreamCode == 0) return; // we assume that there's no stream code at the beginning of the data
+
+  if (size < 4) return; // shouldn't happen
   unsigned char streamCode = *ptr;
 
   if (streamCode == ourStreamCode) {
     // Remove the first 4 bytes from the stream:
     memmove(ptr, ptr + 4, size - 4);
     totNumValidBytes() = totNumValidBytes() - 4;
-
-    return True;
   } else {
     // Discard all of the data that was just read:
     totNumValidBytes() = totNumValidBytes() - size;
-
-    return False;
   }
 }
 

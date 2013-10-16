@@ -251,6 +251,22 @@ int main(int argc, char** argv) {
     announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
+  // A AC3 video elementary stream:
+  {
+    char const* streamName = "ac3AudioTest";
+    char const* inputFileName = "test.ac3";
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, streamName, streamName,
+				      descriptionString);
+
+    sms->addSubsession(AC3AudioFileServerMediaSubsession
+		       ::createNew(*env, inputFileName, reuseFirstSource));
+
+    rtspServer->addServerMediaSession(sms);
+
+    announceStream(rtspServer, sms, streamName, inputFileName);
+  }
+
   // Also, attempt to create a HTTP server for RTSP-over-HTTP tunneling.
   // Try first with the default HTTP port (80), and then with the alternative HTTP
   // port numbers (8000 and 8080).

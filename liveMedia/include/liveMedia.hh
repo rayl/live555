@@ -101,6 +101,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "H263plusVideoFileServerMediaSubsession.hh"
 #include "ADTSAudioFileServerMediaSubsession.hh"
 #include "DVVideoFileServerMediaSubsession.hh"
+#include "AC3AudioFileServerMediaSubsession.hh"
 #include "DarwinInjector.hh"
 
 #endif

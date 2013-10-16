@@ -41,15 +41,17 @@ protected:
   virtual ~AC3AudioRTPSink();
 
 private: // redefined virtual functions:
-  virtual
-  Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
-					 unsigned numBytesInFrame) const;
+  virtual Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
+						 unsigned numBytesInFrame) const;
   virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
                                       unsigned char* frameStart,
                                       unsigned numBytesInFrame,
                                       struct timeval frameTimestamp,
                                       unsigned numRemainingBytes);
   virtual unsigned specialHeaderSize() const;
+
+private:
+  unsigned char fTotNumFragmentsUsed; // used only if a frame gets fragmented across multiple packets
 };
 
 #endif

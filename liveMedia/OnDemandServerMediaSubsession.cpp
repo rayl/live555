@@ -20,8 +20,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "OnDemandServerMediaSubsession.hh"
-#include "RTCP.hh"
-#include "BasicUDPSink.hh"
 #include <GroupsockHelper.hh>
 
 OnDemandServerMediaSubsession
@@ -34,27 +32,6 @@ OnDemandServerMediaSubsession
   gethostname(fCNAME, sizeof fCNAME);
   fCNAME[sizeof fCNAME-1] = '\0'; // just in case
 }
-
-class Destinations {
-public:
-  Destinations(struct in_addr const& destAddr,
-	       Port const& rtpDestPort,
-	       Port const& rtcpDestPort)
-    : isTCP(False), addr(destAddr), rtpPort(rtpDestPort), rtcpPort(rtcpDestPort) {
-  }
-  Destinations(int tcpSockNum, unsigned char rtpChanId, unsigned char rtcpChanId)
-    : isTCP(True), rtpPort(0) /*dummy*/, rtcpPort(0) /*dummy*/,
-      tcpSocketNum(tcpSockNum), rtpChannelId(rtpChanId), rtcpChannelId(rtcpChanId) {
-  }
-
-public:
-  Boolean isTCP;
-  struct in_addr addr;
-  Port rtpPort;
-  Port rtcpPort;
-  int tcpSocketNum;
-  unsigned char rtpChannelId, rtcpChannelId;
-};
 
 OnDemandServerMediaSubsession::~OnDemandServerMediaSubsession() {
   delete[] fSDPLines;
@@ -94,53 +71,6 @@ OnDemandServerMediaSubsession::sdpLines() {
 
   return fSDPLines;
 }
-
-// A class that represents the state of an ongoing stream
-class StreamState {
-public:
-  StreamState(OnDemandServerMediaSubsession& master,
-              Port const& serverRTPPort, Port const& serverRTCPPort,
-	      RTPSink* rtpSink, BasicUDPSink* udpSink,
-	      unsigned totalBW, FramedSource* mediaSource,
-	      Groupsock* rtpGS, Groupsock* rtcpGS);
-  virtual ~StreamState();
-
-  void startPlaying(Destinations* destinations,
-		    TaskFunc* rtcpRRHandler, void* rtcpRRHandlerClientData,
-		    ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
-                    void* serverRequestAlternativeByteHandlerClientData);
-  void pause();
-  void endPlaying(Destinations* destinations);
-  void reclaim();
-
-  unsigned& referenceCount() { return fReferenceCount; }
-
-  Port const& serverRTPPort() const { return fServerRTPPort; }
-  Port const& serverRTCPPort() const { return fServerRTCPPort; }
-
-  RTPSink* rtpSink() const { return fRTPSink; }
-
-  float streamDuration() const { return fStreamDuration; }
-
-  FramedSource* mediaSource() const { return fMediaSource; }
-
-private:
-  OnDemandServerMediaSubsession& fMaster;
-  Boolean fAreCurrentlyPlaying;
-  unsigned fReferenceCount;
-
-  Port fServerRTPPort, fServerRTCPPort;
-
-  RTPSink* fRTPSink;
-  BasicUDPSink* fUDPSink;
-
-  float fStreamDuration;
-  unsigned fTotalBW; RTCPInstance* fRTCPInstance;
-
-  FramedSource* fMediaSource;
-
-  Groupsock* fRTPgs; Groupsock* fRTCPgs;
-};
 
 void OnDemandServerMediaSubsession
 ::getStreamParameters(unsigned clientSessionId,
