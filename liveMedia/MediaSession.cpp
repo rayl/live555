@@ -590,7 +590,10 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 
     if (fClientPortNum != 0) {
       // The sockets' port numbers were specified for us.  Use these:
-      fClientPortNum = fClientPortNum&~1; // even
+      Boolean const protocolIsRTP = strcmp(fProtocolName, "RTP") == 0;
+      if (protocolIsRTP) {
+	fClientPortNum = fClientPortNum&~1; // use an even-numbered port for RTP, and the next (odd-numbered) port for RTCP
+      }
       if (isSSM()) {
 	fRTPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr, fClientPortNum);
       } else {
@@ -601,18 +604,14 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	break;
       }
       
-      // Set our RTCP port to be the RTP port +1
-      portNumBits const rtcpPortNum = fClientPortNum|1;
-      if (isSSM()) {
-	fRTCPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr, rtcpPortNum);
-      } else {
-	fRTCPSocket = new Groupsock(env(), tempAddr, rtcpPortNum, 255);
-      }
-      if (fRTCPSocket == NULL) {
-	char tmpBuf[100];
-	sprintf(tmpBuf, "Failed to create RTCP socket (port %d)", rtcpPortNum);
-	env().setResultMsg(tmpBuf);
-	break;
+      if (protocolIsRTP) {
+	// Set our RTCP port to be the RTP port +1
+	portNumBits const rtcpPortNum = fClientPortNum|1;
+	if (isSSM()) {
+	  fRTCPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr, rtcpPortNum);
+	} else {
+	  fRTCPSocket = new Groupsock(env(), tempAddr, rtcpPortNum, 255);
+	}
       }
     } else {
       // Port numbers were not specified in advance, so we use ephemeral port numbers.
@@ -690,8 +689,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
       rtpBufSize = 50 * 1024;
     increaseReceiveBufferTo(env(), fRTPSocket->socketNum(), rtpBufSize);
 
-    // ASSERT: fRTPSocket != NULL && fRTCPSocket != NULL
-    if (isSSM()) {
+    if (isSSM() && fRTCPSocket != NULL) {
       // Special case for RTCP SSM: Send RTCP packets back to the source via unicast:
       fRTCPSocket->changeDestinationParameters(fSourceFilterAddr,0,~0);
     }
@@ -705,7 +703,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
     }
 
     // Finally, create our RTCP instance. (It starts running automatically)
-    if (fRTPSource != NULL) {
+    if (fRTPSource != NULL && fRTCPSocket != NULL) {
       // If bandwidth is specified, use it and add 5% for RTCP overhead.
       // Otherwise make a guess at 500 kbps.
       unsigned totSessionBandwidth
@@ -791,8 +789,7 @@ void MediaSubsession::setDestinations(netAddressBits defaultDestAddress) {
   if (fRTCPSocket != NULL && !isSSM()) {
     // Note: For SSM sessions, the dest address for RTCP was already set.
     Port destPort(serverPortNum+1);
-    fRTCPSocket->
-      changeDestinationParameters(destAddr, destPort, destTTL);
+    fRTCPSocket->changeDestinationParameters(destAddr, destPort, destTTL);
   }
 }
 

@@ -31,8 +31,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "DigestAuthentication.hh"
 #endif
 
-#define RTSPCLIENT_SYNCHRONOUS_INTERFACE 1 // For now, continue to support the old synchronous interface as well
-
 class RTSPClient: public Medium {
 public:
   static RTSPClient* createNew(UsageEnvironment& env, char const* rtspURL,

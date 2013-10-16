@@ -582,7 +582,8 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
 	break;
       }
 
-      loopbackWorks = 1;
+      // We use this packet's source address, if it's good:
+      loopbackWorks = !badAddressForUs(fromAddr.sin_addr.s_addr);
     } while (0);
 
     if (sock >= 0) {
