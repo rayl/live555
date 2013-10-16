@@ -82,13 +82,8 @@ void BasicUDPSink::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedB
 
   struct timeval timeNow;
   gettimeofday(&timeNow, NULL);
-  int uSecondsToGo;
-  if (fNextSendTime.tv_sec < timeNow.tv_sec) {
-    uSecondsToGo = 0; // prevents integer underflow if too far behind
-  } else {
-    uSecondsToGo = (fNextSendTime.tv_sec - timeNow.tv_sec)*1000000
-      + (fNextSendTime.tv_usec - timeNow.tv_usec);
-  }
+  int64_t uSecondsToGo;
+  uSecondsToGo = (fNextSendTime.tv_sec - timeNow.tv_sec)*1000000 + (fNextSendTime.tv_usec - timeNow.tv_usec);
 
   // Delay this amount of time:
   nextTask() = envir().taskScheduler().scheduleDelayedTask(uSecondsToGo,

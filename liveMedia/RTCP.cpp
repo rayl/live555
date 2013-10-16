@@ -868,10 +868,11 @@ void RTCPInstance::schedule(double nextTime) {
   fNextReportTime = nextTime;
 
   double secondsToDelay = nextTime - dTimeNow();
+  if (secondsToDelay < 0) secondsToDelay = 0;
 #ifdef DEBUG
   fprintf(stderr, "schedule(%f->%f)\n", secondsToDelay, nextTime);
 #endif
-  int usToGo = (int)(secondsToDelay * 1000000);
+  int64_t usToGo = (int64_t)(secondsToDelay * 1000000);
   nextTask() = envir().taskScheduler().scheduleDelayedTask(usToGo,
 				(TaskFunc*)RTCPInstance::onExpire, this);
 }
