@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "mTunnel" multicast access service
-// Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2012 Live Networks, Inc.  All rights reserved.
 // Helper routines to implement 'group sockets'
 // Implementation
 
@@ -39,14 +39,34 @@ static void socketErr(UsageEnvironment& env, char const* errorMsg) {
   env.setResultErrMsg(errorMsg);
 }
 
-static int reuseFlag = 1;
-
-NoReuse::NoReuse() {
-  reuseFlag = 0;
+NoReuse::NoReuse(UsageEnvironment& env)
+  : fEnv(env) {
+  groupsockPriv(fEnv)->reuseFlag = 0;
 }
 
 NoReuse::~NoReuse() {
-  reuseFlag = 1;
+  groupsockPriv(fEnv)->reuseFlag = 1;
+  reclaimGroupsockPriv(fEnv);
+}
+
+
+_groupsockPriv* groupsockPriv(UsageEnvironment& env) {
+  if (env.groupsockPriv == NULL) { // We need to create it
+    _groupsockPriv* result = new _groupsockPriv;
+    result->socketTable = NULL;
+    result->reuseFlag = 1; // default value => allow reuse of socket numbers
+    env.groupsockPriv = result;
+  }
+  return (_groupsockPriv*)(env.groupsockPriv);
+}
+
+void reclaimGroupsockPriv(UsageEnvironment& env) {
+  _groupsockPriv* priv = (_groupsockPriv*)(env.groupsockPriv);
+  if (priv->socketTable == NULL && priv->reuseFlag == 1/*default value*/) {
+    // We can delete the structure (to save space); it will get created again, if needed:
+    delete priv;
+    env.groupsockPriv = NULL;
+  }
 }
 
 static int createSocket(int type) {
@@ -79,6 +99,8 @@ int setupDatagramSocket(UsageEnvironment& env, Port port) {
     return newSocket;
   }
 
+  int reuseFlag = groupsockPriv(env)->reuseFlag;
+  reclaimGroupsockPriv(env);
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEADDR) error: ");
@@ -185,6 +207,8 @@ int setupStreamSocket(UsageEnvironment& env,
     return newSocket;
   }
 
+  int reuseFlag = groupsockPriv(env)->reuseFlag;
+  reclaimGroupsockPriv(env);
   if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR,
 		 (const char*)&reuseFlag, sizeof reuseFlag) < 0) {
     socketErr(env, "setsockopt(SO_REUSEADDR) error: ");

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2012 Live Networks, Inc.  All rights reserved.
 // AMR Audio RTP Sources (RFC 3267)
 // Implementation
 
@@ -326,13 +326,13 @@ AMRBufferedPacket::~AMRBufferedPacket() {
 // The mapping from the "FT" field to frame size.
 // Values of 65535 are invalid.
 #define FT_INVALID 65535
-static unsigned short frameBytesFromFT[16] = {
+static unsigned short const frameBytesFromFT[16] = {
   12, 13, 15, 17,
   19, 20, 26, 31,
   5, FT_INVALID, FT_INVALID, FT_INVALID,
   FT_INVALID, FT_INVALID, FT_INVALID, 0
 };
-static unsigned short frameBytesFromFTWideband[16] = {
+static unsigned short const frameBytesFromFTWideband[16] = {
   17, 23, 32, 36,
   40, 46, 50, 58,
   60, 5, FT_INVALID, FT_INVALID,
@@ -672,13 +672,13 @@ AMRDeinterleavingBuffer::FrameDescriptor::~FrameDescriptor() {
 }
 
 // Unpack bandwidth-aligned data to octet-aligned:
-static unsigned short frameBitsFromFT[16] = {
+static unsigned short const frameBitsFromFT[16] = {
   95, 103, 118, 134,
   148, 159, 204, 244,
   39, 0, 0, 0,
   0, 0, 0, 0
 };
-static unsigned short frameBitsFromFTWideband[16] = {
+static unsigned short const frameBitsFromFTWideband[16] = {
   132, 177, 253, 285,
   317, 365, 397, 461,
   477, 40, 0, 0,

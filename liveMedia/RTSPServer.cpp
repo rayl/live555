@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2012 Live Networks, Inc.  All rights reserved.
 // A RTSP server
 // Implementation
 
@@ -156,7 +156,7 @@ int RTSPServer::setUpOurSocket(UsageEnvironment& env, Port& ourPort) {
     // The following statement is enabled by default.
     // Don't disable it (by defining ALLOW_RTSP_SERVER_PORT_REUSE) unless you know what you're doing.
 #ifndef ALLOW_RTSP_SERVER_PORT_REUSE
-    NoReuse dummy; // Don't use this socket if there's already a local server using it
+    NoReuse dummy(env); // Don't use this socket if there's already a local server using it
 #endif
 
     ourSocket = setupStreamSocket(env, ourPort);
@@ -344,7 +344,7 @@ void RTSPServer::RTSPClientSession::reclaimStreamStates() {
 void RTSPServer::RTSPClientSession::resetRequestBuffer() {
   fRequestBytesAlreadySeen = 0;
   fRequestBufferBytesLeft = sizeof fRequestBuffer;
-  fLastCRLF = &fRequestBuffer[-3]; // hack
+  fLastCRLF = &fRequestBuffer[-3]; // hack: Ensures that we don't think we have end-of-msg if the data starts with <CR><LF>
   fBase64RemainderCount = 0;
 }
 
@@ -426,9 +426,8 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
     }
     
     // Look for the end of the message: <CR><LF><CR><LF>
-    unsigned char *tmpPtr = ptr;
-    if (fRequestBytesAlreadySeen > 0) --tmpPtr;
-    // in case the last read ended with a <CR>
+    unsigned char *tmpPtr = fLastCRLF + 2;
+    if (tmpPtr < fRequestBuffer) tmpPtr = fRequestBuffer;
     while (tmpPtr < &ptr[newBytesRead-1]) {
       if (*tmpPtr == '\r' && *(tmpPtr+1) == '\n') {
 	if (tmpPtr - fLastCRLF == 2) { // This is it:
@@ -459,7 +458,7 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
 			       cseq, sizeof cseq,
 			       contentLength)) {
 #ifdef DEBUG
-      fprintf(stderr, "parseRTSPRequestString() succeeded, returning cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\", CSeq \"%s\", Content-Length %u\n", cmdName, urlPreSuffix, urlSuffix, cseq, contentLength);
+      fprintf(stderr, "parseRTSPRequestString() succeeded, returning cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\", CSeq \"%s\", Content-Length %u, with %d bytes following the message.\n", cmdName, urlPreSuffix, urlSuffix, cseq, contentLength, ptr + newBytesRead - (tmpPtr + 2));
 #endif
       // If there was a "Content-Length:" header, then make sure we've received all of the data that it specified:
       if (ptr + newBytesRead < tmpPtr + 2 + contentLength) break; // we still need more data; subsequent reads will give it to us 

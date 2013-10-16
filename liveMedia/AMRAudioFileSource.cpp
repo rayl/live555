@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2012 Live Networks, Inc.  All rights reserved.
 // A source object for AMR audio files (as defined in RFC 3267, section 5)
 // Implementation
 
@@ -98,13 +98,13 @@ AMRAudioFileSource::~AMRAudioFileSource() {
 // The mapping from the "FT" field to frame size.
 // Values of 65535 are invalid.
 #define FT_INVALID 65535
-static unsigned short frameSize[16] = {
+static unsigned short const frameSize[16] = {
   12, 13, 15, 17,
   19, 20, 26, 31,
   5, FT_INVALID, FT_INVALID, FT_INVALID,
   FT_INVALID, FT_INVALID, FT_INVALID, 0
 };
-static unsigned short frameSizeWideband[16] = {
+static unsigned short const frameSizeWideband[16] = {
   17, 23, 32, 36,
   40, 46, 50, 58,
   60, 5, FT_INVALID, FT_INVALID,

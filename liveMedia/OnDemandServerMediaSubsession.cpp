@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2012 Live Networks, Inc.  All rights reserved.
 // A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
 // on demand.
 // Implementation
@@ -112,7 +112,7 @@ void OnDemandServerMediaSubsession
     portNumBits serverPortNum;
     if (clientRTCPPort.num() == 0) {
       // We're streaming raw UDP (not RTP). Create a single groupsock:
-      NoReuse dummy; // ensures that we skip over ports that are already in use
+      NoReuse dummy(envir()); // ensures that we skip over ports that are already in use
       for (serverPortNum = fInitialPortNum; ; ++serverPortNum) {
 	struct in_addr dummyAddr; dummyAddr.s_addr = 0;
 
@@ -127,7 +127,7 @@ void OnDemandServerMediaSubsession
     } else {
       // Normal case: We're streaming RTP (over UDP or TCP).  Create a pair of
       // groupsocks (RTP and RTCP), with adjacent port numbers (RTP port number even):
-      NoReuse dummy; // ensures that we skip over ports that are already in use
+      NoReuse dummy(envir()); // ensures that we skip over ports that are already in use
       for (portNumBits serverPortNum = fInitialPortNum; ; serverPortNum += 2) {
 	struct in_addr dummyAddr; dummyAddr.s_addr = 0;
 
