@@ -71,7 +71,7 @@ private:
   ServerRequestAlternativeByteHandler* fServerRequestAlternativeByteHandler;
   void* fServerRequestAlternativeByteHandlerClientData;
   u_int8_t fStreamChannelId, fSizeByte1;
-  Boolean fReadErrorOccurred;
+  Boolean fReadErrorOccurred, fDeleteMyselfNext;
   enum { AWAITING_DOLLAR, AWAITING_STREAM_CHANNEL_ID, AWAITING_SIZE1, AWAITING_SIZE2, AWAITING_PACKET_DATA } fTCPReadingState;
 };
 
@@ -342,8 +342,8 @@ Boolean RTPInterface::sendDataOverTCP(int socketNum, u_int8_t const* data, unsig
 SocketDescriptor::SocketDescriptor(UsageEnvironment& env, int socketNum)
   :fEnv(env), fOurSocketNum(socketNum),
     fSubChannelHashTable(HashTable::create(ONE_WORD_HASH_KEYS)),
-   fServerRequestAlternativeByteHandler(NULL), fServerRequestAlternativeByteHandlerClientData(NULL), fReadErrorOccurred(False),
-   fTCPReadingState(AWAITING_DOLLAR) {
+   fServerRequestAlternativeByteHandler(NULL), fServerRequestAlternativeByteHandlerClientData(NULL),
+   fReadErrorOccurred(False), fDeleteMyselfNext(False), fTCPReadingState(AWAITING_DOLLAR) {
 }
 
 SocketDescriptor::~SocketDescriptor() {
@@ -396,14 +396,15 @@ void SocketDescriptor
 
   if (fSubChannelHashTable->IsEmpty()) {
     // No more interfaces are using us, so it's curtains for us now:
-    delete this;
+    fDeleteMyselfNext = True; // hack to cause ourself to be deleted from "tcpReadHandler()" below
   }
 }
 
 void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor, int mask) {
   // Call the read handler until it returns false, with a limit to avoid starving other sockets
   unsigned count = 2000;
-  while (socketDescriptor->tcpReadHandler1(mask) && --count > 0) {}
+  while (!socketDescriptor->fDeleteMyselfNext && socketDescriptor->tcpReadHandler1(mask) && --count > 0) {}
+  if (socketDescriptor->fDeleteMyselfNext) delete socketDescriptor;
 }
 
 Boolean SocketDescriptor::tcpReadHandler1(int mask) {
@@ -426,7 +427,7 @@ Boolean SocketDescriptor::tcpReadHandler1(int mask) {
       fprintf(stderr, "SocketDescriptor(socket %d)::tcpReadHandler(): readSocket(1 byte) returned %d (error)\n", fOurSocketNum, result);
 #endif
       fReadErrorOccurred = True;
-      delete this;
+      fDeleteMyselfNext = True;
       return False;
     }
   }
@@ -508,7 +509,7 @@ Boolean SocketDescriptor::tcpReadHandler1(int mask) {
 	    fprintf(stderr, "SocketDescriptor(socket %d)::tcpReadHandler(): readSocket(1 byte) returned %d (error)\n", fOurSocketNum, result);
 #endif
 	    fReadErrorOccurred = True;
-	    delete this;
+	    fDeleteMyselfNext = True;
 	    return False;
 	  } else {
 	    fTCPReadingState = AWAITING_PACKET_DATA;
