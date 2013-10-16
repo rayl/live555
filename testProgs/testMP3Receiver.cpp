@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
     = MP3ADUdeinterleaver::createNew(*env, sessionState.source);
   if (sessionState.source == NULL) {
     *env << "Unable to create an ADU deinterleaving filter for the source\n";
-    abort();
+    exit(1);
   }
 
   // Add another filter that converts these ADUs to MP3s:
@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
     = MP3FromADUSource::createNew(*env, sessionState.source);
   if (sessionState.source == NULL) {
     *env << "Unable to create an ADU->MP3 filter for the source\n";
-    abort();
+    exit(1);
   }
 #endif
 

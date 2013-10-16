@@ -64,7 +64,7 @@ void play() {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as a WAV audio file source: "
 	 << env->getResultMsg() << "\n";
-    abort();
+    exit(1);
   }
 
   // Get attributes of the audio source:
@@ -72,7 +72,7 @@ void play() {
   if (bitsPerSample != 8 && bitsPerSample !=  16) {
     *env << "The input file contains " << bitsPerSample
 	 << " bit-per-sample audio, which we don't handle\n";
-    abort();
+    exit(1);
   }
   sessionState.source = pcmSource;
   unsigned const samplingFrequency = pcmSource->samplingFrequency();
@@ -97,7 +97,7 @@ void play() {
     if (sessionState.source == NULL) {
       *env << "Unable to create a u-law filter from the PCM audio source: "
 	   << env->getResultMsg() << "\n";
-      abort();
+      exit(1);
     }
     bitsPerSecond /= 2;
     mimeType = "PCMU";
@@ -115,7 +115,7 @@ void play() {
     if (sessionState.source == NULL) {
       *env << "Unable to create a little->bit-endian order filter from the PCM audio source: "
 	   << env->getResultMsg() << "\n";
-      abort();
+      exit(1);
     }
     mimeType = "L16";
     if (samplingFrequency == 44100 && numChannels == 2) {
@@ -179,7 +179,7 @@ void play() {
   sessionState.rtspServer = RTSPServer::createNew(*env, 8554);
   if (sessionState.rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
-    abort();
+    exit(1);
   }
   ServerMediaSession* sms
     = ServerMediaSession::createNew(*env, "testStream", inputFileName,

@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
   if (inputSource == NULL) {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as a byte-stream file source\n";
-    abort();
+    exit(1);
   }
 
   // Create a MPEG demultiplexor that reads from that source.

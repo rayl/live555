@@ -31,7 +31,7 @@ char const* programName;
 void usage() {
   *env << "usage: " << programName << " <transport-stream-file-name>\n";
   *env << "\twhere <transport-stream-file-name> ends with \".ts\"\n";
-  abort();
+  exit(1);
 }
 
 int main(int argc, char const** argv) {
@@ -57,7 +57,7 @@ int main(int argc, char const** argv) {
     = ByteStreamFileSource::createNew(*env, inputFileName, TRANSPORT_PACKET_SIZE);
   if (input == NULL) {
     *env << "Failed to open input file \"" << inputFileName << "\" (does it exist?)\n";
-    abort();
+    exit(1);
   }
 
   // Create a filter that indexes the input Transport Stream data:
@@ -72,7 +72,7 @@ int main(int argc, char const** argv) {
   MediaSink* output = FileSink::createNew(*env, outputFileName);
   if (output == NULL) {
     *env << "Failed to open output file \"" << outputFileName << "\"\n";
-    abort();
+    exit(1);
   }
 
   // Start playing, to generate the output index file:

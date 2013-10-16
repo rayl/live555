@@ -39,7 +39,7 @@ void usage() {
   *env << "\twhere\t<transport-stream-file-name> ends with \".ts\"\n";
   *env << "\t\t<start-time> is the starting play time in seconds (0 for the start)\n";
   *env << "\t\t<scale> is a non-zero integer, representing the playing speed (use 1 for normal play; use a negative number for reverse play)\n";
-  abort();
+  exit(1);
 }
 
 int main(int argc, char const** argv) {
@@ -72,7 +72,7 @@ int main(int argc, char const** argv) {
     = ByteStreamFileSource::createNew(*env, inputFileName, TRANSPORT_PACKET_SIZE);
   if (input == NULL) {
     *env << "Failed to open input file \"" << inputFileName << "\" (does it exist?)\n";
-    abort();
+    exit(1);
   }
 
   // Check whether the corresponding index file exists.
@@ -83,7 +83,7 @@ int main(int argc, char const** argv) {
     = MPEG2TransportStreamIndexFile::createNew(*env, indexFileName);
   if (indexFile == NULL) {
     *env << "Failed to open index file \"" << indexFileName << "\" (does it exist?)\n";
-    abort();
+    exit(1);
   }
 
   // Create a filter that generates trick mode data from the input and index files:
@@ -98,7 +98,7 @@ int main(int argc, char const** argv) {
       *env << "Failed to seek trick mode filter to ts #" << (unsigned)tsRecordNumber
 	   << ", ix #" << (unsigned)indexRecordNumber
 	   << "(for time " << startTime << ")\n";
-      abort();
+      exit(1);
     }
   }
 
@@ -112,7 +112,7 @@ int main(int argc, char const** argv) {
   MediaSink* output = FileSink::createNew(*env, outputFileName);
   if (output == NULL) {
     *env << "Failed to open output file \"" << outputFileName << "\"\n";
-    abort();
+    exit(1);
   }
 
   // Start playing, to generate the output file:

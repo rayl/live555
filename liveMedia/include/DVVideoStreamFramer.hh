@@ -54,7 +54,8 @@ private:
   void afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes);
 
 private:
-  char const* fProfileName;
+  void const* fOurProfile;
+  struct timeval fNextFramePresentationTime;
   unsigned char fSavedInitialBlocks[DV_SAVED_INITIAL_BLOCKS_SIZE];
   char fInitialBlocksPresent;
 };

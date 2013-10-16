@@ -41,7 +41,7 @@ char const* programName;
 void usage() {
   *env << "usage: " << programName
        << " <Darwin Streaming Server name or IP address>\n";
-  abort();
+  exit(1);
 }
 
 Boolean awaitConfigInfo(RTPSink* sink); // forward
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
   if (!awaitConfigInfo(videoSink)) {
     *env << "Failed to get MPEG-4 'config' information from input file: "
 	 << env->getResultMsg() << "\n";
-    abort();
+    exit(1);
   }
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
 				programName, "LIVE555 Streaming Media")) {
     *env << "injector->setDestination() failed: "
 	 << env->getResultMsg() << "\n";
-    abort();
+    exit(1);
   }
 
   *env << "Play this stream (from the Darwin Streaming Server) using the URL:\n"
@@ -135,7 +135,7 @@ void play() {
   if (fileSource == NULL) {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as a byte-stream file source\n";
-    abort();
+    exit(1);
   }
 
   FramedSource* videoES = fileSource;

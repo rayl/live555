@@ -203,7 +203,6 @@ private:
   UserAuthenticationDatabase* fAuthDB;
   unsigned fReclamationTestSeconds;
   HashTable* fServerMediaSessions;
-  unsigned fSessionIdCounter;
 };
 
 #endif

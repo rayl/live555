@@ -49,7 +49,7 @@ Boolean iFramesOnly = False;
 void usage() {
   *env << "usage: " << programName
        << " <Darwin Streaming Server name or IP address>\n";
-  abort();
+  exit(1);
 }
 
 void play(); // forward
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
 				programName, "LIVE555 Streaming Media")) {
     *env << "injector->setDestination() failed: "
 	 << env->getResultMsg() << "\n";
-    abort();
+    exit(1);
   }
 
   *env << "Play this stream (from the Darwin Streaming Server) using the URL:\n"
@@ -167,7 +167,7 @@ void play() {
   if (fileSource == NULL) {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as a byte-stream file source\n";
-    abort();
+    exit(1);
   }
 
   // We must demultiplex Audio and Video Elementary Streams

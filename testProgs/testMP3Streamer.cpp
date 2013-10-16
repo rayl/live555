@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
   // (optional) parameter to the "RTSPServer::createNew()" call above.
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
-    abort();
+    exit(1);
   }
   ServerMediaSession* sms
     = ServerMediaSession::createNew(*env, "testStream", inputFileName,
@@ -153,7 +153,7 @@ void play() {
   if (sessionState.source == NULL) {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as a MP3 file source\n";
-    abort();
+    exit(1);
   }
 
 #ifdef STREAM_USING_ADUS
@@ -162,7 +162,7 @@ void play() {
     = ADUFromMP3Source::createNew(*env, sessionState.source);
   if (sessionState.source == NULL) {
     *env << "Unable to create a MP3->ADU filter for the source\n";
-    abort();
+    exit(1);
   }
 
 #ifdef INTERLEAVE_ADUS
@@ -175,7 +175,7 @@ void play() {
     = MP3ADUinterleaver::createNew(*env, interleaving, sessionState.source);
   if (sessionState.source == NULL) {
     *env << "Unable to create an ADU interleaving filter for the source\n";
-    abort();
+    exit(1);
   }
 #endif
 #endif

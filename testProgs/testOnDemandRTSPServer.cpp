@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   RTSPServer* rtspServer = RTSPServer::createNew(*env, 8554, authDB);
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
-    abort();
+    exit(1);
   }
 
   char const* descriptionString

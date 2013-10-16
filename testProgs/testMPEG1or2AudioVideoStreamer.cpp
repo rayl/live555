@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
   // (optional) parameter to the "RTSPServer::createNew()" call above.
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
-    abort();
+    exit(1);
   }
   ServerMediaSession* sms
     = ServerMediaSession::createNew(*env, "testStream", inputFileName,
@@ -180,7 +180,7 @@ void play() {
   if (fileSource == NULL) {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as a byte-stream file source\n";
-    abort();
+    exit(1);
   }
 
   // We must demultiplex Audio and Video Elementary Streams

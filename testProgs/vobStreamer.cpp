@@ -58,7 +58,7 @@ void usage() {
   *env << "usage: " << programName << " [-i] [-a|-v] "
 	  "[-p <RTSP-server-port-number>] "
 	  "<VOB-file>...<VOB-file>\n";
-  abort();
+  exit(1);
 }
 
 void play(); // forward
@@ -195,7 +195,7 @@ int main(int argc, char const** argv) {
     if (rtspServer == NULL) {
       *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
       *env << "To change the RTSP server's port number, use the \"-p <port number>\" option.\n";
-      abort();
+      exit(1);
     }
     ServerMediaSession* sms
       = ServerMediaSession::createNew(*env, "vobStream", *curInputFileName,
@@ -253,7 +253,7 @@ void play() {
   if (*curInputFileName == NULL) {
     // We have reached the end of the file name list.
     // Start again, unless we didn't succeed in reading any files:
-    if (!haveReadOneFile) abort();
+    if (!haveReadOneFile) exit(1);
     haveReadOneFile = False;
     curInputFileName = inputFileNames;
   }

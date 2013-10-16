@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
   rtspServer = RTSPServer::createNew(*env, 8554);
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "%s\n";
-    abort();
+    exit(1);
   }
   ServerMediaSession* sms
     = ServerMediaSession::createNew(*env, "testStream", "GSM input",
@@ -139,7 +139,7 @@ void play() {
   sessionState.source = createNewGSMAudioSource(*env);
   if (sessionState.source == NULL) {
     *env << "Failed to create GSM source\n";
-    abort();
+    exit(1);
   }
 
   // Finally, start the streaming:

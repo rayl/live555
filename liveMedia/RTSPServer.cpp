@@ -177,8 +177,7 @@ RTSPServer::RTSPServer(UsageEnvironment& env,
   : Medium(env),
     fServerSocket(ourSocket), fServerPort(ourPort),
     fAuthDB(authDatabase), fReclamationTestSeconds(reclamationTestSeconds),
-    fServerMediaSessions(HashTable::create(STRING_HASH_KEYS)),
-    fSessionIdCounter(0) {
+    fServerMediaSessions(HashTable::create(STRING_HASH_KEYS)) {
 #ifdef USE_SIGNALS
   // Ignore the SIGPIPE signal, so that clients on the same host that are killed
   // don't also kill us:
@@ -237,8 +236,11 @@ void RTSPServer::incomingConnectionHandler1() {
   envir() << "accept()ed connection from " << our_inet_ntoa(clientAddr.sin_addr) << '\n';
 #endif
 
-  // Create a new object for this RTSP session:
-  (void)createNewClientSession(++fSessionIdCounter, clientSocket, clientAddr);
+  // Create a new object for this RTSP session.
+  // (Choose a random 32-bit integer for the session id (it will be encoded as a 8-digit hex number).  We don't bother checking for
+  //  a collision; the probability of two concurrent sessions getting the same session id is very low.)
+  unsigned sessionId = (unsigned)our_random();
+  (void)createNewClientSession(sessionId, clientSocket, clientAddr);
 }
 
 
@@ -743,7 +745,7 @@ void RTSPServer::RTSPClientSession
                  "CSeq: %s\r\n"
                  "%s"
                  "Transport: RTP/AVP;multicast;destination=%s;source=%s;port=%d-%d;ttl=%d\r\n"
-                 "Session: %d\r\n\r\n",
+                 "Session: %08X\r\n\r\n",
                  cseq,
                  dateHeader(),
                  destAddrStr, sourceAddrStr, ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()), destinationTTL,
@@ -759,7 +761,7 @@ void RTSPServer::RTSPClientSession
                  "CSeq: %s\r\n"
                  "%s"
                  "Transport: %s;multicast;destination=%s;source=%s;port=%d;ttl=%d\r\n"
-                 "Session: %d\r\n\r\n",
+                 "Session: %08X\r\n\r\n",
                  cseq,
                  dateHeader(),
                  streamingModeString, destAddrStr, sourceAddrStr, ntohs(serverRTPPort.num()), destinationTTL,
@@ -774,7 +776,7 @@ void RTSPServer::RTSPClientSession
 	       "CSeq: %s\r\n"
 	       "%s"
 	       "Transport: RTP/AVP;unicast;destination=%s;source=%s;client_port=%d-%d;server_port=%d-%d\r\n"
-	       "Session: %d\r\n\r\n",
+	       "Session: %08X\r\n\r\n",
 	       cseq,
 	       dateHeader(),
 	       destAddrStr, sourceAddrStr, ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
@@ -787,7 +789,7 @@ void RTSPServer::RTSPClientSession
 	       "CSeq: %s\r\n"
 	       "%s"
 	       "Transport: RTP/AVP/TCP;unicast;destination=%s;source=%s;interleaved=%d-%d\r\n"
-	       "Session: %d\r\n\r\n",
+	       "Session: %08X\r\n\r\n",
 	       cseq,
 	       dateHeader(),
 	       destAddrStr, sourceAddrStr, rtpChannelId, rtcpChannelId,
@@ -800,7 +802,7 @@ void RTSPServer::RTSPClientSession
 	       "CSeq: %s\r\n"
 	       "%s"
 	       "Transport: %s;unicast;destination=%s;source=%s;client_port=%d;server_port=%d\r\n"
-	       "Session: %d\r\n\r\n",
+	       "Session: %08X\r\n\r\n",
 	       cseq,
 	       dateHeader(),
 	       streamingModeString, destAddrStr, sourceAddrStr, ntohs(clientRTPPort.num()), ntohs(serverRTPPort.num()),
@@ -1028,7 +1030,7 @@ void RTSPServer::RTSPClientSession
 	   "%s"
 	   "%s"
 	   "%s"
-	   "Session: %d\r\n"
+	   "Session: %08X\r\n"
 	   "%s\r\n",
 	   cseq,
 	   dateHeader(),
@@ -1050,7 +1052,7 @@ void RTSPServer::RTSPClientSession
     }
   }
   snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
-	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%sSession: %d\r\n\r\n",
+	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%sSession: %08X\r\n\r\n",
 	   cseq, dateHeader(), fOurSessionId);
 }
 
@@ -1060,7 +1062,7 @@ void RTSPServer::RTSPClientSession
   // We implement "GET_PARAMETER" just as a 'keep alive',
   // and send back an empty response:
   snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
-	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%sSession: %d\r\n\r\n",
+	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%sSession: %08X\r\n\r\n",
 	   cseq, dateHeader(), fOurSessionId);
 }
 
