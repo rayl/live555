@@ -766,8 +766,7 @@ void setupStreams() {
 	  // Also set a handler to be called if a RTCP "BYE" arrives
 	  // for this subsession:
 	  if (subsession->rtcpInstance() != NULL) {
-	    subsession->rtcpInstance()->setByeHandler(subsessionByeHandler,
-						      subsession);
+	    subsession->rtcpInstance()->setByeHandler(subsessionByeHandler, subsession);
 	  }
 
 	  madeProgress = True;
@@ -1112,8 +1111,12 @@ void printQOSData(int exitCode) {
   delete qosRecordHead;
 }
 
+Boolean areAlreadyShuttingDown = False;
 int shutdownExitCode;
 void shutdown(int exitCode) {
+  if (areAlreadyShuttingDown) return; // in case we're called after receiving a RTCP "BYE" while in the middle of a "TEARDOWN".
+  areAlreadyShuttingDown = True;
+
   shutdownExitCode = exitCode;
   if (env != NULL) {
     env->taskScheduler().unscheduleDelayedTask(sessionTimerTask);
