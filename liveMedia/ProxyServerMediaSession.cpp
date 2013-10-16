@@ -421,6 +421,7 @@ FramedSource* ProxyServerMediaSubsession::createNewStreamSource(unsigned clientS
   }
 
   estBitrate = fClientMediaSubsession.bandwidth();
+  if (estBitrate == 0) estBitrate = 50; // kbps, estimate
   return fClientMediaSubsession.readSource();
 }
 

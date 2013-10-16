@@ -127,20 +127,13 @@ void BasicTaskScheduler0::deleteEventTrigger(EventTriggerId eventTriggerId) {
 }
 
 void BasicTaskScheduler0::triggerEvent(EventTriggerId eventTriggerId, void* clientData) {
-  // First, record the "clientData":
-  if (eventTriggerId == fLastUsedTriggerMask) { // common-case optimization:
-    fTriggeredEventClientDatas[fLastUsedTriggerNum] = clientData;
-  } else {
-    EventTriggerId mask = 0x80000000;
-    for (unsigned i = 0; i < MAX_NUM_EVENT_TRIGGERS; ++i) {
-      if ((eventTriggerId&mask) != 0) {
-	fTriggeredEventClientDatas[i] = clientData;
-
-	fLastUsedTriggerMask = mask;
-	fLastUsedTriggerNum = i;
-      }
-      mask >>= 1;
+  // First, record the "clientData".  (Note that we allow "eventTriggerId" to be a combination of bits for multiple events.)
+  EventTriggerId mask = 0x80000000;
+  for (unsigned i = 0; i < MAX_NUM_EVENT_TRIGGERS; ++i) {
+    if ((eventTriggerId&mask) != 0) {
+      fTriggeredEventClientDatas[i] = clientData;
     }
+    mask >>= 1;
   }
 
   // Then, note this event as being ready to be handled.

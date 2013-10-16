@@ -255,5 +255,12 @@ void RTSPServerSupportingHTTPStreaming::RTSPClientSessionSupportingHTTPStreaming
 void RTSPServerSupportingHTTPStreaming::RTSPClientSessionSupportingHTTPStreaming::afterStreaming(void* clientData) {
    RTSPServerSupportingHTTPStreaming::RTSPClientSessionSupportingHTTPStreaming* clientSession
     = (RTSPServerSupportingHTTPStreaming::RTSPClientSessionSupportingHTTPStreaming*)clientData;
-   delete clientSession;
+   // Arrange to delete the 'clientSession' object:
+   if (clientSession->fRecursionCount > 0) {
+     // We're still in the midst of handling a request
+     clientSession->fSessionIsActive = False; // will cause the session to get deleted at the end of handling the request
+   } else {
+     // We're no longer handling a request; delete the 'clientSession' object now:
+     delete clientSession;
+   }
 }
