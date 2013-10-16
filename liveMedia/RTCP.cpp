@@ -298,7 +298,7 @@ void RTCPInstance::setStreamSocket(int sockNum,
 void RTCPInstance::addStreamSocket(int sockNum,
 				   unsigned char streamChannelId) {
   // First, turn off background read handling for the default (UDP) socket:
-  fRTCPInterface.stopNetworkReading();
+  envir().taskScheduler().turnOffBackgroundReadHandling(fRTCPInterface.gs()->socketNum());
 
   // Add the RTCP-over-TCP interface:
   fRTCPInterface.addStreamSocket(sockNum, streamChannelId);

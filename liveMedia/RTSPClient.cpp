@@ -998,7 +998,7 @@ Boolean RTSPClient::handleSETUPResponse(MediaSubsession& subsession, char const*
       // Tell the subsession to receive RTP (and send/receive RTCP) over the RTSP stream:
       if (subsession.rtpSource() != NULL) {
 	subsession.rtpSource()->setStreamSocket(fInputSocketNum, subsession.rtpChannelId);
-	subsession.rtpSource()->setServerRequestAlternativeByteHandler(handleAlternativeRequestByte, this);
+	subsession.rtpSource()->setServerRequestAlternativeByteHandler(fInputSocketNum, handleAlternativeRequestByte, this);
       }
       if (subsession.rtcpInstance() != NULL) subsession.rtcpInstance()->setStreamSocket(fInputSocketNum, subsession.rtcpChannelId);
     } else {

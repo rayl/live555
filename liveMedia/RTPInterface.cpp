@@ -39,6 +39,8 @@ static void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
 
 static HashTable* socketHashTable(UsageEnvironment& env, Boolean createIfNotPresent = True) {
   _Tables* ourTables = _Tables::getOurTables(env, createIfNotPresent);
+  if (ourTables == NULL) return NULL;
+
   if (ourTables->socketTable == NULL) {
     // Create a new socket number -> SocketDescriptor mapping table:
     ourTables->socketTable = HashTable::create(ONE_WORD_HASH_KEYS);
@@ -172,14 +174,11 @@ void RTPInterface::removeStreamSocket(int sockNum,
   }
 }
 
-void RTPInterface::setServerRequestAlternativeByteHandler(ServerRequestAlternativeByteHandler* handler, void* clientData) {
-  for (tcpStreamRecord* streams = fTCPStreams; streams != NULL;
-       streams = streams->fNext) {
-    // Get (or create, if necessary) a socket descriptor for "streams->fStreamSocketNum":
-    SocketDescriptor* socketDescriptor = lookupSocketDescriptor(envir(), streams->fStreamSocketNum);
+void RTPInterface
+::setServerRequestAlternativeByteHandler(int socketNum, ServerRequestAlternativeByteHandler* handler, void* clientData) {
+  SocketDescriptor* socketDescriptor = lookupSocketDescriptor(envir(), socketNum);
 
-    socketDescriptor->setServerRequestAlternativeByteHandler(handler, clientData);
-  }
+  if (socketDescriptor != NULL) socketDescriptor->setServerRequestAlternativeByteHandler(handler, clientData);
 }
 
 
