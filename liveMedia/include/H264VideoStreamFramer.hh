@@ -27,7 +27,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class H264VideoStreamFramer: public MPEGVideoStreamFramer {
 public:
-  static H264VideoStreamFramer* createNew(UsageEnvironment& env, FramedSource* inputSource);
+  static H264VideoStreamFramer* createNew(UsageEnvironment& env, FramedSource* inputSource,
+					  Boolean includeStartCodeInOutput = False);
 
   void getSPSandPPS(u_int8_t*& sps, unsigned& spsSize, u_int8_t*& pps, unsigned& ppsSize) const{
     // Returns pointers to copies of the most recently seen SPS (sequence parameter set) and PPS (picture parameter set) NAL unit.
@@ -37,7 +38,7 @@ public:
   }
 
 protected:
-  H264VideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource, Boolean createParser = True);
+  H264VideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource, Boolean createParser, Boolean includeStartCodeInOutput);
   virtual ~H264VideoStreamFramer();
 
   void saveCopyOfSPS(u_int8_t* from, unsigned size);
@@ -50,6 +51,7 @@ private:
   void setPresentationTime() { fPresentationTime = fNextPresentationTime; }
 
 private:
+  Boolean fIncludeStartCodeInOutput;
   u_int8_t* fLastSeenSPS;
   unsigned fLastSeenSPSSize;
   u_int8_t* fLastSeenPPS;

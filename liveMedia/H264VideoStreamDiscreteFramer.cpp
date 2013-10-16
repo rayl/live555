@@ -31,7 +31,7 @@ H264VideoStreamDiscreteFramer::createNew(UsageEnvironment& env, FramedSource* in
 
 H264VideoStreamDiscreteFramer
 ::H264VideoStreamDiscreteFramer(UsageEnvironment& env, FramedSource* inputSource)
-  : H264VideoStreamFramer(env, inputSource, False/*don't create a parser*/) {
+  : H264VideoStreamFramer(env, inputSource, False/*don't create a parser*/, False) {
 }
 
 H264VideoStreamDiscreteFramer::~H264VideoStreamDiscreteFramer() {

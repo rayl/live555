@@ -965,19 +965,27 @@ void RTSPServer::RTSPClientSession
 			  char const* urlPreSuffix, char const* urlSuffix,
 			  char const* cseq, char const* fullRequestStr) {
   // This will either be:
+  // - an operation on the entire server, if "urlPreSuffix" is "", and "urlSuffix" is "*" (i.e., the special "*" URL), or
   // - a non-aggregated operation, if "urlPreSuffix" is the session (stream)
   //   name and "urlSuffix" is the subsession (track) name, or
-  // - a aggregated operation, if "urlSuffix" is the session (stream) name,
-  //   or "urlPreSuffix" is the session (stream) name, and "urlSuffix"
-  //   is empty.
-  // First, figure out which of these it is:
-  if (fOurServerMediaSession == NULL) { // There wasn't a previous SETUP!
+  // - an aggregated operation, if "urlSuffix" is the session (stream) name,
+  //   or "urlPreSuffix" is the session (stream) name, and "urlSuffix" is empty.
+  // Begin by figuring out which of these it is:
+  ServerMediaSubsession* subsession;
+  if (urlPreSuffix[0] == '\0' && urlSuffix[0] == '*' && urlSuffix[1] == '\0') {
+    // An operation on the entire server.  This works only for GET_PARAMETER and SET_PARAMETER:
+    if (strcmp(cmdName, "GET_PARAMETER") == 0) {
+      handleCmd_GET_PARAMETER(NULL, cseq, fullRequestStr);
+    } else if (strcmp(cmdName, "SET_PARAMETER") == 0) {
+      handleCmd_SET_PARAMETER(NULL, cseq, fullRequestStr);
+    } else {
+      handleCmd_notSupported(cseq);
+    }
+    return;
+  } else if (fOurServerMediaSession == NULL) { // There wasn't a previous SETUP!
     handleCmd_notSupported(cseq);
     return;
-  }
-  ServerMediaSubsession* subsession;
-  if (urlSuffix[0] != '\0' &&
-      strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0) {
+  } else if (urlSuffix[0] != '\0' && strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0) {
     // Non-aggregated operation.
     // Look up the media subsession whose track id is "urlSuffix":
     ServerMediaSubsessionIterator iter(*fOurServerMediaSession);
@@ -1202,10 +1210,11 @@ void RTSPServer::RTSPClientSession
 }
 
 void RTSPServer::RTSPClientSession
-::handleCmd_GET_PARAMETER(ServerMediaSubsession* subsession, char const* cseq,
+::handleCmd_GET_PARAMETER(ServerMediaSubsession* /*subsession*/, char const* cseq,
 			  char const* /*fullRequestStr*/) {
-  // We implement "GET_PARAMETER" just as a 'keep alive',
-  // and send back an empty response:
+  // By default, we implement "GET_PARAMETER" just as a 'keep alive', and send back an empty response.
+  // (If you want to handle "GET_PARAMETER" properly, you can do so by defining a subclass of "RTSPServer"
+  // and "RTSPServer::RTSPClientSession", and then reimplement this virtual function in your subclass.)
   snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
 	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%sSession: %08X\r\n\r\n",
 	   cseq, dateHeader(), fOurSessionId);
@@ -1214,8 +1223,12 @@ void RTSPServer::RTSPClientSession
 void RTSPServer::RTSPClientSession
 ::handleCmd_SET_PARAMETER(ServerMediaSubsession* /*subsession*/, char const* cseq,
 			  char const* /*fullRequestStr*/) {
-  // By default, we don't implement "SET_PARAMETER":
-  handleCmd_notSupported(cseq);
+  // By default, we implement "SET_PARAMETER" just as a 'keep alive', and send back an empty response.
+  // (If you want to handle "SET_PARAMETER" properly, you can do so by defining a subclass of "RTSPServer"
+  // and "RTSPServer::RTSPClientSession", and then reimplement this virtual function in your subclass.)
+  snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
+	   "RTSP/1.0 200 OK\r\nCSeq: %s\r\n%sSession: %08X\r\n\r\n",
+	   cseq, dateHeader(), fOurSessionId);
 }
 
 static void lookForHeader(char const* headerName, char const* source, unsigned sourceLen, char* resultStr, unsigned resultMaxSize) {

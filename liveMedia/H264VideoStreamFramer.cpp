@@ -26,7 +26,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class H264VideoStreamParser: public MPEGVideoStreamParser {
 public:
-  H264VideoStreamParser(H264VideoStreamFramer* usingSource, FramedSource* inputSource);
+  H264VideoStreamParser(H264VideoStreamFramer* usingSource, FramedSource* inputSource, Boolean includeStartCodeInOutput);
   virtual ~H264VideoStreamParser();
 
 private: // redefined virtual functions:
@@ -52,6 +52,7 @@ private:
 			    Boolean& field_pic_flag, Boolean& bottom_field_flag);
 
 private:
+  Boolean fIncludeStartCodeInOutput;
   Boolean fHaveSeenFirstStartCode;
 
   // Fields in H.264 headers, used in parsing:
@@ -63,15 +64,18 @@ private:
 
 ////////// H264VideoStreamFramer implementation //////////
 
-H264VideoStreamFramer* H264VideoStreamFramer::createNew(UsageEnvironment& env, FramedSource* inputSource) {
-  return new H264VideoStreamFramer(env, inputSource);
+H264VideoStreamFramer* H264VideoStreamFramer
+::createNew(UsageEnvironment& env, FramedSource* inputSource, Boolean includeStartCodeInOutput) {
+  return new H264VideoStreamFramer(env, inputSource, True, includeStartCodeInOutput);
 }
 
-H264VideoStreamFramer::H264VideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource, Boolean createParser)
+H264VideoStreamFramer
+::H264VideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource, Boolean createParser, Boolean includeStartCodeInOutput)
   : MPEGVideoStreamFramer(env, inputSource),
+    fIncludeStartCodeInOutput(includeStartCodeInOutput),
     fLastSeenSPS(NULL), fLastSeenSPSSize(0), fLastSeenPPS(NULL), fLastSeenPPSSize(0) {
   fParser = createParser
-    ? new H264VideoStreamParser(this, inputSource)
+    ? new H264VideoStreamParser(this, inputSource, includeStartCodeInOutput)
     : NULL;
   fNextPresentationTime = fPresentationTimeBase;
   fFrameRate = 25.0; // We assume a frame rate of 25 fps, unless we learn otherwise (from parsing a Sequence Parameter Set NAL unit)
@@ -105,9 +109,10 @@ Boolean H264VideoStreamFramer::isH264VideoStreamFramer() const {
 
 ////////// H264VideoStreamParser implementation //////////
 
-H264VideoStreamParser::H264VideoStreamParser(H264VideoStreamFramer* usingSource, FramedSource* inputSource)
+H264VideoStreamParser
+::H264VideoStreamParser(H264VideoStreamFramer* usingSource, FramedSource* inputSource, Boolean includeStartCodeInOutput)
   : MPEGVideoStreamParser(usingSource, inputSource),
-    fHaveSeenFirstStartCode(False),
+    fIncludeStartCodeInOutput(includeStartCodeInOutput), fHaveSeenFirstStartCode(False),
     // Default values for our parser variables (in case they're not set explicitly in headers that we parse:
     log2_max_frame_num(5), separate_colour_plane_flag(False), frame_mbs_only_flag(True) {
 }
@@ -554,6 +559,10 @@ unsigned H264VideoStreamParser::parse() {
       fHaveSeenFirstStartCode = True; // from now on
     }
     
+    if (fIncludeStartCodeInOutput) {
+      save4Bytes(0x00000001);
+    }
+
     // Then save everything up until the next 0x00000001 (4 bytes) or 0x000001 (4 bytes).
     // Also make note of the first byte, because it contains the "nal_unit_type": 
     u_int32_t next4Bytes = test4Bytes();
