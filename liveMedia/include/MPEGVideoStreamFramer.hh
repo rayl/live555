@@ -67,13 +67,13 @@ protected:
   double fFrameRate; // Note: For MPEG-4, this is really a 'tick rate'
   unsigned fPictureCount; // hack used to implement doGetNextFrame()
   Boolean fPictureEndMarker;
+  struct timeval fPresentationTimeBase;
 
   // parsing state
   class MPEGVideoStreamParser* fParser;
   friend class MPEGVideoStreamParser; // hack
 
 private:
-  struct timeval fPresentationTimeBase;
   TimeCode fCurGOPTimeCode, fPrevGOPTimeCode;
   unsigned fPicturesAdjustment;
   double fPictureTimeBase;

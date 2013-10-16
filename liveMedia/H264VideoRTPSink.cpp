@@ -20,32 +20,15 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "H264VideoRTPSink.hh"
 #include "H264VideoStreamFramer.hh"
+#include "Base64.hh"
 
 ////////// H264VideoRTPSink implementation //////////
 
 H264VideoRTPSink
 ::H264VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		   unsigned char rtpPayloadFormat,
-		   unsigned profile_level_id,
-		   char const* sprop_parameter_sets_str)
+		   unsigned char rtpPayloadFormat)
   : VideoRTPSink(env, RTPgs, rtpPayloadFormat, 90000, "H264"),
-    fOurFragmenter(NULL) {
-  // Set up the "a=fmtp:" SDP line for this stream:
-  char const* fmtpFmt =
-    "a=fmtp:%d packetization-mode=1"
-    ";profile-level-id=%06X"
-    ";sprop-parameter-sets=%s\r\n";
-  unsigned fmtpFmtSize = strlen(fmtpFmt)
-    + 3 /* max char len */
-    + 8 /* max unsigned len in hex */
-    + strlen(sprop_parameter_sets_str);
-  char* fmtp = new char[fmtpFmtSize];
-  sprintf(fmtp, fmtpFmt,
-          rtpPayloadFormat,
-	  profile_level_id,
-          sprop_parameter_sets_str);
-  fFmtpSDPLine = strDup(fmtp);
-  delete[] fmtp;
+    fOurFragmenter(NULL), fFmtpSDPLine(NULL) {
 }
 
 H264VideoRTPSink::~H264VideoRTPSink() {
@@ -56,11 +39,8 @@ H264VideoRTPSink::~H264VideoRTPSink() {
 
 H264VideoRTPSink*
 H264VideoRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
-			    unsigned char rtpPayloadFormat,
-			    unsigned profile_level_id,
-			    char const* sprop_parameter_sets_str) {
-  return new H264VideoRTPSink(env, RTPgs, rtpPayloadFormat,
-			      profile_level_id, sprop_parameter_sets_str);
+			    unsigned char rtpPayloadFormat) {
+  return new H264VideoRTPSink(env, RTPgs, rtpPayloadFormat);
 }
 
 Boolean H264VideoRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
@@ -97,16 +77,16 @@ void H264VideoRTPSink::doSpecialFrameHandling(unsigned /*fragmentationOffset*/,
 					      struct timeval frameTimestamp,
 					      unsigned /*numRemainingBytes*/) {
   // Set the RTP 'M' (marker) bit iff
-  // 1/ The most recently delivered fragment was the end of
-  //    (or the only fragment of) an NAL unit, and
+  // 1/ The most recently delivered fragment was the end of (or the only fragment of) an NAL unit, and
   // 2/ This NAL unit was the last NAL unit of an 'access unit' (i.e. video frame).
   if (fOurFragmenter != NULL) {
     H264VideoStreamFramer* framerSource
       = (H264VideoStreamFramer*)(fOurFragmenter->inputSource());
-    // This relies on our fragmenter's source being a "MPEG4VideoStreamFramer".
+    // This relies on our fragmenter's source being a "H264VideoStreamFramer".
     if (fOurFragmenter->lastFragmentCompletedNALUnit()
-	&& framerSource != NULL && framerSource->currentNALUnitEndsAccessUnit()) {
+	&& framerSource != NULL && framerSource->pictureEndMarker()) {
       setMarkerBit();
+      framerSource->pictureEndMarker() = False;
     }
   }
 
@@ -120,6 +100,45 @@ Boolean H264VideoRTPSink
 }
 
 char const* H264VideoRTPSink::auxSDPLine() {
+  // Generate a new "a=fmtp:" line each time, using parameters from
+  // our framer source (in case they've changed since the last time that
+  // we were called):
+  if (fOurFragmenter == NULL) return NULL; // we don't yet have a fragmenter (and therefore not a source)
+  H264VideoStreamFramer* framerSource = (H264VideoStreamFramer*)(fOurFragmenter->inputSource());
+  if (framerSource == NULL) return NULL; // we don't yet have a source
+
+  u_int8_t* sps; unsigned spsSize;
+  u_int8_t* pps; unsigned ppsSize;
+  framerSource->getSPSandPPS(sps, spsSize, pps, ppsSize);
+  if (sps == NULL || pps == NULL) return NULL; // our source isn't ready
+
+  u_int8_t profile_level_id;
+  if (spsSize < 4) { // sanity check
+    profile_level_id = 0;
+  } else {
+    profile_level_id = (sps[1]<<16)|(sps[2]<<8)|sps[3]; // profile_idc|constraint_setN_flag|level_idc
+  }
+  
+  // Set up the "a=fmtp:" SDP line for this stream:
+  char* sps_base64 = base64Encode((char*)sps, spsSize);
+  char* pps_base64 = base64Encode((char*)pps, ppsSize);
+  char const* fmtpFmt =
+    "a=fmtp:%d packetization-mode=1"
+    ";profile-level-id=%06X"
+    ";sprop-parameter-sets=%s,%s\r\n";
+  unsigned fmtpFmtSize = strlen(fmtpFmt)
+    + 3 /* max char len */
+    + 6 /* 3 bytes in hex */
+    + strlen(sps_base64) + strlen(pps_base64);
+  char* fmtp = new char[fmtpFmtSize];
+  sprintf(fmtp, fmtpFmt,
+          rtpPayloadType(),
+	  profile_level_id,
+          sps_base64, pps_base64);
+  delete[] sps_base64;
+  delete[] pps_base64;
+
+  delete[] fFmtpSDPLine; fFmtpSDPLine = fmtp;
   return fFmtpSDPLine;
 }
 

@@ -41,6 +41,8 @@ static unsigned char const singleBitMask[8]
 #define MAX_LENGTH 32
 
 void BitVector::putBits(unsigned from, unsigned numBits) {
+  if (numBits == 0) return; 
+
   unsigned char tmpBuf[4];
   unsigned overflowingBits = 0;
 
@@ -63,7 +65,6 @@ void BitVector::putBits(unsigned from, unsigned numBits) {
   fCurBitIndex += numBits - overflowingBits;
 }
 
-
 void BitVector::put1Bit(unsigned bit) {
   // The following is equivalent to "putBits(..., 1)", except faster:
   if (fCurBitIndex >= fTotNumBits) { /* overflow */
@@ -79,8 +80,9 @@ void BitVector::put1Bit(unsigned bit) {
   }
 }
 
-
 unsigned BitVector::getBits(unsigned numBits) {
+  if (numBits == 0) return 0;
+
   unsigned char tmpBuf[4];
   unsigned overflowingBits = 0;
 
@@ -125,10 +127,24 @@ void BitVector::skipBits(unsigned numBits) {
   }
 }
 
+unsigned BitVector::get_expGolomb() {
+  unsigned numLeadingZeroBits = 0;
+  unsigned codeStart = 1;
+
+  while (get1Bit() == 0) {
+    ++numLeadingZeroBits;
+    codeStart *= 2;
+  }
+
+  return codeStart -1 + getBits(numLeadingZeroBits);
+}
+
 
 void shiftBits(unsigned char* toBasePtr, unsigned toBitOffset,
 	       unsigned char const* fromBasePtr, unsigned fromBitOffset,
 	       unsigned numBits) {
+  if (numBits == 0) return;
+
   /* Note that from and to may overlap, if from>to */
   unsigned char const* fromBytePtr = fromBasePtr + fromBitOffset/8;
   unsigned fromBitRem = fromBitOffset%8;

@@ -76,10 +76,13 @@ protected: // we're a virtual base class
   }
 
   void getBytes(u_int8_t* to, unsigned numBytes) {
-    ensureValidBytes(numBytes);
-    memmove(to, nextToParse(), numBytes);
+    testBytes(to, numBytes);
     fCurParserIndex += numBytes;
     fRemainingUnparsedBits = 0;
+  }
+  void testBytes(u_int8_t* to, unsigned numBytes) { // as above, but doesn't advance ptr
+    ensureValidBytes(numBytes);
+    memmove(to, nextToParse(), numBytes);
   }
   void skipBytes(unsigned numBytes) {
     ensureValidBytes(numBytes);

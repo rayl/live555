@@ -82,6 +82,7 @@ private:
 private:
   // Redefined virtual functions:
   void doGetNextFrame();
+  virtual void doStopGettingFrames();
 
 private:
   class QCELPDeinterleavingBuffer* fDeinterleavingBuffer;
@@ -347,6 +348,11 @@ void QCELPDeinterleaver::doGetNextFrame() {
 			       afterGettingFrame, this,
 			       FramedSource::handleClosure, this);
   }
+}
+
+void QCELPDeinterleaver::doStopGettingFrames() {
+  fNeedAFrame = False;
+  fInputSource->stopGettingFrames();
 }
 
 void QCELPDeinterleaver

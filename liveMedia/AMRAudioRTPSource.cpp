@@ -101,7 +101,6 @@ private:
   RawAMRRTPSource* fInputSource;
   class AMRDeinterleavingBuffer* fDeinterleavingBuffer;
   Boolean fNeedAFrame;
-
 };
 
 
@@ -480,6 +479,7 @@ void AMRDeinterleaver::doGetNextFrame() {
 }
 
 void AMRDeinterleaver::doStopGettingFrames() {
+  fNeedAFrame = False;
   fInputSource->stopGettingFrames();
 }
 

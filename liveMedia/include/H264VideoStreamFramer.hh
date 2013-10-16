@@ -15,31 +15,47 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
-// Any source that feeds into a "H264VideoRTPSink" must be of this class.
-// This is a virtual base class; subclasses must implement the
-// "currentNALUnitEndsAccessUnit()" virtual function.
+// A filter that breaks up a H.264 Video Elementary Stream into NAL units.
 // C++ header
 
 #ifndef _H264_VIDEO_STREAM_FRAMER_HH
 #define _H264_VIDEO_STREAM_FRAMER_HH
 
-#ifndef _FRAMED_FILTER_HH
-#include "FramedFilter.hh"
+#ifndef _MPEG_VIDEO_STREAM_FRAMER_HH
+#include "MPEGVideoStreamFramer.hh"
 #endif
 
-class H264VideoStreamFramer: public FramedFilter {
+class H264VideoStreamFramer: public MPEGVideoStreamFramer {
 public:
-  virtual Boolean currentNALUnitEndsAccessUnit() = 0;
-  // subclasses must define this function.  It returns True iff the
-  // most recently received NAL unit ends a video 'access unit' (i.e., 'frame')
+  static H264VideoStreamFramer* createNew(UsageEnvironment& env, FramedSource* inputSource);
+
+  void getSPSandPPS(u_int8_t*& sps, unsigned& spsSize, u_int8_t*& pps, unsigned& ppsSize) const{
+    // Returns pointers to copies of the most recently seen SPS (sequence parameter set) and PPS (picture parameter set) NAL unit.
+    // (NULL pointers are returned if the NAL units have not yet been seen.)
+    sps = fLastSeenSPS; spsSize = fLastSeenSPSSize;
+    pps = fLastSeenPPS; ppsSize = fLastSeenPPSSize;
+  }
 
 protected:
-  H264VideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource);
+  H264VideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource, Boolean createParser = True);
   virtual ~H264VideoStreamFramer();
 
-private:
+  void saveCopyOfSPS(u_int8_t* from, unsigned size);
+  void saveCopyOfPPS(u_int8_t* from, unsigned size);
+
   // redefined virtual functions:
   virtual Boolean isH264VideoStreamFramer() const;
+
+private:
+  void setPresentationTime() { fPresentationTime = fNextPresentationTime; }
+
+private:
+  u_int8_t* fLastSeenSPS;
+  unsigned fLastSeenSPSSize;
+  u_int8_t* fLastSeenPPS;
+  unsigned fLastSeenPPSSize;
+  struct timeval fNextPresentationTime; // the presentation time to be used for the next NAL unit to be parsed/delivered after this
+  friend class H264VideoStreamParser; // hack
 };
 
 #endif

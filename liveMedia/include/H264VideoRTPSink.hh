@@ -34,15 +34,11 @@ class H264VideoRTPSink: public VideoRTPSink {
 public:
   static H264VideoRTPSink* createNew(UsageEnvironment& env,
 				     Groupsock* RTPgs,
-				     unsigned char rtpPayloadFormat,
-				     unsigned profile_level_id,
-				     char const* sprop_parameter_sets_str);
+				     unsigned char rtpPayloadFormat);
 
 protected:
   H264VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		   unsigned char rtpPayloadFormat,
-		   unsigned profile_level_id,
-		   char const* sprop_parameter_sets_str);
+		   unsigned char rtpPayloadFormat);
 	// called only by createNew()
 
   virtual ~H264VideoRTPSink();

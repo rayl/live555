@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
   *env << "\t\".aac\" => an AAC Audio (ADTS format) file\n";
   *env << "\t\".amr\" => an AMR Audio file\n";
   *env << "\t\".m4e\" => a MPEG-4 Video Elementary Stream file\n";
+  *env << "\t\".264\" => a H.264 Video Elementary Stream file\n";
   *env << "\t\".dv\" => a DV Video file\n";
   *env << "\t\".mp3\" => a MPEG-1 or 2 Audio file\n";
   *env << "\t\".mpg\" => a MPEG-1 or 2 Program Stream (audio+video) file\n";
