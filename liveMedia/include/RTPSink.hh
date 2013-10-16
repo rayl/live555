@@ -184,7 +184,6 @@ public:
   void getTotalPacketCount(u_int32_t& hi, u_int32_t& lo);
 
   // Information which requires at least two RRs to have been received:
-  Boolean oldValid() const {return fOldValid;} // Have two RRs been received?
   unsigned packetsReceivedSinceLastRR() const;
   u_int8_t packetLossRatio() const { return fPacketLossRatio; }
      // as an 8-bit fixed-point number
@@ -212,7 +211,7 @@ private:
   unsigned fLastSRTime;
   unsigned fDiffSR_RRTime;
   struct timeval fTimeCreated, fTimeReceived;
-  Boolean fOldValid;
+  Boolean fAtLeastTwoRRsHaveBeenReceived;
   unsigned fOldLastPacketNumReceived;
   unsigned fOldTotNumPacketsLost;
   Boolean fFirstPacket;

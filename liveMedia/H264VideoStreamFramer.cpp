@@ -344,7 +344,7 @@ void H264VideoStreamParser
     DEBUG_PRINT(chroma_format_idc);
     if (chroma_format_idc == 3) {
       DEBUG_TAB;
-      separate_colour_plane_flag = bv.get1Bit();
+      separate_colour_plane_flag = bv.get1BitBoolean();
       DEBUG_PRINT(separate_colour_plane_flag);
     }
     (void)bv.get_expGolomb(); // bit_depth_luma_minus8
@@ -408,7 +408,7 @@ void H264VideoStreamParser
   DEBUG_PRINT(pic_width_in_mbs_minus1);
   unsigned pic_height_in_map_units_minus1 = bv.get_expGolomb();
   DEBUG_PRINT(pic_height_in_map_units_minus1);
-  frame_mbs_only_flag = bv.get1Bit();
+  frame_mbs_only_flag = bv.get1BitBoolean();
   DEBUG_PRINT(frame_mbs_only_flag);
   if (!frame_mbs_only_flag) {
     bv.skipBits(1); // mb_adaptive_frame_field_flag
@@ -537,11 +537,11 @@ void H264VideoStreamParser
   DEBUG_PRINT(frame_num);
   if (!frame_mbs_only_flag) {
     DEBUG_TAB;
-    field_pic_flag = bv.get1Bit();
+    field_pic_flag = bv.get1BitBoolean();
     DEBUG_PRINT(field_pic_flag);
     if (field_pic_flag) {
       DEBUG_TAB;
-      bottom_field_flag = bv.get1Bit();
+      bottom_field_flag = bv.get1BitBoolean();
       DEBUG_PRINT(bottom_field_flag);
     }
   }

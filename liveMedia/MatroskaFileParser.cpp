@@ -1130,11 +1130,25 @@ Boolean MatroskaFileParser::parseEBMLVal_unsigned(EBMLDataSize& size, unsigned& 
 }
 
 Boolean MatroskaFileParser::parseEBMLVal_float(EBMLDataSize& size, float& result) {
-  unsigned resultAsUnsigned;
-  if (!parseEBMLVal_unsigned(size, resultAsUnsigned)) return False;
+  switch (size.val()) {
+    case 4: {
+      unsigned resultAsUnsigned;
 
-  result = *(float*)&resultAsUnsigned;
-  return True;
+      if (!parseEBMLVal_unsigned(size, resultAsUnsigned)) return False;
+      result = *(float*)&resultAsUnsigned;
+      return True;
+    }
+    case 8: {
+      u_int64_t resultAsU64;
+
+      if (!parseEBMLVal_unsigned64(size, resultAsU64)) return False;
+      result = (float)*(double*)&resultAsU64;
+      return True;
+    }
+    default: {
+      return False;
+    }
+  }
 }
 
 Boolean MatroskaFileParser::parseEBMLVal_string(EBMLDataSize& size, char*& result) {

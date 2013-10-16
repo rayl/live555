@@ -52,7 +52,7 @@ public:
 };
 
 /* forward */
-void MP3HuffmanDecode(MP3SideInfo::gr_info_s_t* gr, int isMPEG2,
+void MP3HuffmanDecode(MP3SideInfo::gr_info_s_t* gr, Boolean isMPEG2,
 		      unsigned char const* fromBasePtr,
 		      unsigned fromBitOffset, unsigned fromLength,
 		      unsigned& scaleFactorsLength,

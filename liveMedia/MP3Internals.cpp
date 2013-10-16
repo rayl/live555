@@ -173,7 +173,7 @@ void MP3FrameParams::setParamsFromHeader() {
     samplingFreqIndex = ((hdr>>10)&0x3) + (isMPEG2*3);
   }
 
-  hasCRC = ((hdr>>16)&0x1)^0x1;
+  hasCRC = (hdr & 0x10000) == 0;
 
   padding   = ((hdr>>9)&0x1);
   extension = ((hdr>>8)&0x1);
@@ -224,7 +224,7 @@ unsigned ComputeFrameSize(unsigned bitrate, unsigned samplingFreq,
   unsigned framesize;
 
   framesize = bitrate*bitrateMultiplier;
-  framesize /= samplingFreq<<isMPEG2;
+  framesize /= samplingFreq<<(isMPEG2 ? 1 : 0);
   framesize = framesize + usePadding - 4;
 
   return framesize;

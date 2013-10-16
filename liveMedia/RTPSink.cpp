@@ -236,7 +236,7 @@ void RTPTransmissionStatsDB::add(u_int32_t SSRC, RTPTransmissionStats* stats) {
 RTPTransmissionStats::RTPTransmissionStats(RTPSink& rtpSink, u_int32_t SSRC)
   : fOurRTPSink(rtpSink), fSSRC(SSRC), fLastPacketNumReceived(0),
     fPacketLossRatio(0), fTotNumPacketsLost(0), fJitter(0),
-    fLastSRTime(0), fDiffSR_RRTime(0), fFirstPacket(True),
+    fLastSRTime(0), fDiffSR_RRTime(0), fAtLeastTwoRRsHaveBeenReceived(False), fFirstPacket(True),
     fTotalOctetCount_hi(0), fTotalOctetCount_lo(0),
     fTotalPacketCount_hi(0), fTotalPacketCount_lo(0) {
   gettimeofday(&fTimeCreated, NULL);
@@ -256,7 +256,7 @@ void RTPTransmissionStats
     fFirstPacket = False;
     fFirstPacketNumReported = lastPacketNumReceived;
   } else {
-    fOldValid = True;
+    fAtLeastTwoRRsHaveBeenReceived = True;
     fOldLastPacketNumReceived = fLastPacketNumReceived;
     fOldTotNumPacketsLost = fTotNumPacketsLost;
   }
@@ -335,13 +335,13 @@ void RTPTransmissionStats::getTotalPacketCount(u_int32_t& hi, u_int32_t& lo) {
 }
 
 unsigned RTPTransmissionStats::packetsReceivedSinceLastRR() const {
-  if (!fOldValid) return 0;
+  if (!fAtLeastTwoRRsHaveBeenReceived) return 0;
 
   return fLastPacketNumReceived-fOldLastPacketNumReceived;
 }
 
 int RTPTransmissionStats::packetsLostBetweenRR() const {
-  if (!fOldValid) return 0;
+  if (!fAtLeastTwoRRsHaveBeenReceived) return 0;
 
   return fTotNumPacketsLost - fOldTotNumPacketsLost;
 }

@@ -16,7 +16,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _BOOLEAN_HH
 #define _BOOLEAN_HH
 
-#ifdef   __BORLANDC__
+#if defined(__BORLANDC__)  ||  (defined(_MSC_VER) &&  _MSC_VER >= 1400)    // MSVC++ 8.0, Visual Studio 2005 and higher
 #define Boolean bool
 #define False false
 #define True true

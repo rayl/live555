@@ -538,7 +538,7 @@ static int rsf_huffman_decoder(BitVector& bv,
 			       struct huffcodetab const* h,
 			       int* x, int* y, int* v, int* w); // forward
 
-void MP3HuffmanDecode(MP3SideInfo::gr_info_s_t* gr, int isMPEG2,
+void MP3HuffmanDecode(MP3SideInfo::gr_info_s_t* gr, Boolean isMPEG2,
 		      unsigned char const* fromBasePtr,
 		      unsigned fromBitOffset, unsigned fromLength,
 		      unsigned& scaleFactorsLength,

@@ -593,8 +593,8 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
     tempAddr.s_addr = connectionEndpointAddress();
         // This could get changed later, as a result of a RTSP "SETUP"
 
-    if (fClientPortNum != 0) {
-      // The sockets' port numbers were specified for us.  Use these:
+    if (fClientPortNum != 0  && IsMulticastAddress(tempAddr.s_addr)) {
+      // This is a multicast stream, and the sockets' port numbers were specified for us.  Use these:
       Boolean const protocolIsRTP = strcmp(fProtocolName, "RTP") == 0;
       if (protocolIsRTP) {
 	fClientPortNum = fClientPortNum&~1; // use an even-numbered port for RTP, and the next (odd-numbered) port for RTCP
@@ -1111,16 +1111,16 @@ Boolean MediaSubsession::createSourceObjects(int useSpecialRTPoffset) {
       } else if (strcmp(fCodecName, "AMR") == 0) { // AMR audio (narrowband)
 	fReadSource =
 	  AMRAudioRTPSource::createNew(env(), fRTPSocket, fRTPSource,
-				       fRTPPayloadFormat, 0 /*isWideband*/,
-				       fNumChannels, fOctetalign, fInterleaving,
-				       fRobustsorting, fCRC);
+				       fRTPPayloadFormat, False /*isWideband*/,
+				       fNumChannels, fOctetalign != 0, fInterleaving,
+				       fRobustsorting != 0, fCRC != 0);
 	// Note that fReadSource will differ from fRTPSource in this case
       } else if (strcmp(fCodecName, "AMR-WB") == 0) { // AMR audio (wideband)
 	fReadSource =
 	  AMRAudioRTPSource::createNew(env(), fRTPSocket, fRTPSource,
-				       fRTPPayloadFormat, 1 /*isWideband*/,
-				       fNumChannels, fOctetalign, fInterleaving,
-				       fRobustsorting, fCRC);
+				       fRTPPayloadFormat, True /*isWideband*/,
+				       fNumChannels, fOctetalign != 0, fInterleaving,
+				       fRobustsorting != 0, fCRC != 0);
 	// Note that fReadSource will differ from fRTPSource in this case
       } else if (strcmp(fCodecName, "MPA") == 0) { // MPEG-1 or 2 audio
 	fReadSource = fRTPSource

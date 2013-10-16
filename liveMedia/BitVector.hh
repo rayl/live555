@@ -21,6 +21,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _BIT_VECTOR_HH
 #define _BIT_VECTOR_HH
 
+#ifndef _BOOLEAN_HH
+#include "Boolean.hh"
+#endif
+
 class BitVector {
 public:
   BitVector(unsigned char* baseBytePtr,
@@ -36,6 +40,7 @@ public:
 
   unsigned getBits(unsigned numBits); // "numBits" <= 32
   unsigned get1Bit();
+  Boolean get1BitBoolean() { return get1Bit() != 0; }
 
   void skipBits(unsigned numBits);
 
