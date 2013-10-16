@@ -240,8 +240,7 @@ MatroskaTrack* MatroskaFile::TrackTable::lookup(unsigned trackNumber) {
 
 unsigned MatroskaFile::TrackTable::numTracks() const { return fTable->numEntries(); }
 
-MatroskaFile::TrackTable::Iterator::Iterator(MatroskaFile::TrackTable& ourTable)
-  : fOurTable(ourTable) {
+MatroskaFile::TrackTable::Iterator::Iterator(MatroskaFile::TrackTable& ourTable) {
   fIter = HashTable::Iterator::create(*(ourTable.fTable));
 }
 

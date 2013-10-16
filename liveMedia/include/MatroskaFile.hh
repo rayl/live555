@@ -57,7 +57,6 @@ public:
       virtual ~Iterator();
       MatroskaTrack* next();
     private:
-      TrackTable& fOurTable;
       HashTable::Iterator* fIter;
     };
 
