@@ -85,11 +85,11 @@ public:
   void increment(unsigned numBytes) {fCurOffset += numBytes;}
 
   void enqueue(unsigned char const* from, unsigned numBytes);
-  void enqueueWord(unsigned word);
+  void enqueueWord(u_int32_t word);
   void insert(unsigned char const* from, unsigned numBytes, unsigned toPosition);
-  void insertWord(unsigned word, unsigned toPosition);
+  void insertWord(u_int32_t word, unsigned toPosition);
   void extract(unsigned char* to, unsigned numBytes, unsigned fromPosition);
-  unsigned extractWord(unsigned fromPosition);
+  u_int32_t extractWord(unsigned fromPosition);
 
   void skipBytes(unsigned numBytes);
 

@@ -895,8 +895,8 @@ Boolean RTSPClient::parseTransportParams(char const* paramsStr,
     } else if (_strncasecmp(field, "destination=", 12) == 0) {
       delete[] foundDestinationStr;
       foundDestinationStr = strDup(field+12);
-    } else if (sscanf(field, "port=%hu-%hu",
-		      &multicastPortNumRTP, &multicastPortNumRTCP) == 2) {
+    } else if (sscanf(field, "port=%hu-%hu", &multicastPortNumRTP, &multicastPortNumRTCP) == 2 ||
+	       sscanf(field, "port=%hu", &multicastPortNumRTP) == 1) {
       foundMulticastPortNum = True;
     }
 

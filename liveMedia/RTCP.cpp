@@ -381,7 +381,7 @@ void RTCPInstance::incomingReportHandler1() {
     // must be version=2, with no padding bit, and a payload type of
     // SR (200) or RR (201):
     if (packetSize < 4) break;
-    unsigned rtcpHdr = ntohl(*(unsigned*)pkt);
+    unsigned rtcpHdr = ntohl(*(u_int32_t*)pkt);
     if ((rtcpHdr & 0xE0FE0000) != (0x80000000 | (RTCP_PT_SR<<16))) {
 #ifdef DEBUG
       fprintf(stderr, "rejected bad RTCP packet: header 0x%08x\n", rtcpHdr);
@@ -403,7 +403,7 @@ void RTCPInstance::incomingReportHandler1() {
 
       // Assume that each RTCP subpacket begins with a 4-byte SSRC:
       if (length < 4) break; length -= 4;
-      reportSenderSSRC = ntohl(*(unsigned*)pkt); ADVANCE(4);
+      reportSenderSSRC = ntohl(*(u_int32_t*)pkt); ADVANCE(4);
 
       Boolean subPacketOK = False;
       switch (pt) {
@@ -414,9 +414,9 @@ void RTCPInstance::incomingReportHandler1() {
 	  if (length < 20) break; length -= 20;
 
 	  // Extract the NTP timestamp, and note this:
-	  unsigned NTPmsw = ntohl(*(unsigned*)pkt); ADVANCE(4);
-	  unsigned NTPlsw = ntohl(*(unsigned*)pkt); ADVANCE(4);
-	  unsigned rtpTimestamp = ntohl(*(unsigned*)pkt); ADVANCE(4);
+	  unsigned NTPmsw = ntohl(*(u_int32_t*)pkt); ADVANCE(4);
+	  unsigned NTPlsw = ntohl(*(u_int32_t*)pkt); ADVANCE(4);
+	  unsigned rtpTimestamp = ntohl(*(u_int32_t*)pkt); ADVANCE(4);
 	  if (fSource != NULL) {
 	    RTPReceptionStatsDB& receptionStats
 	      = fSource->receptionStatsDB();
@@ -442,14 +442,14 @@ void RTCPInstance::incomingReportHandler1() {
 	    // Use this information to update stats about our transmissions:
             RTPTransmissionStatsDB& transmissionStats = fSink->transmissionStatsDB();
             for (unsigned i = 0; i < rc; ++i) {
-              unsigned senderSSRC = ntohl(*(unsigned*)pkt); ADVANCE(4);
+              unsigned senderSSRC = ntohl(*(u_int32_t*)pkt); ADVANCE(4);
               // We care only about reports about our own transmission, not others'
               if (senderSSRC == fSink->SSRC()) {
-                unsigned lossStats = ntohl(*(unsigned*)pkt); ADVANCE(4);
-                unsigned highestReceived = ntohl(*(unsigned*)pkt); ADVANCE(4);
-                unsigned jitter = ntohl(*(unsigned*)pkt); ADVANCE(4);
-                unsigned timeLastSR = ntohl(*(unsigned*)pkt); ADVANCE(4);
-                unsigned timeSinceLastSR = ntohl(*(unsigned*)pkt); ADVANCE(4);
+                unsigned lossStats = ntohl(*(u_int32_t*)pkt); ADVANCE(4);
+                unsigned highestReceived = ntohl(*(u_int32_t*)pkt); ADVANCE(4);
+                unsigned jitter = ntohl(*(u_int32_t*)pkt); ADVANCE(4);
+                unsigned timeLastSR = ntohl(*(u_int32_t*)pkt); ADVANCE(4);
+                unsigned timeSinceLastSR = ntohl(*(u_int32_t*)pkt); ADVANCE(4);
                 transmissionStats.noteIncomingRR(reportSenderSSRC, fromAddress,
 						 lossStats,
 						 highestReceived, jitter,
@@ -549,7 +549,7 @@ void RTCPInstance::incomingReportHandler1() {
 #endif
 	break;
       }
-      rtcpHdr = ntohl(*(unsigned*)pkt);
+      rtcpHdr = ntohl(*(u_int32_t*)pkt);
       if ((rtcpHdr & 0xC0000000) != 0x80000000) {
 #ifdef DEBUG
 	fprintf(stderr, "bad RTCP subpacket: header 0x%08x\n", rtcpHdr);

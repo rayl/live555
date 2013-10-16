@@ -134,8 +134,8 @@ void OutPacketBuffer::enqueue(unsigned char const* from, unsigned numBytes) {
   increment(numBytes);
 }
 
-void OutPacketBuffer::enqueueWord(unsigned word) {
-  unsigned nWord = htonl(word);
+void OutPacketBuffer::enqueueWord(u_int32_t word) {
+  u_int32_t nWord = htonl(word);
   enqueue((unsigned char*)&nWord, 4);
 }
 
@@ -153,8 +153,8 @@ void OutPacketBuffer::insert(unsigned char const* from, unsigned numBytes,
   }
 }
 
-void OutPacketBuffer::insertWord(unsigned word, unsigned toPosition) {
-  unsigned nWord = htonl(word);
+void OutPacketBuffer::insertWord(u_int32_t word, unsigned toPosition) {
+  u_int32_t nWord = htonl(word);
   insert((unsigned char*)&nWord, 4, toPosition);
 }
 
@@ -169,8 +169,8 @@ void OutPacketBuffer::extract(unsigned char* to, unsigned numBytes,
   memmove(to, &fBuf[realFromPosition], numBytes);
 }
 
-unsigned OutPacketBuffer::extractWord(unsigned fromPosition) {
-  unsigned nWord;
+u_int32_t OutPacketBuffer::extractWord(unsigned fromPosition) {
+  u_int32_t nWord;
   extract((unsigned char*)&nWord, 4, fromPosition);
   return ntohl(nWord);
 }

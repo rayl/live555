@@ -31,6 +31,12 @@ UsageEnvironment::UsageEnvironment(TaskScheduler& scheduler)
 UsageEnvironment::~UsageEnvironment() {
 }
 
+// By default, we handle 'should not occur'-type library errors by calling abort().  Subclasses can redefine this, if desired.
+void UsageEnvironment::internalError() {
+  abort();
+}
+
+
 TaskScheduler::TaskScheduler() {
 }
 
@@ -42,4 +48,9 @@ void TaskScheduler::rescheduleDelayedTask(TaskToken& task,
 					  void* clientData) {
   unscheduleDelayedTask(task);
   task = scheduleDelayedTask(microseconds, proc, clientData);
+}
+
+// By default, we handle 'should not occur'-type library errors by calling abort().  Subclasses can redefine this, if desired.
+void TaskScheduler::internalError() {
+  abort();
 }

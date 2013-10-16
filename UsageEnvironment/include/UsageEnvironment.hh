@@ -69,6 +69,8 @@ public:
 	// used to report a (previously set) error message within
 	// a background event
 
+  virtual void internalError(); // used to 'handle' a 'should not occur'-type error condition within the library.
+
   // 'errno'
   virtual int getErrno() const = 0;
 
@@ -141,6 +143,8 @@ public:
     setBackgroundHandling(socketNum, SOCKET_READABLE, handlerProc, clientData);
   }
   void turnOffBackgroundReadHandling(int socketNum) { disableBackgroundHandling(socketNum); }
+
+  virtual void internalError(); // used to 'handle' a 'should not occur'-type error condition within the library.
 
 protected:
   TaskScheduler(); // abstract base class

@@ -246,10 +246,10 @@ void MultiFramedRTPSource::networkReadHandler1() {
 
     // Check for the 12-byte RTP header:
     if (bPacket->dataSize() < 12) break;
-    unsigned rtpHdr = ntohl(*(unsigned*)(bPacket->data())); ADVANCE(4);
+    unsigned rtpHdr = ntohl(*(u_int32_t*)(bPacket->data())); ADVANCE(4);
     Boolean rtpMarkerBit = (rtpHdr&0x00800000) >> 23;
-    unsigned rtpTimestamp = ntohl(*(unsigned*)(bPacket->data()));ADVANCE(4);
-    unsigned rtpSSRC = ntohl(*(unsigned*)(bPacket->data())); ADVANCE(4);
+    unsigned rtpTimestamp = ntohl(*(u_int32_t*)(bPacket->data()));ADVANCE(4);
+    unsigned rtpSSRC = ntohl(*(u_int32_t*)(bPacket->data())); ADVANCE(4);
 
     // Check the RTP version number (it should be 2):
     if ((rtpHdr&0xC0000000) != 0x80000000) break;
@@ -262,7 +262,7 @@ void MultiFramedRTPSource::networkReadHandler1() {
     // Check for (& ignore) any RTP header extension
     if (rtpHdr&0x10000000) {
       if (bPacket->dataSize() < 4) break;
-      unsigned extHdr = ntohl(*(unsigned*)(bPacket->data())); ADVANCE(4);
+      unsigned extHdr = ntohl(*(u_int32_t*)(bPacket->data())); ADVANCE(4);
       unsigned remExtSize = 4*(extHdr&0xFFFF);
       if (bPacket->dataSize() < remExtSize) break;
       ADVANCE(remExtSize);

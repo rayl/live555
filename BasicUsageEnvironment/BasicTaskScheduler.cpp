@@ -92,7 +92,7 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
 #if !defined(_WIN32_WCE)
 	perror("BasicTaskScheduler::SingleStep(): select() fails");
 #endif
-	abort();
+	internalError();
       }
   }
 

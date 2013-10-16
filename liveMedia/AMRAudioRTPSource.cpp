@@ -537,7 +537,7 @@ void AMRDeinterleavingBuffer
 #ifdef DEBUG
     fprintf(stderr, "AMRDeinterleavingBuffer::deliverIncomingFrame() param sanity check failed (%d,%d,%d,%d)\n", frameSize, fILL, ILP, frameIndex);
 #endif
-    abort();
+    source->envir().internalError();
   }
 
   --frameIndex; // because it was incremented by the source when this frame was read

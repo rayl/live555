@@ -79,7 +79,7 @@ void StreamParser::ensureValidBytes1(unsigned numBytesNeeded) {
 			  << fCurParserIndex << "+ "
 			  << numBytesNeeded << " > "
 			  << BANK_SIZE << ")\n";
-    abort();
+    fInputSource->envir().internalError();
   }
 
   // Try to read as many new bytes as will fit in the current bank:

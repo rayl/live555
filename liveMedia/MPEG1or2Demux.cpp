@@ -162,7 +162,7 @@ void MPEG1or2Demux::registerReadInterest(u_int8_t streamIdTag,
   if (out.isCurrentlyAwaitingData) {
     envir() << "MPEG1or2Demux::registerReadInterest(): attempt to read stream id "
 	    << (void*)streamIdTag << " more than once!\n";
-    abort();
+    envir().internalError();
   }
 
   out.to = to; out.maxSize = maxSize;

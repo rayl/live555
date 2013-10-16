@@ -32,7 +32,7 @@ BasicUsageEnvironment::BasicUsageEnvironment(TaskScheduler& taskScheduler)
   if (!initializeWinsockIfNecessary()) {
     setResultErrMsg("Failed to initialize 'winsock': ");
     reportBackgroundError();
-    abort();
+    internalError();
   }
 #endif
 }
