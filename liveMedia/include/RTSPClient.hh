@@ -203,6 +203,7 @@ private:
   class RequestQueue {
   public:
     RequestQueue();
+    RequestQueue(RequestQueue& origQueue); // moves the queue contents to the new queue
     virtual ~RequestQueue();
 
     void enqueue(RequestRecord* request); // "request" must not be NULL

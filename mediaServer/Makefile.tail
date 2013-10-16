@@ -13,7 +13,7 @@ all: $(ALL)
 
 MEDIA_SERVER_OBJS = live555MediaServer.$(OBJ) DynamicRTSPServer.$(OBJ)
 
-live555MediaServer,$(CPP):	DynamicRTSPServer.hh version.hh
+live555MediaServer.$(CPP):	DynamicRTSPServer.hh version.hh
 DynamicRTSPServer.$(CPP):	DynamicRTSPServer.hh
 
 USAGE_ENVIRONMENT_DIR = ../UsageEnvironment

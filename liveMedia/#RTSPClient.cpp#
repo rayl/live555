@@ -1371,7 +1371,6 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
   if (fVerbosityLevel >= 1 && newBytesRead > 1) envir() << "Received " << newBytesRead << " new bytes of response data.\n";
   
   unsigned numExtraBytesAfterResponse = 0;
-  Boolean responseSuccess = False; // by default
   do {
     // Data was read OK.  Look through the data that we've read so far, to see if it contains <CR><LF><CR><LF>.
     // (If not, wait for more data to arrive.)
@@ -1406,7 +1405,6 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
     char const* publicParamsStr = NULL;
     char* bodyStart = NULL;
     unsigned numBodyBytes = 0;
-    responseSuccess = False;
     do {
       headerDataCopy = new char[responseBufferSize];
       strncpy(headerDataCopy, fResponseBuffer, fResponseBytesAlreadySeen);
