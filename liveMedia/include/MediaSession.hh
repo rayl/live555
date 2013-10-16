@@ -218,6 +218,7 @@ public:
   // (e.g., by a "RTP-Info:" header in a RTSP response).
   // Also, for this function to work properly, the RTP stream's presentation times must (eventually) be
   // synchronized via RTCP.
+  // (Note: If this function returns a negative number, then the result should be ignored by the caller.)
 
 protected:
   friend class MediaSession;

@@ -964,10 +964,10 @@ void MediaSubsession::setDestinations(netAddressBits defaultDestAddress) {
 }
 
 double MediaSubsession::getNormalPlayTime(struct timeval const& presentationTime) {
-  // First, check whether our "RTPSource" object has already been synchronized using RTCP.
-  // If it hasn't, then - as a special case - we need to use the RTP timestamp to compute the NPT.
   if (rtpSource() == NULL || rtpSource()->timestampFrequency() == 0) return 0.0; // no RTP source, or bad freq!
 
+  // First, check whether our "RTPSource" object has already been synchronized using RTCP.
+  // If it hasn't, then - as a special case - we need to use the RTP timestamp to compute the NPT.
   if (!rtpSource()->hasBeenSynchronizedUsingRTCP()) {
     if (!rtpInfo.infoIsNew) return 0.0; // the "rtpInfo" structure has not been filled in
     u_int32_t timestampOffset = rtpSource()->curPacketRTPTimestamp() - rtpInfo.timestamp;
@@ -983,6 +983,7 @@ double MediaSubsession::getNormalPlayTime(struct timeval const& presentationTime
     if (rtpInfo.infoIsNew) {
       // This is the first time we've been called with a synchronized presentation time since the "rtpInfo"
       // structure was last filled in.  Use this "presentationTime" to compute "fNPT_PTS_Offset":
+      if (seqNumLT(rtpSource()->curPacketRTPSeqNum(), rtpInfo.seqNum)) return -0.1; // sanity check; ignore old packets
       u_int32_t timestampOffset = rtpSource()->curPacketRTPTimestamp() - rtpInfo.timestamp;
       double nptOffset = (timestampOffset/(double)(rtpSource()->timestampFrequency()))*scale();
       double npt = playStartTime() + nptOffset;
