@@ -1100,11 +1100,11 @@ void shutdown(int exitCode) {
     printQOSData(exitCode);
   }
 
-  // Close our output files:
-  closeMediaSinks();
-
   // Teardown, then shutdown, any outstanding RTP/RTCP subsessions
   tearDownStreams();
+
+  // Now that we've stopped any more incoming data from arriving, close our output files:
+  closeMediaSinks();
   Medium::close(session);
 
   // Finally, shut down our client:

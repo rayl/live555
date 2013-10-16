@@ -143,6 +143,9 @@ Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeE
   } else if (sscanf(paramStr, "npt = %lf -", &start) == 1) {
     rangeStart = start;
     rangeEnd = 0.0;
+  } else if (strcmp(paramStr, "npt=now-") == 0) {
+    rangeStart = 0.0;
+    rangeEnd = 0.0;
   } else {
     return False; // The header is malformed
   }
