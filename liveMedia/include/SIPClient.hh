@@ -68,8 +68,6 @@ public:
 					     char*& username,
 					     char*& password);
 
-  unsigned inviteStatus() const { return fInviteStatusCode; }
-
 protected:
   virtual ~SIPClient();
 
@@ -141,8 +139,6 @@ private:
   Authenticator* fWorkingAuthenticator;
   inviteClientState fInviteClientState;
   char fEventLoopStopFlag;
-  unsigned fInviteStatusCode;
-  // 0: OK; 1: connection failed; 2: stream unavailable
 };
 
 #endif

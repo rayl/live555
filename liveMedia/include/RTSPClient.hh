@@ -207,10 +207,7 @@ private:
       unsigned fUserAgentHeaderStrSize;
   int fInputSocketNum, fOutputSocketNum;
   unsigned fServerAddress;
-  static unsigned fCSeq; // sequence number, used in consecutive requests
-      // Note: it's static, to ensure that it differs if more than one
-      // connection is made to the same server, using the same URL.
-      // Some servers (e.g., DSS) may have problems with this otherwise.
+  unsigned fCSeq; // sequence number, used in consecutive requests
   char* fBaseURL;
   Authenticator fCurrentAuthenticator;
   unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP

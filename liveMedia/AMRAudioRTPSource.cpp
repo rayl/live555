@@ -67,7 +67,7 @@ private:
   unsigned char fILL, fILP;
   unsigned fTOCSize;
   unsigned char* fTOC;
-  unsigned fFrameIndex, fNumSuccessiveSyncedPackets;
+  unsigned fFrameIndex;
   Boolean fIsSynchronized;
 };
 
@@ -216,8 +216,7 @@ RawAMRRTPSource
                          new AMRBufferedPacketFactory),
   fIsWideband(isWideband), fIsOctetAligned(isOctetAligned),
   fIsInterleaved(isInterleaved), fCRCsArePresent(CRCsArePresent),
-  fILL(0), fILP(0), fTOCSize(0), fTOC(NULL), fFrameIndex(0),
-    fNumSuccessiveSyncedPackets(0), fIsSynchronized(false) {
+  fILL(0), fILP(0), fTOCSize(0), fTOC(NULL), fFrameIndex(0), fIsSynchronized(False) {
 }
 
 RawAMRRTPSource::~RawAMRRTPSource() {
@@ -239,13 +238,6 @@ Boolean RawAMRRTPSource
 
   unsigned char* headerStart = packet->data();
   unsigned packetSize = packet->dataSize();
-
-  // First, check whether this packet's RTP timestamp is synchronized:
-  if (RTPSource::hasBeenSynchronizedUsingRTCP()) {
-    ++fNumSuccessiveSyncedPackets;
-  } else {
-    fNumSuccessiveSyncedPackets = 0;
-  }
 
   // There's at least a 1-byte header, containing the CMR:
   if (packetSize < 1) return False;
@@ -427,6 +419,8 @@ private:
   u_int16_t fLastPacketSeqNumForGroup;
   unsigned char* fInputBuffer;
   struct timeval fLastRetrievedPresentationTime;
+  unsigned fNumSuccessiveSyncedFrames;
+  unsigned char fILL;
 };
 
 
@@ -517,7 +511,7 @@ AMRDeinterleavingBuffer
   : fNumChannels(numChannels), fMaxInterleaveGroupSize(maxInterleaveGroupSize),
     fIncomingBankId(0), fIncomingBinMax(0),
     fOutgoingBinMax(0), fNextOutgoingBin(0),
-    fHaveSeenPackets(False) {
+    fHaveSeenPackets(False), fNumSuccessiveSyncedFrames(0), fILL(0) {
   // Use two banks of descriptors - one for incoming, one for outgoing
   fFrames[0] = new FrameDescriptor[fMaxInterleaveGroupSize];
   fFrames[1] = new FrameDescriptor[fMaxInterleaveGroupSize];
@@ -532,16 +526,16 @@ AMRDeinterleavingBuffer::~AMRDeinterleavingBuffer() {
 void AMRDeinterleavingBuffer
 ::deliverIncomingFrame(unsigned frameSize, RawAMRRTPSource* source,
 		       struct timeval presentationTime) {
-  unsigned char const ILL = source->ILL();
+  fILL = source->ILL();
   unsigned char const ILP = source->ILP();
   unsigned frameIndex = source->frameIndex();
   unsigned short packetSeqNum = source->curPacketRTPSeqNum();
 
   // First perform a sanity check on the parameters:
   // (This is overkill, as the source should have already done this.)
-  if (ILP > ILL || frameIndex == 0) {
+  if (ILP > fILL || frameIndex == 0) {
 #ifdef DEBUG
-    fprintf(stderr, "AMRDeinterleavingBuffer::deliverIncomingFrame() param sanity check failed (%d,%d,%d,%d)\n", frameSize, ILL, ILP, frameIndex);
+    fprintf(stderr, "AMRDeinterleavingBuffer::deliverIncomingFrame() param sanity check failed (%d,%d,%d,%d)\n", frameSize, fILL, ILP, frameIndex);
 #endif
     abort();
   }
@@ -559,7 +553,7 @@ void AMRDeinterleavingBuffer
 
   // The input "presentationTime" was that of the first frame-block in this
   // packet.  Update it for the current frame:
-  unsigned uSecIncrement = frameBlockIndex*(ILL+1)*uSecsPerFrame;
+  unsigned uSecIncrement = frameBlockIndex*(fILL+1)*uSecsPerFrame;
   presentationTime.tv_usec += uSecIncrement;
   presentationTime.tv_sec += presentationTime.tv_usec/1000000;
   presentationTime.tv_usec = presentationTime.tv_usec%1000000;
@@ -572,7 +566,7 @@ void AMRDeinterleavingBuffer
     fprintf(stderr, "AMRDeinterleavingBuffer::deliverIncomingFrame(): new interleave group\n");
 #endif
     fHaveSeenPackets = True;
-    fLastPacketSeqNumForGroup = packetSeqNum + ILL - ILP;
+    fLastPacketSeqNumForGroup = packetSeqNum + fILL - ILP;
 
     // Switch the incoming and outgoing banks:
     fIncomingBankId ^= 1;
@@ -584,7 +578,7 @@ void AMRDeinterleavingBuffer
 
   // Now move the incoming frame into the appropriate bin:
   unsigned const binNumber
-    = ((ILP + frameBlockIndex*(ILL+1))*fNumChannels + frameWithinFrameBlock)
+    = ((ILP + frameBlockIndex*(fILL+1))*fNumChannels + frameWithinFrameBlock)
       % fMaxInterleaveGroupSize; // the % is for sanity
 #ifdef DEBUG
   fprintf(stderr, "AMRDeinterleavingBuffer::deliverIncomingFrame(): frameIndex %d (%d,%d) put in bank %d, bin %d (%d): size %d, header 0x%02x, presentationTime %lu.%06ld\n", frameIndex, frameBlockIndex, frameWithinFrameBlock, fIncomingBankId, binNumber, fMaxInterleaveGroupSize, frameSize, frameHeader, presentationTime.tv_sec, presentationTime.tv_usec);
@@ -595,7 +589,7 @@ void AMRDeinterleavingBuffer
   inBin.frameSize = frameSize;
   inBin.frameHeader = frameHeader;
   inBin.presentationTime = presentationTime;
-  inBin.fIsSynchronized = ((RTPSource*)source)->hasBeenSynchronizedUsingRTCP();
+  inBin.fIsSynchronized = ((RTPSource*)source)->RTPSource::hasBeenSynchronizedUsingRTCP();
 
   if (curBuffer == NULL) curBuffer = createNewBuffer();
   fInputBuffer = curBuffer;
@@ -618,7 +612,17 @@ Boolean AMRDeinterleavingBuffer
   unsigned char* fromPtr = outBin.frameData;
   unsigned char fromSize = outBin.frameSize;
   outBin.frameSize = 0; // for the next time this bin is used
-  resultIsSynchronized = outBin.fIsSynchronized;
+  resultIsSynchronized = False; // by default; can be changed by:
+  if (outBin.fIsSynchronized) {
+    // Don't consider the outgoing frame to be synchronized until we've received at least a complete interleave cycle of
+    // synchronized frames.  This ensures that the receiver will be getting all synchronized frames from now on.
+    if (++fNumSuccessiveSyncedFrames > fILL) {
+      resultIsSynchronized = True;
+      fNumSuccessiveSyncedFrames = fILL+1; // prevents overflow
+    }
+  } else {
+    fNumSuccessiveSyncedFrames = 0;
+  } 
 
   // Check whether this frame is missing; if so, return a FT_NO_DATA frame:
   if (fromSize == 0) {

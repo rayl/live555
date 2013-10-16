@@ -45,8 +45,6 @@ char* getSDPDescriptionFromURL(Medium* client, char const* url,
     result = rtspClient->describeURL(url);
   }
 
-  extern unsigned statusCode;
-  statusCode = rtspClient->describeStatus();
   return result;
 }
 

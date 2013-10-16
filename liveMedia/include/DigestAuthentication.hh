@@ -32,6 +32,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class Authenticator {
 public:
   Authenticator();
+  Authenticator(char const* username, char const* password);
   Authenticator(const Authenticator& orig);
   Authenticator& operator=(const Authenticator& rightSide);
   virtual ~Authenticator();

@@ -52,15 +52,13 @@ Boolean RTSPClient::lookupByName(UsageEnvironment& env,
   return True;
 }
 
-unsigned RTSPClient::fCSeq = 0;
-
 RTSPClient::RTSPClient(UsageEnvironment& env,
 		       int verbosityLevel, char const* applicationName,
 		       portNumBits tunnelOverHTTPPortNum)
   : Medium(env),
     fVerbosityLevel(verbosityLevel),
     fTunnelOverHTTPPortNum(tunnelOverHTTPPortNum),
-    fInputSocketNum(-1), fOutputSocketNum(-1), fServerAddress(0),
+    fInputSocketNum(-1), fOutputSocketNum(-1), fServerAddress(0), fCSeq(0),
     fBaseURL(NULL), fTCPStreamIdCount(0), fLastSessionId(NULL),
     fSessionTimeoutParameter(0),
     fServerIsKasenna(False), fKasennaContentType(NULL),

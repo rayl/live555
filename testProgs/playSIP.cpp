@@ -79,8 +79,6 @@ char* getSDPDescriptionFromURL(Medium* client, char const* url,
     result = sipClient->invite(url);
   }
 
-  extern unsigned statusCode;
-  statusCode = sipClient->inviteStatus();
   return result;
 }
 

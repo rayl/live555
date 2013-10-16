@@ -30,6 +30,10 @@ Authenticator::Authenticator() {
   assign(NULL, NULL, NULL, NULL, False);
 }
 
+Authenticator::Authenticator(char const* username, char const* password) {
+  setUsernameAndPassword(username, password);
+}
+
 Authenticator::Authenticator(const Authenticator& orig) {
   assign(orig.realm(), orig.nonce(), orig.username(), orig.password(),
 	 orig.fPasswordIsMD5);

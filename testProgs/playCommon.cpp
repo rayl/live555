@@ -94,7 +94,6 @@ Boolean packetLossCompensate = False;
 Boolean syncStreams = False;
 Boolean generateHintTracks = False;
 unsigned qosMeasurementIntervalMS = 0; // 0 means: Don't output QOS data
-unsigned statusCode = 0;
 
 struct timeval startTime;
 
@@ -1011,10 +1010,7 @@ void beginQOSMeasurement() {
 }
 
 void printQOSData(int exitCode) {
-  if (exitCode != 0 && statusCode == 0) statusCode = 2;
   *env << "begin_QOS_statistics\n";
-  *env << "server_availability\t" << (statusCode == 1 ? 0 : 100) << "\n";
-  *env << "stream_availability\t" << (statusCode == 0 ? 100 : 0) << "\n";
   
   // Print out stats for each active subsession:
   qosMeasurementRecord* curQOSRecord = qosRecordHead;
