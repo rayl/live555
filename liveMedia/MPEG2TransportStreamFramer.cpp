@@ -216,7 +216,7 @@ void MPEG2TransportStreamFramer
     // (This can produce more accurate estimates for wildly VBR streams.)
     double meanPCRPeriod = 0.0;
     if (fTSPCRCount > 0) {
-      meanPCRPeriod=(double)fTSPacketCount/fTSPCRCount;
+      meanPCRPeriod = (double)fTSPacketCount/fTSPCRCount;
       if (fTSPacketCount - pidStatus->lastPacketNum < meanPCRPeriod*PCR_PERIOD_VARIATION_RATIO) return;
     }
 

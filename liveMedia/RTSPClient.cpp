@@ -169,13 +169,12 @@ Boolean RTSPClient::lookupByName(UsageEnvironment& env,
 }
 
 Boolean RTSPClient::parseRTSPURL(UsageEnvironment& env, char const* url,
+				 char*& username, char*& password,
 				 NetAddress& address,
 				 portNumBits& portNum,
 				 char const** urlSuffix) {
   do {
-    // Parse the URL as "rtsp://<address>:<port>/<etc>"
-    // (with ":<port>" and "/<etc>" optional)
-    // Also, skip over any "<username>[:<password>]@" preceding <address>
+    // Parse the URL as "rtsp://[<username>[:<password>]@]<server-address-or-name>[:<port>][/<stream-name>]"
     char const* prefix = "rtsp://";
     unsigned const prefixLength = 7;
     if (_strncasecmp(url, prefix, prefixLength) != 0) {
@@ -187,19 +186,37 @@ Boolean RTSPClient::parseRTSPURL(UsageEnvironment& env, char const* url,
     char parseBuffer[parseBufferSize];
     char const* from = &url[prefixLength];
 
-    // Skip over any "<username>[:<password>]@"
-    // (Note that this code fails if <password> contains '@' or '/', but
-    // given that these characters can also appear in <etc>, there seems to
-    // be no way of unambiguously parsing that situation.)
-    char const* from1 = from;
-    while (*from1 != '\0' && *from1 != '/') {
-      if (*from1 == '@') {
-	from = ++from1;
+    // Check whether "<username>[:<password>]@" occurs next.
+    // We do this by checking whether '@' appears before the end of the URL, or before the first '/'.
+    username = password = NULL; // default return values
+    char const* colonPasswordStart = NULL;
+    char const* p;
+    for (p = from; *p != '\0' && *p != '/'; ++p) {
+      if (*p == ':' && colonPasswordStart == NULL) {
+	colonPasswordStart = p;
+      } else if (*p == '@') {
+	// We found <username> (and perhaps <password>).  Copy them into newly-allocated result strings:
+	if (colonPasswordStart == NULL) colonPasswordStart = p;
+
+	char const* usernameStart = from;
+	unsigned usernameLen = colonPasswordStart - usernameStart;
+	username = new char[usernameLen + 1] ; // allow for the trailing '\0'
+	for (unsigned i = 0; i < usernameLen; ++i) username[i] = usernameStart[i];
+	username[usernameLen] = '\0';
+
+	char const* passwordStart = colonPasswordStart;
+	if (passwordStart < p) ++passwordStart; // skip over the ':'
+	unsigned passwordLen = p - passwordStart;
+	password = new char[passwordLen + 1]; // allow for the trailing '\0'
+	for (unsigned j = 0; j < passwordLen; ++j) password[j] = passwordStart[j];
+	password[passwordLen] = '\0';
+
+	from = p + 1; // skip over the '@'
 	break;
       }
-      ++from1;
     }
 
+    // Next, parse <server-address-or-name>
     char* to = &parseBuffer[0];
     unsigned i;
     for (i = 0; i < parseBufferSize; ++i) {
@@ -241,46 +258,6 @@ Boolean RTSPClient::parseRTSPURL(UsageEnvironment& env, char const* url,
 
     // The remainder of the URL is the suffix:
     if (urlSuffix != NULL) *urlSuffix = from;
-
-    return True;
-  } while (0);
-
-  return False;
-}
-
-Boolean RTSPClient::parseRTSPURLUsernamePassword(char const* url,
-						 char*& username,
-						 char*& password) {
-  username = password = NULL; // by default
-  do {
-    // Parse the URL as "rtsp://<username>[:<password>]@<whatever>"
-    char const* prefix = "rtsp://";
-    unsigned const prefixLength = 7;
-    if (_strncasecmp(url, prefix, prefixLength) != 0) break;
-
-    // Look for the ':' and '@':
-    unsigned usernameIndex = prefixLength;
-    unsigned colonIndex = 0, atIndex = 0;
-    for (unsigned i = usernameIndex; url[i] != '\0' && url[i] != '/'; ++i) {
-      if (url[i] == ':' && colonIndex == 0) {
-	colonIndex = i;
-      } else if (url[i] == '@') {
-	atIndex = i;
-	break; // we're done
-      }
-    }
-    if (atIndex == 0) break; // no '@' found
-
-    char* urlCopy = strDup(url);
-    urlCopy[atIndex] = '\0';
-    if (colonIndex > 0) {
-      urlCopy[colonIndex] = '\0';
-      password = strDup(&urlCopy[colonIndex+1]);
-    } else {
-      password = strDup("");
-    }
-    username = strDup(&urlCopy[usernameIndex]);
-    delete[] urlCopy;
 
     return True;
   } while (0);
@@ -381,12 +358,18 @@ int RTSPClient::openConnection() {
   do {
     // Set up a connection to the server.  Begin by parsing the URL:
 
+    char* username;
+    char* password;
     NetAddress destAddress;
     portNumBits urlPortNum;
     char const* urlSuffix;
-    if (!parseRTSPURL(envir(), fBaseURL, destAddress, urlPortNum, &urlSuffix)) break;
-    portNumBits destPortNum
-      = fTunnelOverHTTPPortNum == 0 ? urlPortNum : fTunnelOverHTTPPortNum;
+    if (!parseRTSPURL(envir(), fBaseURL, username, password, destAddress, urlPortNum, &urlSuffix)) break;
+    portNumBits destPortNum = fTunnelOverHTTPPortNum == 0 ? urlPortNum : fTunnelOverHTTPPortNum;
+    if (username != NULL || password != NULL) {
+      fCurrentAuthenticator.setUsernameAndPassword(username, password);
+      delete[] username;
+      delete[] password;
+    }
 
     // We don't yet have a TCP socket (or we used to have one, but it got closed).  Set it up now.
     fInputSocketNum = fOutputSocketNum = setupStreamSocket(envir(), 0);
@@ -632,10 +615,16 @@ unsigned RTSPClient::sendRequest(RequestRecord* request) {
       sprintf(extraHeaders, "%s%s", transportStr, sessionStr);
       delete[] transportStr; delete[] sessionStr;
     } else if (strcmp(request->commandName(), "GET") == 0 || strcmp(request->commandName(), "POST") == 0) {
+      // We will be sending a HTTP (not a RTSP) request.
+      // Begin by re-parsing our RTSP URL, just to get the stream name, which we'll use as our 'cmdURL' in the subsequent request:
+      char* username;
+      char* password;
       NetAddress destAddress;
       portNumBits urlPortNum;
-      if (!parseRTSPURL(envir(), fBaseURL, destAddress, urlPortNum, (char const**)&cmdURL)) break;
+      if (!parseRTSPURL(envir(), fBaseURL, username, password, destAddress, urlPortNum, (char const**)&cmdURL)) break;
       if (cmdURL[0] == '\0') cmdURL = (char*)"/";
+      delete[] username;
+      delete[] password;
 
       protocolStr = "HTTP/1.0";
 
@@ -661,10 +650,8 @@ unsigned RTSPClient::sendRequest(RequestRecord* request) {
 	extraHeaders = new char[extraHeadersSize];
 	extraHeadersWereAllocated = True;
 	sprintf(extraHeaders, extraHeadersFmt,
-		fSessionCookie);
+	fSessionCookie);
       } else { // "POST"
-	protocolStr = "HTTP/1.0";
-	
 	char const* const extraHeadersFmt =
 	  "x-sessioncookie: %s\r\n"
 	  "Content-Type: application/x-rtsp-tunnelled\r\n"
@@ -1694,8 +1681,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
 char* RTSPClient::describeWithPassword(char const* url,
 				       char const* username, char const* password,
 				       Boolean allowKasennaProtocol, int timeout) {
-  Authenticator authenticator;
-  authenticator.setUsernameAndPassword(username, password);
+  Authenticator authenticator(username, password);
   return describeURL(url, &authenticator, allowKasennaProtocol, timeout);
 }
 
@@ -1710,16 +1696,14 @@ char* RTSPClient::sendOptionsCmd(char const* url,
     // (and no username,password pair was supplied separately):
     if (username == NULL && password == NULL
 	&& parseRTSPURLUsernamePassword(url, username, password)) {
-      Authenticator newAuthenticator;
-      newAuthenticator.setUsernameAndPassword(username, password);
+      Authenticator newAuthenticator(username,password);
       result = sendOptionsCmd(url, username, password, &newAuthenticator, timeout);
       delete[] username; delete[] password; // they were dynamically allocated
       return result;
     } else if (username != NULL && password != NULL) {
       // Use the separately supplied username and password:
-      authenticator = new Authenticator;
+      authenticator = new Authenticator(username,password);
       haveAllocatedAuthenticator = True;
-      authenticator->setUsernameAndPassword(username, password);
       
       result = sendOptionsCmd(url, username, password, authenticator, timeout);
       if (result != NULL) return result; // We are already authorized
@@ -1774,8 +1758,7 @@ Boolean RTSPClient::announceSDPDescription(char const* url,
 Boolean RTSPClient
 ::announceWithPassword(char const* url, char const* sdpDescription,
 		       char const* username, char const* password, int timeout) {
-  Authenticator authenticator;
-  authenticator.setUsernameAndPassword(username, password);
+  Authenticator authenticator(username,password);
   return announceSDPDescription(url, sdpDescription, &authenticator, timeout);
 }
 
@@ -1899,6 +1882,46 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
   envir().taskScheduler().doEventLoop(&fWatchVariableForSyncInterface);
   delete[] fResultString;
   return fResultCode == 0;
+}
+
+Boolean RTSPClient::parseRTSPURLUsernamePassword(char const* url,
+						 char*& username,
+						 char*& password) {
+  username = password = NULL; // by default
+  do {
+    // Parse the URL as "rtsp://<username>[:<password>]@<whatever>"
+    char const* prefix = "rtsp://";
+    unsigned const prefixLength = 7;
+    if (_strncasecmp(url, prefix, prefixLength) != 0) break;
+
+    // Look for the ':' and '@':
+    unsigned usernameIndex = prefixLength;
+    unsigned colonIndex = 0, atIndex = 0;
+    for (unsigned i = usernameIndex; url[i] != '\0' && url[i] != '/'; ++i) {
+      if (url[i] == ':' && colonIndex == 0) {
+	colonIndex = i;
+      } else if (url[i] == '@') {
+	atIndex = i;
+	break; // we're done
+      }
+    }
+    if (atIndex == 0) break; // no '@' found
+
+    char* urlCopy = strDup(url);
+    urlCopy[atIndex] = '\0';
+    if (colonIndex > 0) {
+      urlCopy[colonIndex] = '\0';
+      password = strDup(&urlCopy[colonIndex+1]);
+    } else {
+      password = strDup("");
+    }
+    username = strDup(&urlCopy[usernameIndex]);
+    delete[] urlCopy;
+
+    return True;
+  } while (0);
+
+  return False;
 }
 
 void RTSPClient::responseHandlerForSyncInterface(RTSPClient* rtspClient, int responseCode, char* responseString) {

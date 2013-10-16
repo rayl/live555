@@ -310,8 +310,7 @@ int main(int argc, char** argv) {
 	}
       }
 
-      ourAuthenticator = new Authenticator;
-      ourAuthenticator->setUsernameAndPassword(username, password);
+      ourAuthenticator = new Authenticator(username,password);
       break;
     }
 

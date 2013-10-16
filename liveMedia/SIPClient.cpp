@@ -606,8 +606,7 @@ char* SIPClient::inviteWithPassword(char const* url, char const* username,
   delete[] (char*)fUserName; fUserName = strDup(username);
   fUserNameSize = strlen(fUserName);
 
-  Authenticator authenticator;
-  authenticator.setUsernameAndPassword(username, password);
+  Authenticator authenticator(username, password);
   char* inviteResult = invite(url, &authenticator);
   if (inviteResult != NULL) {
     // We are already authorized

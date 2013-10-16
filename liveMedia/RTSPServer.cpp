@@ -474,30 +474,40 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
 #endif
     // The request was not (valid) RTSP, but check for a special case: HTTP commands (for setting up RTSP-over-HTTP tunneling):
     char sessionCookie[RTSP_PARAM_STRING_MAX];
-    if (parseHTTPRequestString(cmdName, sizeof cmdName, sessionCookie, sizeof sessionCookie)) {
+    char acceptStr[RTSP_PARAM_STRING_MAX];
+    if (parseHTTPRequestString(cmdName, sizeof cmdName,
+			       urlSuffix, sizeof urlPreSuffix,
+			       sessionCookie, sizeof sessionCookie,
+			       acceptStr, sizeof acceptStr)) {
 #ifdef DEBUG
-      fprintf(stderr, "parseHTTPRequestString() succeeded, returning cmdName \"%s\", sessionCookie \"%s\"\n", cmdName, sessionCookie);
+      fprintf(stderr, "parseHTTPRequestString() succeeded, returning cmdName \"%s\", urlSuffix \"%s\", sessionCookie \"%s\", acceptStr \"%s\"\n", cmdName, urlSuffix, sessionCookie, acceptStr);
 #endif
       // Check that the HTTP command is valid for RTSP-over-HTTP tunneling: There must be a 'session cookie'.
-      Boolean isValidHTTPTunnelingCmd = True;
+      Boolean isValidHTTPCmd = True;
       if (sessionCookie[0] == '\0') {
-	isValidHTTPTunnelingCmd = False;
+	// There was no "x-sessionCookie:" header.  If there was an "Accept: application/x-rtsp-tunnelled" header,
+	// then this is a bad tunneling request.  Otherwise, assume that it's an attempt to access the stream via HTTP.
+	if (strcmp(acceptStr, "application/x-rtsp-tunnelled") == 0) {
+	  isValidHTTPCmd = False;
+	} else {
+	  handleHTTPCmd_StreamingGET(urlSuffix, (char const*)fRequestBuffer);
+	}
       } else if (strcmp(cmdName, "GET") == 0) {
-	handleHTTPCmd_GET(sessionCookie);
+	handleHTTPCmd_TunnelingGET(sessionCookie);
       } else if (strcmp(cmdName, "POST") == 0) {
 	// We might have received additional data following the HTTP "POST" command - i.e., the first Base64-encoded RTSP command.
 	// Check for this, and handle it if it exists:
 	unsigned char const* extraData = fLastCRLF+4;
 	unsigned extraDataSize = &fRequestBuffer[fRequestBytesAlreadySeen] - extraData;
-	if (handleHTTPCmd_POST(sessionCookie, extraData, extraDataSize)) {
+	if (handleHTTPCmd_TunnelingPOST(sessionCookie, extraData, extraDataSize)) {
 	  // We don't respond to the "POST" command, and we go away:
 	  delete this;
 	  return;
 	}
       } else {
-	isValidHTTPTunnelingCmd = False;
+	isValidHTTPCmd = False;
       }
-      if (!isValidHTTPTunnelingCmd) {
+      if (!isValidHTTPCmd) {
 	handleHTTPCmd_notSupported();
       }
     } else {
@@ -1231,7 +1241,9 @@ static void lookForHeader(char const* headerName, char const* source, unsigned s
 }
 
 Boolean RTSPServer::RTSPClientSession::parseHTTPRequestString(char* resultCmdName, unsigned resultCmdNameMaxSize,
-							      char* sessionCookie, unsigned sessionCookieMaxSize) {
+							      char* urlSuffix, unsigned urlSuffixMaxSize,
+							      char* sessionCookie, unsigned sessionCookieMaxSize,
+							      char* acceptStr, unsigned acceptStrMaxSize) {
   // Check for the limited HTTP requests that we expect for specifying RTSP-over-HTTP tunneling.
   // This parser is currently rather dumb; it should be made smarter #####
   char const* reqStr = (char const*)fRequestBuffer;
@@ -1263,8 +1275,20 @@ Boolean RTSPServer::RTSPClientSession::parseHTTPRequestString(char* resultCmdNam
   }
   if (!parseSucceeded) return False;
 
+  // Get the 'URL suffix' that occurred before this:
+  unsigned k = i-6;
+  while (k > 0 && reqStr[k] == ' ') --k; // back up over white space
+  unsigned j = k;
+  while (j > 0 && reqStr[j] != ' ' && reqStr[j] != '/') --j;
+  // The URL suffix is in position (j,k]:
+  if (k - j + 1 > urlSuffixMaxSize) return False; // there's no room> 
+  unsigned n = 0;
+  while (++j <= k) urlSuffix[n++] = reqStr[j];
+  urlSuffix[n] = '\0';
+
   // Look for various headers that we're interested in:
   lookForHeader("x-sessioncookie", &reqStr[i], reqStrSize-i, sessionCookie, sessionCookieMaxSize);
+  lookForHeader("Accept", &reqStr[i], reqStrSize-i, acceptStr, acceptStrMaxSize);
 
   return True;
 }
@@ -1275,7 +1299,7 @@ void RTSPServer::RTSPClientSession::handleHTTPCmd_notSupported() {
 	   dateHeader());
 }
 
-void RTSPServer::RTSPClientSession::handleHTTPCmd_GET(char const* sessionCookie) {
+void RTSPServer::RTSPClientSession::handleHTTPCmd_TunnelingGET(char const* sessionCookie) {
   // Record ourself as having this 'session cookie', so that a subsequent HTTP "POST" command (with the same 'session cookie')
   // can find us:
   if (fOurServer.fClientSessionsForHTTPTunneling == NULL) {
@@ -1297,7 +1321,7 @@ void RTSPServer::RTSPClientSession::handleHTTPCmd_GET(char const* sessionCookie)
 }
 
 Boolean RTSPServer::RTSPClientSession
-::handleHTTPCmd_POST(char const* sessionCookie, unsigned char const* extraData, unsigned extraDataSize) {
+::handleHTTPCmd_TunnelingPOST(char const* sessionCookie, unsigned char const* extraData, unsigned extraDataSize) {
   // Use the "sessionCookie" string to look up the separate "RTSPClientSession" object that should have been used to handle
   // an earlier HTTP "GET" request:
   RTSPServer::RTSPClientSession* prevClientSession
@@ -1316,6 +1340,11 @@ Boolean RTSPServer::RTSPClientSession
   prevClientSession->changeClientInputSocket(fClientInputSocket, extraData, extraDataSize);
   fClientInputSocket = fClientOutputSocket = -1; // so the socket doesn't get closed when we get deleted
   return True;
+}
+
+void RTSPServer::RTSPClientSession::handleHTTPCmd_StreamingGET(char const* /*urlSuffix*/, char const* /*fullRequestStr*/) {
+  // By default, we don't support requests to access streams via HTTP:
+  handleHTTPCmd_notSupported();
 }
 
 static Boolean parseAuthorizationHeader(char const* buf,
