@@ -565,32 +565,51 @@ unsigned H264VideoStreamParser::parse() {
       save4Bytes(0x00000001);
     }
 
-    // Then save everything up until the next 0x00000001 (4 bytes) or 0x000001 (4 bytes).
+    // Then save everything up until the next 0x00000001 (4 bytes) or 0x000001 (3 bytes), or we hit EOF.
     // Also make note of the first byte, because it contains the "nal_unit_type": 
-    u_int32_t next4Bytes = test4Bytes();
-    u_int8_t firstByte = next4Bytes>>24;
-    u_int8_t nal_ref_idc = (firstByte&0x60)>>5;
-    u_int8_t nal_unit_type = firstByte&0x1F;
-    while (next4Bytes != 0x00000001 && (next4Bytes&0xFFFFFF00) != 0x00000100) {
-      // We save at least some of "next4Bytes".
-      if ((unsigned)(next4Bytes&0xFF) > 1) {
-        // Common case: 0x00000001 or 0x000001 definitely doesn't begin anywhere in "next4Bytes", so we save all of it:
-        save4Bytes(next4Bytes);
+    u_int8_t firstByte;
+    if (haveSeenEOF()) {
+      // We hit EOF the last time that we tried to parse this data,
+      // so we know that the remaining unparsed data forms a complete NAL unit:
+      unsigned remainingDataSize = totNumValidBytes() - curOffset();
+      if (remainingDataSize == 0) (void)get1Byte(); // forces another read, which will cause EOF to get handled for real this time
+#ifdef DEBUG
+      fprintf(stderr, "This NAL unit (%d bytes) ends with EOF\n", remainingDataSize);
+#endif
+      if (remainingDataSize == 0) return 0;
+      firstByte = get1Byte();
+      saveByte(firstByte);
+      
+      while (--remainingDataSize > 0) {
+	saveByte(get1Byte());
+      }
+    } else {
+      u_int32_t next4Bytes = test4Bytes();
+      firstByte = next4Bytes>>24;
+      while (next4Bytes != 0x00000001 && (next4Bytes&0xFFFFFF00) != 0x00000100) {
+	// We save at least some of "next4Bytes".
+	if ((unsigned)(next4Bytes&0xFF) > 1) {
+	  // Common case: 0x00000001 or 0x000001 definitely doesn't begin anywhere in "next4Bytes", so we save all of it:
+	  save4Bytes(next4Bytes);
+	  skipBytes(4);
+	} else {
+	  // Save the first byte, and continue testing the rest:
+	  saveByte(next4Bytes>>24);
+	  skipBytes(1);
+	}
+	next4Bytes = test4Bytes();
+      }
+      // Assert: next4Bytes starts with 0x00000001 or 0x000001, and we've saved all previous bytes (forming a complete NAL unit).
+      // Skip over these remaining bytes, up until the start of the next NAL unit:
+      if (next4Bytes == 0x00000001) {
 	skipBytes(4);
       } else {
-        // Save the first byte, and continue testing the rest:
-        saveByte(next4Bytes>>24);
-	skipBytes(1);
+	skipBytes(3);
       }
-      next4Bytes = test4Bytes();
     }
-    // Assert: next4Bytes starts with 0x00000001 or 0x000001, and we've saved all previous bytes (forming a complete NAL unit).
-    // Skip over these remaining bytes, up until the start of the next NAL unit:
-    if (next4Bytes == 0x00000001) {
-      skipBytes(4);
-    } else {
-      skipBytes(3);
-    }
+
+    u_int8_t nal_ref_idc = (firstByte&0x60)>>5;
+    u_int8_t nal_unit_type = firstByte&0x1F;
 #ifdef DEBUG
     fprintf(stderr, "Parsed %d-byte NAL-unit (nal_ref_idc: %d, nal_unit_type: %d (\"%s\"))\n",
 	    curFrameSize()-fOutputStartCodeSize, nal_ref_idc, nal_unit_type, nal_unit_type_description[nal_unit_type]);
@@ -641,107 +660,112 @@ unsigned H264VideoStreamParser::parse() {
     // ends the current 'access unit'.  We need this information to figure out when to increment "fPresentationTime".
     // (RTP streamers also need to know this in order to figure out whether or not to set the "M" bit.)
     Boolean thisNALUnitEndsAccessUnit = False; // until we learn otherwise 
-    Boolean const isVCL = nal_unit_type <= 5 && nal_unit_type > 0; // Would need to include type 20 for SVC and MVC #####
-    if (isVCL) {
-      u_int32_t first4BytesOfNextNALUnit = test4Bytes();
-      u_int8_t firstByteOfNextNALUnit = first4BytesOfNextNALUnit>>24;
-      u_int8_t next_nal_ref_idc = (firstByteOfNextNALUnit&0x60)>>5;
-      u_int8_t next_nal_unit_type = firstByteOfNextNALUnit&0x1F;
-      if (next_nal_unit_type >= 6) {
-	// The next NAL unit is not a VCL; therefore, we assume that this NAL unit ends the current 'access unit':
+    if (haveSeenEOF()) {
+      // There is no next NAL unit, so we assume that this one ends the current 'access unit':
+      thisNALUnitEndsAccessUnit = True;
+    } else {
+      Boolean const isVCL = nal_unit_type <= 5 && nal_unit_type > 0; // Would need to include type 20 for SVC and MVC #####
+      if (isVCL) {
+	u_int32_t first4BytesOfNextNALUnit = test4Bytes();
+	u_int8_t firstByteOfNextNALUnit = first4BytesOfNextNALUnit>>24;
+	u_int8_t next_nal_ref_idc = (firstByteOfNextNALUnit&0x60)>>5;
+	u_int8_t next_nal_unit_type = firstByteOfNextNALUnit&0x1F;
+	if (next_nal_unit_type >= 6) {
+	  // The next NAL unit is not a VCL; therefore, we assume that this NAL unit ends the current 'access unit':
 #ifdef DEBUG
-	fprintf(stderr, "\t(The next NAL unit is not a VCL)\n");
-#endif
-	thisNALUnitEndsAccessUnit = True;
-      } else {
-	// The next NAL unit is also a VLC.  We need to examine it a little to figure out if it's a different 'access unit'.
-	// (We use many of the criteria described in section 7.4.1.2.4 of the H.264 specification.)
-	Boolean IdrPicFlag = nal_unit_type == 5;
-	Boolean next_IdrPicFlag = next_nal_unit_type == 5;
-	if (next_IdrPicFlag != IdrPicFlag) {
-	  // IdrPicFlag differs in value
-#ifdef DEBUG
-	  fprintf(stderr, "\t(IdrPicFlag differs in value)\n");
+	  fprintf(stderr, "\t(The next NAL unit is not a VCL)\n");
 #endif
 	  thisNALUnitEndsAccessUnit = True;
-	} else if (next_nal_ref_idc != nal_ref_idc && next_nal_ref_idc*nal_ref_idc == 0) {
-	  // nal_ref_idc differs in value with one of the nal_ref_idc values being equal to 0
+	} else {
+	  // The next NAL unit is also a VLC.  We need to examine it a little to figure out if it's a different 'access unit'.
+	  // (We use many of the criteria described in section 7.4.1.2.4 of the H.264 specification.)
+	  Boolean IdrPicFlag = nal_unit_type == 5;
+	  Boolean next_IdrPicFlag = next_nal_unit_type == 5;
+	  if (next_IdrPicFlag != IdrPicFlag) {
+	    // IdrPicFlag differs in value
 #ifdef DEBUG
-	  fprintf(stderr, "\t(nal_ref_idc differs in value with one of the nal_ref_idc values being equal to 0)\n");
-#endif
-	  thisNALUnitEndsAccessUnit = True;
-	} else if ((nal_unit_type == 1 || nal_unit_type == 2 || nal_unit_type == 5)
-		   && (next_nal_unit_type == 1 || next_nal_unit_type == 2 || next_nal_unit_type == 5)) {
-	  // Both this and the next NAL units begin with a "slice_header".
-	  // Parse this (for each), to get parameters that we can compare:
-
-	  // Current NAL unit's "slice_header":
-	  unsigned frame_num, pic_parameter_set_id, idr_pic_id;
-	  Boolean field_pic_flag, bottom_field_flag;
-	  analyze_slice_header(fStartOfFrame + fOutputStartCodeSize, fTo, nal_unit_type,
-			       frame_num, pic_parameter_set_id, idr_pic_id, field_pic_flag, bottom_field_flag);
-	  
-	  // Next NAL unit's "slice_header":
-#ifdef DEBUG
-	  fprintf(stderr, "    Next NAL unit's slice_header:\n");
-#endif
-	  u_int8_t next_slice_header[NUM_NEXT_SLICE_HEADER_BYTES_TO_ANALYZE];
-	  testBytes(next_slice_header, sizeof next_slice_header);
-	  unsigned next_frame_num, next_pic_parameter_set_id, next_idr_pic_id;
-	  Boolean next_field_pic_flag, next_bottom_field_flag;
-	  analyze_slice_header(next_slice_header, &next_slice_header[sizeof next_slice_header], next_nal_unit_type,
-			       next_frame_num, next_pic_parameter_set_id, next_idr_pic_id, next_field_pic_flag, next_bottom_field_flag);
-
-	  if (next_frame_num != frame_num) {
-	    // frame_num differs in value
-#ifdef DEBUG
-	    fprintf(stderr, "\t(frame_num differs in value)\n");
+	    fprintf(stderr, "\t(IdrPicFlag differs in value)\n");
 #endif
 	    thisNALUnitEndsAccessUnit = True;
-	  } else if (next_pic_parameter_set_id != pic_parameter_set_id) {
-	    // pic_parameter_set_id differs in value
+	  } else if (next_nal_ref_idc != nal_ref_idc && next_nal_ref_idc*nal_ref_idc == 0) {
+	    // nal_ref_idc differs in value with one of the nal_ref_idc values being equal to 0
 #ifdef DEBUG
-	    fprintf(stderr, "\t(pic_parameter_set_id differs in value)\n");
+	    fprintf(stderr, "\t(nal_ref_idc differs in value with one of the nal_ref_idc values being equal to 0)\n");
 #endif
 	    thisNALUnitEndsAccessUnit = True;
-	  } else if (next_field_pic_flag != field_pic_flag) {
-	    // field_pic_flag differs in value
+	  } else if ((nal_unit_type == 1 || nal_unit_type == 2 || nal_unit_type == 5)
+		     && (next_nal_unit_type == 1 || next_nal_unit_type == 2 || next_nal_unit_type == 5)) {
+	    // Both this and the next NAL units begin with a "slice_header".
+	    // Parse this (for each), to get parameters that we can compare:
+	    
+	    // Current NAL unit's "slice_header":
+	    unsigned frame_num, pic_parameter_set_id, idr_pic_id;
+	    Boolean field_pic_flag, bottom_field_flag;
+	    analyze_slice_header(fStartOfFrame + fOutputStartCodeSize, fTo, nal_unit_type,
+				 frame_num, pic_parameter_set_id, idr_pic_id, field_pic_flag, bottom_field_flag);
+	    
+	    // Next NAL unit's "slice_header":
 #ifdef DEBUG
-	    fprintf(stderr, "\t(field_pic_flag differs in value)\n");
+	    fprintf(stderr, "    Next NAL unit's slice_header:\n");
 #endif
-	    thisNALUnitEndsAccessUnit = True;
-	  } else if (next_bottom_field_flag != bottom_field_flag) {
-	    // bottom_field_flag differs in value
+	    u_int8_t next_slice_header[NUM_NEXT_SLICE_HEADER_BYTES_TO_ANALYZE];
+	    testBytes(next_slice_header, sizeof next_slice_header);
+	    unsigned next_frame_num, next_pic_parameter_set_id, next_idr_pic_id;
+	    Boolean next_field_pic_flag, next_bottom_field_flag;
+	    analyze_slice_header(next_slice_header, &next_slice_header[sizeof next_slice_header], next_nal_unit_type,
+				 next_frame_num, next_pic_parameter_set_id, next_idr_pic_id, next_field_pic_flag, next_bottom_field_flag);
+	    
+	    if (next_frame_num != frame_num) {
+	      // frame_num differs in value
 #ifdef DEBUG
-	    fprintf(stderr, "\t(bottom_field_flag differs in value)\n");
+	      fprintf(stderr, "\t(frame_num differs in value)\n");
 #endif
-	    thisNALUnitEndsAccessUnit = True;
-	  } else if (next_IdrPicFlag == 1 && next_idr_pic_id != idr_pic_id) {
-	    // IdrPicFlag is equal to 1 for both and idr_pic_id differs in value
-	    // Note: We already know that IdrPicFlag is the same for both.
+	      thisNALUnitEndsAccessUnit = True;
+	    } else if (next_pic_parameter_set_id != pic_parameter_set_id) {
+	      // pic_parameter_set_id differs in value
 #ifdef DEBUG
-	    fprintf(stderr, "\t(IdrPicFlag is equal to 1 for both and idr_pic_id differs in value)\n");
+	      fprintf(stderr, "\t(pic_parameter_set_id differs in value)\n");
 #endif
-	    thisNALUnitEndsAccessUnit = True;
+	      thisNALUnitEndsAccessUnit = True;
+	    } else if (next_field_pic_flag != field_pic_flag) {
+	      // field_pic_flag differs in value
+#ifdef DEBUG
+	      fprintf(stderr, "\t(field_pic_flag differs in value)\n");
+#endif
+	      thisNALUnitEndsAccessUnit = True;
+	    } else if (next_bottom_field_flag != bottom_field_flag) {
+	      // bottom_field_flag differs in value
+#ifdef DEBUG
+	      fprintf(stderr, "\t(bottom_field_flag differs in value)\n");
+#endif
+	      thisNALUnitEndsAccessUnit = True;
+	    } else if (next_IdrPicFlag == 1 && next_idr_pic_id != idr_pic_id) {
+	      // IdrPicFlag is equal to 1 for both and idr_pic_id differs in value
+	      // Note: We already know that IdrPicFlag is the same for both.
+#ifdef DEBUG
+	      fprintf(stderr, "\t(IdrPicFlag is equal to 1 for both and idr_pic_id differs in value)\n");
+#endif
+	      thisNALUnitEndsAccessUnit = True;
+	    }
 	  }
 	}
       }
-
-      if (thisNALUnitEndsAccessUnit) {
+    }
+	
+    if (thisNALUnitEndsAccessUnit) {
 #ifdef DEBUG
-	fprintf(stderr, "\t*****This NAL unit ends the current access unit*****\n");
+      fprintf(stderr, "*****This NAL unit ends the current access unit*****\n");
 #endif
-	usingSource()->fPictureEndMarker = True;
-	++usingSource()->fPictureCount;
+      usingSource()->fPictureEndMarker = True;
+      ++usingSource()->fPictureCount;
 
-	// Note that the presentation time for the next NAL unit will be different:
-	struct timeval& nextPT = usingSource()->fNextPresentationTime; // alias
-	nextPT = usingSource()->fPresentationTime;
-	double nextFraction = nextPT.tv_usec/1000000.0 + 1/usingSource()->fFrameRate;
-	unsigned nextSecsIncrement = (long)nextFraction;
-	nextPT.tv_sec += (long)nextSecsIncrement;
-	nextPT.tv_usec = (long)((nextFraction - nextSecsIncrement)*1000000);
-      }
+      // Note that the presentation time for the next NAL unit will be different:
+      struct timeval& nextPT = usingSource()->fNextPresentationTime; // alias
+      nextPT = usingSource()->fPresentationTime;
+      double nextFraction = nextPT.tv_usec/1000000.0 + 1/usingSource()->fFrameRate;
+      unsigned nextSecsIncrement = (long)nextFraction;
+      nextPT.tv_sec += (long)nextSecsIncrement;
+      nextPT.tv_usec = (long)((nextFraction - nextSecsIncrement)*1000000);
     }
     setParseState();
 

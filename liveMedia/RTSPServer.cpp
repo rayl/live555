@@ -452,7 +452,7 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
     if (strcmp(cmdName, "OPTIONS") == 0) {
       handleCmd_OPTIONS(cseq);
     } else if (strcmp(cmdName, "DESCRIBE") == 0) {
-      handleCmd_DESCRIBE(cseq, urlSuffix, (char const*)fRequestBuffer);
+      handleCmd_DESCRIBE(cseq, urlPreSuffix, urlSuffix, (char const*)fRequestBuffer);
     } else if (strcmp(cmdName, "SETUP") == 0) {
       handleCmd_SETUP(cseq, urlPreSuffix, urlSuffix, (char const*)fRequestBuffer);
     } else if (strcmp(cmdName, "TEARDOWN") == 0
@@ -460,8 +460,7 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
 	       || strcmp(cmdName, "PAUSE") == 0
 	       || strcmp(cmdName, "GET_PARAMETER") == 0
 	       || strcmp(cmdName, "SET_PARAMETER") == 0) {
-      handleCmd_withinSession(cmdName, urlPreSuffix, urlSuffix, cseq,
-			      (char const*)fRequestBuffer);
+      handleCmd_withinSession(cmdName, urlPreSuffix, urlSuffix, cseq, (char const*)fRequestBuffer);
     } else {
       handleCmd_notSupported(cseq);
     }
@@ -570,25 +569,36 @@ void RTSPServer::RTSPClientSession::handleCmd_OPTIONS(char const* cseq) {
 }
 
 void RTSPServer::RTSPClientSession
-::handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix,
+::handleCmd_DESCRIBE(char const* cseq,
+		     char const* urlPreSuffix, char const* urlSuffix,
 		     char const* fullRequestStr) {
   char* sdpDescription = NULL;
   char* rtspURL = NULL;
   do {
-      if (!authenticationOK("DESCRIBE", cseq, urlSuffix, fullRequestStr))
-          break;
-
+    char urlTotalSuffix[RTSP_PARAM_STRING_MAX];
+    if (strlen(urlPreSuffix) + strlen(urlSuffix) + 2 > sizeof urlTotalSuffix) {
+      handleCmd_bad(cseq);
+      break;
+    }
+    urlTotalSuffix[0] = '\0';
+    if (urlPreSuffix[0] != '\0') {
+      strcat(urlTotalSuffix, urlPreSuffix);
+      strcat(urlTotalSuffix, "/");
+    }
+    strcat(urlTotalSuffix, urlSuffix);
+      
+    if (!authenticationOK("DESCRIBE", cseq, urlTotalSuffix, fullRequestStr)) break;
+    
     // We should really check that the request contains an "Accept:" #####
     // for "application/sdp", because that's what we're sending back #####
-
-    // Begin by looking up the "ServerMediaSession" object for the
-    // specified "urlSuffix":
-    ServerMediaSession* session = fOurServer.lookupServerMediaSession(urlSuffix);
+    
+    // Begin by looking up the "ServerMediaSession" object for the specified "urlTotalSuffix":
+    ServerMediaSession* session = fOurServer.lookupServerMediaSession(urlTotalSuffix);
     if (session == NULL) {
       handleCmd_notFound(cseq);
       break;
     }
-
+    
     // Then, assemble a SDP description for this session:
     sdpDescription = session->generateSDPDescription();
     if (sdpDescription == NULL) {
@@ -600,15 +610,15 @@ void RTSPServer::RTSPClientSession
 	       "%s\r\n",
 	       cseq,
 	       dateHeader());
-     break;
+      break;
     }
     unsigned sdpDescriptionSize = strlen(sdpDescription);
-
+    
     // Also, generate our RTSP URL, for the "Content-Base:" header
     // (which is necessary to ensure that the correct URL gets used in
     // subsequent "SETUP" requests).
     rtspURL = fOurServer.rtspURL(session, fClientInputSocket);
-
+    
     snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
 	     "RTSP/1.0 200 OK\r\nCSeq: %s\r\n"
 	     "%s"
@@ -726,8 +736,7 @@ void RTSPServer::RTSPClientSession
     // Set up this session's state.
 
     // Look up the "ServerMediaSession" object for the specified stream:
-    if (streamName[0] != '\0' ||
-	fOurServer.lookupServerMediaSession("") != NULL) { // normal case
+    if (streamName[0] != '\0' || fOurServer.lookupServerMediaSession("") != NULL) { // normal case
     } else { // weird case: there was no track id in the URL
       streamName = urlSuffix;
       trackId = NULL;

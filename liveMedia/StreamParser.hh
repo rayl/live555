@@ -97,6 +97,8 @@ protected: // we're a virtual base class
 
   unsigned& totNumValidBytes() { return fTotNumValidBytes; }
 
+  Boolean haveSeenEOF() const { return fHaveSeenEOF; }
+
 private:
   unsigned char* curBank() { return fCurBank; }
   unsigned char* nextToParse() { return &curBank()[fCurParserIndex]; }
@@ -115,11 +117,15 @@ private:
 				unsigned numTruncatedBytes,
 				struct timeval presentationTime,
 				unsigned durationInMicroseconds);
+  void afterGettingBytes1(unsigned numBytesRead, struct timeval presentationTime);
+
+  static void onInputClosure(void* clientData);
+  void onInputClosure1();
 
 private:
   FramedSource* fInputSource; // should be a byte-stream source??
-  FramedSource::onCloseFunc* fOnInputCloseFunc;
-  void* fOnInputCloseClientData;
+  FramedSource::onCloseFunc* fClientOnInputCloseFunc;
+  void* fClientOnInputCloseClientData;
   clientContinueFunc* fClientContinueFunc;
   void* fClientContinueClientData;
 
@@ -138,6 +144,11 @@ private:
 
   // The total number of valid bytes stored in the current bank:
   unsigned fTotNumValidBytes; // <= BANK_SIZE
+
+  // Whether we have seen EOF on the input source:
+  Boolean fHaveSeenEOF;
+
+  struct timeval fLastSeenPresentationTime; // hack used for EOF handling
 };
 
 #endif

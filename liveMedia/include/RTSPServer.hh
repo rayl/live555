@@ -133,7 +133,8 @@ public: // should be protected, but some old compilers complain otherwise
     virtual void handleCmd_notFound(char const* cseq);
     virtual void handleCmd_unsupportedTransport(char const* cseq);
     virtual void handleCmd_OPTIONS(char const* cseq);
-    virtual void handleCmd_DESCRIBE(char const* cseq, char const* urlSuffix,
+    virtual void handleCmd_DESCRIBE(char const* cseq,
+				    char const* urlPreSuffix, char const* urlSuffix,
 				    char const* fullRequestStr);
     virtual void handleCmd_SETUP(char const* cseq,
 				 char const* urlPreSuffix, char const* urlSuffix,

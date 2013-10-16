@@ -1084,7 +1084,11 @@ Boolean RTSPClient::handleGET_PARAMETERResponse(char const* parameterName, char*
       unsigned parameterNameLen = strlen(parameterName);
       // ASSERT: parameterNameLen >= 2;
       parameterNameLen -= 2; // because of the trailing \r\n
-      if (_strncasecmp(resultValueString, parameterName, parameterNameLen) != 0) break; // parameter name wasn't in the output
+      if (_strncasecmp(resultValueString, parameterName, parameterNameLen) != 0) {
+	// The parameter name wasn't in the output, so just return an empty string:
+	resultValueString[0] = '\0';
+	return True;
+      }
       resultValueString += parameterNameLen;
       if (resultValueString[0] == ':') ++resultValueString;
       while (resultValueString[0] == ' ' || resultValueString[0] == '\t') ++resultValueString;

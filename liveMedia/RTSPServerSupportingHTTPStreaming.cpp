@@ -66,7 +66,7 @@ static char const* lastModifiedHeader(char const* fileName) {
     // Failed to 'stat' the file; return an empty string
     buf[0] = '\0';
   } else {
-    strftime(buf, sizeof buf, "Last-Modified: %a, %b %d %Y %H:%M:%S GMT\r\n", gmtime(&sb.st_mtime));
+    strftime(buf, sizeof buf, "Last-Modified: %a, %b %d %Y %H:%M:%S GMT\r\n", gmtime((const time_t*)&sb.st_mtime));
   }
 
   return buf;

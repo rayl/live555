@@ -237,7 +237,7 @@ void AC3AudioStreamParser
 		 unsigned char* ptr, unsigned size) {
   if (ourStreamCode == 0) return; // we assume that there's no stream code at the beginning of the data
 
-  if (size < 4) return; // shouldn't happen
+  if (size < 4) return;
   unsigned char streamCode = *ptr;
 
   if (streamCode == ourStreamCode) {
