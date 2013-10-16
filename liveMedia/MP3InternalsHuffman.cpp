@@ -397,7 +397,7 @@ static int read_decoder_table(unsigned char* fi) {
 #ifdef DEBUG
     	fprintf(stderr, "heaperror at table %d\n",n);
 #endif
-    	abort();
+	return -1;
       }
       for (i=0;(unsigned)i<rsf_ht[n].treelen; i++) {
         rsfscanf(&fi, &v0);
@@ -426,7 +426,7 @@ static void initialize_huffman() {
 #ifdef DEBUG
       fprintf(stderr,"decoder table read error\n");
 #endif
-      abort();
+      return;
       }
    huffman_initialized = True;
 }

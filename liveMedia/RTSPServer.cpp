@@ -697,12 +697,13 @@ static void parseTransportHeader(char const* buf,
   while (1) {
     if (*buf == '\0') return; // not found
     if (*buf == '\r' && *(buf+1) == '\n' && *(buf+2) == '\r') return; // end of the headers => not found
-    if (_strncasecmp(buf, "Transport: ", 11) == 0) break;
+    if (_strncasecmp(buf, "Transport:", 10) == 0) break;
     ++buf;
   }
 
   // Then, run through each of the fields, looking for ones we handle:
-  char const* fields = buf + 11;
+  char const* fields = buf + 10;
+  while (*fields == ' ') ++fields;
   char* field = strDupSize(fields);
   while (sscanf(fields, "%[^;\r\n]", field) == 1) {
     if (strcmp(field, "RTP/AVP/TCP") == 0) {
@@ -1062,12 +1063,12 @@ static Boolean parseScaleHeader(char const* buf, float& scale) {
   // First, find "Scale:"
   while (1) {
     if (*buf == '\0') return False; // not found
-    if (_strncasecmp(buf, "Scale: ", 7) == 0) break;
+    if (_strncasecmp(buf, "Scale:", 6) == 0) break;
     ++buf;
   }
 
   // Then, run through each of the fields, looking for ones we handle:
-  char const* fields = buf + 7;
+  char const* fields = buf + 6;
   while (*fields == ' ') ++fields;
   float sc;
   if (sscanf(fields, "%f", &sc) == 1) {

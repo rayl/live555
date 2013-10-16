@@ -39,3 +39,12 @@ void* HashTable::RemoveNext() {
   delete iter;
   return removedValue;
 }
+
+void* HashTable::getFirst() {
+  Iterator* iter = Iterator::create(*this);
+  char const* key;
+  void* firstValue = iter->next(key);
+
+  delete iter;
+  return firstValue;
+}

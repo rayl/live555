@@ -69,7 +69,7 @@ ProxyServerMediaSession::ProxyServerMediaSession(UsageEnvironment& env, char con
 						 char const* username, char const* password,
 						 portNumBits tunnelOverHTTPPortNum, int verbosityLevel)
   : ServerMediaSession(env, streamName, NULL, NULL, False, NULL),
-    describeCompletedFlag(0), fVerbosityLevel(verbosityLevel) {
+    describeCompletedFlag(0), fClientMediaSession(NULL), fVerbosityLevel(verbosityLevel) {
 
   // Open a RTSP connection to the input stream, and send a "DESCRIBE" command.
   // We'll use the SDP description in the response to set ourselves up.

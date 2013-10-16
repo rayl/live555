@@ -48,7 +48,7 @@ MPEG2TransportUDPServerMediaSubsession::
 }
 
 FramedSource* MPEG2TransportUDPServerMediaSubsession
-::createNewStreamSource(unsigned/* clientSessionId*/, unsigned& estBitrate){
+::createNewStreamSource(unsigned/* clientSessionId*/, unsigned& estBitrate) {
   estBitrate = 5000; // kbps, estimate
 
   if (fInputGroupsock == NULL) {

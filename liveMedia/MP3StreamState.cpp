@@ -405,7 +405,9 @@ unsigned MP3StreamState::readFromStream(unsigned char* buf,
 
     return totBytesRead;
   } else {
+#ifndef _WIN32_WCE
     waitUntilSocketIsReadable(fEnv, (int)fileno(fFid));
+#endif
     return fread(buf, 1, numChars, fFid);
   }
 }

@@ -408,7 +408,7 @@ void QCELPDeinterleavingBuffer
 #ifdef DEBUG
     fprintf(stderr, "QCELPDeinterleavingBuffer::deliverIncomingFrame() param sanity check failed (%d,%d,%d,%d)\n", frameSize, interleaveL, interleaveN, frameIndex);
 #endif
-    abort();
+    return;
   }
 
   // The input "presentationTime" was that of the first frame in this

@@ -122,13 +122,6 @@ void ByteStreamFileSource::fileReadableHandler(ByteStreamFileSource* source, int
   source->doReadFromFile();
 }
 
-static Boolean const readFromFilesSynchronously
-#ifdef READ_FROM_FILES_SYNCHRONOUSLY
-= True;
-#else
-= False;
-#endif
-
 void ByteStreamFileSource::doReadFromFile() {
   // Try to read as many bytes as will fit in the buffer provided (or "fPreferredFrameSize" if less)
   if (fLimitNumBytesToStream && fNumBytesToStream < (u_int64_t)fMaxSize) {
@@ -137,12 +130,16 @@ void ByteStreamFileSource::doReadFromFile() {
   if (fPreferredFrameSize > 0 && fPreferredFrameSize < fMaxSize) {
     fMaxSize = fPreferredFrameSize;
   }
-  if (readFromFilesSynchronously || fFidIsSeekable) {
+#ifdef READ_FROM_FILES_SYNCHRONOUSLY
+  fFrameSize = fread(fTo, 1, fMaxSize, fFid);
+#else
+  if (fFidIsSeekable) {
     fFrameSize = fread(fTo, 1, fMaxSize, fFid);
   } else {
     // For non-seekable files (e.g., pipes), call "read()" rather than "fread()", to ensure that the read doesn't block:
     fFrameSize = read(fileno(fFid), fTo, fMaxSize);
   }
+#endif
   if (fFrameSize == 0) {
     handleClosure(this);
     return;

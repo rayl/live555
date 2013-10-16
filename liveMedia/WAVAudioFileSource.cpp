@@ -82,7 +82,7 @@ unsigned char WAVAudioFileSource::getAudioFormat() {
 
 #define nextc fgetc(fid)
 
-static Boolean get4Bytes(FILE* fid, unsigned& result) { // little-endian
+static Boolean get4Bytes(FILE* fid, u_int32_t& result) { // little-endian
   int c0, c1, c2, c3;
   if ((c0 = nextc) == EOF || (c1 = nextc) == EOF ||
       (c2 = nextc) == EOF || (c3 = nextc) == EOF) return False;
@@ -90,7 +90,7 @@ static Boolean get4Bytes(FILE* fid, unsigned& result) { // little-endian
   return True;
 }
 
-static Boolean get2Bytes(FILE* fid, unsigned short& result) {//little-endian
+static Boolean get2Bytes(FILE* fid, u_int16_t& result) {//little-endian
   int c0, c1;
   if ((c0 = nextc) == EOF || (c1 = nextc) == EOF) return False;
   result = (c1<<8)|c0;
@@ -121,8 +121,16 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
     if (!skipBytes(fid, 4)) break;
     if (nextc != 'W' || nextc != 'A' || nextc != 'V' || nextc != 'E') break;
 
-    // FORMAT Chunk:
-    if (nextc != 'f' || nextc != 'm' || nextc != 't' || nextc != ' ') break;
+    // Skip over any chunk that's not a FORMAT ('fmt ') chunk:
+    u_int32_t tmp;
+    if (!get4Bytes(fid, tmp)) break;
+    if (tmp != 0x20746d66/*'fmt ', little-endian*/) {
+      // Skip this chunk:
+      if (!get4Bytes(fid, tmp)) break;
+      if (!skipBytes(fid, tmp)) break;
+    }
+
+    // FORMAT Chunk (the 4-byte header code has already been parsed):
     unsigned formatLength;
     if (!get4Bytes(fid, formatLength)) break;
     unsigned short audioFormat;
@@ -246,13 +254,6 @@ void WAVAudioFileSource::fileReadableHandler(WAVAudioFileSource* source, int /*m
   source->doReadFromFile();
 }
 
-static Boolean const readFromFilesSynchronously
-#ifdef READ_FROM_FILES_SYNCHRONOUSLY
-= True;
-#else
-= False;
-#endif
-
 void WAVAudioFileSource::doReadFromFile() {
   // Try to read as many bytes as will fit in the buffer provided (or "fPreferredFrameSize" if less)
   if (fLimitNumBytesToStream && fNumBytesToStream < fMaxSize) {
@@ -268,12 +269,16 @@ void WAVAudioFileSource::doReadFromFile() {
   unsigned bytesToRead = fScaleFactor == 1 ? fMaxSize - fMaxSize%bytesPerSample : bytesPerSample;
   unsigned numBytesRead;
   while (1) { // loop for 'trick play' only
-    if (readFromFilesSynchronously || fFidIsSeekable) {
+#ifdef READ_FROM_FILES_SYNCHRONOUSLY
+    numBytesRead = fread(fTo, 1, bytesToRead, fFid);
+#else
+    if (fFidIsSeekable) {
       numBytesRead = fread(fTo, 1, bytesToRead, fFid);
-   } else {
+    } else {
       // For non-seekable files (e.g., pipes), call "read()" rather than "fread()", to ensure that the read doesn't block:
       numBytesRead = read(fileno(fFid), fTo, bytesToRead);
     }
+#endif
     if (numBytesRead == 0) {
      handleClosure(this);
       return;
@@ -284,7 +289,9 @@ void WAVAudioFileSource::doReadFromFile() {
     fNumBytesToStream -= numBytesRead;
 
     // If we did an asynchronous read, and didn't read an integral number of samples, then we need to wait for another read:
-    if (!readFromFilesSynchronously && fFrameSize%bytesPerSample > 0) return;
+#ifndef READ_FROM_FILES_SYNCHRONOUSLY
+    if (fFrameSize%bytesPerSample > 0) return;
+#endif
     
     // If we're doing 'trick play', then seek to the appropriate place for reading the next sample,
     // and keep reading until we fill the provided buffer:

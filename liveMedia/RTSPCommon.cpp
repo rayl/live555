@@ -112,12 +112,11 @@ Boolean parseRTSPRequestString(char const* reqStr,
   }
   if (!parseSucceeded) return False;
 
-  // Look for "CSeq:", skip whitespace,
+  // Look for "CSeq:" (case insensitive), skip whitespace,
   // then read everything up to the next \r or \n as 'CSeq':
   parseSucceeded = False;
   for (j = i; (int)j < (int)(reqStrSize-5); ++j) {
-    if (reqStr[j] == 'C' && reqStr[j+1] == 'S' && reqStr[j+2] == 'e' &&
-	reqStr[j+3] == 'q' && reqStr[j+4] == ':') {
+    if (_strncasecmp("CSeq:", &reqStr[j], 5) == 0) {
       j += 5;
       while (j < reqStrSize && (reqStr[j] ==  ' ' || reqStr[j] == '\t')) ++j;
       unsigned n;
@@ -136,12 +135,9 @@ Boolean parseRTSPRequestString(char const* reqStr,
   }
   if (!parseSucceeded) return False;
 
-  // Also: Look for "Content-Length:" (optional)
+  // Also: Look for "Content-Length:" (optional, case insensitive)
   for (j = i; (int)j < (int)(reqStrSize-15); ++j) {
-    if (reqStr[j] == 'C' && reqStr[j+1] == 'o' && reqStr[j+2] == 'n' && reqStr[j+3] == 't' && reqStr[j+4] == 'e' &&
-	reqStr[j+5] == 'n' && reqStr[j+6] == 't' && reqStr[j+7] == '-' && (reqStr[j+8] == 'L' || reqStr[j+8] == 'l') &&
-	reqStr[j+9] == 'e' && reqStr[j+10] == 'n' && reqStr[j+11] == 'g' && reqStr[j+12] == 't' && reqStr[j+13] == 'h' &&
-	reqStr[j+14] == ':') {
+    if (_strncasecmp("Content-Length:", &(reqStr[j]), 15) == 0) {
       j += 15;
       while (j < reqStrSize && (reqStr[j] ==  ' ' || reqStr[j] == '\t')) ++j;
       unsigned num;
@@ -161,15 +157,21 @@ Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeE
     rangeStart = start;
     rangeEnd = end;
   } else if (sscanf(paramStr, "npt = %lf -", &start) == 1) {
-    rangeStart = start;
-    rangeEnd = 0.0;
+    if (start < 0.0) {
+      // special case for "npt = -<endtime>", which seems to match here:
+      rangeStart = 0.0;
+      rangeEnd = -start;
+    } else {
+      rangeStart = start;
+      rangeEnd = 0.0;
+    }
   } else if (strcmp(paramStr, "npt=now-") == 0) {
     rangeStart = 0.0;
     rangeEnd = 0.0;
   } else if (sscanf(paramStr, "clock = %*s%n", &numCharsMatched) == 0 && numCharsMatched > 0) {
-    // We accept "clock=" parameters, but currently do no interpret them.
+    // We accept "clock=" parameters, but currently do not interpret them.
   } else if (sscanf(paramStr, "smtpe = %*s%n", &numCharsMatched) == 0 && numCharsMatched > 0) {
-    // We accept "smtpe=" parameters, but currently do no interpret them.
+    // We accept "smtpe=" parameters, but currently do not interpret them.
   } else {
     return False; // The header is malformed
   }

@@ -578,7 +578,7 @@ unsigned H264VideoStreamParser::parse() {
       fHaveSeenFirstStartCode = True; // from now on
     }
     
-    if (fOutputStartCodeSize > 0 && curFrameSize() == 0) {
+    if (fOutputStartCodeSize > 0 && curFrameSize() == 0 && !haveSeenEOF()) {
       // Include a start code in the output:
       save4Bytes(0x00000001);
     }
@@ -589,19 +589,26 @@ unsigned H264VideoStreamParser::parse() {
       // We hit EOF the last time that we tried to parse this data, so we know that any remaining unparsed data
       // forms a complete NAL unit, and that there's no 'start code' at the end:
       unsigned remainingDataSize = totNumValidBytes() - curOffset();
+      unsigned const trailingNALUnitSize = remainingDataSize;
       while (remainingDataSize > 0) {
-	saveByte(get1Byte());
+	u_int8_t nextByte = get1Byte();
+	if (!fHaveSeenFirstByteOfNALUnit) {
+	  fFirstByteOfNALUnit = nextByte;
+	  fHaveSeenFirstByteOfNALUnit = True;
+	}
+	saveByte(nextByte);
 	--remainingDataSize;
       }
 
-      if (!fHaveSeenFirstByteOfNALUnit) {
-	// There's no remaining NAL unit.
-	(void)get1Byte(); // forces another read, which will cause EOF to get handled for real this time
-	return 0;
-      }
+      u_int8_t nal_ref_idc = (fFirstByteOfNALUnit&0x60)>>5;
+      u_int8_t nal_unit_type = fFirstByteOfNALUnit&0x1F;
 #ifdef DEBUG
-      fprintf(stderr, "This NAL unit (%d bytes) ends with EOF\n", curFrameSize()-fOutputStartCodeSize);
+      fprintf(stderr, "Parsed trailing %d-byte NAL-unit (nal_ref_idc: %d, nal_unit_type: %d (\"%s\"))\n",
+	      trailingNALUnitSize, nal_ref_idc, nal_unit_type, nal_unit_type_description[nal_unit_type]);
 #endif
+
+      (void)get1Byte(); // forces another read, which will cause EOF to get handled for real this time
+      return 0;
     } else {
       u_int32_t next4Bytes = test4Bytes();
       if (!fHaveSeenFirstByteOfNALUnit) {
@@ -690,8 +697,8 @@ unsigned H264VideoStreamParser::parse() {
     } else {
       Boolean const isVCL = nal_unit_type <= 5 && nal_unit_type > 0; // Would need to include type 20 for SVC and MVC #####
       if (isVCL) {
-	u_int32_t first4BytesOfNextNALUnit = test4Bytes();
-	u_int8_t firstByteOfNextNALUnit = first4BytesOfNextNALUnit>>24;
+	u_int8_t firstByteOfNextNALUnit;
+	testBytes(&firstByteOfNextNALUnit, 1);
 	u_int8_t next_nal_ref_idc = (firstByteOfNextNALUnit&0x60)>>5;
 	u_int8_t next_nal_unit_type = firstByteOfNextNALUnit&0x1F;
 	if (next_nal_unit_type >= 6) {
