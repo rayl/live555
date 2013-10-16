@@ -1553,7 +1553,7 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
       }
       
       // If we saw a "Content-Length:" header, then make sure that we have the amount of data that it specified:
-      unsigned bodyOffset = nextLineStart - headerDataCopy;
+      unsigned bodyOffset = nextLineStart == NULL ? fResponseBytesAlreadySeen : nextLineStart - headerDataCopy;
       bodyStart = &fResponseBuffer[bodyOffset];
       numBodyBytes = fResponseBytesAlreadySeen - bodyOffset;
       if (contentLength > numBodyBytes) {
