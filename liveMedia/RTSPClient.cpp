@@ -1127,21 +1127,18 @@ Boolean RTSPClient::handleTEARDOWNResponse(MediaSession& /*session*/, MediaSubse
 
 Boolean RTSPClient::handleGET_PARAMETERResponse(char const* parameterName, char*& resultValueString) {
   do {
-    // If "parameterName" is non-empty, it should be (possibly followed by ':' and whitespace) at the start of the result string:
+    // If "parameterName" is non-empty, it may be (possibly followed by ':' and whitespace) at the start of the result string:
     if (parameterName != NULL && parameterName[0] != '\0') {
       if (parameterName[1] == '\0') break; // sanity check; there should have been \r\n at the end of "parameterName"
 
       unsigned parameterNameLen = strlen(parameterName);
       // ASSERT: parameterNameLen >= 2;
       parameterNameLen -= 2; // because of the trailing \r\n
-      if (_strncasecmp(resultValueString, parameterName, parameterNameLen) != 0) {
-	// The parameter name wasn't in the output, so just return an empty string:
-	resultValueString[0] = '\0';
-	return True;
+      if (_strncasecmp(resultValueString, parameterName, parameterNameLen) == 0) {
+	resultValueString += parameterNameLen;
+	if (resultValueString[0] == ':') ++resultValueString;
+	while (resultValueString[0] == ' ' || resultValueString[0] == '\t') ++resultValueString;
       }
-      resultValueString += parameterNameLen;
-      if (resultValueString[0] == ':') ++resultValueString;
-      while (resultValueString[0] == ' ' || resultValueString[0] == '\t') ++resultValueString;
     }
 
     // The rest of "resultValueStr" should be our desired result, but first trim off any \r and/or \n characters at the end:

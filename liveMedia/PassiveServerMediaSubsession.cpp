@@ -193,7 +193,7 @@ float PassiveServerMediaSubsession::getCurrentNPT(void* streamToken) {
   struct timeval timeNow;
   gettimeofday(&timeNow, NULL);
 
-  return timeNow.tv_sec - creationTime.tv_sec + (timeNow.tv_usec - creationTime.tv_usec)/1000000.0;
+  return (float)(timeNow.tv_sec - creationTime.tv_sec + (timeNow.tv_usec - creationTime.tv_usec)/1000000.0);
 }
 
 void PassiveServerMediaSubsession::deleteStream(unsigned clientSessionId, void*& /*streamToken*/) {

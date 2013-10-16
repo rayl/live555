@@ -228,7 +228,7 @@ void OnDemandServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
   if (streamState != NULL && streamState->mediaSource() != NULL) {
     seekStreamSource(streamState->mediaSource(), seekNPT, streamDuration, numBytes);
 
-    streamState->startNPT() = seekNPT;
+    streamState->startNPT() = (float)seekNPT;
     RTPSink* rtpSink = streamState->rtpSink(); // alias
     if (rtpSink != NULL) rtpSink->resetPresentationTimes();
   }
@@ -277,7 +277,7 @@ float OnDemandServerMediaSubsession::getCurrentNPT(void* streamToken) {
 
     return streamState->startNPT()
       + (rtpSink->mostRecentPresentationTime().tv_sec - rtpSink->initialPresentationTime().tv_sec)
-      + (rtpSink->mostRecentPresentationTime().tv_sec - rtpSink->initialPresentationTime().tv_sec)/1000000.0;
+      + (rtpSink->mostRecentPresentationTime().tv_sec - rtpSink->initialPresentationTime().tv_sec)/1000000.0f;
   } while (0);
 
   return 0.0;
