@@ -578,7 +578,7 @@ unsigned H264VideoStreamParser::parse() {
       fHaveSeenFirstStartCode = True; // from now on
     }
     
-    if (fOutputStartCodeSize > 0) {
+    if (fOutputStartCodeSize > 0 && curFrameSize() == 0) {
       // Include a start code in the output:
       save4Bytes(0x00000001);
     }

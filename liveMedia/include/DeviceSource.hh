@@ -40,6 +40,9 @@ public:
 
 public:
   static EventTriggerId eventTriggerId;
+  // Note that this is defined here to be a static class variable, because this code is intended to illustrate how to
+  // encapsulate a *single* device - not a set of devices.
+  // You can, however, redefine this to be a non-static member variable.
 
 protected:
   DeviceSource(UsageEnvironment& env, DeviceParameters params);

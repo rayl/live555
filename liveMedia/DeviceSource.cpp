@@ -143,6 +143,9 @@ void DeviceSource::deliverFrame() {
 
 // The following code would be called to signal that a new frame of data has become available.
 // This (unlike other "LIVE555 Streaming Media" library code) may be called from a separate thread.
+// (Note, however, that "triggerEvent()" cannot be called with the same 'event trigger id' from different threads.
+// Also, if you want to have multiple device threads, each one using a different 'event trigger id', then you will need
+// to make "eventTriggerId" a non-static member variable of "DeviceSource".)
 void signalNewFrameData() {
   TaskScheduler* ourScheduler = NULL; //%%% TO BE WRITTEN %%%
   DeviceSource* ourDevice  = NULL; //%%% TO BE WRITTEN %%%
