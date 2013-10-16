@@ -118,8 +118,8 @@ Boolean Medium::isDarwinInjector() const {
 
 ////////// _Tables implementation //////////
 
-_Tables* _Tables::getOurTables(UsageEnvironment& env) {
-  if (env.liveMediaPriv == NULL) {
+_Tables* _Tables::getOurTables(UsageEnvironment& env, Boolean createIfNotPresent) {
+  if (env.liveMediaPriv == NULL && createIfNotPresent) {
     env.liveMediaPriv = new _Tables(env);
   }
   return (_Tables*)(env.liveMediaPriv);

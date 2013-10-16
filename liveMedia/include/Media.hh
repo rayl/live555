@@ -88,7 +88,7 @@ private:
 // The structure pointed to by the "liveMediaPriv" UsageEnvironment field:
 class _Tables {
 public:
-  static _Tables* getOurTables(UsageEnvironment& env);
+  static _Tables* getOurTables(UsageEnvironment& env, Boolean createIfNotPresent = True);
       // returns a pointer to an "ourTables" structure (creating it if necessary)
   void reclaimIfPossible();
       // used to delete ourselves when we're no longer used

@@ -37,8 +37,8 @@ static void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
 // "SocketDescriptor" that contains a hash table for each of the
 // sub-channels that are reading from this socket.
 
-static HashTable* socketHashTable(UsageEnvironment& env) {
-  _Tables* ourTables = _Tables::getOurTables(env);
+static HashTable* socketHashTable(UsageEnvironment& env, Boolean createIfNotPresent = True) {
+  _Tables* ourTables = _Tables::getOurTables(env, createIfNotPresent);
   if (ourTables->socketTable == NULL) {
     // Create a new socket number -> SocketDescriptor mapping table:
     ourTables->socketTable = HashTable::create(ONE_WORD_HASH_KEYS);
@@ -73,11 +73,14 @@ private:
 };
 
 static SocketDescriptor* lookupSocketDescriptor(UsageEnvironment& env, int sockNum, Boolean createIfNotFound = True) {
+  HashTable* table = socketHashTable(env, createIfNotFound);
+  if (table == NULL) return NULL;
+
   char const* key = (char const*)(long)sockNum;
-  SocketDescriptor* socketDescriptor = (SocketDescriptor*)(socketHashTable(env)->Lookup(key));
+  SocketDescriptor* socketDescriptor = (SocketDescriptor*)(table->Lookup(key));
   if (socketDescriptor == NULL && createIfNotFound) {
     socketDescriptor = new SocketDescriptor(env, sockNum);
-    socketHashTable(env)->Add((char const*)(long)(sockNum), socketDescriptor);
+    table->Add((char const*)(long)(sockNum), socketDescriptor);
   }
 
   return socketDescriptor;

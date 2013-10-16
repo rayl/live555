@@ -55,12 +55,6 @@ unsigned RTSPClient::sendSetupCommand(MediaSubsession& subsession, responseHandl
   if (fTunnelOverHTTPPortNum != 0) streamUsingTCP = True; // RTSP-over-HTTP tunneling uses TCP (by definition)
   if (authenticator != NULL) fCurrentAuthenticator = *authenticator;
 
-  // Some servers don't send the right endTime on live streams.  Correct this:
-  char *tmpStr = subsession.parentSession().mediaSessionType();
-  if (tmpStr != NULL && strncmp(tmpStr, "broadcast", 9) == 0) {
-    subsession.parentSession().playEndTime() = 0.0;
-  }
-
   u_int32_t booleanFlags = 0;
   if (streamUsingTCP) booleanFlags |= 0x1;
   if (streamOutgoing) booleanFlags |= 0x2;
@@ -88,7 +82,7 @@ unsigned RTSPClient::sendPauseCommand(MediaSession& session, responseHandler* re
 
 unsigned RTSPClient::sendPauseCommand(MediaSubsession& subsession, responseHandler* responseHandler, Authenticator* authenticator) {
   if (authenticator != NULL) fCurrentAuthenticator = *authenticator;
-  return sendRequest(new RequestRecord(++fCSeq, "PLAY", responseHandler, NULL, &subsession));
+  return sendRequest(new RequestRecord(++fCSeq, "PAUSE", responseHandler, NULL, &subsession));
 }
 
 unsigned RTSPClient::sendRecordCommand(MediaSession& session, responseHandler* responseHandler, Authenticator* authenticator) {
@@ -133,7 +127,7 @@ unsigned RTSPClient::sendGetParameterCommand(MediaSession& session, responseHand
   unsigned parameterNameLen = parameterName == NULL ? 0 : strlen(parameterName);
   char* paramString = new char[parameterNameLen + 3]; // the 3 is for \r\n + the '\0' byte
   if (parameterName == NULL) {
-    sprintf(paramString, "%s", parameterName);
+    paramString[0] = '\0';
   } else {
     sprintf(paramString, "%s\r\n", parameterName);
   }
@@ -633,7 +627,7 @@ unsigned RTSPClient::sendRequest(RequestRecord* request) {
       extraHeadersWereAllocated = True;
       sprintf(extraHeaders, "%s%s", transportStr, sessionStr);
       delete[] transportStr; delete[] sessionStr;
-    } else if (strcmp(request->commandName(), "GET") == 0) {
+    } else if (strcmp(request->commandName(), "GET") == 0 || strcmp(request->commandName(), "POST") == 0) {
       NetAddress destAddress;
       portNumBits urlPortNum;
       if (!parseRTSPURL(envir(), fBaseURL, destAddress, urlPortNum, (char const**)&cmdURL)) break;
@@ -641,45 +635,47 @@ unsigned RTSPClient::sendRequest(RequestRecord* request) {
 
       protocolStr = "HTTP/1.0";
 
-      // Create a 'session cookie' string, using MD5:
-      struct {
-	struct timeval timestamp;
-	unsigned counter;
-      } seedData;
-      gettimeofday(&seedData.timestamp, NULL);
-      seedData.counter = ++fSessionCookieCounter;
-      our_MD5Data((unsigned char*)(&seedData), sizeof seedData, fSessionCookie);
-      // DSS seems to require that the 'session cookie' string be 22 bytes long:
-      fSessionCookie[23] = '\0';
-
-      char const* const extraHeadersFmt =
-	"x-sessioncookie: %s\r\n"
-	"Accept: application/x-rtsp-tunnelled\r\n"
-	"Pragma: no-cache\r\n"
-	"Cache-Control: no-cache\r\n";
-      unsigned extraHeadersSize = strlen(extraHeadersFmt)
-	+ strlen(fSessionCookie);
-      extraHeaders = new char[extraHeadersSize];
-      extraHeadersWereAllocated = True;
-      sprintf(extraHeaders, extraHeadersFmt,
-	      fSessionCookie);
-    } else if (strcmp(request->commandName(), "POST") == 0) {
-      protocolStr = "HTTP/1.0";
-
-      char const* const extraHeadersFmt =
-	"x-sessioncookie: %s\r\n"
-	"Content-Type: application/x-rtsp-tunnelled\r\n"
-	"Pragma: no-cache\r\n"
-	"Cache-Control: no-cache\r\n"
-	"Content-Length: 32767\r\n"
-	"Expires: Sun, 9 Jan 1972 00:00:00 GMT\r\n";
-      unsigned extraHeadersSize = strlen(extraHeadersFmt)
-	+ strlen(fSessionCookie);
-      extraHeaders = new char[extraHeadersSize];
-      extraHeadersWereAllocated = True;
-      sprintf(extraHeaders, extraHeadersFmt,
-	      fSessionCookie);
-    } else {
+      if (strcmp(request->commandName(), "GET") == 0) {
+	// Create a 'session cookie' string, using MD5:
+	struct {
+	  struct timeval timestamp;
+	  unsigned counter;
+	} seedData;
+	gettimeofday(&seedData.timestamp, NULL);
+	seedData.counter = ++fSessionCookieCounter;
+	our_MD5Data((unsigned char*)(&seedData), sizeof seedData, fSessionCookie);
+	// DSS seems to require that the 'session cookie' string be 22 bytes long:
+	fSessionCookie[23] = '\0';
+	
+	char const* const extraHeadersFmt =
+	  "x-sessioncookie: %s\r\n"
+	  "Accept: application/x-rtsp-tunnelled\r\n"
+	  "Pragma: no-cache\r\n"
+	  "Cache-Control: no-cache\r\n";
+	unsigned extraHeadersSize = strlen(extraHeadersFmt)
+	  + strlen(fSessionCookie);
+	extraHeaders = new char[extraHeadersSize];
+	extraHeadersWereAllocated = True;
+	sprintf(extraHeaders, extraHeadersFmt,
+		fSessionCookie);
+      } else { // "POST"
+	protocolStr = "HTTP/1.0";
+	
+	char const* const extraHeadersFmt =
+	  "x-sessioncookie: %s\r\n"
+	  "Content-Type: application/x-rtsp-tunnelled\r\n"
+	  "Pragma: no-cache\r\n"
+	  "Cache-Control: no-cache\r\n"
+	  "Content-Length: 32767\r\n"
+	  "Expires: Sun, 9 Jan 1972 00:00:00 GMT\r\n";
+	unsigned extraHeadersSize = strlen(extraHeadersFmt)
+	  + strlen(fSessionCookie);
+	extraHeaders = new char[extraHeadersSize];
+	extraHeadersWereAllocated = True;
+	sprintf(extraHeaders, extraHeadersFmt,
+		fSessionCookie);
+      }
+    } else { // "PLAY", "PAUSE", "TEARDOWN", "RECORD", "SET_PARAMETER", "GET_PARAMETER"
       // First, make sure that we have a RTSP session in progress
       if (fLastSessionId == NULL) {
 	envir().setResultMsg("No RTSP session is currently in progress\n");
@@ -1166,7 +1162,7 @@ void RTSPClient::constructSubsessionURL(MediaSubsession const& subsession,
     prefix = separator = "";
   } else {
     unsigned prefixLen = strlen(prefix);
-    separator = (prefix[prefixLen-1] == '/' || suffix[0] == '/') ? "" : "/";
+    separator = (prefixLen == 0 || prefix[prefixLen-1] == '/' || suffix[0] == '/') ? "" : "/";
   }
 }
 
