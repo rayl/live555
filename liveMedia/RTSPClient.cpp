@@ -804,16 +804,13 @@ void RTSPClient::handleRequestError(RequestRecord* request) {
 }
 
 Boolean RTSPClient
-::parseResponseCode(char const* line, unsigned& responseCode, char const*& responseString, Boolean& responseIsHTTP) {
-  responseIsHTTP = False; // by default
-  if (sscanf(line, "RTSP/%*s%u", &responseCode) != 1) {
-    if (sscanf(line, "HTTP/%*s%u", &responseCode) != 1) return False;
-    responseIsHTTP = True;
-    // Note: We check for HTTP responses as well as RTSP responses, both in order to setup RTSP-over-HTTP tunneling,
-    // and so that we get back a meaningful error if the client tried to mistakenly send a RTSP command to a HTTP-only server.
-  }
+::parseResponseCode(char const* line, unsigned& responseCode, char const*& responseString) {
+  if (sscanf(line, "RTSP/%*s%u", &responseCode) != 1 &&
+      sscanf(line, "HTTP/%*s%u", &responseCode) != 1) return False;
+  // Note: We check for HTTP responses as well as RTSP responses, both in order to setup RTSP-over-HTTP tunneling,
+  // and so that we get back a meaningful error if the client tried to mistakenly send a RTSP command to a HTTP-only server.
 
-  // Use everything after the RTSP/* as the response string:
+  // Use everything after the RTSP/* (or HTTP/*) as the response string:
   responseString = line;
   while (responseString[0] != '\0' && responseString[0] != ' '  && responseString[0] != '\t') ++responseString;
   while (responseString[0] != '\0' && (responseString[0] == ' '  || responseString[0] == '\t')) ++responseString; // skip whitespace
@@ -1221,6 +1218,8 @@ void RTSPClient::responseHandlerForHTTP_GET(RTSPClient* rtspClient, int response
 void RTSPClient::responseHandlerForHTTP_GET1(int responseCode, char* responseString) {
   RequestRecord* request;
   do {
+    if (responseCode != 0) break; // The HTTP "GET" failed.
+
     // Having successfully set up (using the HTTP "GET" command) the server->client link, set up a second TCP connection
     // (to the same server & port as before) for the client->server link.  All future output will be to this new socket.
     fOutputSocketNum = setupStreamSocket(envir(), 0);
@@ -1394,7 +1393,6 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
   char* headerDataCopy;
   unsigned responseCode = 200;
   char const* responseStr = NULL;
-  Boolean responseIsHTTP = False;
   RequestRecord* foundRequest = NULL;
   char const* sessionParamsStr = NULL;
   char const* transportParamsStr = NULL;
@@ -1413,7 +1411,7 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
 
     char* lineStart = headerDataCopy;
     char* nextLineStart = getLine(lineStart);
-    if (!parseResponseCode(lineStart, responseCode, responseStr, responseIsHTTP)) {
+    if (!parseResponseCode(lineStart, responseCode, responseStr)) {
       // This does not appear to be a RTSP response; perhaps it's a RTSP request instead?
       handleIncomingRequest();
       break; // we're done with this data
@@ -1482,8 +1480,8 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
     }
     if (!reachedEndOfHeaders) break; // an error occurred
 
-    if (foundRequest == NULL && responseIsHTTP) {
-      // Hack: HTTP responses don't have a "CSeq:" header, so if we got a HTTP response, assume it's for our most recent request:
+    if (foundRequest == NULL) {
+      // Hack: The response didn't have a "CSeq:" header; assume it's for our most recent request:
       foundRequest = fRequestsAwaitingResponse.dequeue();
     }
 

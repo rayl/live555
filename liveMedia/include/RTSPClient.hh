@@ -222,7 +222,7 @@ private:
   char* createAuthenticatorString(char const* cmd, char const* url);
   unsigned sendRequest(RequestRecord* request);
   void handleRequestError(RequestRecord* request);
-  Boolean parseResponseCode(char const* line, unsigned& responseCode, char const*& responseString, Boolean& responseIsHTTP);
+  Boolean parseResponseCode(char const* line, unsigned& responseCode, char const*& responseString);
   void handleIncomingRequest();
   static Boolean checkForHeader(char const* line, char const* headerName, unsigned headerNameLength, char const*& headerParams);
   Boolean parseTransportParams(char const* paramsStr,

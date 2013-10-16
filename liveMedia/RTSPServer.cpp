@@ -247,8 +247,7 @@ void RTSPServer::incomingConnectionHandler1() {
 ////////// RTSPServer::RTSPClientSession implementation //////////
 
 RTSPServer::RTSPClientSession
-::RTSPClientSession(RTSPServer& ourServer, unsigned sessionId,
-	      int clientSocket, struct sockaddr_in clientAddr)
+::RTSPClientSession(RTSPServer& ourServer, unsigned sessionId, int clientSocket, struct sockaddr_in clientAddr)
   : fOurServer(ourServer), fOurSessionId(sessionId),
     fOurServerMediaSession(NULL),
     fClientSocket(clientSocket), fClientAddr(clientAddr),
@@ -363,8 +362,7 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
 
   if (!endOfMsg) return; // subsequent reads will be needed to complete the request
 
-  // Parse the request string into command name and 'CSeq',
-  // then handle the command:
+  // Parse the request string into command name and 'CSeq', then handle the command:
   fRequestBuffer[fRequestBytesAlreadySeen] = '\0';
   char cmdName[RTSP_PARAM_STRING_MAX];
   char urlPreSuffix[RTSP_PARAM_STRING_MAX];

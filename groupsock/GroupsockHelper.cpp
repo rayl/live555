@@ -633,12 +633,16 @@ char const* timestampString() {
 #if !defined(_WIN32_WCE)
   static char timeString[9]; // holds hh:mm:ss plus trailing '\0'
   char const* ctimeResult = ctime((time_t*)&tvNow.tv_sec);
-  char const* from = &ctimeResult[11];
-  int i;
-  for (i = 0; i < 8; ++i) {
-    timeString[i] = from[i];
+  if (ctimeResult == NULL) {
+    sprintf(timeString, "??:??:??");
+  } else {
+    char const* from = &ctimeResult[11];
+    int i;
+    for (i = 0; i < 8; ++i) {
+      timeString[i] = from[i];
+    }
+    timeString[i] = '\0';
   }
-  timeString[i] = '\0';
 #else
   // WinCE apparently doesn't have "ctime()", so instead, construct
   // a timestamp string just using the integer and fractional parts
