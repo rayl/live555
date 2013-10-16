@@ -351,13 +351,6 @@ SocketDescriptor::SocketDescriptor(UsageEnvironment& env, int socketNum)
 
 SocketDescriptor::~SocketDescriptor() {
   fEnv.taskScheduler().turnOffBackgroundReadHandling(fOurSocketNum);
-  if (fServerRequestAlternativeByteHandler != NULL) {
-    // Hack: Pass a special character to our alternative byte handler, to tell it that either
-    // - an error occurred when reading the TCP socket, or
-    // - no error occurred, but it needs to take over control of the TCP socket once again.
-    u_int8_t specialChar = fReadErrorOccurred ? 0xFF : 0xFE;
-    (*fServerRequestAlternativeByteHandler)(fServerRequestAlternativeByteHandlerClientData, specialChar);
-  }
   removeSocketDescription(fEnv, fOurSocketNum);
 
   if (fSubChannelHashTable != NULL) {
@@ -377,6 +370,15 @@ SocketDescriptor::~SocketDescriptor() {
     // Then remove the hash table entries themselves, and then remove the hash table:
     while (fSubChannelHashTable->RemoveNext() != NULL) {}
     delete fSubChannelHashTable;
+  }
+
+  // Finally:
+  if (fServerRequestAlternativeByteHandler != NULL) {
+    // Hack: Pass a special character to our alternative byte handler, to tell it that either
+    // - an error occurred when reading the TCP socket, or
+    // - no error occurred, but it needs to take over control of the TCP socket once again.
+    u_int8_t specialChar = fReadErrorOccurred ? 0xFF : 0xFE;
+    (*fServerRequestAlternativeByteHandler)(fServerRequestAlternativeByteHandlerClientData, specialChar);
   }
 }
 
@@ -426,8 +428,8 @@ void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor, int ma
   unsigned count = 2000;
   socketDescriptor->fAreInReadHandlerLoop = True;
   while (!socketDescriptor->fDeleteMyselfNext && socketDescriptor->tcpReadHandler1(mask) && --count > 0) {}
+  socketDescriptor->fAreInReadHandlerLoop = False;
   if (socketDescriptor->fDeleteMyselfNext) delete socketDescriptor;
-  socketDescriptor->fAreInReadHandlerLoop = False; // do this here, in case the 'delete' caused "deregister...()" to be called
 }
 
 Boolean SocketDescriptor::tcpReadHandler1(int mask) {
