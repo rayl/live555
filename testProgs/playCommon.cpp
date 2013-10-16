@@ -16,6 +16,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Copyright (c) 1996-2012, Live Networks, Inc.  All rights reserved
 // A common framework, used for the "openRTSP" and "playSIP" applications
 // Implementation
+//
+// NOTE: If you want to develop your own RTSP client application (or embed RTSP client functionality into your own application),
+// then we don't recommend using this code as a model, because it is too complex (with many options).
+// Instead, we recommend using the "testRTSPClient" application code as a model.
 
 #include "playCommon.hh"
 #include "BasicUsageEnvironment.hh"

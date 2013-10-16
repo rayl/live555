@@ -14,8 +14,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // Copyright (c) 1996-2012, Live Networks, Inc.  All rights reserved
-// A RTSP client test program that opens a RTSP URL argument,
-// and extracts the data from each incoming RTP stream.
+// A RTSP client application that opens a RTSP URL argument,
+// and extracts and records the data from each incoming RTP stream.
+//
+// NOTE: If you want to develop your own RTSP client application (or embed RTSP client functionality into your own application),
+// then we don't recommend using this code as a model, because it is too complex (with many options).
+// Instead, we recommend using the "testRTSPClient" application code as a model.
 
 #include "playCommon.hh"
 

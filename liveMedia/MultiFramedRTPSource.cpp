@@ -183,7 +183,7 @@ void MultiFramedRTPSource::doGetNextFrame1() {
       fReorderingBuffer->releaseUsedPacket(nextPacket);
     }
 
-    if (fCurrentPacketCompletesFrame || fNumTruncatedBytes > 0) {
+    if (fCurrentPacketCompletesFrame) {
       // We have all the data that the client wants.
       if (fNumTruncatedBytes > 0) {
 	envir() << "MultiFramedRTPSource::doGetNextFrame1(): The total received frame size exceeds the client's buffer size ("
@@ -418,7 +418,7 @@ void BufferedPacket::use(unsigned char* to, unsigned toSize,
   getNextEnclosedFrameParameters(newFramePtr, fTail - fHead,
 				 frameSize, frameDurationInMicroseconds);
   if (frameSize > toSize) {
-    bytesTruncated = frameSize - toSize;
+    bytesTruncated += frameSize - toSize;
     bytesUsed = toSize;
   } else {
     bytesTruncated = 0;
