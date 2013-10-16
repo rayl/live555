@@ -219,10 +219,10 @@ char* ServerMediaSession::generateSDPDescription() {
     for (subsession = fSubsessionsHead; subsession != NULL;
 	 subsession = subsession->fNext) {
       char const* sdpLines = subsession->sdpLines();
-      if (sdpLines == NULL) break; // the media's not available
+      if (sdpLines == NULL) continue; // the media's not available
       sdpLength += strlen(sdpLines);
     }
-    if (subsession != NULL) break; // an error occurred
+    if (sdpLength == 0) break; // the session has no usable subsessions
 
     // Unless subsessions have differing durations, we also have a "a=range:" line:
     float dur = duration();
@@ -282,7 +282,8 @@ char* ServerMediaSession::generateSDPDescription() {
     for (subsession = fSubsessionsHead; subsession != NULL;
 	 subsession = subsession->fNext) {
       mediaSDP += strlen(mediaSDP);
-      sprintf(mediaSDP, "%s", subsession->sdpLines());
+      char const* sdpLines = subsession->sdpLines();
+      if (sdpLines != NULL) sprintf(mediaSDP, "%s", sdpLines);
     }
   } while (0);
 
