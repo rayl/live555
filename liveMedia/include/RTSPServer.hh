@@ -152,7 +152,7 @@ protected:
 					   char* sessionCookie, unsigned sessionCookieMaxSize);
     virtual void handleHTTPCmd_notSupported();
     virtual void handleHTTPCmd_GET(char const* sessionCookie);
-    virtual Boolean handleHTTPCmd_POST(char const* sessionCookie);
+    virtual Boolean handleHTTPCmd_POST(char const* sessionCookie, unsigned char const* extraData, unsigned extraDataSize);
   protected:
     UsageEnvironment& envir() { return fOurServer.envir(); }
     void reclaimStreamStates();
@@ -169,7 +169,7 @@ protected:
     void noteLiveness();
     static void noteClientLiveness(RTSPClientSession* clientSession);
     static void livenessTimeoutTask(RTSPClientSession* clientSession);
-    void changeClientInputSocket(int newSocketNum);
+    void changeClientInputSocket(int newSocketNum, unsigned char const* extraData, unsigned extraDataSize);
   protected:
     RTSPServer& fOurServer;
     unsigned fOurSessionId;

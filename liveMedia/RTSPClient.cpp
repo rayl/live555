@@ -1202,7 +1202,7 @@ void RTSPClient::constructSubsessionURL(MediaSubsession const& subsession,
 
 Boolean RTSPClient::setupHTTPTunneling1() {
   // Set up RTSP-over-HTTP tunneling, as described in
-  //     http://developer.apple.com/documentation/QuickTime/QTSS/Concepts/chapter_2_section_14.html
+  //     http://developer.apple.com/quicktime/icefloe/dispatch028.html and http://images.apple.com/br/quicktime/pdf/QTSS_Modules.pdf
   if (fVerbosityLevel >= 1) {
     envir() << "Requesting RTSP-over-HTTP tunneling (on port " << fTunnelOverHTTPPortNum << ")\n\n";
   }
@@ -1532,7 +1532,14 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
 	  if (!handleGET_PARAMETERResponse(foundRequest->contentStr(), bodyStart)) break;
 	}
       } else if (responseCode == 401 && handleAuthenticationFailure(wwwAuthenticateParamsStr)) {
-	needToResendCommand = True;
+	if (strcmp(foundRequest->commandName(), "GET") == 0) {
+	  // Note: If a HTTP "GET" command (for RTSP-over-HTTP tunneling) returns "401 Unauthorized", then we don't resend it
+	  // (with an "Authorization:" header).  Instead, we continue, as normal, sending the subsequent HTTP "POST" (with an
+	  // "Authorization:" header).
+	  responseCode = 200;
+	} else {
+	  needToResendCommand = True;
+	}
       } else if (responseCode == 301 || responseCode == 302) { // redirection
 	resetTCPSockets(); // because we need to connect somewhere else next
 	needToResendCommand = True;
