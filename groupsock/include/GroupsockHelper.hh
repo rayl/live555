@@ -58,6 +58,7 @@ unsigned increaseReceiveBufferTo(UsageEnvironment& env,
 				 int socket, unsigned requestedSize);
 
 Boolean makeSocketNonBlocking(int sock);
+Boolean makeSocketBlocking(int sock);
 
 Boolean socketJoinGroup(UsageEnvironment& env, int socket,
 			netAddressBits groupAddress);

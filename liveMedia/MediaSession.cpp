@@ -287,7 +287,7 @@ Boolean MediaSession::parseSDPLine(char const* inputLine,
 static char* parseCLine(char const* sdpLine) {
   char* resultStr = NULL;
   char* buffer = strDupSize(sdpLine); // ensures we have enough space
-  if (sscanf(sdpLine, "c=IN IP4 %[^/ ]", buffer) == 1) {
+  if (sscanf(sdpLine, "c=IN IP4 %[^/\r\n]", buffer) == 1) {
     // Later, handle the optional /<ttl> and /<numAddresses> #####
     resultStr = strDup(buffer);
   }

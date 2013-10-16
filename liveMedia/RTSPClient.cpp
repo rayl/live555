@@ -982,7 +982,7 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     // If we saw a "Content-Length:" header in the response, then discard whatever
     // included data it refers to:
     if (cLength > 0) {
-      char* dummyBuf = new char[cLength];
+      char* dummyBuf = new char[cLength+1]; // allow for a trailing '\0'
       getResponse1(dummyBuf, cLength);
       delete[] dummyBuf;
     }
@@ -1812,52 +1812,42 @@ Boolean RTSPClient
       fInputSocketNum = fOutputSocketNum
 	= setupStreamSocket(envir(), 0, False /* =>blocking */);
       if (fInputSocketNum < 0) break;
-
+      
       // Connect to the remote endpoint:
       fServerAddress = *(unsigned*)(destAddress.data());
       MAKE_SOCKADDR_IN(remoteName, fServerAddress, htons(destPortNum));
-      //Start change for timeout on connect
-
-/*
-      if (connect(fInputSocketNum, (struct sockaddr*)&remoteName, sizeof remoteName)
-	  != 0) {
-	envir().setResultErrMsg("connect() failed: ");
-	break;
-*/
       fd_set set;
       FD_ZERO(&set);
       timeval tvout = {0,0};
+      
+      // If we were supplied with a timeout, make our socket temporarily non-blocking
       if (timeout > 0) {
-        FD_SET((unsigned)fInputSocketNum, &set);
-        tvout.tv_sec = timeout;
-        tvout.tv_usec = 0;
-        makeSocketNonBlocking(fInputSocketNum);
+	FD_SET((unsigned)fInputSocketNum, &set);
+	tvout.tv_sec = timeout;
+	tvout.tv_usec = 0;
+	makeSocketNonBlocking(fInputSocketNum);
       }
       if (connect(fInputSocketNum, (struct sockaddr*) &remoteName, sizeof remoteName) != 0) {
-        if (envir().getErrno() != EINPROGRESS && envir().getErrno() != EWOULDBLOCK) {
-          envir().setResultErrMsg("connect() failed: ");
-          break;
-        }
+	if (envir().getErrno() != EINPROGRESS && envir().getErrno() != EWOULDBLOCK) {
+	  envir().setResultErrMsg("connect() failed: ");
+	  break;
+	}
 	if (timeout > 0 && (select(fInputSocketNum + 1, NULL, &set, NULL, &tvout) <= 0)) {
-          envir().setResultErrMsg("select/connect() failed: ");
-          break;
-        }
-/*
-errno = 0;
-if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &err, &len) < 0 || errno != 0 )
-{
-break;
-}
-*/
-      //End change for timeout on connect
+	  envir().setResultErrMsg("select/connect() failed: ");
+	  break;
+	}
       }
-
+      // If we set our socket to non-blocking, put it back in blocking mode now.
+      if (timeout > 0) {
+	makeSocketBlocking(fInputSocketNum);
+      }
+      
       if (fTunnelOverHTTPPortNum != 0 && !setupHTTPTunneling(urlSuffix, authenticator)) break;
     }
-
+    
     return True;
   } while (0);
-
+  
   fDescribeStatusCode = 1;
   resetTCPSockets();
   return False;

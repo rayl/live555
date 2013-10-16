@@ -141,6 +141,19 @@ Boolean makeSocketNonBlocking(int sock) {
 #endif
 }
 
+Boolean makeSocketBlocking(int sock) {
+#if defined(__WIN32__) || defined(_WIN32) || defined(IMN_PIM)
+  unsigned long arg = 0;
+  return ioctlsocket(sock, FIONBIO, &arg) == 0;
+#elif defined(VXWORKS)
+  int arg = 0;
+  return ioctl(sock, FIONBIO, (int)&arg) == 0;
+#else
+  int curFlags = fcntl(sock, F_GETFL, 0);
+  return fcntl(sock, F_SETFL, curFlags&(~O_NONBLOCK)) >= 0;
+#endif
+}
+
 int setupStreamSocket(UsageEnvironment& env,
                       Port port, Boolean makeNonBlocking) {
   if (!initializeWinsockIfNecessary()) {
