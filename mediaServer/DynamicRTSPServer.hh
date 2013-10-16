@@ -31,13 +31,13 @@ public:
 				      UserAuthenticationDatabase* authDatabase,
 				      unsigned reclamationTestSeconds = 65);
 
-private:
+protected:
   DynamicRTSPServer(UsageEnvironment& env, int ourSocket, Port ourPort,
 		    UserAuthenticationDatabase* authDatabase, unsigned reclamationTestSeconds);
   // called only by createNew();
   virtual ~DynamicRTSPServer();
 
-private: // redefined virtual functions
+protected: // redefined virtual functions
   virtual ServerMediaSession* lookupServerMediaSession(char const* streamName);
 };
 

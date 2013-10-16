@@ -34,7 +34,7 @@ public:
 	    unsigned char rtpPayloadFormat,
 	    unsigned rtpTimestampFrequency = 90000);
 
-private:
+protected:
   H264VideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
 			 unsigned char rtpPayloadFormat,
 			 unsigned rtpTimestampFrequency);
@@ -42,7 +42,7 @@ private:
 
   virtual ~H264VideoRTPSource();
 
-private:
+protected:
   // redefined virtual functions:
   virtual Boolean processSpecialHeader(BufferedPacket* packet,
                                        unsigned& resultSpecialHeaderSize);

@@ -65,12 +65,14 @@ private:
   virtual void doGetNextFrame();
   virtual void doStopGettingFrames();
 
+protected:
+  u_int64_t fFileSize;
+
 private:
   unsigned fPreferredFrameSize;
   unsigned fPlayTimePerFrame;
   Boolean fFidIsSeekable;
   unsigned fLastPlayTime;
-  u_int64_t fFileSize;
   Boolean fHaveStartedReading;
   Boolean fLimitNumBytesToStream;
   u_int64_t fNumBytesToStream; // used iff "fLimitNumBytesToStream" is True

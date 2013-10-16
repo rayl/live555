@@ -382,8 +382,13 @@ void SocketDescriptor::tcpReadHandler1(int mask) {
     }
     case AWAITING_STREAM_CHANNEL_ID: {
       // The byte that we read is the stream channel id.
-      fStreamChannelId = c;
-      fTCPReadingState = AWAITING_SIZE1;
+      if (lookupRTPInterface(c) != NULL) { // sanity check
+	fStreamChannelId = c;
+	fTCPReadingState = AWAITING_SIZE1;
+      } else {
+	// This wasn't a stream channel id that we expected.  We're (somehow) in a strange state.  Try to recover:
+	fTCPReadingState = AWAITING_DOLLAR;
+      }
       break;
     }
     case AWAITING_SIZE1: {

@@ -78,8 +78,8 @@ void ByteStreamFileSource::seekToByteRelative(int64_t offset) {
 ByteStreamFileSource::ByteStreamFileSource(UsageEnvironment& env, FILE* fid,
 					   unsigned preferredFrameSize,
 					   unsigned playTimePerFrame)
-  : FramedFileSource(env, fid), fPreferredFrameSize(preferredFrameSize),
-    fPlayTimePerFrame(playTimePerFrame), fLastPlayTime(0), fFileSize(0),
+  : FramedFileSource(env, fid), fFileSize(0), fPreferredFrameSize(preferredFrameSize),
+    fPlayTimePerFrame(playTimePerFrame), fLastPlayTime(0),
     fHaveStartedReading(False), fLimitNumBytesToStream(False), fNumBytesToStream(0) {
 #ifndef READ_FROM_FILES_SYNCHRONOUSLY
   makeSocketNonBlocking(fileno(fFid));
