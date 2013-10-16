@@ -179,7 +179,7 @@ BasicUDPSink.$(CPP):	include/BasicUDPSink.hh
 include/BasicUDPSink.hh:	include/MediaSink.hh
 AMRAudioFileSink.$(CPP):	include/AMRAudioFileSink.hh include/AMRAudioSource.hh include/OutputFile.hh
 include/AMRAudioFileSink.hh:	include/FileSink.hh
-H264VideoFileSink.$(CPP):       include/H264VideoFileSink.hh include/OutputFile.hh
+H264VideoFileSink.$(CPP):       include/H264VideoFileSink.hh include/OutputFile.hh include/H264VideoRTPSource.hh
 include/H264VideoFileSink.hh:   include/FileSink.hh
 HTTPSink.$(CPP):	include/HTTPSink.hh
 include/HTTPSink.hh:		include/MediaSink.hh

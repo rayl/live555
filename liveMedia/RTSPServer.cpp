@@ -740,16 +740,28 @@ void RTSPServer::RTSPClientSession
   delete[] clientsDestinationAddressStr;
   Port serverRTPPort(0);
   Port serverRTCPPort(0);
+
+  // Make sure that we transmit on the same interface that's used by the client (in case we're a multi-homed server):
+  struct sockaddr_in sourceAddr; SOCKLEN_T namelen = sizeof sourceAddr;
+  getsockname(fClientSocket, (struct sockaddr*)&sourceAddr, &namelen);
+  netAddressBits origSendingInterfaceAddr = SendingInterfaceAddr;
+  netAddressBits origReceivingInterfaceAddr = ReceivingInterfaceAddr;
+  // NOTE: The following might not work properly, so we ifdef it out for now:
+#ifdef HACK_FOR_MULTIHOMED_SERVERS
+  ReceivingInterfaceAddr = SendingInterfaceAddr = sourceAddr.sin_addr.s_addr;
+#endif
+
   subsession->getStreamParameters(fOurSessionId, fClientAddr.sin_addr.s_addr,
 				  clientRTPPort, clientRTCPPort,
 				  tcpSocketNum, rtpChannelId, rtcpChannelId,
 				  destinationAddress, destinationTTL, fIsMulticast,
 				  serverRTPPort, serverRTCPPort,
 				  fStreamStates[streamNum].streamToken);
+  SendingInterfaceAddr = origSendingInterfaceAddr;
+  ReceivingInterfaceAddr = origReceivingInterfaceAddr;
+
   struct in_addr destinationAddr; destinationAddr.s_addr = destinationAddress;
   char* destAddrStr = strDup(our_inet_ntoa(destinationAddr));
-  struct sockaddr_in sourceAddr; SOCKLEN_T namelen = sizeof sourceAddr;
-  getsockname(fClientSocket, (struct sockaddr*)&sourceAddr, &namelen);
   char* sourceAddrStr = strDup(our_inet_ntoa(sourceAddr.sin_addr));
   if (fIsMulticast) {
     switch (streamingMode) {

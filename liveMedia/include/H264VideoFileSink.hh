@@ -28,20 +28,25 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class H264VideoFileSink: public FileSink {
 public:
   static H264VideoFileSink* createNew(UsageEnvironment& env, char const* fileName,
-				     unsigned bufferSize = 10000,
-				     Boolean oneFilePerFrame = False);
-  // (See "FileSink.hh" for a description of these parameters.)
+				      char const* sPropParameterSetsStr = NULL,
+  // An optional 'SDP format' string (comma-separated Base64-encoded) representing SPS and/or PPS NAL-units to prepend to the output
+				      unsigned bufferSize = 10000,
+				      Boolean oneFilePerFrame = False);
+  // See "FileSink.hh" for a description of these parameters.
 
 protected:
-  H264VideoFileSink(UsageEnvironment& env, FILE* fid, unsigned bufferSize,
-		   char const* perFrameFileNamePrefix);
+  H264VideoFileSink(UsageEnvironment& env, FILE* fid,
+		    char const* sPropParameterSetsStr,
+		    unsigned bufferSize, char const* perFrameFileNamePrefix);
       // called only by createNew()
   virtual ~H264VideoFileSink();
 
 protected: // redefined virtual functions:
-  virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
-  virtual void afterGettingFrame1(unsigned frameSize,
-				  struct timeval presentationTime);
+  virtual void afterGettingFrame1(unsigned frameSize, struct timeval presentationTime);
+
+private:
+  char const* fSPropParameterSetsStr;
+  Boolean fHaveWrittenFirstFrame;
 };
 
 #endif

@@ -88,7 +88,7 @@ void FileSink::afterGettingFrame(void* clientData, unsigned frameSize,
   sink->afterGettingFrame1(frameSize, presentationTime);
 }
 
-void FileSink::addData(unsigned char* data, unsigned dataSize,
+void FileSink::addData(unsigned char const* data, unsigned dataSize,
 		       struct timeval presentationTime) {
   if (fPerFrameFileNameBuffer != NULL) {
     // Special case: Open a new file on-the-fly for this frame

@@ -724,7 +724,8 @@ void setupStreams() {
 	    (strcmp(subsession->codecName(), "H264") == 0)) {
 	  // For H.264 video stream, we use a special sink that insert start_codes:
 	  fileSink = H264VideoFileSink::createNew(*env, outFileName,
-						 fileSinkBufferSize, oneFilePerFrame);
+						  subsession->fmtp_spropparametersets(),
+						  fileSinkBufferSize, oneFilePerFrame);
 	} else {
 	  // Normal case:
 	  fileSink = FileSink::createNew(*env, outFileName,
