@@ -15,56 +15,36 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
-// H.264 Video RTP Sources
+// VP8 Video RTP Sources
 // C++ header
 
-#ifndef _H264_VIDEO_RTP_SOURCE_HH
-#define _H264_VIDEO_RTP_SOURCE_HH
+#ifndef _VP8_VIDEO_RTP_SOURCE_HH
+#define _VP8_VIDEO_RTP_SOURCE_HH
 
 #ifndef _MULTI_FRAMED_RTP_SOURCE_HH
 #include "MultiFramedRTPSource.hh"
 #endif
 
-class H264VideoRTPSource: public MultiFramedRTPSource {
+class VP8VideoRTPSource: public MultiFramedRTPSource {
 public:
-  static H264VideoRTPSource*
+  static VP8VideoRTPSource*
   createNew(UsageEnvironment& env, Groupsock* RTPgs,
 	    unsigned char rtpPayloadFormat,
 	    unsigned rtpTimestampFrequency = 90000);
 
 protected:
-  H264VideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
-			 unsigned char rtpPayloadFormat,
-			 unsigned rtpTimestampFrequency);
+  VP8VideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
+		    unsigned char rtpPayloadFormat,
+		    unsigned rtpTimestampFrequency);
       // called only by createNew()
 
-  virtual ~H264VideoRTPSource();
+  virtual ~VP8VideoRTPSource();
 
 protected:
   // redefined virtual functions:
   virtual Boolean processSpecialHeader(BufferedPacket* packet,
                                        unsigned& resultSpecialHeaderSize);
   virtual char const* MIMEtype() const;
-
-private:
-  friend class H264BufferedPacket;
-  unsigned char fCurPacketNALUnitType;
 };
-
-class SPropRecord {
-public:
-  ~SPropRecord() { delete[] sPropBytes; }
-
-  unsigned sPropLength; // in bytes
-  unsigned char* sPropBytes;
-};
-
-SPropRecord* parseSPropParameterSets(char const* sPropParameterSetsStr,
-				     // result parameter:
-				     unsigned& numSPropRecords);
-    // Returns the binary value of each 'parameter set' specified in a
-    // "sprop-parameter-sets" string (in the SDP description for a H.264/RTP stream).
-    // The value is returned as an array (length "numSPropRecords") of "SPropRecord"s.
-    // This array is dynamically allocated by this routine, and must be delete[]d by the caller.
 
 #endif

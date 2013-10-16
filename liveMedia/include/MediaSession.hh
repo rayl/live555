@@ -210,6 +210,7 @@ public:
   Boolean fmtp_cpresent() const { return fCpresent; }
   Boolean fmtp_randomaccessindication() const { return fRandomaccessindication; }
   char const* fmtp_config() const { return fConfig; }
+  char const* fmtp_configuration() const { return fmtp_config(); }
   char const* fmtp_mode() const { return fMode; }
   char const* fmtp_spropparametersets() const { return fSpropParameterSets; }
   char const* fmtp_emphasis() const { return fEmphasis; }

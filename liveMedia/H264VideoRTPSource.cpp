@@ -41,7 +41,7 @@ private: // redefined virtual functions
 };
 
 
-///////// MPEG4H264VideoRTPSource implementation ////////
+///////// H264VideoRTPSource implementation ////////
 
 H264VideoRTPSource*
 H264VideoRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,

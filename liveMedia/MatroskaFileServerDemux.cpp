@@ -22,7 +22,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MP3AudioMatroskaFileServerMediaSubsession.hh"
 #include "AACAudioMatroskaFileServerMediaSubsession.hh"
 #include "AC3AudioMatroskaFileServerMediaSubsession.hh"
+#include "VorbisAudioMatroskaFileServerMediaSubsession.hh"
 #include "H264VideoMatroskaFileServerMediaSubsession.hh"
+#include "VP8VideoMatroskaFileServerMediaSubsession.hh"
 #include "T140TextMatroskaFileServerMediaSubsession.hh"
 
 void MatroskaFileServerDemux
@@ -60,9 +62,15 @@ ServerMediaSubsession* MatroskaFileServerDemux::newServerMediaSubsession(unsigne
   } else if (strncmp(track->codecID, "A_AC3", 5) == 0) {
     track->mimeType = "audio/AC3";
     result = AC3AudioMatroskaFileServerMediaSubsession::createNew(*this, track->trackNumber);
+  } else if (strncmp(track->codecID, "A_VORBIS", 8) == 0) {
+    track->mimeType = "audio/VORBIS";
+    result = VorbisAudioMatroskaFileServerMediaSubsession::createNew(*this, track->trackNumber);
   } else if (strcmp(track->codecID, "V_MPEG4/ISO/AVC") == 0) {
     track->mimeType = "video/H264";
     result = H264VideoMatroskaFileServerMediaSubsession::createNew(*this, track->trackNumber);
+  } else if (strncmp(track->codecID, "V_VP8", 5) == 0) {
+    track->mimeType = "video/VP8";
+    result = VP8VideoMatroskaFileServerMediaSubsession::createNew(*this, track->trackNumber);
   } else if (strncmp(track->codecID, "S_TEXT", 6) == 0) {
     track->mimeType = "text/T140";
     result = T140TextMatroskaFileServerMediaSubsession::createNew(*this, track->trackNumber);

@@ -249,7 +249,7 @@ void MultiFramedRTPSource::networkReadHandler1() {
     // Check for the 12-byte RTP header:
     if (bPacket->dataSize() < 12) break;
     unsigned rtpHdr = ntohl(*(u_int32_t*)(bPacket->data())); ADVANCE(4);
-    Boolean rtpMarkerBit = (rtpHdr&0x00800000) >> 23;
+    Boolean rtpMarkerBit = (rtpHdr&0x00800000) != 0;
     unsigned rtpTimestamp = ntohl(*(u_int32_t*)(bPacket->data()));ADVANCE(4);
     unsigned rtpSSRC = ntohl(*(u_int32_t*)(bPacket->data())); ADVANCE(4);
 

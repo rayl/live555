@@ -300,6 +300,33 @@ int main(int argc, char** argv) {
     announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
+  // A WebM ('.webm') file, with video(VP8)+audio(Vorbis) streams:
+  // (Note: ".webm' files are special types of Matroska files, so we use the same code as the Matroska ('.mkv') file code above.)
+  {
+    char const* streamName = "webmFileTest";
+    char const* inputFileName = "test.webm";
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, streamName, streamName,
+				      descriptionString);
+
+    newMatroskaDemuxWatchVariable = 0;
+    MatroskaFileServerDemux::createNew(*env, inputFileName, onMatroskaDemuxCreation, NULL);
+    env->taskScheduler().doEventLoop(&newMatroskaDemuxWatchVariable);
+
+    Boolean sessionHasTracks = False;
+    ServerMediaSubsession* smss;
+    while ((smss = demux->newServerMediaSubsession()) != NULL) {
+      sms->addSubsession(smss);
+      sessionHasTracks = True;
+    }
+    if (sessionHasTracks) {
+      rtspServer->addServerMediaSession(sms);
+    }
+    // otherwise, because the stream has no tracks, we don't add a ServerMediaSession to the server.
+
+    announceStream(rtspServer, sms, streamName, inputFileName);
+  }
+
   // Also, attempt to create a HTTP server for RTSP-over-HTTP tunneling.
   // Try first with the default HTTP port (80), and then with the alternative HTTP
   // port numbers (8000 and 8080).

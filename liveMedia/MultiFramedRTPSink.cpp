@@ -60,7 +60,7 @@ void MultiFramedRTPSink
 			 struct timeval framePresentationTime,
 			 unsigned /*numRemainingBytes*/) {
   // default implementation: If this is the first frame in the packet,
-  // use its timestamp for the RTP timestamp:
+  // use its presentationTime for the RTP timestamp:
   if (isFirstFrameInPacket()) {
     setTimestamp(framePresentationTime);
   }

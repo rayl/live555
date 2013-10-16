@@ -81,6 +81,7 @@ char const* EBMLId::stringName() const {
     case MATROSKA_ID_BLOCK_GROUP: { return "Block Group"; }
     case MATROSKA_ID_BLOCK: { return "Block"; }
     case MATROSKA_ID_BLOCK_DURATION: { return "Block Duration"; }
+    case MATROSKA_ID_REFERENCE_BLOCK: { return "Reference Block"; }
     case MATROSKA_ID_TRACKS: { return "Tracks"; }
     case MATROSKA_ID_TRACK_ENTRY: { return "Track Entry"; }
     case MATROSKA_ID_TRACK_NUMBER: { return "Track Number"; }

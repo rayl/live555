@@ -167,8 +167,8 @@ static ServerMediaSession* createNewSMS(UsageEnvironment& env,
 
     NEW_SMS("DV Video");
     sms->addSubsession(DVVideoFileServerMediaSubsession::createNew(env, fileName, reuseSource));
-  } else if (strcmp(extension, ".mkv") == 0) {
-    // Assumed to be a Matroska file
+  } else if (strcmp(extension, ".mkv") == 0 || strcmp(extension, ".webm") == 0) {
+    // Assumed to be a Matroska file (note that WebM ('.webm') files are also Matroska files)
     NEW_SMS("Matroska video+audio+(optional)subtitles");
 
     // Create a Matroska file server demultiplexor for the specified file.  (We enter the event loop to wait for this to complete.)

@@ -25,8 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MultiFramedRTPSource.hh"
 #endif
 
-#define SPECIAL_HEADER_BUFFER_SIZE 1000
-
 class MPEG4GenericRTPSource: public MultiFramedRTPSource {
 public:
   static MPEG4GenericRTPSource*

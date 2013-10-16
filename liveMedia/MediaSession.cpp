@@ -988,7 +988,9 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
 	fCpresent = u != 0;
       } else if (sscanf(line, " randomaccessindication = %u", &u) == 1) {
 	fRandomaccessindication = u != 0;
-      } else if (sscanf(line, " config = %[^; \t\r\n]", valueStr) == 1) {
+      } else if (sscanf(sdpLine, " config = %[^; \t\r\n]", valueStr) == 1 ||
+		 sscanf(sdpLine, " configuration = %[^; \t\r\n]", valueStr) == 1) {
+	// Note: We used "sdpLine" here, because the value may be case-sensitive (if it's Base-64).
 	delete[] fConfig; fConfig = strDup(valueStr);
       } else if (sscanf(line, " mode = %[^; \t\r\n]", valueStr) == 1) {
 	delete[] fMode; fMode = strDup(valueStr);
@@ -1146,12 +1148,22 @@ Boolean MediaSubsession::createSourceObjects(int useSpecialRTPoffset) {
 	  = MPEG4LATMAudioRTPSource::createNew(env(), fRTPSocket,
 					       fRTPPayloadFormat,
 					       fRTPTimestampFrequency);
+      } else if (strcmp(fCodecName, "VORBIS") == 0) { // Vorbis audio
+	fReadSource = fRTPSource
+	  = VorbisAudioRTPSource::createNew(env(), fRTPSocket,
+					    fRTPPayloadFormat,
+					    fRTPTimestampFrequency);
+      } else if (strcmp(fCodecName, "VP8") == 0) { // VP8 video
+	fReadSource = fRTPSource
+	  = VP8VideoRTPSource::createNew(env(), fRTPSocket,
+					 fRTPPayloadFormat,
+					 fRTPTimestampFrequency);
       } else if (strcmp(fCodecName, "AC3") == 0 || strcmp(fCodecName, "EAC3") == 0) { // AC3 audio
 	fReadSource = fRTPSource
 	  = AC3AudioRTPSource::createNew(env(), fRTPSocket,
 					 fRTPPayloadFormat,
 					 fRTPTimestampFrequency);
-      } else if (strcmp(fCodecName, "MP4V-ES") == 0) { // MPEG-4 Elem Str vid
+      } else if (strcmp(fCodecName, "MP4V-ES") == 0) { // MPEG-4 Elementary Stream video
 	fReadSource = fRTPSource
 	  = MPEG4ESVideoRTPSource::createNew(env(), fRTPSocket,
 					     fRTPPayloadFormat,

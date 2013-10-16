@@ -15,30 +15,32 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
-// H.264 Video RTP Sources
+// Vorbis Audio RTP Sources
 // C++ header
 
-#ifndef _H264_VIDEO_RTP_SOURCE_HH
-#define _H264_VIDEO_RTP_SOURCE_HH
+#ifndef _VORBIS_AUDIO_RTP_SOURCE_HH
+#define _VORBIS_AUDIO_RTP_SOURCE_HH
 
 #ifndef _MULTI_FRAMED_RTP_SOURCE_HH
 #include "MultiFramedRTPSource.hh"
 #endif
 
-class H264VideoRTPSource: public MultiFramedRTPSource {
+class VorbisAudioRTPSource: public MultiFramedRTPSource {
 public:
-  static H264VideoRTPSource*
+  static VorbisAudioRTPSource*
   createNew(UsageEnvironment& env, Groupsock* RTPgs,
 	    unsigned char rtpPayloadFormat,
-	    unsigned rtpTimestampFrequency = 90000);
+	    unsigned rtpTimestampFrequency);
+
+  u_int32_t curPacketIdent() const { return fCurPacketIdent; } // The current "Ident" field; only the low-order 24 bits are used
 
 protected:
-  H264VideoRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
-			 unsigned char rtpPayloadFormat,
-			 unsigned rtpTimestampFrequency);
+  VorbisAudioRTPSource(UsageEnvironment& env, Groupsock* RTPgs,
+		       unsigned char rtpPayloadFormat,
+		       unsigned rtpTimestampFrequency);
       // called only by createNew()
 
-  virtual ~H264VideoRTPSource();
+  virtual ~VorbisAudioRTPSource();
 
 protected:
   // redefined virtual functions:
@@ -47,24 +49,7 @@ protected:
   virtual char const* MIMEtype() const;
 
 private:
-  friend class H264BufferedPacket;
-  unsigned char fCurPacketNALUnitType;
+  u_int32_t fCurPacketIdent; // only the low-order 24 bits are used
 };
-
-class SPropRecord {
-public:
-  ~SPropRecord() { delete[] sPropBytes; }
-
-  unsigned sPropLength; // in bytes
-  unsigned char* sPropBytes;
-};
-
-SPropRecord* parseSPropParameterSets(char const* sPropParameterSetsStr,
-				     // result parameter:
-				     unsigned& numSPropRecords);
-    // Returns the binary value of each 'parameter set' specified in a
-    // "sprop-parameter-sets" string (in the SDP description for a H.264/RTP stream).
-    // The value is returned as an array (length "numSPropRecords") of "SPropRecord"s.
-    // This array is dynamically allocated by this routine, and must be delete[]d by the caller.
 
 #endif

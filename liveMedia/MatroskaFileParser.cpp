@@ -929,6 +929,29 @@ void MatroskaFileParser::deliverFrameWithinBlock() {
 	durationInMicroseconds = 0;
       }
     }
+
+    if (track->defaultDuration == 0) {
+      // Adjust the frame duration to keep the sum of frame durations aligned with presentation times.
+      if (track->prevPresentationTime.tv_sec != 0) { // not the first time for this track
+	track->durationImbalance
+	  += (presentationTime.tv_sec - track->prevPresentationTime.tv_sec)*1000000
+	  + (presentationTime.tv_usec - track->prevPresentationTime.tv_usec);
+      }
+      int adjustment = 0;
+      if (track->durationImbalance > 0) {
+	// The duration needs to be increased.
+	int const adjustmentThreshold = 100000; // don't increase the duration by more than this amount (in case there's a mistake)
+	adjustment = track->durationImbalance > adjustmentThreshold ? adjustmentThreshold : track->durationImbalance;
+      } else if (track->durationImbalance < 0) {
+	// The duration needs to be decreased.
+	adjustment
+	  = (unsigned)(-track->durationImbalance) < durationInMicroseconds ? track->durationImbalance : -(int)durationInMicroseconds;
+      }
+      durationInMicroseconds += adjustment;
+      track->durationImbalance -= durationInMicroseconds; // for next time
+      track->prevPresentationTime = presentationTime; // for next time
+    }
+
     demuxedTrack->presentationTime() = presentationTime;
     demuxedTrack->durationInMicroseconds() = durationInMicroseconds;
 

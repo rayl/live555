@@ -259,7 +259,8 @@ MatroskaTrack::MatroskaTrack()
     name(NULL), language(NULL), codecID(NULL),
     samplingFrequency(0), numChannels(2), mimeType(""),
     codecPrivateSize(0), codecPrivate(NULL), headerStrippedBytesSize(0), headerStrippedBytes(NULL),
-    subframeSizeSize(0) {
+    subframeSizeSize(0), durationImbalance(0) {
+  prevPresentationTime.tv_sec = 0; prevPresentationTime.tv_usec = 0;
 }
 
 MatroskaTrack::~MatroskaTrack() {

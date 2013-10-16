@@ -60,7 +60,7 @@ protected:
       // whether other frames can be packed into a packet following the
       // final fragment of a previous, fragmented frame (by default: False)
   virtual Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
-					 unsigned numBytesInFrame) const;
+						 unsigned numBytesInFrame) const;
       // whether this frame can appear in position >1 in a pkt (default: True)
   virtual unsigned specialHeaderSize() const;
       // returns the size of any special header used (following the RTP header) (default: 0)

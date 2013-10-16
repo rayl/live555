@@ -1713,11 +1713,15 @@ char* RTSPClient::sendOptionsCmd(char const* url,
       haveAllocatedAuthenticator = True;
       
       result = sendOptionsCmd(url, username, password, authenticator, timeout);
-      if (result != NULL) return result; // We are already authorized
+      if (result != NULL) { // We are already authorized
+	delete authenticator;
+	return result;
+      }
 
       // The "realm" field should have been filled in:
       if (authenticator->realm() == NULL) {
 	// We haven't been given enough information to try again, so fail:
+	delete authenticator;
 	return NULL;
       }
     }
@@ -1733,6 +1737,7 @@ char* RTSPClient::sendOptionsCmd(char const* url,
     fTimeoutTask = envir().taskScheduler().scheduleDelayedTask(timeout*1000000, timeoutHandlerForSyncInterface, this);
   }
   (void)sendOptionsCommand(responseHandlerForSyncInterface, authenticator);
+  if (haveAllocatedAuthenticator) delete authenticator;
 
   // Now block (but handling events) until we get a response (or a timeout):
   envir().taskScheduler().doEventLoop(&fWatchVariableForSyncInterface);
