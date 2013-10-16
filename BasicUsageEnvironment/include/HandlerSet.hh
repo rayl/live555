@@ -50,7 +50,7 @@ public:
   virtual ~HandlerSet();
 
   void assignHandler(int socketNum, int conditionSet, TaskScheduler::BackgroundHandlerProc* handlerProc, void* clientData);
-  Boolean clearHandler(int socketNum, int conditionSet); // returns True iff the handler is completely deleted
+  void clearHandler(int socketNum);
   void moveHandler(int oldSocketNum, int newSocketNum);
 
 private:

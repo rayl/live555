@@ -150,63 +150,25 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
   fDelayQueue.handleAlarm();
 }
 
-void BasicTaskScheduler::turnOnBackgroundReadHandling(int socketNum, BackgroundHandlerProc* handlerProc, void* clientData) {
-  if (socketNum < 0) return;
-  fHandlers->assignHandler(socketNum, SOCKET_READABLE, handlerProc, clientData);
-  FD_SET((unsigned)socketNum, &fReadSet);
-
-  if (socketNum+1 > fMaxNumSockets) {
-    fMaxNumSockets = socketNum+1;
-  }
-}
-
-void BasicTaskScheduler::turnOnBackgroundWriteHandling(int socketNum, BackgroundHandlerProc* handlerProc, void* clientData) {
-  if (socketNum < 0) return;
-  fHandlers->assignHandler(socketNum, SOCKET_WRITABLE, handlerProc, clientData);
-  FD_SET((unsigned)socketNum, &fWriteSet);
-
-  if (socketNum+1 > fMaxNumSockets) {
-    fMaxNumSockets = socketNum+1;
-  }
-}
-
-void BasicTaskScheduler::turnOnBackgroundExceptionHandling(int socketNum, BackgroundHandlerProc* handlerProc, void* clientData) {
-  if (socketNum < 0) return;
-  fHandlers->assignHandler(socketNum, SOCKET_EXCEPTION, handlerProc, clientData);
-  FD_SET((unsigned)socketNum, &fExceptionSet);
-
-  if (socketNum+1 > fMaxNumSockets) {
-    fMaxNumSockets = socketNum+1;
-  }
-}
-
-void BasicTaskScheduler::turnOffBackgroundReadHandling(int socketNum) {
+void BasicTaskScheduler
+  ::setBackgroundHandling(int socketNum, int conditionSet, BackgroundHandlerProc* handlerProc, void* clientData) {
   if (socketNum < 0) return;
   FD_CLR((unsigned)socketNum, &fReadSet);
-  if (fHandlers->clearHandler(socketNum, SOCKET_READABLE)) {
-    if (socketNum+1 == fMaxNumSockets) {
-      --fMaxNumSockets;
-    }
-  }
-}
-
-void BasicTaskScheduler::turnOffBackgroundWriteHandling(int socketNum) {
-  if (socketNum < 0) return;
   FD_CLR((unsigned)socketNum, &fWriteSet);
-  if (fHandlers->clearHandler(socketNum, SOCKET_WRITABLE)) {
-    if (socketNum+1 == fMaxNumSockets) {
-      --fMaxNumSockets;
-    }
-  }
-}
-
-void BasicTaskScheduler::turnOffBackgroundExceptionHandling(int socketNum) {
-  if (socketNum < 0) return;
   FD_CLR((unsigned)socketNum, &fExceptionSet);
-  if (fHandlers->clearHandler(socketNum, SOCKET_EXCEPTION)) {
+  if (conditionSet == 0) {
+    fHandlers->clearHandler(socketNum);
     if (socketNum+1 == fMaxNumSockets) {
       --fMaxNumSockets;
     }
+  } else {
+    fHandlers->assignHandler(socketNum, conditionSet, handlerProc, clientData);
+    if (socketNum+1 > fMaxNumSockets) {
+      fMaxNumSockets = socketNum+1;
+    }
+    if (conditionSet&SOCKET_READABLE) FD_SET((unsigned)socketNum, &fReadSet);
+    if (conditionSet&SOCKET_WRITABLE) FD_SET((unsigned)socketNum, &fWriteSet);
+    if (conditionSet&SOCKET_EXCEPTION) FD_SET((unsigned)socketNum, &fExceptionSet);
   }
 }
 

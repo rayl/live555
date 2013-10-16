@@ -120,28 +120,14 @@ void HandlerSet
     handler->socketNum = socketNum;
   }
 
-  if (handler->handlerProc == handlerProc) {
-    // We're using the same handler function as before, so reuse the condition set as well: 
-    handler->conditionSet |= conditionSet;
-  } else {
-    // Assign a new condition set along with the new handler function:
-    handler->conditionSet = conditionSet;
-    handler->handlerProc = handlerProc;
-  }
+  handler->conditionSet = conditionSet;
+  handler->handlerProc = handlerProc;
   handler->clientData = clientData;
 }
 
-Boolean HandlerSet::clearHandler(int socketNum, int conditionSet) {
+void HandlerSet::clearHandler(int socketNum) {
   HandlerDescriptor* handler = lookupHandler(socketNum);
-  if (handler != NULL) {
-    handler->conditionSet &=~ conditionSet;
-    if (handler->conditionSet == 0) {
-      delete handler;
-      handler = NULL;
-    }
-  }
-
-  return handler == NULL;
+  delete handler;
 }
 
 void HandlerSet::moveHandler(int oldSocketNum, int newSocketNum) {

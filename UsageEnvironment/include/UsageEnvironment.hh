@@ -124,19 +124,8 @@ public:
     #define SOCKET_READABLE    (1<<1)
     #define SOCKET_WRITABLE    (1<<2)
     #define SOCKET_EXCEPTION   (1<<3)
-  virtual void turnOnBackgroundReadHandling(int socketNum,
-					    BackgroundHandlerProc* handlerProc,
-					    void* clientData) = 0;
-  virtual void turnOnBackgroundWriteHandling(int socketNum,
-					     BackgroundHandlerProc* handlerProc,
-					     void* clientData) = 0;
-  virtual void turnOnBackgroundExceptionHandling(int socketNum,
-						 BackgroundHandlerProc* handlerProc,
-						 void* clientData) = 0;
-        // Note: If more than one of the above functions are called on the same socket, then "handlerProc" must be the same for all.
-  virtual void turnOffBackgroundReadHandling(int socketNum) = 0;
-  virtual void turnOffBackgroundWriteHandling(int socketNum) = 0;
-  virtual void turnOffBackgroundExceptionHandling(int socketNum) = 0;
+  virtual void setBackgroundHandling(int socketNum, int conditionSet, BackgroundHandlerProc* handlerProc, void* clientData) = 0;
+  void disableBackgroundHandling(int socketNum) { setBackgroundHandling(socketNum, 0, NULL, NULL); }
   virtual void moveSocketHandling(int oldSocketNum, int newSocketNum) = 0;
         // Changes any socket handling for "oldSocketNum" so that occurs with "newSocketNum" instead.
 
@@ -146,6 +135,12 @@ public:
 	// to proceed.
         // (If "watchVariable" is not NULL, then we return from this
         // routine when *watchVariable != 0)
+
+  // The following two functions are deprecated, and are provided for backwards-compatibility only:
+  void turnOnBackgroundReadHandling(int socketNum, BackgroundHandlerProc* handlerProc, void* clientData) {
+    setBackgroundHandling(socketNum, SOCKET_READABLE, handlerProc, clientData);
+  }
+  void turnOffBackgroundReadHandling(int socketNum) { disableBackgroundHandling(socketNum); }
 
 protected:
   TaskScheduler(); // abstract base class
