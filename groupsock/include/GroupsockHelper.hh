@@ -31,15 +31,7 @@ int setupStreamSocket(UsageEnvironment& env,
 
 int readSocket(UsageEnvironment& env,
 	       int socket, unsigned char* buffer, unsigned bufferSize,
-	       struct sockaddr_in& fromAddress,
-	       struct timeval* timeout = NULL);
-
-int readSocketExact(UsageEnvironment& env,
-		    int socket, unsigned char* buffer, unsigned bufferSize,
-		    struct sockaddr_in& fromAddress,
-		    struct timeval* timeout = NULL);
-    // like "readSocket()", except that it rereads as many times as needed until
-    // *exactly* "bufferSize" bytes are read.
+	       struct sockaddr_in& fromAddress);
 
 Boolean writeSocket(UsageEnvironment& env,
 		    int socket, struct in_addr address, Port port,

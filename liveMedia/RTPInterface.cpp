@@ -63,6 +63,7 @@ public:
 
 private:
   static void tcpReadHandler(SocketDescriptor*, int mask);
+  void tcpReadHandler1(int mask);
 
 private:
   UsageEnvironment& fEnv;
@@ -70,6 +71,8 @@ private:
   HashTable* fSubChannelHashTable;
   ServerRequestAlternativeByteHandler* fServerRequestAlternativeByteHandler;
   void* fServerRequestAlternativeByteHandlerClientData;
+  u_int8_t fStreamChannelId, fSizeByte1;
+  enum { AWAITING_DOLLAR, AWAITING_STREAM_CHANNEL_ID, AWAITING_SIZE1, AWAITING_SIZE2 } fTCPReadingState;
 };
 
 static SocketDescriptor* lookupSocketDescriptor(UsageEnvironment& env, int sockNum, Boolean createIfNotFound = True) {
@@ -297,7 +300,8 @@ void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
 SocketDescriptor::SocketDescriptor(UsageEnvironment& env, int socketNum)
   :fEnv(env), fOurSocketNum(socketNum),
     fSubChannelHashTable(HashTable::create(ONE_WORD_HASH_KEYS)),
-   fServerRequestAlternativeByteHandler(NULL), fServerRequestAlternativeByteHandlerClientData(NULL) {
+   fServerRequestAlternativeByteHandler(NULL), fServerRequestAlternativeByteHandlerClientData(NULL),
+   fTCPReadingState(AWAITING_DOLLAR) {
 }
 
 SocketDescriptor::~SocketDescriptor() {
@@ -338,54 +342,75 @@ void SocketDescriptor
 }
 
 void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor, int mask) {
-  do {
-    UsageEnvironment& env = socketDescriptor->fEnv; // abbrev
-    int socketNum = socketDescriptor->fOurSocketNum;
+  socketDescriptor->tcpReadHandler1(mask);
+}
 
-    // Begin by reading any characters before the first '$'.  Any such characters make up a RTSP command or response,
-    // which needs to be handled separately.
-    unsigned char c;
-    struct sockaddr_in fromAddress;
-    struct timeval timeout; timeout.tv_sec = 0; timeout.tv_usec = 0;
-    while (1) {
-      int result = readSocket(env, socketNum, &c, 1, fromAddress, &timeout);
-      if (result != 1) { // error reading TCP socket
-	if (result < 0) {
-	  env.taskScheduler().turnOffBackgroundReadHandling(socketNum); // stops further calls to us
+void SocketDescriptor::tcpReadHandler1(int mask) {
+  // We expect the following data over the TCP channel:
+  //   optional RTSP command or response bytes (before the first '$' character)
+  //   a '$' character
+  //   a 1-byte channel id
+  //   a 2-byte packet size (in network byte order)
+  //   the packet data.
+  // However, because the socket is being read asynchronously, this data might arrive in pieces.
+  
+  u_int8_t c;
+  struct sockaddr_in fromAddress;
+  while (1) {
+    int result = readSocket(fEnv, fOurSocketNum, &c, 1, fromAddress);
+    if (result != 1) { // error reading TCP socket, or no more data available
+      if (result < 0) { // error
+	fEnv.taskScheduler().turnOffBackgroundReadHandling(fOurSocketNum); // stops further calls to us
+      }
+      return;
+    }
+    
+    switch (fTCPReadingState) {
+      case AWAITING_DOLLAR: {
+	if (c == '$') {
+	  fTCPReadingState = AWAITING_STREAM_CHANNEL_ID;
+	} else {
+	  // This character is part of a RTSP request or command, which is handled separately:
+	  if (fServerRequestAlternativeByteHandler != NULL) {
+	    (*fServerRequestAlternativeByteHandler)(fServerRequestAlternativeByteHandlerClientData, c);
+	  }
+	}
+	break;
+      }
+      case AWAITING_STREAM_CHANNEL_ID: {
+	// The byte that we read is the stream channel id.
+	fStreamChannelId = c;
+	fTCPReadingState = AWAITING_SIZE1;
+	break;
+      }
+      case AWAITING_SIZE1: {
+	// The byte that we read is the first (high) byte of the 16-bit RTP or RTCP packet 'size'.
+	fSizeByte1 = c;
+	fTCPReadingState = AWAITING_SIZE2;
+	break;
+      }
+      case AWAITING_SIZE2: {
+	// The byte that we read is the second (low) byte of the 16-bit RTP or RTCP packet 'size'.
+	unsigned short size = (fSizeByte1<<8)|c;
+	fTCPReadingState = AWAITING_DOLLAR;
+	
+	// Now that we know how much packet data to read, call this subchannel's read handler:
+	RTPInterface* rtpInterface = lookupRTPInterface(fStreamChannelId);
+	if (rtpInterface != NULL) {
+	  rtpInterface->fNextTCPReadSize = size;
+	  rtpInterface->fNextTCPReadStreamSocketNum = fOurSocketNum;
+	  rtpInterface->fNextTCPReadStreamChannelId = fStreamChannelId;
+	  if (rtpInterface->fReadHandlerProc != NULL) {
+#ifdef DEBUG
+	    fprintf(stderr, "SocketDescriptor::tcpReadHandler() reading %d bytes on channel %d\n", rtpInterface->fNextTCPReadSize, rtpInterface->fNextTCPReadStreamChannelId);
+#endif
+	    rtpInterface->fReadHandlerProc(rtpInterface->fOwner, mask);
+	  }
 	}
 	return;
       }
-
-      if (c == '$') break;
-      if (socketDescriptor->fServerRequestAlternativeByteHandler != NULL) {
-	(*socketDescriptor->fServerRequestAlternativeByteHandler)(socketDescriptor->fServerRequestAlternativeByteHandlerClientData, c);
-      }
     }
-
-    // The next byte is the stream channel id:
-    unsigned char streamChannelId;
-    if (readSocket(env, socketNum, &streamChannelId, 1, fromAddress) != 1) break;
-    RTPInterface* rtpInterface = socketDescriptor->lookupRTPInterface(streamChannelId);
-    if (rtpInterface == NULL) break; // we're not interested in this channel
-
-    // The next two bytes are the RTP or RTCP packet size (in network order)
-    unsigned short size;
-    if (readSocketExact(env, socketNum, (unsigned char*)&size, 2,
-			fromAddress) != 2) break;
-    rtpInterface->fNextTCPReadSize = ntohs(size);
-    rtpInterface->fNextTCPReadStreamSocketNum = socketNum;
-    rtpInterface->fNextTCPReadStreamChannelId = streamChannelId;
-#ifdef DEBUG
-    fprintf(stderr, "SocketDescriptor::tcpReadHandler() reading %d bytes on channel %d\n", rtpInterface->fNextTCPReadSize, streamChannelId);
-#endif
-
-    // Now that we have the data set up, call this subchannel's
-    // read handler:
-    if (rtpInterface->fReadHandlerProc != NULL) {
-      rtpInterface->fReadHandlerProc(rtpInterface->fOwner, mask);
-    }
-
-  } while (0);
+  }
 }
 
 

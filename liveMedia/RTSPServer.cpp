@@ -22,6 +22,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "RTSPCommon.hh"
 #include <GroupsockHelper.hh>
 
+#define DEBUG 1//#####@@@@@
 #if defined(__WIN32__) || defined(_WIN32) || defined(_QNX4)
 #else
 #include <signal.h>

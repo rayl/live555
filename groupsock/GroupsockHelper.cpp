@@ -222,108 +222,37 @@ int setupStreamSocket(UsageEnvironment& env,
   return newSocket;
 }
 
-#ifndef IMN_PIM
-static int blockUntilReadable(UsageEnvironment& env,
-			      int socket, struct timeval* timeout) {
-  int result = -1;
-  do {
-    fd_set rd_set;
-    FD_ZERO(&rd_set);
-    if (socket < 0) break;
-    FD_SET((unsigned) socket, &rd_set);
-    const unsigned numFds = socket+1;
-
-    result = select(numFds, &rd_set, NULL, NULL, timeout);
-    if (timeout != NULL && result == 0) {
-      break; // this is OK - timeout occurred
-    } else if (result <= 0) {
-      int err = env.getErrno();
-      if (err == EINTR || err == EAGAIN || err == EWOULDBLOCK) continue;
-      socketErr(env, "select() error: ");
-      break;
-    }
-
-    if (!FD_ISSET(socket, &rd_set)) {
-      socketErr(env, "select() error - !FD_ISSET");
-      break;
-    }
-  } while (0);
-
-  return result;
-}
-#else
-extern int blockUntilReadable(UsageEnvironment& env,
-			      int socket, struct timeval* timeout);
-#endif
-
 int readSocket(UsageEnvironment& env,
 	       int socket, unsigned char* buffer, unsigned bufferSize,
-	       struct sockaddr_in& fromAddress,
-	       struct timeval* timeout) {
-  int bytesRead = -1;
-  do {
-    int result = blockUntilReadable(env, socket, timeout);
-    if (timeout != NULL && result == 0) {
-      bytesRead = 0;
-      break;
-    } else if (result <= 0) {
-      break;
-    }
-
-    SOCKLEN_T addressSize = sizeof fromAddress;
-    bytesRead = recvfrom(socket, (char*)buffer, bufferSize, 0,
-			 (struct sockaddr*)&fromAddress,
-			 &addressSize);
-    if (bytesRead < 0) {
-      //##### HACK to work around bugs in Linux and Windows:
-      int err = env.getErrno();
-      if (err == 111 /*ECONNREFUSED (Linux)*/
+	       struct sockaddr_in& fromAddress) {
+  SOCKLEN_T addressSize = sizeof fromAddress;
+  int bytesRead = recvfrom(socket, (char*)buffer, bufferSize, 0,
+			   (struct sockaddr*)&fromAddress,
+			   &addressSize);
+  if (bytesRead < 0) {
+    //##### HACK to work around bugs in Linux and Windows:
+    int err = env.getErrno();
+    if (err == 111 /*ECONNREFUSED (Linux)*/
 #if defined(__WIN32__) || defined(_WIN32)
-	  // What a piece of crap Windows is.  Sometimes
-	  // recvfrom() returns -1, but with an 'errno' of 0.
-	  // This appears not to be a real error; just treat
-	  // it as if it were a read of zero bytes, and hope
-	  // we don't have to do anything else to 'reset'
-	  // this alleged error:
-	  || err == 0
+	// What a piece of crap Windows is.  Sometimes
+	// recvfrom() returns -1, but with an 'errno' of 0.
+	// This appears not to be a real error; just treat
+	// it as if it were a read of zero bytes, and hope
+	// we don't have to do anything else to 'reset'
+	// this alleged error:
+	|| err == 0
 #else
-	  || err == EAGAIN
+	|| err == EAGAIN
 #endif
-	  || err == 113 /*EHOSTUNREACH (Linux)*/) {
-			        //Why does Linux return this for datagram sock?
-	fromAddress.sin_addr.s_addr = 0;
-	return 0;
-      }
-      //##### END HACK
-      socketErr(env, "recvfrom() error: ");
-      break;
+	|| err == 113 /*EHOSTUNREACH (Linux)*/) { // Why does Linux return this for datagram sock?
+      fromAddress.sin_addr.s_addr = 0;
+      return 0;
     }
-  } while (0);
+    //##### END HACK
+    socketErr(env, "recvfrom() error: ");
+  }
 
   return bytesRead;
-}
-
-
-int readSocketExact(UsageEnvironment& env,
-		    int socket, unsigned char* buffer, unsigned bufferSize,
-		    struct sockaddr_in& fromAddress,
-		    struct timeval* timeout) {
-  /* read EXACTLY bufferSize bytes from the socket into the buffer.
-     fromaddress is address of last read.
-     return the number of bytes actually read when an error occurs
-  */
-  int bsize = bufferSize;
-  int bytesRead = 0;
-  int totBytesRead =0;
-  do {
-    bytesRead = readSocket (env, socket, buffer + totBytesRead, bsize,
-                            fromAddress, timeout);
-    if (bytesRead <= 0) break;
-    totBytesRead += bytesRead;
-    bsize -= bytesRead;
-  } while (bsize != 0);
-
-  return totBytesRead;
 }
 
 Boolean writeSocket(UsageEnvironment& env,
@@ -591,17 +520,23 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
       if (!writeSocket(env, sock, testAddr, testPort, 0,
 		       testString, testStringLength)) break;
 
-      unsigned char readBuffer[20];
+      // Block until the socket is readable (with a 5-second timeout):
+      fd_set rd_set;
+      FD_ZERO(&rd_set);
+      FD_SET((unsigned)sock, &rd_set);
+      const unsigned numFds = sock+1;
       struct timeval timeout;
       timeout.tv_sec = 5;
       timeout.tv_usec = 0;
+      int result = select(numFds, &rd_set, NULL, NULL, &timeout);
+      if (result <= 0) break;
+
+      unsigned char readBuffer[20];
       int bytesRead = readSocket(env, sock,
 				 readBuffer, sizeof readBuffer,
-				 fromAddr, &timeout);
-      if (bytesRead == 0 // timeout occurred
-	  || bytesRead != (int)testStringLength
-	  || strncmp((char*)readBuffer, (char*)testString,
-		     testStringLength) != 0) {
+				 fromAddr);
+      if (bytesRead != (int)testStringLength
+	  || strncmp((char*)readBuffer, (char*)testString, testStringLength) != 0) {
 	break;
       }
 
@@ -613,9 +548,7 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
       // so try instead to look it up directly.
       char hostname[100];
       hostname[0] = '\0';
-#ifndef CRIS
       gethostname(hostname, sizeof hostname);
-#endif
       if (hostname[0] == '\0') {
 	env.setResultErrMsg("initial gethostname() failed");
 	break;

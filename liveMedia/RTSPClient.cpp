@@ -111,7 +111,7 @@ unsigned RTSPClient::sendSetParameterCommand(MediaSession& session, responseHand
   if (authenticator != NULL) fCurrentAuthenticator = *authenticator;
   char* paramString = new char[strlen(parameterName) + strlen(parameterValue) + 10];
   sprintf(paramString, "%s: %s\r\n", parameterName, parameterValue);
-  unsigned result = sendRequest(new RequestRecord(++fCSeq, "SET_PARAMETER", responseHandler, NULL, NULL, False, 0.0, 0.0, 0.0, paramString));
+  unsigned result = sendRequest(new RequestRecord(++fCSeq, "SET_PARAMETER", responseHandler, &session, NULL, False, 0.0, 0.0, 0.0, paramString));
   delete[] paramString;
   return result;
 }
@@ -131,7 +131,7 @@ unsigned RTSPClient::sendGetParameterCommand(MediaSession& session, responseHand
   } else {
     sprintf(paramString, "%s\r\n", parameterName);
   }
-  unsigned result = sendRequest(new RequestRecord(++fCSeq, "GET_PARAMETER", responseHandler, NULL, NULL, False, 0.0, 0.0, 0.0, paramString));
+  unsigned result = sendRequest(new RequestRecord(++fCSeq, "GET_PARAMETER", responseHandler, &session, NULL, False, 0.0, 0.0, 0.0, paramString));
   delete[] paramString;
   return result;
 }
