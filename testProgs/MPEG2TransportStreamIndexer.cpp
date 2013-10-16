@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2010, Live Networks, Inc.  All rights reserved
 // A program that reads an existing MPEG-2 Transport Stream file,
 // and generates a separate index file that can be used - by our RTSP server
 // implementation - to support 'trick play' operations when streaming the
@@ -31,7 +31,7 @@ char const* programName;
 void usage() {
   *env << "usage: " << programName << " <transport-stream-file-name>\n";
   *env << "\twhere <transport-stream-file-name> ends with \".ts\"\n";
-  exit(1);
+  abort();
 }
 
 int main(int argc, char const** argv) {
@@ -57,7 +57,7 @@ int main(int argc, char const** argv) {
     = ByteStreamFileSource::createNew(*env, inputFileName, TRANSPORT_PACKET_SIZE);
   if (input == NULL) {
     *env << "Failed to open input file \"" << inputFileName << "\" (does it exist?)\n";
-    exit(1);
+    abort();
   }
 
   // Create a filter that indexes the input Transport Stream data:
@@ -72,7 +72,7 @@ int main(int argc, char const** argv) {
   MediaSink* output = FileSink::createNew(*env, outputFileName);
   if (output == NULL) {
     *env << "Failed to open output file \"" << outputFileName << "\"\n";
-    exit(1);
+    abort();
   }
 
   // Start playing, to generate the output index file:

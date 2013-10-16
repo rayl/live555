@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
 // A filter that parses a DV input stream into DV frames to deliver to the downstream object
 // C++ header
 
@@ -26,13 +26,14 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 #define DV_DIF_BLOCK_SIZE 80
+#define DV_SAVED_INITIAL_BLOCKS_SIZE (6*DV_DIF_BLOCK_SIZE) /* enough initial data to parse the profile */
 
 class DVVideoStreamFramer: public FramedFilter {
 public:
   static DVVideoStreamFramer*
   createNew(UsageEnvironment& env, FramedSource* inputSource);
 
-  char const* profileName() const;
+  char const* profileName();
 
 protected:
   DVVideoStreamFramer(UsageEnvironment& env,
@@ -46,9 +47,16 @@ private:
   virtual void doGetNextFrame();
 
 private:
+  static void afterGettingFrame(void* clientData, unsigned frameSize,
+                                unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+                                unsigned durationInMicroseconds);
+  void afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes);
+
+private:
   char const* fProfileName;
-  unsigned char fSavedInitialBlock[DV_DIF_BLOCK_SIZE];
-  Boolean fInitialBlockPresent;
+  unsigned char fSavedInitialBlocks[DV_SAVED_INITIAL_BLOCKS_SIZE];
+  char fInitialBlocksPresent;
 };
 
 #endif

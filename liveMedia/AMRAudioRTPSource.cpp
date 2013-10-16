@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
 // AMR Audio RTP Sources (RFC 3267)
 // Implementation
 
@@ -543,7 +543,7 @@ void AMRDeinterleavingBuffer
 #ifdef DEBUG
     fprintf(stderr, "AMRDeinterleavingBuffer::deliverIncomingFrame() param sanity check failed (%d,%d,%d,%d)\n", frameSize, ILL, ILP, frameIndex);
 #endif
-    exit(1);
+    abort();
   }
 
   --frameIndex; // because it was incremented by the source when this frame was read

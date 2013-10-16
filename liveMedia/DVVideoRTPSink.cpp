@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
 // RTP sink for DV video (RFC 3189)
 // (Thanks to Ben Hutchings for prototyping this.)
 // Implementation
@@ -49,12 +49,6 @@ void DVVideoRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 					      unsigned /*numBytesInFrame*/,
 					      struct timeval frameTimestamp,
 					      unsigned numRemainingBytes) {
-  if (fragmentationOffset == 0) {
-    // This packet contains the first (or only) fragment of the frame.  Read its header to figure out our profile:
-    // TO COMPLETE #####@@@@@
-    
-  }
-
   if (numRemainingBytes == 0) {
     // This packet contains the last (or only) fragment of the frame.
     // Set the RTP 'M' ('marker') bit:

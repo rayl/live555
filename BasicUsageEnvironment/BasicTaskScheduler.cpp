@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
 // Basic Usage Environment: for a simple, non-scripted, console application
 // Implementation
 
@@ -88,7 +88,7 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
 #if !defined(_WIN32_WCE)
 	perror("BasicTaskScheduler::SingleStep(): select() fails");
 #endif
-	exit(0);
+	abort();
       }
   }
 

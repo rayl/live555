@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
 // Abstract class for parsing a byte stream
 // Implementation
 
@@ -79,7 +79,7 @@ void StreamParser::ensureValidBytes1(unsigned numBytesNeeded) {
 			  << fCurParserIndex << "+ "
 			  << numBytesNeeded << " > "
 			  << BANK_SIZE << ")\n";
-    exit(1);
+    abort();
   }
 
   // Try to read as many new bytes as will fit in the current bank:

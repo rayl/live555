@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2010, Live Networks, Inc.  All rights reserved
 // A test program that reads a MPEG-1 or 2 Program Stream file,
 // splits it into Audio and Video Elementary Streams,
 // and streams both using RTP, through a remote Darwin Streaming Server.
@@ -49,7 +49,7 @@ Boolean iFramesOnly = False;
 void usage() {
   *env << "usage: " << programName
        << " <Darwin Streaming Server name or IP address>\n";
-  exit(1);
+  abort();
 }
 
 void play(); // forward
@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
 				programName, "LIVE555 Streaming Media")) {
     *env << "injector->setDestination() failed: "
 	 << env->getResultMsg() << "\n";
-    exit(1);
+    abort();
   }
 
   *env << "Play this stream (from the Darwin Streaming Server) using the URL:\n"
@@ -167,7 +167,7 @@ void play() {
   if (fileSource == NULL) {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as a byte-stream file source\n";
-    exit(1);
+    abort();
   }
 
   // We must demultiplex Audio and Video Elementary Streams

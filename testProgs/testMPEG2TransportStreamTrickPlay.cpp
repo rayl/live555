@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2010, Live Networks, Inc.  All rights reserved
 // A program that tests 'trick mode' operations on a MPEG-2 Transport Stream file,
 // by generating a new Transport Stream file that represents the result of the
 // 'trick mode' operation (seeking and/or fast forward/reverse play).
@@ -39,7 +39,7 @@ void usage() {
   *env << "\twhere\t<transport-stream-file-name> ends with \".ts\"\n";
   *env << "\t\t<start-time> is the starting play time in seconds (0 for the start)\n";
   *env << "\t\t<scale> is a non-zero integer, representing the playing speed (use 1 for normal play; use a negative number for reverse play)\n";
-  exit(1);
+  abort();
 }
 
 int main(int argc, char const** argv) {
@@ -72,7 +72,7 @@ int main(int argc, char const** argv) {
     = ByteStreamFileSource::createNew(*env, inputFileName, TRANSPORT_PACKET_SIZE);
   if (input == NULL) {
     *env << "Failed to open input file \"" << inputFileName << "\" (does it exist?)\n";
-    exit(1);
+    abort();
   }
 
   // Check whether the corresponding index file exists.
@@ -83,7 +83,7 @@ int main(int argc, char const** argv) {
     = MPEG2TransportStreamIndexFile::createNew(*env, indexFileName);
   if (indexFile == NULL) {
     *env << "Failed to open index file \"" << indexFileName << "\" (does it exist?)\n";
-    exit(1);
+    abort();
   }
 
   // Create a filter that generates trick mode data from the input and index files:
@@ -98,7 +98,7 @@ int main(int argc, char const** argv) {
       *env << "Failed to seek trick mode filter to ts #" << (unsigned)tsRecordNumber
 	   << ", ix #" << (unsigned)indexRecordNumber
 	   << "(for time " << startTime << ")\n";
-      exit(1);
+      abort();
     }
   }
 
@@ -112,7 +112,7 @@ int main(int argc, char const** argv) {
   MediaSink* output = FileSink::createNew(*env, outputFileName);
   if (output == NULL) {
     *env << "Failed to open output file \"" << outputFileName << "\"\n";
-    exit(1);
+    abort();
   }
 
   // Start playing, to generate the output file:

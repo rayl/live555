@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2010, Live Networks, Inc.  All rights reserved
 // A test program that reads an AMR audio file (as defined in RFC 3267)
 // and streams it using RTP
 // main program
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
   RTSPServer* rtspServer = RTSPServer::createNew(*env, 8554);
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
-    exit(1);
+    abort();
   }
   ServerMediaSession* sms
     = ServerMediaSession::createNew(*env, "testStream", inputFileName,
@@ -112,7 +112,7 @@ void play() {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as an AMR audio file source: "
 	 << env->getResultMsg() << "\n";
-    exit(1);
+    abort();
   }
 
   // Finally, start playing:

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
 // A class encapsulating the state of a MP3 stream
 // Implementation
 
@@ -226,18 +226,6 @@ Boolean MP3StreamState::findNextFrame() {
   unsigned char hbuf[8];
   unsigned l; int i;
   int attempt = 0;
-
-#ifdef DEBUGGING_INPUT
-  /* use this debugging code to generate a copy of the input stream */
-  FILE* fout;
-  unsigned char c;
-  fout = fopen("testOut", "w");
-  while (readFromStream(&c, 1) ==1) {
-    fwrite(&c, 1, 1, fout);
-  }
-  fclose(fout);
-  exit(0);
-#endif
 
  read_again:
   if (readFromStream(hbuf, 4) != 4) return False;

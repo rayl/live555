@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2010, Live Networks, Inc.  All rights reserved
 // A test program that receives a RTP/RTCP multicast MP3 stream,
 // and outputs the resulting MP3 file stream to 'stdout'
 // main program
@@ -118,7 +118,7 @@ int main(int argc, char** argv) {
     = MP3ADUdeinterleaver::createNew(*env, sessionState.source);
   if (sessionState.source == NULL) {
     *env << "Unable to create an ADU deinterleaving filter for the source\n";
-    exit(1);
+    abort();
   }
 
   // Add another filter that converts these ADUs to MP3s:
@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
     = MP3FromADUSource::createNew(*env, sessionState.source);
   if (sessionState.source == NULL) {
     *env << "Unable to create an ADU->MP3 filter for the source\n";
-    exit(1);
+    abort();
   }
 #endif
 

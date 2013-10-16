@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2010, Live Networks, Inc.  All rights reserved
 // A test program that reads a VOB file
 // splits it into Audio (AC3) and Video (MPEG) Elementary Streams,
 // and streams both using RTP.
@@ -58,7 +58,7 @@ void usage() {
   *env << "usage: " << programName << " [-i] [-a|-v] "
 	  "[-p <RTSP-server-port-number>] "
 	  "<VOB-file>...<VOB-file>\n";
-  exit(1);
+  abort();
 }
 
 void play(); // forward
@@ -195,7 +195,7 @@ int main(int argc, char const** argv) {
     if (rtspServer == NULL) {
       *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
       *env << "To change the RTSP server's port number, use the \"-p <port number>\" option.\n";
-      exit(1);
+      abort();
     }
     ServerMediaSession* sms
       = ServerMediaSession::createNew(*env, "vobStream", *curInputFileName,
@@ -253,7 +253,7 @@ void play() {
   if (*curInputFileName == NULL) {
     // We have reached the end of the file name list.
     // Start again, unless we didn't succeed in reading any files:
-    if (!haveReadOneFile) exit(1);
+    if (!haveReadOneFile) abort();
     haveReadOneFile = False;
     curInputFileName = inputFileNames;
   }

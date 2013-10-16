@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2010, Live Networks, Inc.  All rights reserved
 // A test program that streams a MP3 file via RTP/RTCP
 // main program
 
@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
   // (optional) parameter to the "RTSPServer::createNew()" call above.
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
-    exit(1);
+    abort();
   }
   ServerMediaSession* sms
     = ServerMediaSession::createNew(*env, "testStream", inputFileName,
@@ -153,7 +153,7 @@ void play() {
   if (sessionState.source == NULL) {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as a MP3 file source\n";
-    exit(1);
+    abort();
   }
 
 #ifdef STREAM_USING_ADUS
@@ -162,7 +162,7 @@ void play() {
     = ADUFromMP3Source::createNew(*env, sessionState.source);
   if (sessionState.source == NULL) {
     *env << "Unable to create a MP3->ADU filter for the source\n";
-    exit(1);
+    abort();
   }
 
 #ifdef INTERLEAVE_ADUS
@@ -175,7 +175,7 @@ void play() {
     = MP3ADUinterleaver::createNew(*env, interleaving, sessionState.source);
   if (sessionState.source == NULL) {
     *env << "Unable to create an ADU interleaving filter for the source\n";
-    exit(1);
+    abort();
   }
 #endif
 #endif

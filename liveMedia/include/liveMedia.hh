@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
 // Inclusion of header files representing the interface
 // for the entire library
 //
@@ -35,6 +35,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GSMAudioRTPSink.hh"
 #include "H263plusVideoRTPSink.hh"
 #include "H264VideoRTPSink.hh"
+#include "DVVideoRTPSink.hh"
+#include "DVVideoStreamFramer.hh"
 #include "H264VideoStreamFramer.hh"
 #include "JPEGVideoRTPSink.hh"
 #include "SimpleRTPSink.hh"

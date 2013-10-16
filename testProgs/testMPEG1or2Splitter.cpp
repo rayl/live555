@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2009, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2010, Live Networks, Inc.  All rights reserved
 // A test program that splits a MPEG-1 or 2 Program Stream file into
 // video and audio output files.
 // main program
@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
   if (inputSource == NULL) {
     *env << "Unable to open file \"" << inputFileName
 	 << "\" as a byte-stream file source\n";
-    exit(1);
+    abort();
   }
 
   // Create a MPEG demultiplexor that reads from that source.
