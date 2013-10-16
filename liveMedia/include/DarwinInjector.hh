@@ -73,7 +73,8 @@ public:
 			 char const* remoteUserName = "",
 			 char const* remotePassword = "",
 			 char const* sessionAuthor = "",
-			 char const* sessionCopyright = "");
+			 char const* sessionCopyright = "",
+			 int timeout = -1);
 
 private: // redefined virtual functions
   virtual Boolean isDarwinInjector() const;

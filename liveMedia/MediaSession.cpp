@@ -463,7 +463,8 @@ char* MediaSession::lookupPayloadFormat(unsigned char rtpPayloadType,
 unsigned MediaSession::guessRTPTimestampFrequency(char const* mediumName,
 						  char const* codecName) {
   // By default, we assume that audio sessions use a frequency of 8000,
-  // and that video sessions use a frequency of 90000.
+  // video sessions use a frequency of 90000,
+  // and text sessions use a frequency of 1000.
   // Begin by checking for known exceptions to this rule
   // (where the frequency is known unambiguously (e.g., not like "DVI4"))
   if (strcmp(codecName, "L16") == 0) return 44100;
@@ -473,6 +474,7 @@ unsigned MediaSession::guessRTPTimestampFrequency(char const* mediumName,
 
   // Now, guess default values:
   if (strcmp(mediumName, "video") == 0) return 90000;
+  else if (strcmp(mediumName, "text") == 0) return 1000;
   return 8000; // for "audio", and any other medium
 }
 
@@ -863,6 +865,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 		   || strcmp(fCodecName, "G726-32") == 0 // G.726, 32 kbps
 		   || strcmp(fCodecName, "G726-40") == 0 // G.726, 40 kbps
 		   || strcmp(fCodecName, "SPEEX") == 0 // SPEEX audio
+		   || strcmp(fCodecName, "T140") == 0 // T.140 text (RFC 4103)
 		   ) {
 	createSimpleRTPSource = True;
 	useSpecialRTPoffset = 0;

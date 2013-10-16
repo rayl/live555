@@ -109,7 +109,8 @@ Boolean DarwinInjector
 		 char const* remoteUserName,
 		 char const* remotePassword,
 		 char const* sessionAuthor,
-		 char const* sessionCopyright) {
+		 char const* sessionCopyright,
+		 int timeout) {
   char* sdp = NULL;
   char* url = NULL;
   Boolean success = False; // until we learn otherwise
@@ -186,9 +187,9 @@ Boolean DarwinInjector
     Boolean announceSuccess;
     if (remoteUserName[0] != '\0' || remotePassword[0] != '\0') {
       announceSuccess
-	= fRTSPClient->announceWithPassword(url, sdp, remoteUserName, remotePassword);
+	= fRTSPClient->announceWithPassword(url, sdp, remoteUserName, remotePassword, timeout);
     } else {
-      announceSuccess = fRTSPClient->announceSDPDescription(url, sdp);
+      announceSuccess = fRTSPClient->announceSDPDescription(url, sdp, NULL, timeout);
     }
     if (!announceSuccess) break;
 
