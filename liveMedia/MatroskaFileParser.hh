@@ -35,6 +35,7 @@ enum MatroskaParseState {
   PARSING_START_OF_FILE,
   LOOKING_FOR_TRACKS,
   PARSING_TRACK,
+  PARSING_CUES,
   LOOKING_FOR_CLUSTER,
   LOOKING_FOR_BLOCK,
   PARSING_BLOCK,
@@ -48,6 +49,8 @@ public:
 		     MatroskaDemux* ourDemux = NULL);
   virtual ~MatroskaFileParser();
 
+  void seekToTime(double& seekNPT);
+
   // StreamParser 'client continue' function:
   static void continueParsing(void* clientData, unsigned char* ptr, unsigned size, struct timeval presentationTime);
   void continueParsing();
@@ -60,6 +63,7 @@ private:
   Boolean parseStartOfFile();
   void lookForNextTrack();
   Boolean parseTrack();
+  Boolean parseCues();
 
   void lookForNextBlock();
   void parseBlock();
@@ -79,6 +83,10 @@ private:
   void skipHeader(EBMLDataSize const& size);
 
   void setParseState();
+
+  void seekToFilePosition(u_int64_t offsetInFile);
+  void seekToEndOfFile();
+  void resetStateAfterSeeking(); // common code, called by both of the above
 
 private: // redefined virtual functions
   virtual void restoreSavedParserState();

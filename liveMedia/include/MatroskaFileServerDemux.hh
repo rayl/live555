@@ -50,8 +50,7 @@ public:
 
   MatroskaFile* ourMatroskaFile() { return fOurMatroskaFile; }
   char const* fileName() const { return fFileName; }
-  float fileDuration() const { return 0.0f; } // TEMPORARY - until we support seeking within the Matroska file #####@@@@@
-  //float fileDuration() const { return fOurMatroskaFile->fileDuration(); }
+  float fileDuration() const { return fOurMatroskaFile->fileDuration(); }
   MatroskaTrack* lookup(unsigned trackNumber) { return fOurMatroskaFile->lookup(trackNumber); } // shortcut
 
   FramedSource* newDemuxedTrack(unsigned clientSessionId, unsigned trackNumber);

@@ -93,7 +93,7 @@ struct hostent* our_gethostbyname(name)
 }
 #endif
 
-#ifndef USE_OUR_RANDOM
+#ifdef USE_SYSTEM_RANDOM
 /* Use the system-supplied "random()" and "srandom()" functions */
 #include <stdlib.h>
 long our_random() {
@@ -423,33 +423,53 @@ our_setstate(arg_state)
  *
  * Returns a 31-bit random number.
  */
-long
-our_random()
-{
-	long i;
+long our_random() {
+  long i;
 
-	if (rand_type == TYPE_0)
-		i = state[0] = (state[0] * 1103515245 + 12345) & 0x7fffffff;
-	else {
-		*fptr += *rptr;
-		i = (*fptr >> 1) & 0x7fffffff;	/* chucking least random bit */
-		if (++fptr >= end_ptr) {
-			fptr = state;
-			++rptr;
-		} else if (++rptr >= end_ptr)
-			rptr = state;
-	}
-	return(i);
+  if (rand_type == TYPE_0) {
+    i = state[0] = (state[0] * 1103515245 + 12345) & 0x7fffffff;
+  } else {
+    /* Make copies of "rptr" and "fptr" before working with them, in case we're being called concurrently by multiple threads: */
+    long* rp = rptr;
+    long* fp = fptr;
+
+    /* Make sure "rp" and "fp" are separated by the correct distance (again, allowing for concurrent access): */
+    if (!(fp == rp+SEP_3 || fp+DEG_3 == rp+SEP_3)) {
+      /* A rare case that should occur only if we're being called concurrently by multiple threads. */
+      /* Restore the proper separation between the pointers: */
+      if (rp <= fp) rp = fp-SEP_3; else rp = fp+DEG_3-SEP_3;
+    }
+
+    *fp += *rp;
+    i = (*fp >> 1) & 0x7fffffff;	/* chucking least random bit */
+    if (++fp >= end_ptr) {
+      fp = state;
+      ++rp;
+    } else if (++rp >= end_ptr) {
+      rp = state;
+    }
+
+    /* Restore "rptr" and "fptr" from our working copies: */
+    rptr = rp;
+    fptr = fp;
+  }
+
+  return i;
 }
 #endif
 
 u_int32_t our_random32() {
   // Return a 32-bit random number.
   // Because "our_random()" returns a 31-bit random number, we call it a second
-  // time, to generate the high bit:
-  long random1 = our_random();
-  long random2 = our_random();
-  return (u_int32_t)((random2<<31) | random1);
+  // time, to generate the high bit.
+  // (Actually, to increase the likelhood of randomness, we take the middle 16 bits of two successive calls to "our_random()")
+  long random_1 = our_random();
+  u_int32_t random16_1 = (u_int32_t)(random_1&0x00FFFF00);
+
+  long random_2 = our_random();
+  u_int32_t random16_2 = (u_int32_t)(random_2&0x00FFFF00);
+
+  return (random16_1<<8) | (random16_2>>8);
 }
 
 #ifdef USE_OUR_BZERO

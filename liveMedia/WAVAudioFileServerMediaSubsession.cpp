@@ -43,7 +43,7 @@ WAVAudioFileServerMediaSubsession
 }
 
 void WAVAudioFileServerMediaSubsession
-::seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration, u_int64_t& numBytes) {
+::seekStreamSource(FramedSource* inputSource, double& seekNPT, double streamDuration, u_int64_t& numBytes) {
   WAVAudioFileSource* wavSource;
   if (fBitsPerSample == 16) {
     // "inputSource" is a filter; its input source is the original WAV file source:

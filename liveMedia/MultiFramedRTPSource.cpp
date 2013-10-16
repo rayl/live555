@@ -53,6 +53,7 @@ private:
   Boolean fHaveSeenFirstPacket; // used to set initial "fNextExpectedSeqNo"
   unsigned short fNextExpectedSeqNo;
   BufferedPacket* fHeadPacket;
+  BufferedPacket* fTailPacket;
   BufferedPacket* fSavedPacket;
       // to avoid calling new/free in the common case
   Boolean fSavedPacketFree;
@@ -459,7 +460,7 @@ BufferedPacket* BufferedPacketFactory
 ReorderingPacketBuffer
 ::ReorderingPacketBuffer(BufferedPacketFactory* packetFactory)
   : fThresholdTime(100000) /* default reordering threshold: 100 ms */,
-    fHaveSeenFirstPacket(False), fHeadPacket(NULL), fSavedPacket(NULL), fSavedPacketFree(True) {
+    fHaveSeenFirstPacket(False), fHeadPacket(NULL), fTailPacket(NULL), fSavedPacket(NULL), fSavedPacketFree(True) {
   fPacketFactory = (packetFactory == NULL)
     ? (new BufferedPacketFactory)
     : packetFactory;
@@ -474,8 +475,7 @@ void ReorderingPacketBuffer::reset() {
   if (fSavedPacketFree) delete fSavedPacket; // because fSavedPacket is not in the list
   delete fHeadPacket; // will also delete fSavedPacket if it's in the list
   resetHaveSeenFirstPacket();
-  fHeadPacket = NULL;
-  fSavedPacket = NULL;
+  fHeadPacket = fTailPacket = fSavedPacket = NULL;
 }
 
 BufferedPacket* ReorderingPacketBuffer::getFreePacket(MultiFramedRTPSource* ourSource) {
@@ -505,7 +505,27 @@ Boolean ReorderingPacketBuffer::storePacket(BufferedPacket* bPacket) {
   // that we're looking for (in this case, it's been excessively delayed).
   if (seqNumLT(rtpSeqNo, fNextExpectedSeqNo)) return False;
 
-  // Figure out where the new packet will be stored in the queue:
+  if (fTailPacket == NULL) {
+    // Common case: There are no packets in the queue; this will be the first one:
+    bPacket->nextPacket() = NULL;
+    fHeadPacket = fTailPacket = bPacket;
+    return True;
+  }
+
+  if (seqNumLT(fTailPacket->rtpSeqNo(), rtpSeqNo)) {
+    // The next-most common case: There are packets already in the queue; this packet arrived in order => put it at the tail:
+    bPacket->nextPacket() = NULL;
+    fTailPacket->nextPacket() = bPacket;
+    fTailPacket = bPacket;
+    return True;
+  } 
+
+  if (rtpSeqNo == fTailPacket->rtpSeqNo()) {
+    // This is a duplicate packet - ignore it
+    return False;
+  }
+
+  // Rare case: This packet is out-of-order.  Run through the list (from the head), to figure out where it belongs:
   BufferedPacket* beforePtr = NULL;
   BufferedPacket* afterPtr = fHeadPacket;
   while (afterPtr != NULL) {
@@ -536,6 +556,9 @@ void ReorderingPacketBuffer::releaseUsedPacket(BufferedPacket* packet) {
   ++fNextExpectedSeqNo; // because we're finished with this packet now
 
   fHeadPacket = fHeadPacket->nextPacket();
+  if (!fHeadPacket) { 
+    fTailPacket = NULL;
+  }
   packet->nextPacket() = NULL;
 
   freePacket(packet);

@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "T140TextMatroskaFileServerMediaSubsession.hh"
 #include "T140TextRTPSink.hh"
+#include "MatroskaDemuxedTrack.hh"
 
 T140TextMatroskaFileServerMediaSubsession* T140TextMatroskaFileServerMediaSubsession
 ::createNew(MatroskaFileServerDemux& demux, unsigned trackNumber) {
@@ -38,6 +39,11 @@ T140TextMatroskaFileServerMediaSubsession
 }
 
 float T140TextMatroskaFileServerMediaSubsession::duration() const { return fOurDemux.fileDuration(); }
+
+void T140TextMatroskaFileServerMediaSubsession
+::seekStreamSource(FramedSource* inputSource, double& seekNPT, double /*streamDuration*/, u_int64_t& /*numBytes*/) {
+  ((MatroskaDemuxedTrack*)inputSource)->seekToTime(seekNPT);
+}
 
 FramedSource* T140TextMatroskaFileServerMediaSubsession
 ::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate) {

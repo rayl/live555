@@ -28,6 +28,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class MatroskaDemux; // forward
 
 class MatroskaDemuxedTrack: public FramedSource {
+public:
+  void seekToTime(double& seekNPT);
+
 private: // We are created only by a MatroskaDemux (a friend)
   friend class MatroskaDemux;
   MatroskaDemuxedTrack(UsageEnvironment& env, unsigned trackNumber, MatroskaDemux& sourceDemux);

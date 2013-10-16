@@ -119,8 +119,9 @@ void RTSPServerSupportingHTTPStreaming::RTSPClientSessionSupportingHTTPStreaming
       fStreamStates[0].streamToken = streamToken;
       
       // Seek the stream source to the desired place, with the desired duration, and (as a side effect) get the number of bytes:
+      double dOffsetInSeconds = (double)offsetInSeconds;
       u_int64_t numBytes;
-      subsession->seekStream(fOurSessionId, streamToken, (double)offsetInSeconds, (double)durationInSeconds, numBytes);
+      subsession->seekStream(fOurSessionId, streamToken, dOffsetInSeconds, (double)durationInSeconds, numBytes);
       unsigned numTSBytesToStream = (unsigned)numBytes;
       
       if (numTSBytesToStream == 0) {

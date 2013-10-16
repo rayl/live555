@@ -339,7 +339,7 @@ void ServerMediaSubsession::pauseStream(unsigned /*clientSessionId*/,
   // default implementation: do nothing
 }
 void ServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
-				       void* /*streamToken*/, double /*seekNPT*/, double /*streamDuration*/, u_int64_t& numBytes) {
+				       void* /*streamToken*/, double& /*seekNPT*/, double /*streamDuration*/, u_int64_t& numBytes) {
   // default implementation: do nothing
   numBytes = 0;
 }

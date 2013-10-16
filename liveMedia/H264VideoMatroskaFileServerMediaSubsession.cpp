@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "H264VideoMatroskaFileServerMediaSubsession.hh"
 #include "H264VideoStreamDiscreteFramer.hh"
+#include "MatroskaDemuxedTrack.hh"
 
 H264VideoMatroskaFileServerMediaSubsession* H264VideoMatroskaFileServerMediaSubsession
 ::createNew(MatroskaFileServerDemux& demux, unsigned trackNumber) {
@@ -95,6 +96,15 @@ H264VideoMatroskaFileServerMediaSubsession
 }
 
 float H264VideoMatroskaFileServerMediaSubsession::duration() const { return fOurDemux.fileDuration(); }
+
+void H264VideoMatroskaFileServerMediaSubsession
+::seekStreamSource(FramedSource* inputSource, double& seekNPT, double /*streamDuration*/, u_int64_t& /*numBytes*/) {
+  // "inputSource" is a framer. *Its* source is the demuxed track that we seek on:
+  H264VideoStreamFramer* framer = (H264VideoStreamFramer*)inputSource;
+
+  MatroskaDemuxedTrack* demuxedTrack = (MatroskaDemuxedTrack*)(framer->inputSource());
+  demuxedTrack->seekToTime(seekNPT);
+}
 
 FramedSource* H264VideoMatroskaFileServerMediaSubsession
 ::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate) {

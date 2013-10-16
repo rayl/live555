@@ -21,6 +21,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MatroskaDemuxedTrack.hh"
 #include "MatroskaFile.hh"
 
+void MatroskaDemuxedTrack::seekToTime(double& seekNPT) {
+  fOurSourceDemux.seekToTime(seekNPT);
+}
+
 MatroskaDemuxedTrack::MatroskaDemuxedTrack(UsageEnvironment& env, unsigned trackNumber, MatroskaDemux& sourceDemux)
   : FramedSource(env),
     fOurTrackNumber(trackNumber), fOurSourceDemux(sourceDemux) {

@@ -49,6 +49,41 @@ MatroskaFileParser::~MatroskaFileParser() {
   Medium::close(fInputSource);
 }
 
+void MatroskaFileParser::seekToTime(double& seekNPT) {
+#ifdef DEBUG
+  fprintf(stderr, "seekToTime(%f)\n", seekNPT);
+#endif
+  if (seekNPT <= 0.0) {
+#ifdef DEBUG
+    fprintf(stderr, "\t=> start of file\n");
+#endif
+    seekNPT = 0.0;
+    seekToFilePosition(0);
+  } else if (seekNPT >= fOurFile.fileDuration()) {
+#ifdef DEBUG
+    fprintf(stderr, "\t=> end of file\n");
+#endif
+    seekNPT = fOurFile.fileDuration();
+    seekToEndOfFile();
+  } else {
+    u_int64_t clusterOffsetInFile;
+    unsigned blockNumWithinCluster;
+    if (!fOurFile.lookupCuePoint(seekNPT, clusterOffsetInFile, blockNumWithinCluster)) {
+#ifdef DEBUG
+      fprintf(stderr, "\t=> not supported\n");
+#endif
+      return; // seeking not supported
+    }
+
+#ifdef DEBUG
+    fprintf(stderr, "\t=> seek time %f, file position %llu, block number within cluster %d\n", seekNPT, clusterOffsetInFile, blockNumWithinCluster);
+#endif
+    seekToFilePosition(clusterOffsetInFile);
+    fCurrentParseState = LOOKING_FOR_BLOCK;
+    // LATER handle "blockNumWithinCluster"; for now, we assume that it's 0 #####
+  }
+}
+
 void MatroskaFileParser
 ::continueParsing(void* clientData, unsigned char* /*ptr*/, unsigned /*size*/, struct timeval /*presentationTime*/) {
   ((MatroskaFileParser*)clientData)->continueParsing();
@@ -86,16 +121,29 @@ Boolean MatroskaFileParser::parse() {
 	}
         case PARSING_TRACK: {
 	  areDone = parseTrack();
+	  if (areDone && fOurFile.fCuesOffset > 0) {
+	    // We've finished parsing the 'Track' information.  There are also 'Cues' in the file, so parse those before finishing:
+	    // Seek to the specified position in the file.  We were already told that the 'Cues' begins there:
+#ifdef DEBUG
+	    fprintf(stderr, "Seeking to file position %llu (the previously-reported location of 'Cues')\n", fOurFile.fCuesOffset);
+#endif
+	    seekToFilePosition(fOurFile.fCuesOffset);
+	    fCurrentParseState = PARSING_CUES;
+	    areDone = False;
+	  }
+	  break;
+	}
+        case PARSING_CUES: {
+	  areDone = parseCues();
 	  break;
 	}
         case LOOKING_FOR_CLUSTER: {
 	  if (fOurFile.fClusterOffset > 0) {
 	    // Optimization: Seek to the specified position in the file.  We were already told that the 'Cluster' begins there:
-	    ByteStreamFileSource* fileSource = (ByteStreamFileSource*)fInputSource; // we know it's a "ByteStreamFileSource"
 #ifdef DEBUG
-	    fprintf(stderr, "Optimization: Seeking to file position %llu (the previously-reported location of a 'Cluster'\n", fOurFile.fClusterOffset);
+	    fprintf(stderr, "Optimization: Seeking to file position %llu (the previously-reported location of a 'Cluster')\n", fOurFile.fClusterOffset);
 #endif
-	    if (fileSource != NULL) fileSource->seekToByteAbsolute(fOurFile.fClusterOffset);
+	    seekToFilePosition(fOurFile.fClusterOffset);
 	  }
 	  fCurrentParseState = LOOKING_FOR_BLOCK;
 	  break;
@@ -585,6 +633,98 @@ void MatroskaFileParser::lookForNextBlock() {
   }
 }
 
+Boolean MatroskaFileParser::parseCues() {
+#if defined(DEBUG) || defined(DEBUG_CUES)
+  fprintf(stderr, "parsing Cues\n");
+#endif
+  EBMLId id;
+  EBMLDataSize size;
+
+  // Read the next header, which should be MATROSKA_ID_CUES:
+  if (!parseEBMLIdAndSize(id, size) || id != MATROSKA_ID_CUES) return True; // The header wasn't what we expected, so we're done
+  fLimitOffsetInFile = fCurOffsetInFile + size.val(); // Make sure we don't read past the end of this header
+
+  double currentCueTime = 0.0;
+  u_int64_t currentClusterOffsetInFile = 0;
+
+  while (fCurOffsetInFile < fLimitOffsetInFile) {
+    while (!parseEBMLIdAndSize(id, size)) {}
+#ifdef DEBUG_CUES
+    if (id == MATROSKA_ID_CUE_POINT) fprintf(stderr, "\n"); // makes debugging output easier to read
+    fprintf(stderr, "MatroskaFileParser::parseCues(): Parsed id 0x%s (%s), size: %lld\n", id.hexString(), id.stringName(), size.val());
+#endif
+    switch (id.val()) {
+      case MATROSKA_ID_CUE_POINT: { // 'Cue Point' header: enter this
+	break;
+      }
+      case MATROSKA_ID_CUE_TIME: { // 'Cue Time' header: get this value
+	unsigned cueTime;
+	if (parseEBMLVal_unsigned(size, cueTime)) {
+	  currentCueTime = cueTime*(fOurFile.fTimecodeScale/1000000000.0);
+#ifdef DEBUG_CUES
+	  fprintf(stderr, "\tCue Time %d (== %f seconds)\n", cueTime, currentCueTime);
+#endif
+	}
+	break;
+      }
+      case MATROSKA_ID_CUE_TRACK_POSITIONS: { // 'Cue Track Positions' header: enter this
+	break;
+      }
+      case MATROSKA_ID_CUE_TRACK: { // 'Cue Track' header: get this value (but only for debugging; we don't do anything with it)
+	unsigned cueTrack;
+	if (parseEBMLVal_unsigned(size, cueTrack)) {
+#ifdef DEBUG_CUES
+	  fprintf(stderr, "\tCue Track %d\n", cueTrack);
+#endif
+	}
+	break;
+      }
+      case MATROSKA_ID_CUE_CLUSTER_POSITION: { // 'Cue Cluster Position' header: get this value
+	u_int64_t cueClusterPosition;
+	if (parseEBMLVal_unsigned64(size, cueClusterPosition)) {
+	  currentClusterOffsetInFile = fOurFile.fSegmentDataOffset + cueClusterPosition;
+#ifdef DEBUG_CUES
+	  fprintf(stderr, "\tCue Cluster Position %llu (=> offset within the file: %llu (0x%llx))\n", cueClusterPosition, currentClusterOffsetInFile, currentClusterOffsetInFile);
+#endif
+	  // Record this cue point:
+	  fOurFile.addCuePoint(currentCueTime, currentClusterOffsetInFile, 1/*default block number within cluster*/);
+	}
+	break;
+      }
+      case MATROSKA_ID_CUE_BLOCK_NUMBER: { // 'Cue Block Number' header: get this value
+	unsigned cueBlockNumber;
+	if (parseEBMLVal_unsigned(size, cueBlockNumber) && cueBlockNumber != 0) {
+#ifdef DEBUG_CUES
+	  fprintf(stderr, "\tCue Block Number %d\n", cueBlockNumber);
+#endif
+	  // Record this cue point (overwriting any existing entry for this cue time):
+	  fOurFile.addCuePoint(currentCueTime, currentClusterOffsetInFile, cueBlockNumber);
+	}
+	break;
+      }
+      default: { // We don't process this header, so just skip over it:
+	skipHeader(size);
+#ifdef DEBUG_CUES
+	fprintf(stderr, "\tskipped %lld bytes\n", size.val());
+#endif
+	break;
+      }
+    }
+    setParseState();
+  }
+
+  fLimitOffsetInFile = 0; // reset
+#if defined(DEBUG) || defined(DEBUG_CUES)
+  fprintf(stderr, "done parsing Cues\n");
+#endif
+#ifdef DEBUG_CUES
+  fprintf(stderr, "Cue Point tree: ");
+  fOurFile.printCuePoints(stderr);
+  fprintf(stderr, "\n");
+#endif
+  return True; // we're done parsing Cues
+}
+
 typedef enum { NoLacing, XiphLacing, FixedSizeLacing, EBMLLacing } MatroskaLacingType;
 
 void MatroskaFileParser::parseBlock() {
@@ -992,83 +1132,25 @@ void MatroskaFileParser::restoreSavedParserState() {
   fCurOffsetWithinFrame = fSavedCurOffsetWithinFrame;
 }
 
-#if 0 //#####@@@@@@
-Boolean MatroskaFileParser:parseCuePoint() {
-  // ASSERT: We just read a 'Cue Point' header.
-  // Now, read and process all headers (which make up this 'Cue Point') until we reach the next 'Cue Point', if any:
-  EBMLId id;
-  EBMLDataSize size;
-
-  Boolean success;
-  while (1) {
-    success = False; // until we learn otherwise
-
-    if (!getNextEBMLIdAndSize(id, size)) {
-      if (fCurOffsetInFile >= fLimitOffsetInFile) {
-        // We've reached the end of our enclosing 'Cues' header:
-	success = True;
-      }
-      break;
-    }
-
-    if (id == MATROSKA_ID_CUE_POINT) {
-      success = True;
-      break;
-    }
-
-    // We process each header in this Cue Point:
-    switch (id.val()) {
-      case MATROSKA_ID_CUE_TIME: { // 'Cue Time' header: get this value
-	unsigned cueTime;
-	if (!getVal_unsigned(size, cueTime)) break;
-#ifdef DEBUG
-	fprintf(stderr, "\tCue Time %d (== %f seconds)\n", cueTime, cueTime*(fTimecodeScale/1000000000.0));
-#endif
-	success = True;
-	break;
-      }
-      case MATROSKA_ID_CUE_TRACK_POSITIONS: { // 'Cue Track Positions' header: enter this
-	success = True;
-	break;
-      }
-      case MATROSKA_ID_CUE_TRACK: { // 'Cue Track' header: get this value
-	unsigned cueTrack;
-	if (!getVal_unsigned(size, cueTrack)) break;
-#ifdef DEBUG
-	fprintf(stderr, "\tCue Track %d\n", cueTrack);
-#endif
-	success = True;
-	break;
-      }
-      case MATROSKA_ID_CUE_CLUSTER_POSITION: { // 'Cue Cluster Position' header: get this value
-	u_int64_t cueClusterPosition;
-	if (!getVal_unsigned64(size, cueClusterPosition)) break;
-#ifdef DEBUG
-	fprintf(stderr, "\tCue Cluster Position %llu\n", cueClusterPosition);
-#endif
-	success = True;
-	break;
-      }
-      case MATROSKA_ID_CUE_BLOCK_NUMBER: { // 'Cue Block Number' header: get this value
-	unsigned cueBlockNumber;
-	if (!getVal_unsigned(size, cueBlockNumber)) break;
-#ifdef DEBUG
-	fprintf(stderr, "\tCue Block Number %d\n", cueBlockNumber);
-#endif
-	success = True;
-	break;
-      }
-      default: {
-	// We don't process this header, so just skip over it:
-	if (!skipEMBLSize(size)) break;
-	success = True; 
-	break;
-      }
-    }
-
-    if (!success) break; // an error occurred during the processing of this header
+void MatroskaFileParser::seekToFilePosition(u_int64_t offsetInFile) {
+  ByteStreamFileSource* fileSource = (ByteStreamFileSource*)fInputSource; // we know it's a "ByteStreamFileSource"
+  if (fileSource != NULL) {
+    fileSource->seekToByteAbsolute(offsetInFile);
+    resetStateAfterSeeking();
   }
-
-  return success;
 }
-#endif
+
+void MatroskaFileParser::seekToEndOfFile() {
+  ByteStreamFileSource* fileSource = (ByteStreamFileSource*)fInputSource; // we know it's a "ByteStreamFileSource"
+  if (fileSource != NULL) {
+    fileSource->seekToEnd();
+    resetStateAfterSeeking();
+  }
+}
+
+void MatroskaFileParser::resetStateAfterSeeking() {
+  // Because we're resuming parsing after seeking to a new position in the file, reset the parser state:
+  fCurOffsetInFile = fSavedCurOffsetInFile = 0;
+  fCurOffsetWithinFrame = fSavedCurOffsetWithinFrame = 0;
+  flushInput();
+}

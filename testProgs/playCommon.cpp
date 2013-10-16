@@ -812,6 +812,10 @@ void continueAfterPLAY(RTSPClient*, int resultCode, char* resultString) {
   Boolean timerIsBeingUsed = False;
   double secondsToDelay = duration;
   if (duration > 0) {
+    // First, adjust "duration" based on any change to the play range (that was specified in the "PLAY" response):
+    double rangeAdjustment = (session->playEndTime() - session->playStartTime()) - (endTime - initialSeekTime);
+    if (duration + rangeAdjustment > 0.0) duration += rangeAdjustment;
+
     timerIsBeingUsed = True;
     double absScale = scale > 0 ? scale : -scale; // ASSERT: scale != 0
     secondsToDelay = duration/absScale + durationSlop;

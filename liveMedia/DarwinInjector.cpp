@@ -173,7 +173,7 @@ Boolean DarwinInjector
       + strlen(sessionAuthor)
       + strlen(sessionCopyright)
       + fSubstreamSDPSizes;
-    unsigned const sdpSessionId = our_random();
+    unsigned const sdpSessionId = our_random32();
     unsigned const sdpVersion = sdpSessionId;
     sdp = new char[sdpLen];
     sprintf(sdp, sdpFmt,

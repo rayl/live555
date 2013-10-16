@@ -117,7 +117,7 @@ void MP3AudioFileServerMediaSubsession::getBaseStreams(FramedSource* frontStream
 
 
 void MP3AudioFileServerMediaSubsession
-::seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration, u_int64_t& /*numBytes*/) {
+::seekStreamSource(FramedSource* inputSource, double& seekNPT, double streamDuration, u_int64_t& /*numBytes*/) {
   FramedSource* sourceMP3Stream;
   ADUFromMP3Source* aduStream;
   getBaseStreams(inputSource, sourceMP3Stream, aduStream);

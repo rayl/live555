@@ -74,7 +74,7 @@ public:
   // Parameters of the file ('Segment'); set when the file is parsed:
   unsigned timecodeScale() { return fTimecodeScale; } // in nanoseconds
   float segmentDuration() { return fSegmentDuration; } // in units of "timecodeScale()"
-  float fileDuration() { return segmentDuration()*(timecodeScale()/1000000000.0f); } // in seconds
+  float fileDuration(); // in seconds
   TrackTable& tracks() { return fTracks; }
   
   char const* fileName() const { return fFileName; }
@@ -92,6 +92,10 @@ private:
   static void handleEndOfTrackHeaderParsing(void* clientData);
   void handleEndOfTrackHeaderParsing();
 
+  void addCuePoint(double cueTime, u_int64_t clusterOffsetInFile, unsigned blockNumWithinCluster);
+  Boolean lookupCuePoint(double& cueTime, u_int64_t& resultClusterOffsetInFile, unsigned& resultBlockNumWithinCluster);
+  void printCuePoints(FILE* fid);
+
   void removeDemux(MatroskaDemux* demux);
 
 private:
@@ -108,6 +112,7 @@ private:
 
   TrackTable fTracks;
   HashTable* fDemuxesTable;
+  class CuePoint* fCuePoints;
   unsigned fChosenVideoTrackNumber, fChosenAudioTrackNumber, fChosenSubtitleTrackNumber;
   class MatroskaFileParser* fParserForInitialization;
 };
@@ -161,6 +166,7 @@ private:
   friend class MatroskaDemuxedTrack;
   void removeTrack(unsigned trackNumber);
   void continueReading(); // called by a demuxed track to tell us that it has a pending read ("doGetNextFrame()")
+  void seekToTime(double& seekNPT);
 
   static void handleEndOfFile(void* clientData);
   void handleEndOfFile();

@@ -181,8 +181,8 @@ char* SIPClient::invite(char const* url, Authenticator* authenticator) {
   delete[] (char*)fURL; fURL = strDup(url);
   fURLSize = strlen(fURL);
 
-  fCallId = our_random();
-  fFromTag = our_random();
+  fCallId = our_random32();
+  fFromTag = our_random32();
 
   return invite1(authenticator);
 }

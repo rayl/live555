@@ -217,7 +217,7 @@ void OnDemandServerMediaSubsession::pauseStream(unsigned /*clientSessionId*/,
 }
 
 void OnDemandServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
-					       void* streamToken, double seekNPT, double streamDuration, u_int64_t& numBytes) {
+					       void* streamToken, double& seekNPT, double streamDuration, u_int64_t& numBytes) {
   numBytes = 0; // by default: unknown
 
   // Seeking isn't allowed if multiple clients are receiving data from
@@ -283,7 +283,7 @@ char const* OnDemandServerMediaSubsession
 }
 
 void OnDemandServerMediaSubsession::seekStreamSource(FramedSource* /*inputSource*/,
-						     double /*seekNPT*/, double /*streamDuration*/, u_int64_t& numBytes) {
+						     double& /*seekNPT*/, double /*streamDuration*/, u_int64_t& numBytes) {
   // Default implementation: Do nothing
 }
 

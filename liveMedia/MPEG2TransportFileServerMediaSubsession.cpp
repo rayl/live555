@@ -111,7 +111,7 @@ void MPEG2TransportFileServerMediaSubsession
 }
 
 void MPEG2TransportFileServerMediaSubsession
-::seekStream(unsigned clientSessionId, void* streamToken, double seekNPT, double streamDuration, u_int64_t& numBytes) {
+::seekStream(unsigned clientSessionId, void* streamToken, double& seekNPT, double streamDuration, u_int64_t& numBytes) {
   // Begin by calling the original, default version of this routine:
   OnDemandServerMediaSubsession::seekStream(clientSessionId, streamToken, seekNPT, streamDuration, numBytes);
 

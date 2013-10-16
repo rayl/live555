@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "AACAudioMatroskaFileServerMediaSubsession.hh"
 #include "MPEG4GenericRTPSink.hh"
+#include "MatroskaDemuxedTrack.hh"
 
 AACAudioMatroskaFileServerMediaSubsession* AACAudioMatroskaFileServerMediaSubsession
 ::createNew(MatroskaFileServerDemux& demux, unsigned trackNumber) {
@@ -44,6 +45,11 @@ AACAudioMatroskaFileServerMediaSubsession
 }
 
 float AACAudioMatroskaFileServerMediaSubsession::duration() const { return fOurDemux.fileDuration(); }
+
+void AACAudioMatroskaFileServerMediaSubsession
+::seekStreamSource(FramedSource* inputSource, double& seekNPT, double /*streamDuration*/, u_int64_t& /*numBytes*/) {
+  ((MatroskaDemuxedTrack*)inputSource)->seekToTime(seekNPT);
+}
 
 FramedSource* AACAudioMatroskaFileServerMediaSubsession
 ::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate) {

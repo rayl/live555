@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "MP3AudioMatroskaFileServerMediaSubsession.hh"
+#include "MatroskaDemuxedTrack.hh"
 
 MP3AudioMatroskaFileServerMediaSubsession* MP3AudioMatroskaFileServerMediaSubsession
 ::createNew(MatroskaFileServerDemux& demux, unsigned trackNumber, Boolean generateADUs, Interleaving* interleaving) {
@@ -39,44 +40,17 @@ MP3AudioMatroskaFileServerMediaSubsession::~MP3AudioMatroskaFileServerMediaSubse
 }
 
 void MP3AudioMatroskaFileServerMediaSubsession
-::seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration, u_int64_t& numBytes) {
-  OnDemandServerMediaSubsession::seekStreamSource(inputSource, seekNPT, streamDuration, numBytes); // for now, we don't support seeking #####@@@@@
-#if 0 //#####@@@@@
+::seekStreamSource(FramedSource* inputSource, double& seekNPT, double /*streamDuration*/, u_int64_t& /*numBytes*/) {
   FramedSource* sourceMP3Stream;
   ADUFromMP3Source* aduStream;
   getBaseStreams(inputSource, sourceMP3Stream, aduStream);
 
   if (aduStream != NULL) aduStream->resetInput(); // because we're about to seek within its source
-#if 0 //#####@@@@@
-  ((MatroskaDemuxedTrack*)sourceMP3Stream)->seekWithinFile(seekNPT, streamDuration);
-#endif
-#endif
-}
-
-void MP3AudioMatroskaFileServerMediaSubsession
-::setStreamSourceScale(FramedSource* inputSource, float scale) {
-  OnDemandServerMediaSubsession::setStreamSourceScale(inputSource, scale); // for now, we don't support scaling #####@@@@@
-#if 0 //#####@@@@@
-  FramedSource* sourceMP3Stream;
-  ADUFromMP3Source* aduStream;
-  getBaseStreams(inputSource, sourceMP3Stream, aduStream);
-
-  if (aduStream == NULL) return; // because, in this case, the stream's not scalable
-
-  int iScale = (int)scale;
-  aduStream->setScaleFactor(iScale);
-#if 0 //#####@@@@@
-  ((MatroskaDemuxedTrack*)sourceMP3Stream)->setPresentationTimeScale(iScale);
-#endif
-#endif
+  ((MatroskaDemuxedTrack*)sourceMP3Stream)->seekToTime(seekNPT);
 }
 
 FramedSource* MP3AudioMatroskaFileServerMediaSubsession
 ::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate) {
   FramedSource* baseMP3Source = fOurDemux.newDemuxedTrack(clientSessionId, fTrackNumber);
   return createNewStreamSourceCommon(baseMP3Source, 0, estBitrate);
-}
-
-void MP3AudioMatroskaFileServerMediaSubsession::testScaleFactor(float& scale) {
-  ServerMediaSubsession::testScaleFactor(scale); // for now, we don't support scaling #####@@@@@
 }

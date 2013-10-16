@@ -21,6 +21,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include "AC3AudioMatroskaFileServerMediaSubsession.hh"
 #include "AC3AudioRTPSink.hh"
+#include "MatroskaDemuxedTrack.hh"
 
 AC3AudioMatroskaFileServerMediaSubsession* AC3AudioMatroskaFileServerMediaSubsession
 ::createNew(MatroskaFileServerDemux& demux, unsigned trackNumber) {
@@ -38,6 +39,11 @@ AC3AudioMatroskaFileServerMediaSubsession
 }
 
 float AC3AudioMatroskaFileServerMediaSubsession::duration() const { return fOurDemux.fileDuration(); }
+
+void AC3AudioMatroskaFileServerMediaSubsession
+::seekStreamSource(FramedSource* inputSource, double& seekNPT, double /*streamDuration*/, u_int64_t& /*numBytes*/) {
+  ((MatroskaDemuxedTrack*)inputSource)->seekToTime(seekNPT);
+}
 
 FramedSource* AC3AudioMatroskaFileServerMediaSubsession
 ::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate) {

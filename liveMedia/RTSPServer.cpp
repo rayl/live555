@@ -270,7 +270,7 @@ void RTSPServer::incomingConnectionHandler(int serverSocket) {
   //  a collision; the probability of two concurrent sessions getting the same session id is very low.)
   // (We do, however, avoid choosing session id 0, because that has a special use (by "OnDemandServerMediaSubsession").)
   unsigned sessionId;
-  do { sessionId = (unsigned)our_random(); } while (sessionId == 0);
+  do { sessionId = (unsigned)our_random32(); } while (sessionId == 0);
   (void)createNewClientSession(sessionId, clientSocket, clientAddr);
 }
 
@@ -1119,16 +1119,6 @@ void RTSPServer::RTSPClientSession
     rangeEnd = tmp;
   }
 
-  char* rangeHeader;
-  if (!sawRangeHeader) {
-    buf[0] = '\0'; // Because we didn't see a Range: header, don't send one back
-  } else if (rangeEnd == 0.0 && scale >= 0.0) {
-    sprintf(buf, "Range: npt=%.3f-\r\n", rangeStart);
-  } else {
-    sprintf(buf, "Range: npt=%.3f-%.3f\r\n", rangeStart, rangeEnd);
-  }
-  rangeHeader = strDup(buf);
-
   // Create a "RTP-Info:" line.  It will get filled in from each subsession's state:
   char const* rtpInfoFmt =
     "%s" // "RTP-Info:", plus any preceding rtpInfo items
@@ -1164,6 +1154,18 @@ void RTSPServer::RTSPClientSession
       }
     }
   }
+
+  // Create the "Range:" header that we'll send back in our response.
+  // (Note that we do this after seeking, in case the seeking operation changed the range start time.)
+  char* rangeHeader;
+  if (!sawRangeHeader) {
+    buf[0] = '\0'; // Because we didn't see a Range: header, don't send one back
+  } else if (rangeEnd == 0.0 && scale >= 0.0) {
+    sprintf(buf, "Range: npt=%.3f-\r\n", rangeStart);
+  } else {
+    sprintf(buf, "Range: npt=%.3f-%.3f\r\n", rangeStart, rangeEnd);
+  }
+  rangeHeader = strDup(buf);
 
   // Now, start streaming:
   for (i = 0; i < fNumStreamStates; ++i) {

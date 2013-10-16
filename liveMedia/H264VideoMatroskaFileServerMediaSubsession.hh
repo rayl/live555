@@ -41,6 +41,7 @@ private:
 
 private: // redefined virtual functions
   virtual float duration() const;
+  virtual void seekStreamSource(FramedSource* inputSource, double& seekNPT, double streamDuration, u_int64_t& numBytes);
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
                                               unsigned& estBitrate);
 

@@ -75,6 +75,10 @@ void ByteStreamFileSource::seekToByteRelative(int64_t offset) {
   SeekFile64(fFid, offset, SEEK_CUR);
 }
 
+void ByteStreamFileSource::seekToEnd() {
+  SeekFile64(fFid, 0, SEEK_END);
+}
+
 ByteStreamFileSource::ByteStreamFileSource(UsageEnvironment& env, FILE* fid,
 					   unsigned preferredFrameSize,
 					   unsigned playTimePerFrame)
