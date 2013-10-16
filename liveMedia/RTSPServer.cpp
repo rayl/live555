@@ -965,7 +965,8 @@ void RTSPServer::RTSPClientSession
   // - a non-aggregated operation, if "urlPreSuffix" is the session (stream)
   //   name and "urlSuffix" is the subsession (track) name, or
   // - an aggregated operation, if "urlSuffix" is the session (stream) name,
-  //   or "urlPreSuffix" is the session (stream) name, and "urlSuffix" is empty.
+  //   or "urlPreSuffix" is the session (stream) name, and "urlSuffix" is empty,
+  //   or "urlPreSuffix" and "urlSuffix" are both nonempty, but when concatenated, (with "/") form the session (stream) name.
   // Begin by figuring out which of these it is:
   ServerMediaSubsession* subsession;
   if (urlPreSuffix[0] == '\0' && urlSuffix[0] == '*' && urlSuffix[1] == '\0') {
@@ -993,9 +994,20 @@ void RTSPServer::RTSPClientSession
       return;
     }
   } else if (strcmp(fOurServerMediaSession->streamName(), urlSuffix) == 0 ||
-	     strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0) {
+	     (urlSuffix[0] == '\0' && strcmp(fOurServerMediaSession->streamName(), urlPreSuffix) == 0)) {
     // Aggregated operation
     subsession = NULL;
+  } else if (urlPreSuffix[0] != '\0' && urlSuffix[0] != '\0') {
+    // Aggregated operation, if <urlPreSuffix>/<urlSuffix> is the session (stream) name:
+    unsigned const urlPreSuffixLen = strlen(urlPreSuffix);
+    if (strncmp(fOurServerMediaSession->streamName(), urlPreSuffix, urlPreSuffixLen) == 0 &&
+	fOurServerMediaSession->streamName()[urlPreSuffixLen] == '/' &&
+	strcmp(&(fOurServerMediaSession->streamName())[urlPreSuffixLen+1], urlSuffix) == 0) {
+      subsession = NULL;
+    } else {
+      handleCmd_notFound(cseq);
+      return;
+    }
   } else { // the request doesn't match a known stream and/or track at all!
     handleCmd_notFound(cseq);
     return;
