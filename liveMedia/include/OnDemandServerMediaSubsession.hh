@@ -37,6 +37,7 @@ protected: // we're a virtual base class
 
 protected: // redefined virtual functions
   virtual char const* sdpLines();
+public://#####@@@@@
   virtual void getStreamParameters(unsigned clientSessionId,
 				   netAddressBits clientAddress,
                                    Port const& clientRTPPort,

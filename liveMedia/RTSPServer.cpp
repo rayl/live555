@@ -1325,6 +1325,12 @@ void RTSPServer::RTSPClientSession::handleHTTPCmd_notSupported() {
 	   dateHeader());
 }
 
+void RTSPServer::RTSPClientSession::handleHTTPCmd_notFound() {
+  snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
+	   "HTTP/1.0 404 Not Found\r\n%s\r\n\r\n",
+	   dateHeader());
+}
+
 void RTSPServer::RTSPClientSession::handleHTTPCmd_TunnelingGET(char const* sessionCookie) {
   // Record ourself as having this 'session cookie', so that a subsequent HTTP "POST" command (with the same 'session cookie')
   // can find us:

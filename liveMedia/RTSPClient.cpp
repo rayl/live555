@@ -1102,6 +1102,8 @@ Boolean RTSPClient::handleGET_PARAMETERResponse(char const* parameterName, char*
 }
 
 Boolean RTSPClient::handleAuthenticationFailure(char const* paramsStr) {
+  if (paramsStr == NULL) return False; // There was no "WWW-Authenticate:" header; we can't proceed.
+
   // Fill in "fCurrentAuthenticator" with the information from the "WWW-Authenticate:" header:
   Boolean alreadyHadRealm = fCurrentAuthenticator.realm() != NULL;
   char* realm = strDupSize(paramsStr);
