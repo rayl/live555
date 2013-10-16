@@ -9,7 +9,7 @@ OBJ =                   o
 LINK =                  /Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/g++ -o 
 LINK_OPTS =             -L. -arch armv7 --sysroot=/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS3.0.sdk
 CONSOLE_LINK_OPTS =     $(LINK_OPTS)
-LIBRARY_LINK =          ar cr 
+LIBRARY_LINK =          libtool -s -o 
 LIBRARY_LINK_OPTS =
 LIB_SUFFIX =            a
 LIBS_FOR_CONSOLE_APPLICATION =

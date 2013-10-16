@@ -271,7 +271,7 @@ void RTSPServer::incomingConnectionHandler(int serverSocket) {
   increaseSendBufferTo(envir(), clientSocket, 50*1024);
 
 #ifdef DEBUG
-  envir() << "accept()ed connection from " << our_inet_ntoa(clientAddr.sin_addr) << '\n';
+  envir() << "accept()ed connection from " << our_inet_ntoa(clientAddr.sin_addr) << "\n";
 #endif
 
   // Create a new object for this RTSP session.

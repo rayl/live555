@@ -40,6 +40,7 @@ Authenticator::Authenticator(const Authenticator& orig) {
 
 Authenticator& Authenticator::operator=(const Authenticator& rightSide) {
   if (&rightSide != this) {
+    reset();
     assign(rightSide.realm(), rightSide.nonce(),
 	   rightSide.username(), rightSide.password(), rightSide.fPasswordIsMD5);
   }

@@ -53,7 +53,8 @@ private: // redefined virtual functions
 				    FramedSource* inputSource);
 
 private:
-  char fDoneFlag; // used when setting up "fSDPLines"
+  char* fAuxSDPLine;
+  char fDoneFlag; // used when setting up "fAuxSDPLine"
   RTPSink* fDummyRTPSink; // ditto
 };
 

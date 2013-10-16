@@ -35,11 +35,11 @@ MPEG4VideoFileServerMediaSubsession
 ::MPEG4VideoFileServerMediaSubsession(UsageEnvironment& env,
                                       char const* fileName, Boolean reuseFirstSource)
   : FileServerMediaSubsession(env, fileName, reuseFirstSource),
-    fDoneFlag(0) {
+    fAuxSDPLine(NULL), fDoneFlag(0), fDummyRTPSink(NULL) {
 }
 
-MPEG4VideoFileServerMediaSubsession
-::~MPEG4VideoFileServerMediaSubsession() {
+MPEG4VideoFileServerMediaSubsession::~MPEG4VideoFileServerMediaSubsession() {
+  delete[] fAuxSDPLine;
 }
 
 static void afterPlayingDummy(void* clientData) {
@@ -62,7 +62,13 @@ static void checkForAuxSDPLine(void* clientData) {
 }
 
 void MPEG4VideoFileServerMediaSubsession::checkForAuxSDPLine1() {
-  if (fDummyRTPSink->auxSDPLine() != NULL) {
+  if (fAuxSDPLine != NULL) {
+    // Signal the event loop that we're done:
+    setDoneFlag();
+  } else if (fDummyRTPSink != NULL && fDummyRTPSink->auxSDPLine() != NULL) {
+    fAuxSDPLine= strDup(fDummyRTPSink->auxSDPLine());
+    fDummyRTPSink = NULL;
+
     // Signal the event loop that we're done:
     setDoneFlag();
   } else {
@@ -73,24 +79,25 @@ void MPEG4VideoFileServerMediaSubsession::checkForAuxSDPLine1() {
   }
 }
 
-char const* MPEG4VideoFileServerMediaSubsession
-::getAuxSDPLine(RTPSink* rtpSink, FramedSource* inputSource) {
-  // Note: For MPEG-4 video files, the 'config' information isn't known
-  // until we start reading the file.  This means that "rtpSink"s
-  // "auxSDPLine()" will be NULL initially, and we need to start reading
-  // data from our file until this changes.
-  fDummyRTPSink = rtpSink;
+char const* MPEG4VideoFileServerMediaSubsession::getAuxSDPLine(RTPSink* rtpSink, FramedSource* inputSource) {
+  if (fAuxSDPLine != NULL) return fAuxSDPLine; // it's already been set up (for a previous client)
 
-  // Start reading the file:
-  fDummyRTPSink->startPlaying(*inputSource, afterPlayingDummy, this);
+  if (fDummyRTPSink == NULL) { // we're not already setting it up for another, concurrent stream
+    // Note: For MPEG-4 video files, the 'config' information isn't known
+    // until we start reading the file.  This means that "rtpSink"s
+    // "auxSDPLine()" will be NULL initially, and we need to start reading data from our file until this changes.
+    fDummyRTPSink = rtpSink;
 
-  // Check whether the sink's 'auxSDPLine()' is ready:
-  checkForAuxSDPLine(this);
+    // Start reading the file:
+    fDummyRTPSink->startPlaying(*inputSource, afterPlayingDummy, this);
+
+    // Check whether the sink's 'auxSDPLine()' is ready:
+    checkForAuxSDPLine(this);
+  }
 
   envir().taskScheduler().doEventLoop(&fDoneFlag);
 
-  char const* auxSDPLine = fDummyRTPSink->auxSDPLine();
-  return auxSDPLine;
+  return fAuxSDPLine;
 }
 
 FramedSource* MPEG4VideoFileServerMediaSubsession
