@@ -35,7 +35,7 @@ public:
   void checkForAuxSDPLine1();
   void afterPlayingDummy1();
 
-private:
+protected:
   H264VideoFileServerMediaSubsession(UsageEnvironment& env,
 				      char const* fileName, Boolean reuseFirstSource);
       // called only by createNew();
@@ -43,7 +43,7 @@ private:
 
   void setDoneFlag() { fDoneFlag = ~0; }
 
-private: // redefined virtual functions
+protected: // redefined virtual functions
   virtual char const* getAuxSDPLine(RTPSink* rtpSink,
 				    FramedSource* inputSource);
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,

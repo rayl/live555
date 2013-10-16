@@ -437,16 +437,14 @@ void StreamState::endPlaying(Destinations* dests) {
     }
     if (fRTCPInstance != NULL) {
       fRTCPInstance->removeStreamSocket(dests->tcpSocketNum, dests->rtcpChannelId);
-      fRTCPInstance->setSpecificRRHandler(dests->tcpSocketNum, dests->rtcpChannelId,
-					  NULL, NULL);
+      fRTCPInstance->unsetSpecificRRHandler(dests->tcpSocketNum, dests->rtcpChannelId);
     }
   } else {
     // Tell the RTP and RTCP 'groupsocks' to stop using these destinations:
     if (fRTPgs != NULL) fRTPgs->removeDestination(dests->addr, dests->rtpPort);
     if (fRTCPgs != NULL) fRTCPgs->removeDestination(dests->addr, dests->rtcpPort);
     if (fRTCPInstance != NULL) {
-      fRTCPInstance->setSpecificRRHandler(dests->addr.s_addr, dests->rtcpPort,
-					  NULL, NULL);
+      fRTCPInstance->unsetSpecificRRHandler(dests->addr.s_addr, dests->rtcpPort);
     }
   }
 }

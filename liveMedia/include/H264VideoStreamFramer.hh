@@ -37,6 +37,13 @@ public:
     pps = fLastSeenPPS; ppsSize = fLastSeenPPSSize;
   }
 
+  void setSPSandPPS(u_int8_t* sps, unsigned spsSize, u_int8_t* pps, unsigned ppsSize) {
+    // Assigns copies of the SPS and PPS NAL units.  If this function is not called, then these NAL units are assigned
+    // only if/when they appear in the input stream.  
+    saveCopyOfSPS(sps, spsSize);
+    saveCopyOfPPS(pps, ppsSize);
+  }
+
 protected:
   H264VideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource, Boolean createParser, Boolean includeStartCodeInOutput);
   virtual ~H264VideoStreamFramer();

@@ -62,11 +62,13 @@ static void checkForAuxSDPLine(void* clientData) {
 }
 
 void MPEG4VideoFileServerMediaSubsession::checkForAuxSDPLine1() {
+  char const* dasl;
+
   if (fAuxSDPLine != NULL) {
     // Signal the event loop that we're done:
     setDoneFlag();
-  } else if (fDummyRTPSink != NULL && fDummyRTPSink->auxSDPLine() != NULL) {
-    fAuxSDPLine= strDup(fDummyRTPSink->auxSDPLine());
+  } else if (fDummyRTPSink != NULL && (dasl = fDummyRTPSink->auxSDPLine()) != NULL) {
+    fAuxSDPLine= strDup(dasl);
     fDummyRTPSink = NULL;
 
     // Signal the event loop that we're done:

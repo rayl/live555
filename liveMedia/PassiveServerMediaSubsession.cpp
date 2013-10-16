@@ -34,6 +34,30 @@ PassiveServerMediaSubsession
 ::PassiveServerMediaSubsession(RTPSink& rtpSink, RTCPInstance* rtcpInstance)
   : ServerMediaSubsession(rtpSink.envir()),
     fSDPLines(NULL), fRTPSink(rtpSink), fRTCPInstance(rtcpInstance) {
+  fClientRTCPSourceRecords = HashTable::create(ONE_WORD_HASH_KEYS);
+}
+
+class RTCPSourceRecord {
+public:
+  RTCPSourceRecord(netAddressBits addr, Port const& port)
+    : addr(addr), port(port) {
+  }
+
+  netAddressBits addr;
+  Port port;
+};
+
+PassiveServerMediaSubsession::~PassiveServerMediaSubsession() {
+  delete[] fSDPLines;
+
+  // Clean out the RTCPSourceRecord table:
+  while (1) {
+    RTCPSourceRecord* source = (RTCPSourceRecord*)(fClientRTCPSourceRecords->RemoveNext());
+    if (source == NULL) break;
+    delete source;
+  }
+
+  delete fClientRTCPSourceRecords;
 }
 
 char const*
@@ -94,10 +118,10 @@ PassiveServerMediaSubsession::sdpLines() {
 }
 
 void PassiveServerMediaSubsession
-::getStreamParameters(unsigned /*clientSessionId*/,
-		      netAddressBits /*clientAddress*/,
+::getStreamParameters(unsigned clientSessionId,
+		      netAddressBits clientAddress,
 		      Port const& /*clientRTPPort*/,
-		      Port const& /*clientRTCPPort*/,
+		      Port const& clientRTCPPort,
 		      int /*tcpSocketNum*/,
 		      unsigned char /*rtpChannelId*/,
 		      unsigned char /*rtcpChannelId*/,
@@ -126,19 +150,20 @@ void PassiveServerMediaSubsession
     serverRTCPPort = rtcpGS->port();
   }
   streamToken = NULL; // not used
+
+  // Make a record of this client's source - for RTCP RR handling:
+  RTCPSourceRecord* source = new RTCPSourceRecord(clientAddress, clientRTCPPort);
+  fClientRTCPSourceRecords->Add((char const*)clientSessionId, source);
 }
 
-void PassiveServerMediaSubsession::startStream(unsigned /*clientSessionId*/,
+void PassiveServerMediaSubsession::startStream(unsigned clientSessionId,
 					       void* /*streamToken*/,
-					       TaskFunc* /*rtcpRRHandler*/,
-					       void* /*rtcpRRHandlerClientData*/,
+					       TaskFunc* rtcpRRHandler,
+					       void* rtcpRRHandlerClientData,
 					       unsigned short& rtpSeqNum,
 					       unsigned& rtpTimestamp,
 					       ServerRequestAlternativeByteHandler* /*serverRequestAlternativeByteHandler*/,
 					       void* /*serverRequestAlternativeByteHandlerClientData*/) {
-  // Note: We don't set a RTCP RR handler, because (i) we're called potentially
-  // many times on the same "RTCPInstance", and (ii) the "RTCPInstance" remains
-  // in existence after "deleteStream()" is called.
   rtpSeqNum = fRTPSink.currentSeqNo();
   rtpTimestamp = fRTPSink.presetNextTimestamp();
 
@@ -148,8 +173,26 @@ void PassiveServerMediaSubsession::startStream(unsigned /*clientSessionId*/,
   unsigned rtpBufSize = streamBitrate * 25 / 2; // 1 kbps * 0.1 s = 12.5 bytes
   if (rtpBufSize < 50 * 1024) rtpBufSize = 50 * 1024;
   increaseSendBufferTo(envir(), fRTPSink.groupsockBeingUsed().socketNum(), rtpBufSize);
+
+  // Set up the handler for incoming RTCP "RR" packets from this client:
+  if (fRTCPInstance != NULL) {
+    RTCPSourceRecord* source = (RTCPSourceRecord*)(fClientRTCPSourceRecords->Lookup((char const*)clientSessionId));
+    if (source != NULL) {
+      fRTCPInstance->setSpecificRRHandler(source->addr, source->port,
+					  rtcpRRHandler, rtcpRRHandlerClientData);
+    }
+  }
 }
 
-PassiveServerMediaSubsession::~PassiveServerMediaSubsession() {
-  delete[] fSDPLines;
+void PassiveServerMediaSubsession::deleteStream(unsigned clientSessionId, void*& /*streamToken*/) {
+  // Lookup and remove the 'RTCPSourceRecord' for this client.  Also turn off RTCP "RR" handling:
+  RTCPSourceRecord* source = (RTCPSourceRecord*)(fClientRTCPSourceRecords->Lookup((char const*)clientSessionId));
+  if (source != NULL) {
+    if (fRTCPInstance != NULL) {
+      fRTCPInstance->unsetSpecificRRHandler(source->addr, source->port);
+    }
+
+    fClientRTCPSourceRecords->Remove((char const*)clientSessionId);
+    delete source;
+  }
 }

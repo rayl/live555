@@ -26,8 +26,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 H264VideoFileServerMediaSubsession*
 H264VideoFileServerMediaSubsession::createNew(UsageEnvironment& env,
-					       char const* fileName,
-					       Boolean reuseFirstSource) {
+					      char const* fileName,
+					      Boolean reuseFirstSource) {
   return new H264VideoFileServerMediaSubsession(env, fileName, reuseFirstSource);
 }
 
@@ -59,11 +59,13 @@ static void checkForAuxSDPLine(void* clientData) {
 }
 
 void H264VideoFileServerMediaSubsession::checkForAuxSDPLine1() {
+  char const* dasl;
+
   if (fAuxSDPLine != NULL) {
     // Signal the event loop that we're done:
     setDoneFlag();
-  } else if (fDummyRTPSink != NULL && fDummyRTPSink->auxSDPLine() != NULL) {
-    fAuxSDPLine = strDup(fDummyRTPSink->auxSDPLine());
+  } else if (fDummyRTPSink != NULL && (dasl = fDummyRTPSink->auxSDPLine()) != NULL) {
+    fAuxSDPLine = strDup(dasl);
     fDummyRTPSink = NULL;
 
     // Signal the event loop that we're done:

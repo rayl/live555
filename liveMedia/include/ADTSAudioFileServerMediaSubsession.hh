@@ -31,13 +31,13 @@ public:
   static ADTSAudioFileServerMediaSubsession*
   createNew(UsageEnvironment& env, char const* fileName, Boolean reuseFirstSource);
 
-private:
+protected:
   ADTSAudioFileServerMediaSubsession(UsageEnvironment& env,
 				      char const* fileName, Boolean reuseFirstSource);
       // called only by createNew();
   virtual ~ADTSAudioFileServerMediaSubsession();
 
-private: // redefined virtual functions
+protected: // redefined virtual functions
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
 					      unsigned& estBitrate);
   virtual RTPSink* createNewRTPSink(Groupsock* rtpGroupsock,

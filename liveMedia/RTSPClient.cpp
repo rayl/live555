@@ -1471,7 +1471,6 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
       } else if (checkForHeader(lineStart, "Location:", 9, headerParamsStr)) {
         setBaseURL(headerParamsStr);
       }
-      // For now, omit parsing the "Server:" header (unless someone convinces us that we still need to treat Windows Media Server especially
     }
     if (!reachedEndOfHeaders) break; // an error occurred
 

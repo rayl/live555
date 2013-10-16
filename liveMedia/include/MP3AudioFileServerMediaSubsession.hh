@@ -29,6 +29,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _MP3_ADU_INTERLEAVING_HH
 #include "MP3ADUinterleaving.hh"
 #endif
+#ifndef _MP3_ADU_HH
+#include "MP3ADU.hh"
+#endif
 
 class MP3AudioFileServerMediaSubsession: public FileServerMediaSubsession{
 public:
@@ -46,7 +49,11 @@ protected:
       // called only by createNew();
   virtual ~MP3AudioFileServerMediaSubsession();
 
-private: // redefined virtual functions
+  FramedSource* createNewStreamSourceCommon(FramedSource* baseMP3Source, unsigned mp3NumBytes, unsigned& estBitrate);
+  void getBaseStreams(FramedSource* frontStream,
+		      FramedSource*& sourceMP3Stream, ADUFromMP3Source*& aduStream/*if any*/);
+
+protected: // redefined virtual functions
   virtual void seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration, u_int64_t& numBytes);
   virtual void setStreamSourceScale(FramedSource* inputSource, float scale);
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
@@ -57,7 +64,7 @@ private: // redefined virtual functions
   virtual void testScaleFactor(float& scale);
   virtual float duration() const;
 
-private:
+protected:
   Boolean fGenerateADUs;
   Interleaving* fInterleaving;
   float fFileDuration;
