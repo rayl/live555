@@ -42,15 +42,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 #ifndef LOCALE_NOT_USED
+#include <locale.h>
 #ifndef XLOCALE_NOT_USED
-#include <xlocale.h>
-#ifndef LC_ALL_MASK
-// Hack: We had a header file "xlocale.h", but if didn't give us all that we wanted.  Use the old "setlocale()" instead:
-#define XLOCALE_NOT_USED 1
-#include <locale.h>
-#endif
-#else
-#include <locale.h>
+#include <xlocale.h> // because, on some systems, <locale.h> doesn't include <xlocale.h>; this makes sure that we get both
 #endif
 #endif
 

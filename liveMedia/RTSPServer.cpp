@@ -1602,6 +1602,12 @@ UserAuthenticationDatabase::UserAuthenticationDatabase(char const* realm,
 
 UserAuthenticationDatabase::~UserAuthenticationDatabase() {
   delete[] fRealm;
+
+  // Delete the allocated 'password' strings that we stored in the table, and then the table itself:
+  char* password;
+  while ((password = (char*)fTable->RemoveNext()) != NULL) {
+    delete[] password;
+  }
   delete fTable;
 }
 
