@@ -1439,7 +1439,7 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
 	  while ((request = fRequestsAwaitingResponse.dequeue()) != NULL) {
 	    if (request->cseq() < cseq) { // assumes that the CSeq counter will never wrap around
 	      // We never received (and will never receive) a response for this handler, so delete it:
-	      if (fVerbosityLevel >= 1) {
+	      if (fVerbosityLevel >= 1 && strcmp(request->commandName(), "POST") != 0) {
 		envir() << "WARNING: The server did not respond to our \"" << request->commandName() << "\" request (CSeq: "
 			<< request->cseq() << ").  The server appears to be buggy (perhaps not handling pipelined requests properly).\n";
 	      }

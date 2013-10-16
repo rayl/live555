@@ -297,6 +297,7 @@ int main(int argc, char** argv) {
     }
 
     case 'u': { // specify a username and password
+      if (argc < 4) usage(); // there's no argv[3] (for the "password")
       username = argv[2];
       password = argv[3];
       argv+=2; argc-=2;
@@ -444,14 +445,14 @@ int main(int argc, char** argv) {
 
     ++argv; --argc;
   }
-  if (argc != 2) usage();
+  if (argc != 2) usage(); // there must be exactly one "rtsp://" URL at the end
   if (outputQuickTimeFile && outputAVIFile) {
-    *env << "The -i and -q (or -4) flags cannot both be used!\n";
+    *env << "The -i and -q (or -4) options cannot both be used!\n";
     usage();
   }
   Boolean outputCompositeFile = outputQuickTimeFile || outputAVIFile;
   if (!createReceivers && outputCompositeFile) {
-    *env << "The -r and -q (or -4 or -i) flags cannot both be used!\n";
+    *env << "The -r and -q (or -4 or -i) options cannot both be used!\n";
     usage();
   }
   if (outputCompositeFile && !movieWidthOptionSet) {
@@ -467,16 +468,16 @@ int main(int argc, char** argv) {
 	 << movieFPS << " frames-per-second\n";
   }
   if (audioOnly && videoOnly) {
-    *env << "The -a and -v flags cannot both be used!\n";
+    *env << "The -a and -v options cannot both be used!\n";
     usage();
   }
   if (sendOptionsRequestOnly && !sendOptionsRequest) {
-    *env << "The -o and -O flags cannot both be used!\n";
+    *env << "The -o and -O options cannot both be used!\n";
     usage();
   }
   if (tunnelOverHTTPPortNum > 0) {
     if (streamUsingTCP) {
-      *env << "The -t and -T flags cannot both be used!\n";
+      *env << "The -t and -T options cannot both be used!\n";
       usage();
     } else {
       streamUsingTCP = True;

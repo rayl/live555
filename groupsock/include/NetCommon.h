@@ -23,7 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #if defined(__WIN32__) || defined(_WIN32) || defined(_WIN32_WCE)
 /* Windows */
-#if defined(WINNT) || defined(_WINNT) || defined(__BORLANDC__) || defined(__MINGW32__) || defined(_WIN32_WCE)
+#if defined(WINNT) || defined(_WINNT) || defined(__BORLANDC__) || defined(__MINGW32__) || defined(_WIN32_WCE) || defined (_MSC_VER)
 #define _MSWSOCK_
 #include <winsock2.h>
 #include <ws2tcpip.h>

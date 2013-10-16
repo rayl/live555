@@ -263,8 +263,10 @@ private:
   void incomingDataHandler1();
   void handleResponseBytes(int newBytesRead);
 
-private:
+protected:
   int fVerbosityLevel;
+
+private:
   portNumBits fTunnelOverHTTPPortNum;
   char* fUserAgentHeaderStr;
   unsigned fUserAgentHeaderStrLen;
