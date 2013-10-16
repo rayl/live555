@@ -60,8 +60,8 @@ public:
   virtual void setResultMsg(MsgString msg) = 0;
   virtual void setResultMsg(MsgString msg1, MsgString msg2) = 0;
   virtual void setResultMsg(MsgString msg1, MsgString msg2, MsgString msg3) = 0;
-  virtual void setResultErrMsg(MsgString msg) = 0;
-	// like setResultMsg(), except that an 'errno' message is appended
+  virtual void setResultErrMsg(MsgString msg, int err = 0) = 0;
+	// like setResultMsg(), except that an 'errno' message is appended.  (If "err == 0", the "getErrno()" code is used instead.)
 
   virtual void appendToResultMsg(MsgString msg) = 0;
 
@@ -117,7 +117,7 @@ public:
   // Combines "unscheduleDelayedTask()" with "scheduleDelayedTask()"
   // (setting "task" to the new task token).
 
-  // For handling socket reads in the background:
+  // For handling socket operations in the background (from the event loop):
   typedef void BackgroundHandlerProc(void* clientData, int mask);
     // Possible bits to set in "mask".  (These are deliberately defined
     // the same as those in Tcl, to make a Tcl-based subclass easy.)
@@ -125,9 +125,14 @@ public:
     #define SOCKET_WRITABLE    (1<<2)
     #define SOCKET_EXCEPTION   (1<<3)
   virtual void turnOnBackgroundReadHandling(int socketNum,
-				BackgroundHandlerProc* handlerProc,
-				void* clientData) = 0;
+					    BackgroundHandlerProc* handlerProc,
+					    void* clientData) = 0;
+  virtual void turnOnBackgroundWriteHandling(int socketNum,
+					     BackgroundHandlerProc* handlerProc,
+					     void* clientData) = 0;
+        // Note: If both of the above functions are called on the same socket, then "handlerProc" must be the same for both.
   virtual void turnOffBackgroundReadHandling(int socketNum) = 0;
+  virtual void turnOffBackgroundWriteHandling(int socketNum) = 0;
   virtual void moveSocketHandling(int oldSocketNum, int newSocketNum) = 0;
         // Changes any socket handling for "oldSocketNum" so that occurs with "newSocketNum" instead.
 

@@ -59,11 +59,11 @@ void BasicUsageEnvironment0::setResultMsg(MsgString msg1, MsgString msg2,
   appendToResultMsg(msg3);
 }
 
-void BasicUsageEnvironment0::setResultErrMsg(MsgString msg) {
+void BasicUsageEnvironment0::setResultErrMsg(MsgString msg, int err) {
   setResultMsg(msg);
 
 #ifndef _WIN32_WCE
-  appendToResultMsg(strerror(getErrno()));
+  appendToResultMsg(strerror(err == 0 ? getErrno() : err));
 #endif
 }
 

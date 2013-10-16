@@ -47,7 +47,7 @@ public:
   virtual void setResultMsg(MsgString msg1,
 		    MsgString msg2,
 		    MsgString msg3);
-  virtual void setResultErrMsg(MsgString msg);
+  virtual void setResultErrMsg(MsgString msg, int err = 0);
 
   virtual void appendToResultMsg(MsgString msg);
 
@@ -94,7 +94,7 @@ protected:
   DelayQueue fDelayQueue;
 
   // To implement background reads:
-  HandlerSet* fReadHandlers;
+  HandlerSet* fHandlers;
   int fLastHandledSocketNum;
 };
 

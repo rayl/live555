@@ -45,11 +45,11 @@ private:
 
 BasicTaskScheduler0::BasicTaskScheduler0()
   : fLastHandledSocketNum(-1) {
-  fReadHandlers = new HandlerSet;
+  fHandlers = new HandlerSet;
 }
 
 BasicTaskScheduler0::~BasicTaskScheduler0() {
-  delete fReadHandlers;
+  delete fHandlers;
 }
 
 TaskToken BasicTaskScheduler0::scheduleDelayedTask(int64_t microseconds,
@@ -80,7 +80,8 @@ void BasicTaskScheduler0::doEventLoop(char* watchVariable) {
 
 ////////// HandlerSet (etc.) implementation //////////
 
-HandlerDescriptor::HandlerDescriptor(HandlerDescriptor* nextHandler) {
+HandlerDescriptor::HandlerDescriptor(HandlerDescriptor* nextHandler)
+  : conditionSet(0), handlerProc(NULL) {
   // Link this descriptor into a doubly-linked list:
   if (nextHandler == this) { // initialization
     fNextHandler = fPrevHandler = this;
@@ -111,9 +112,7 @@ HandlerSet::~HandlerSet() {
 }
 
 void HandlerSet
-::assignHandler(int socketNum,
-		TaskScheduler::BackgroundHandlerProc* handlerProc,
-		void* clientData) {
+::assignHandler(int socketNum, int conditionSet, TaskScheduler::BackgroundHandlerProc* handlerProc, void* clientData) {
   // First, see if there's already a handler for this socket:
   HandlerDescriptor* handler = lookupHandler(socketNum);
   if (handler == NULL) { // No existing handler, so create a new descr:
@@ -121,13 +120,28 @@ void HandlerSet
     handler->socketNum = socketNum;
   }
 
-  handler->handlerProc = handlerProc;
+  if (handler->handlerProc == handlerProc) {
+    // We're using the same handler function as before, so reuse the condition set as well: 
+    handler->conditionSet |= conditionSet;
+  } else {
+    // Assign a new condition set along with the new handler function:
+    handler->conditionSet = conditionSet;
+    handler->handlerProc = handlerProc;
+  }
   handler->clientData = clientData;
 }
 
-void HandlerSet::removeHandler(int socketNum) {
+Boolean HandlerSet::clearHandler(int socketNum, int conditionSet) {
   HandlerDescriptor* handler = lookupHandler(socketNum);
-  delete handler;
+  if (handler != NULL) {
+    handler->conditionSet &=~ conditionSet;
+    if (handler->conditionSet == 0) {
+      delete handler;
+      handler = NULL;
+    }
+  }
+
+  return handler == NULL;
 }
 
 void HandlerSet::moveHandler(int oldSocketNum, int newSocketNum) {

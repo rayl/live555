@@ -339,8 +339,8 @@ void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor, int ma
     UsageEnvironment& env = socketDescriptor->fEnv; // abbrev
     int socketNum = socketDescriptor->fOurSocketNum;
 
-    // Begin by reading any characters that aren't '$'.  Any such characters are regular RTSP commands or responses,
-    // which need to be handled separately.
+    // Begin by reading any characters before the first '$'.  Any such characters make up a RTSP command or response,
+    // which needs to be handled separately.
     unsigned char c;
     struct sockaddr_in fromAddress;
     struct timeval timeout; timeout.tv_sec = 0; timeout.tv_usec = 0;

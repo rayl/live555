@@ -20,6 +20,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _HANDLER_SET_HH
 #define _HANDLER_SET_HH
 
+#ifndef _BOOLEAN_HH
+#include "Boolean.hh"
+#endif
+
 ////////// HandlerSet (etc.) definition //////////
 
 class HandlerDescriptor {
@@ -28,6 +32,7 @@ class HandlerDescriptor {
 
 public:
   int socketNum;
+  int conditionSet;
   TaskScheduler::BackgroundHandlerProc* handlerProc;
   void* clientData;
 
@@ -44,10 +49,8 @@ public:
   HandlerSet();
   virtual ~HandlerSet();
 
-  void assignHandler(int socketNum,
-		     TaskScheduler::BackgroundHandlerProc* handlerProc,
-		     void* clientData);
-  void removeHandler(int socketNum);
+  void assignHandler(int socketNum, int conditionSet, TaskScheduler::BackgroundHandlerProc* handlerProc, void* clientData);
+  Boolean clearHandler(int socketNum, int conditionSet); // returns True iff the handler is completely deleted
   void moveHandler(int oldSocketNum, int newSocketNum);
 
 private:
