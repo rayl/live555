@@ -334,6 +334,7 @@ RTSPClient::RTSPClient(UsageEnvironment& env, char const* rtspURL,
 }
 
 RTSPClient::~RTSPClient() {
+  RTPInterface::clearServerRequestAlternativeByteHandler(envir(), fInputSocketNum); // in case we were receiving RTP-over-TCP
   reset();
 
   delete[] fResponseBuffer;
@@ -1039,12 +1040,12 @@ Boolean RTSPClient::handleSETUPResponse(MediaSubsession& subsession, char const*
       // Tell the subsession to receive RTP (and send/receive RTCP) over the RTSP stream:
       if (subsession.rtpSource() != NULL) {
 	subsession.rtpSource()->setStreamSocket(fInputSocketNum, subsession.rtpChannelId);
-	subsession.rtpSource()->setServerRequestAlternativeByteHandler(fInputSocketNum, handleAlternativeRequestByte, this);
 	  // So that we continue to receive & handle RTSP commands and responses from the server
 	subsession.rtpSource()->enableRTCPReports() = False;
 	  // To avoid confusing the server (which won't start handling RTP/RTCP-over-TCP until "PLAY"), don't send RTCP "RR"s yet
       }
       if (subsession.rtcpInstance() != NULL) subsession.rtcpInstance()->setStreamSocket(fInputSocketNum, subsession.rtcpChannelId);
+      RTPInterface::setServerRequestAlternativeByteHandler(envir(), fInputSocketNum, handleAlternativeRequestByte, this);
     } else {
       // Normal case.
       // Set the RTP and RTCP sockets' destination address and port from the information in the SETUP response (if present):

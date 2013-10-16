@@ -97,7 +97,7 @@ void getSDPDescription(RTSPClient::responseHandler* afterFunc) {
   afterFunc(NULL, resultCode, strDup(result));
 }
 
-void setupSubsession(MediaSubsession* subsession, Boolean /*streamUsingTCP*/, RTSPClient::responseHandler* afterFunc) {
+void setupSubsession(MediaSubsession* subsession, Boolean /*streamUsingTCP*/, Boolean /*forceMulticastOnUnspecified*/,RTSPClient::responseHandler* afterFunc) {
   subsession->setSessionId("mumble"); // anything that's non-NULL will work
 
   ////////// BEGIN hack code that should really be implemented in SIPClient //////////

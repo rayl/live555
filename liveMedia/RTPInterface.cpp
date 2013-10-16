@@ -129,6 +129,7 @@ RTPInterface::RTPInterface(Medium* owner, Groupsock* gs)
 }
 
 RTPInterface::~RTPInterface() {
+  stopNetworkReading();
   delete fTCPStreams;
 }
 
@@ -184,13 +185,16 @@ void RTPInterface::removeStreamSocket(int sockNum,
   }
 }
 
-void RTPInterface
-::setServerRequestAlternativeByteHandler(int socketNum, ServerRequestAlternativeByteHandler* handler, void* clientData) {
-  SocketDescriptor* socketDescriptor = lookupSocketDescriptor(envir(), socketNum);
+void RTPInterface::setServerRequestAlternativeByteHandler(UsageEnvironment& env, int socketNum,
+							  ServerRequestAlternativeByteHandler* handler, void* clientData) {
+  SocketDescriptor* socketDescriptor = lookupSocketDescriptor(env, socketNum, False);
 
   if (socketDescriptor != NULL) socketDescriptor->setServerRequestAlternativeByteHandler(handler, clientData);
 }
 
+void RTPInterface::clearServerRequestAlternativeByteHandler(UsageEnvironment& env, int socketNum) {
+  setServerRequestAlternativeByteHandler(env, socketNum, NULL, NULL);
+}
 
 Boolean RTPInterface::sendPacket(unsigned char* packet, unsigned packetSize) {
   Boolean success = True; // we'll return False instead if any of the sends fail
@@ -277,8 +281,7 @@ void RTPInterface::stopNetworkReading() {
   envir().taskScheduler().turnOffBackgroundReadHandling(fGS->socketNum());
 
   // Also turn off read handling on each of our TCP connections:
-  for (tcpStreamRecord* streams = fTCPStreams; streams != NULL;
-       streams = streams->fNext) {
+  for (tcpStreamRecord* streams = fTCPStreams; streams != NULL; streams = streams->fNext) {
     deregisterSocket(envir(), streams->fStreamSocketNum, streams->fStreamChannelId);
   }
 }

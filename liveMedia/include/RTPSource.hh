@@ -65,9 +65,6 @@ public:
     // hack to allow sending RTP over TCP (RFC 2236, section 10.12)
     fRTPInterface.setStreamSocket(sockNum, streamChannelId);
   }
-  void setServerRequestAlternativeByteHandler(int socketNum, ServerRequestAlternativeByteHandler* handler, void* clientData) {
-    fRTPInterface.setServerRequestAlternativeByteHandler(socketNum, handler, clientData);
-  }
 
   void setAuxilliaryReadHandler(AuxHandlerFunc* handlerFunc,
                                 void* handlerClientData) {

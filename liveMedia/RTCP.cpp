@@ -177,9 +177,6 @@ RTCPInstance::~RTCPInstance() {
 #ifdef DEBUG
   fprintf(stderr, "RTCPInstance[%p]::~RTCPInstance()\n", this);
 #endif
-  // Turn off background read handling:
-  fRTCPInterface.stopNetworkReading();
-
   // Begin by sending a BYE.  We have to do this immediately, without
   // 'reconsideration', because "this" is going away.
   fTypeOfEvent = EVENT_BYE; // not used, but...
