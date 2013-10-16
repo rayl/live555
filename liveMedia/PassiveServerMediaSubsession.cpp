@@ -133,7 +133,9 @@ void PassiveServerMediaSubsession::startStream(unsigned /*clientSessionId*/,
 					       TaskFunc* /*rtcpRRHandler*/,
 					       void* /*rtcpRRHandlerClientData*/,
 					       unsigned short& rtpSeqNum,
-					       unsigned& rtpTimestamp) {
+					       unsigned& rtpTimestamp,
+					       ServerRequestAlternativeByteHandler* /*serverRequestAlternativeByteHandler*/,
+					       void* /*serverRequestAlternativeByteHandlerClientData*/) {
   // Note: We don't set a RTCP RR handler, because (i) we're called potentially
   // many times on the same "RTCPInstance", and (ii) the "RTCPInstance" remains
   // in existence after "deleteStream()" is called.

@@ -80,6 +80,9 @@ public:
   void removeStreamSocket(int sockNum, unsigned char streamChannelId) {
     fRTPInterface.removeStreamSocket(sockNum, streamChannelId);
   }
+  void setServerRequestAlternativeByteHandler(ServerRequestAlternativeByteHandler* handler, void* clientData) {
+    fRTPInterface.setServerRequestAlternativeByteHandler(handler, clientData);
+  }
     // hacks to allow sending RTP over TCP (RFC 2236, section 10.12)
 
   void getTotalBitrate(unsigned& outNumBytes, double& outElapsedTime);

@@ -151,6 +151,9 @@ protected:
     Boolean isMulticast() const { return fIsMulticast; }
     static void incomingRequestHandler(void*, int /*mask*/);
     void incomingRequestHandler1();
+    static void handleAlternativeRequestByte(void*, u_int8_t requestByte);
+    void handleAlternativeRequestByte1(u_int8_t requestByte);
+    void handleRequestBytes(int newBytesRead);
     void noteLiveness();
     static void noteClientLiveness(RTSPClientSession* clientSession);
     static void livenessTimeoutTask(RTSPClientSession* clientSession);

@@ -54,26 +54,27 @@ int BasicUsageEnvironment::getErrno() const {
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(char const* str) {
-	fprintf(stderr, "%s", str);
-	return *this;
+  if (str == NULL) str = "(NULL)"; // sanity check
+  fprintf(stderr, "%s", str);
+  return *this;
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(int i) {
-	fprintf(stderr, "%d", i);
-	return *this;
+  fprintf(stderr, "%d", i);
+  return *this;
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(unsigned u) {
-	fprintf(stderr, "%u", u);
-	return *this;
+  fprintf(stderr, "%u", u);
+  return *this;
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(double d) {
-	fprintf(stderr, "%f", d);
-	return *this;
+  fprintf(stderr, "%f", d);
+  return *this;
 }
 
 UsageEnvironment& BasicUsageEnvironment::operator<<(void* p) {
-	fprintf(stderr, "%p", p);
-	return *this;
+  fprintf(stderr, "%p", p);
+  return *this;
 }

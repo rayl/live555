@@ -56,6 +56,11 @@ public:
   RTPInterface* lookupRTPInterface(unsigned char streamChannelId);
   void deregisterRTPInterface(unsigned char streamChannelId);
 
+  void setServerRequestAlternativeByteHandler(ServerRequestAlternativeByteHandler* handler, void* clientData) {
+    fServerRequestAlternativeByteHandler = handler;
+    fServerRequestAlternativeByteHandlerClientData = clientData;
+  }
+
 private:
   static void tcpReadHandler(SocketDescriptor*, int mask);
 
@@ -63,12 +68,19 @@ private:
   UsageEnvironment& fEnv;
   int fOurSocketNum;
   HashTable* fSubChannelHashTable;
+  ServerRequestAlternativeByteHandler* fServerRequestAlternativeByteHandler;
+  void* fServerRequestAlternativeByteHandlerClientData;
 };
 
-static SocketDescriptor* lookupSocketDescriptor(UsageEnvironment& env,
-						int sockNum) {
+static SocketDescriptor* lookupSocketDescriptor(UsageEnvironment& env, int sockNum, Boolean createIfNotFound = True) {
   char const* key = (char const*)(long)sockNum;
-  return (SocketDescriptor*)(socketHashTable(env)->Lookup(key));
+  SocketDescriptor* socketDescriptor = (SocketDescriptor*)(socketHashTable(env)->Lookup(key));
+  if (socketDescriptor == NULL && createIfNotFound) {
+    socketDescriptor = new SocketDescriptor(env, sockNum);
+    socketHashTable(env)->Add((char const*)(long)(sockNum), socketDescriptor);
+  }
+
+  return socketDescriptor;
 }
 
 static void removeSocketDescription(UsageEnvironment& env, int sockNum) {
@@ -106,8 +118,6 @@ RTPInterface::~RTPInterface() {
   delete fTCPStreams;
 }
 
-Boolean RTPOverTCP_OK = True; // HACK: For detecting TCP socket failure externally #####
-
 void RTPInterface::setStreamSocket(int sockNum,
 				   unsigned char streamChannelId) {
   fGS->removeAllDestinations();
@@ -117,7 +127,6 @@ void RTPInterface::setStreamSocket(int sockNum,
 void RTPInterface::addStreamSocket(int sockNum,
 				   unsigned char streamChannelId) {
   if (sockNum < 0) return;
-  else RTPOverTCP_OK = True; //##### HACK
 
   for (tcpStreamRecord* streams = fTCPStreams; streams != NULL;
        streams = streams->fNext) {
@@ -131,7 +140,7 @@ void RTPInterface::addStreamSocket(int sockNum,
 }
 
 static void deregisterSocket(UsageEnvironment& env, int sockNum, unsigned char streamChannelId) {
-  SocketDescriptor* socketDescriptor = lookupSocketDescriptor(env, sockNum);
+  SocketDescriptor* socketDescriptor = lookupSocketDescriptor(env, sockNum, False);
   if (socketDescriptor != NULL) {
     socketDescriptor->deregisterRTPInterface(streamChannelId);
         // Note: This may delete "socketDescriptor",
@@ -157,6 +166,17 @@ void RTPInterface::removeStreamSocket(int sockNum,
   }
 }
 
+void RTPInterface::setServerRequestAlternativeByteHandler(ServerRequestAlternativeByteHandler* handler, void* clientData) {
+  for (tcpStreamRecord* streams = fTCPStreams; streams != NULL;
+       streams = streams->fNext) {
+    // Get (or create, if necessary) a socket descriptor for "streams->fStreamSocketNum":
+    SocketDescriptor* socketDescriptor = lookupSocketDescriptor(envir(), streams->fStreamSocketNum);
+
+    socketDescriptor->setServerRequestAlternativeByteHandler(handler, clientData);
+  }
+}
+
+
 void RTPInterface::sendPacket(unsigned char* packet, unsigned packetSize) {
   // Normal case: Send as a UDP packet:
   fGS->output(envir(), fGS->ttl(), packet, packetSize);
@@ -180,14 +200,7 @@ void RTPInterface
   for (tcpStreamRecord* streams = fTCPStreams; streams != NULL;
        streams = streams->fNext) {
     // Get a socket descriptor for "streams->fStreamSocketNum":
-    SocketDescriptor* socketDescriptor
-      = lookupSocketDescriptor(envir(), streams->fStreamSocketNum);
-    if (socketDescriptor == NULL) {
-      socketDescriptor
-	= new SocketDescriptor(envir(), streams->fStreamSocketNum);
-      socketHashTable(envir())->Add((char const*)(long)(streams->fStreamSocketNum),
-				    socketDescriptor);
-    }
+    SocketDescriptor* socketDescriptor = lookupSocketDescriptor(envir(), streams->fStreamSocketNum);
 
     // Tell it about our subChannel:
     socketDescriptor->registerRTPInterface(streams->fStreamChannelId, this);
@@ -219,7 +232,6 @@ Boolean RTPInterface::handleRead(unsigned char* buffer,
     if (curBytesRead <= 0) {
       bytesRead = 0;
       readSuccess = False;
-      RTPOverTCP_OK = False; // HACK #####
     } else {
       readSuccess = True;
     }
@@ -274,15 +286,15 @@ void sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
     return;
   } while (0);
 
-  RTPOverTCP_OK = False; // HACK #####
 #ifdef DEBUG
   fprintf(stderr, "sendRTPOverTCP: failed!\n"); fflush(stderr);
 #endif
 }
 
 SocketDescriptor::SocketDescriptor(UsageEnvironment& env, int socketNum)
-  : fEnv(env), fOurSocketNum(socketNum),
-    fSubChannelHashTable(HashTable::create(ONE_WORD_HASH_KEYS)) {
+  :fEnv(env), fOurSocketNum(socketNum),
+    fSubChannelHashTable(HashTable::create(ONE_WORD_HASH_KEYS)),
+   fServerRequestAlternativeByteHandler(NULL), fServerRequestAlternativeByteHandlerClientData(NULL) {
 }
 
 SocketDescriptor::~SocketDescriptor() {
@@ -322,21 +334,17 @@ void SocketDescriptor
   }
 }
 
-void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor,
-				      int mask) {
+void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor, int mask) {
   do {
     UsageEnvironment& env = socketDescriptor->fEnv; // abbrev
     int socketNum = socketDescriptor->fOurSocketNum;
 
-    // Begin by reading and discarding any characters that aren't '$'.
-    // Any such characters are probably regular RTSP responses or
-    // commands from the server.  At present, we can't do anything with
-    // these, because we have taken complete control of reading this socket.
-    // (Later, fix) #####
+    // Begin by reading any characters that aren't '$'.  Any such characters are regular RTSP commands or responses,
+    // which need to be handled separately.
     unsigned char c;
     struct sockaddr_in fromAddress;
     struct timeval timeout; timeout.tv_sec = 0; timeout.tv_usec = 0;
-    do {
+    while (1) {
       int result = readSocket(env, socketNum, &c, 1, fromAddress, &timeout);
       if (result != 1) { // error reading TCP socket
 	if (result < 0) {
@@ -344,14 +352,17 @@ void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor,
 	}
 	return;
       }
-    } while (c != '$');
+
+      if (c == '$') break;
+      if (socketDescriptor->fServerRequestAlternativeByteHandler != NULL) {
+	(*socketDescriptor->fServerRequestAlternativeByteHandler)(socketDescriptor->fServerRequestAlternativeByteHandlerClientData, c);
+      }
+    }
 
     // The next byte is the stream channel id:
     unsigned char streamChannelId;
-    if (readSocket(env, socketNum, &streamChannelId, 1, fromAddress)
-	!= 1) break;
-    RTPInterface* rtpInterface
-      = socketDescriptor->lookupRTPInterface(streamChannelId);
+    if (readSocket(env, socketNum, &streamChannelId, 1, fromAddress) != 1) break;
+    RTPInterface* rtpInterface = socketDescriptor->lookupRTPInterface(streamChannelId);
     if (rtpInterface == NULL) break; // we're not interested in this channel
 
     // The next two bytes are the RTP or RTCP packet size (in network order)

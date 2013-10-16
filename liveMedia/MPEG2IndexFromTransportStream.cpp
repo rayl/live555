@@ -277,11 +277,15 @@ void MPEG2IFrameIndexFromTransportStream::handleInputClosure1() {
 
 void MPEG2IFrameIndexFromTransportStream
 ::analyzePAT(unsigned char* pkt, unsigned size) {
-  // Get the PMT_PID (we assume that's there just 1 program):
-  if (size < 16) return; // table too small
-  u_int16_t program_number = (pkt[9]<<8) | pkt[10];
-  if (program_number != 0) {
-    fPMT_PID = ((pkt[11]&0x1F)<<8) | pkt[12];
+  // Get the PMT_PID:
+  while (size >= 17) { // The table is large enough
+    u_int16_t program_number = (pkt[9]<<8) | pkt[10];
+    if (program_number != 0) {
+      fPMT_PID = ((pkt[11]&0x1F)<<8) | pkt[12];
+      return;
+    }
+
+    pkt += 4; size -= 4;
   }
 }
 

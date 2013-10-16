@@ -118,7 +118,9 @@ MPEG2TransportFileServerMediaSubsession
 void MPEG2TransportFileServerMediaSubsession
 ::startStream(unsigned clientSessionId, void* streamToken, TaskFunc* rtcpRRHandler,
 	      void* rtcpRRHandlerClientData, unsigned short& rtpSeqNum,
-	      unsigned& rtpTimestamp) {
+	      unsigned& rtpTimestamp,
+	      ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
+	      void* serverRequestAlternativeByteHandlerClientData) {
   if (fIndexFile != NULL) { // we support 'trick play'
     ClientTrickPlayState* client = lookupClient(clientSessionId);
     if (client != NULL && client->areChangingScale()) {
@@ -134,7 +136,8 @@ void MPEG2TransportFileServerMediaSubsession
   // Call the original, default version of this routine:
   OnDemandServerMediaSubsession::startStream(clientSessionId, streamToken,
 					     rtcpRRHandler, rtcpRRHandlerClientData,
-					     rtpSeqNum, rtpTimestamp);
+					     rtpSeqNum, rtpTimestamp,
+					     serverRequestAlternativeByteHandler, serverRequestAlternativeByteHandlerClientData);
 }
 
 void MPEG2TransportFileServerMediaSubsession

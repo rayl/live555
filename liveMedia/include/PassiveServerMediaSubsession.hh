@@ -62,7 +62,9 @@ protected: // redefined virtual functions
 			   TaskFunc* rtcpRRHandler,
 			   void* rtcpRRHandlerClientData,
                            unsigned short& rtpSeqNum,
-                           unsigned& rtpTimestamp);
+                           unsigned& rtpTimestamp,
+			   ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
+                           void* serverRequestAlternativeByteHandlerClientData);
 
 protected:
   char* fSDPLines;

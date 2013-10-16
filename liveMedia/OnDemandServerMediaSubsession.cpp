@@ -106,7 +106,9 @@ public:
   virtual ~StreamState();
 
   void startPlaying(Destinations* destinations,
-		    TaskFunc* rtcpRRHandler, void* rtcpRRHandlerClientData);
+		    TaskFunc* rtcpRRHandler, void* rtcpRRHandlerClientData,
+		    ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
+                    void* serverRequestAlternativeByteHandlerClientData);
   void pause();
   void endPlaying(Destinations* destinations);
   void reclaim();
@@ -257,13 +259,16 @@ void OnDemandServerMediaSubsession::startStream(unsigned clientSessionId,
 						TaskFunc* rtcpRRHandler,
 						void* rtcpRRHandlerClientData,
 						unsigned short& rtpSeqNum,
-						unsigned& rtpTimestamp) {
+						unsigned& rtpTimestamp,
+						ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
+						void* serverRequestAlternativeByteHandlerClientData) {
   StreamState* streamState = (StreamState*)streamToken;
   Destinations* destinations
     = (Destinations*)(fDestinationsHashTable->Lookup((char const*)clientSessionId));
   if (streamState != NULL) {
     streamState->startPlaying(destinations,
-			      rtcpRRHandler, rtcpRRHandlerClientData);
+			      rtcpRRHandler, rtcpRRHandlerClientData,
+			      serverRequestAlternativeByteHandler, serverRequestAlternativeByteHandlerClientData);
     if (streamState->rtpSink() != NULL) {
       rtpSeqNum = streamState->rtpSink()->currentSeqNo();
       rtpTimestamp = streamState->rtpSink()->presetNextTimestamp();
@@ -434,7 +439,9 @@ StreamState::~StreamState() {
 
 void StreamState
 ::startPlaying(Destinations* dests,
-	       TaskFunc* rtcpRRHandler, void* rtcpRRHandlerClientData) {
+	       TaskFunc* rtcpRRHandler, void* rtcpRRHandlerClientData,
+	       ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
+	       void* serverRequestAlternativeByteHandlerClientData) {
   if (dests == NULL) return;
   if (!fAreCurrentlyPlaying && fMediaSource != NULL) {
     if (fRTPSink != NULL) {
@@ -459,6 +466,7 @@ void StreamState
     // Change RTP and RTCP to use the TCP socket instead of UDP:
     if (fRTPSink != NULL) {
       fRTPSink->addStreamSocket(dests->tcpSocketNum, dests->rtpChannelId);
+      fRTPSink->setServerRequestAlternativeByteHandler(serverRequestAlternativeByteHandler, serverRequestAlternativeByteHandlerClientData);
     }
     if (fRTCPInstance != NULL) {
       fRTCPInstance->addStreamSocket(dests->tcpSocketNum, dests->rtcpChannelId);

@@ -237,7 +237,7 @@ include/RTCP.hh:		include/RTPSink.hh include/RTPSource.hh
 rtcp_from_spec.$(C):	rtcp_from_spec.h
 RTSPServer.$(CPP):	include/RTSPServer.hh include/RTSPCommon.hh
 include/RTSPServer.hh:		include/ServerMediaSession.hh include/DigestAuthentication.hh include/RTSPCommon.hh
-include/ServerMediaSession.hh:	include/Media.hh include/RTSPCommon.hh
+include/ServerMediaSession.hh:	include/Media.hh include/RTPInterface.hh
 RTSPOverHTTPServer.$(CPP):	include/RTSPOverHTTPServer.hh include/RTSPCommon.hh
 include/RTSPOverHTTPServer.hh:	include/Media.hh
 RTSPClient.$(CPP):	include/RTSPClient.hh  include/RTSPCommon.hh include/Base64.hh include/Locale.hh our_md5.h
@@ -276,7 +276,7 @@ ADTSAudioFileServerMediaSubsession.$(CPP):	include/ADTSAudioFileServerMediaSubse
 include/ADTSAudioFileServerMediaSubsession.hh:	include/FileServerMediaSubsession.hh
 DVVideoFileServerMediaSubsession.$(CPP):	include/DVVideoFileServerMediaSubsession.hh include/DVVideoRTPSink.hh include/ByteStreamFileSource.hh include/DVVideoStreamFramer.hh
 include/DVVideoFileServerMediaSubsession.hh:	include/FileServerMediaSubsession.hh
-QuickTimeFileSink.$(CPP):	include/QuickTimeFileSink.hh include/OutputFile.hh include/QuickTimeGenericRTPSource.hh include/H263plusVideoRTPSource.hh include/MPEG4GenericRTPSource.hh include/MPEG4LATMAudioRTPSource.hh
+QuickTimeFileSink.$(CPP):	include/QuickTimeFileSink.hh include/InputFile.hh include/OutputFile.hh include/QuickTimeGenericRTPSource.hh include/H263plusVideoRTPSource.hh include/MPEG4GenericRTPSource.hh include/MPEG4LATMAudioRTPSource.hh
 include/QuickTimeFileSink.hh:	include/MediaSession.hh
 QuickTimeGenericRTPSource.$(CPP):	include/QuickTimeGenericRTPSource.hh
 include/QuickTimeGenericRTPSource.hh:	include/MultiFramedRTPSource.hh

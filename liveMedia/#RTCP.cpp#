@@ -300,7 +300,7 @@ void RTCPInstance::addStreamSocket(int sockNum,
   fRTCPInterface.stopNetworkReading();
 
   // Add the RTCP-over-TCP interface:
-  fRTCPInterface.addStreamSocket(sockNum, streamChannelId);
+  fRTCPInterface.setStreamSocket(sockNum, streamChannelId);
 
   // Turn on background reading for this socket (in case it's not on already):
   TaskScheduler::BackgroundHandlerProc* handler
@@ -894,11 +894,14 @@ void RTCPInstance::onExpire1() {
 
 SDESItem::SDESItem(unsigned char tag, unsigned char const* value) {
   unsigned length = strlen((char const*)value);
-  if (length > 0xFF) length = 0xFF; // maximum data length for a SDES item
+  if (length > 511) length = 511;
 
   fData[0] = tag;
   fData[1] = (unsigned char)length;
   memmove(&fData[2], value, length);
+
+  // Pad the trailing bytes to a 4-byte boundary:
+  while ((length)%4 > 0) fData[2 + length++] = '\0';
 }
 
 unsigned SDESItem::totalSize() const {

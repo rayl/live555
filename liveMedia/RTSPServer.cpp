@@ -299,43 +299,58 @@ void RTSPServer::RTSPClientSession::resetRequestBuffer() {
   fLastCRLF = &fRequestBuffer[-3]; // hack
 }
 
-void RTSPServer::RTSPClientSession
-::incomingRequestHandler(void* instance, int /*mask*/) {
+void RTSPServer::RTSPClientSession::incomingRequestHandler(void* instance, int /*mask*/) {
   RTSPClientSession* session = (RTSPClientSession*)instance;
   session->incomingRequestHandler1();
 }
 
 void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
+  struct sockaddr_in dummy; // 'from' address, meaningless in this case
+
+  int bytesRead = readSocket(envir(), fClientSocket, &fRequestBuffer[fRequestBytesAlreadySeen], fRequestBufferBytesLeft, dummy);
+  handleRequestBytes(bytesRead);
+}
+
+void RTSPServer::RTSPClientSession::handleAlternativeRequestByte(void* instance, u_int8_t requestByte) {
+  RTSPClientSession* session = (RTSPClientSession*)instance;
+  session->handleAlternativeRequestByte1(requestByte);
+}
+
+void RTSPServer::RTSPClientSession::handleAlternativeRequestByte1(u_int8_t requestByte) {
+  // Add this character to our buffer; then try to handle the data that we have buffered so far:
+  if (fRequestBufferBytesLeft == 0) return;
+  fRequestBuffer[fRequestBytesAlreadySeen] = requestByte;
+  handleRequestBytes(1);
+}
+
+void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
   noteLiveness();
 
-  struct sockaddr_in dummy; // 'from' address, meaningless in this case
-  Boolean endOfMsg = False;
-  unsigned char* ptr = &fRequestBuffer[fRequestBytesAlreadySeen];
-
-  int bytesRead = readSocket(envir(), fClientSocket,
-			     ptr, fRequestBufferBytesLeft, dummy);
-  if (bytesRead <= 0 || (unsigned)bytesRead >= fRequestBufferBytesLeft) {
+  if (newBytesRead <= 0 || (unsigned)newBytesRead >= fRequestBufferBytesLeft) {
     // Either the client socket has died, or the request was too big for us.
     // Terminate this connection:
 #ifdef DEBUG
-    fprintf(stderr, "RTSPClientSession[%p]::incomingRequestHandler1() read %d bytes (of %d); terminating connection!\n", this, bytesRead, fRequestBufferBytesLeft);
+    fprintf(stderr, "RTSPClientSession[%p]::handleRequestBytes() read %d new bytes (of %d); terminating connection!\n", this, newBytesRead, fRequestBufferBytesLeft);
 #endif
     delete this;
     return;
   }
+
+  Boolean endOfMsg = False;
+  unsigned char* ptr = &fRequestBuffer[fRequestBytesAlreadySeen];
 #ifdef DEBUG
-  ptr[bytesRead] = '\0';
-  fprintf(stderr, "RTSPClientSession[%p]::incomingRequestHandler1() read %d bytes:%s\n", this, bytesRead, ptr);
+  ptr[newBytesRead] = '\0';
+  fprintf(stderr, "RTSPClientSession[%p]::handleRequestBytes() read %d new bytes:%s\n", this, newBytesRead, ptr);
 #endif
 
   // Look for the end of the message: <CR><LF><CR><LF>
   unsigned char *tmpPtr = ptr;
   if (fRequestBytesAlreadySeen > 0) --tmpPtr;
       // in case the last read ended with a <CR>
-  while (tmpPtr < &ptr[bytesRead-1]) {
+  while (tmpPtr < &ptr[newBytesRead-1]) {
     if (*tmpPtr == '\r' && *(tmpPtr+1) == '\n') {
       if (tmpPtr - fLastCRLF == 2) { // This is it:
-	endOfMsg = 1;
+	endOfMsg = True;
 	break;
       }
       fLastCRLF = tmpPtr;
@@ -343,8 +358,8 @@ void RTSPServer::RTSPClientSession::incomingRequestHandler1() {
     ++tmpPtr;
   }
 
-  fRequestBufferBytesLeft -= bytesRead;
-  fRequestBytesAlreadySeen += bytesRead;
+  fRequestBufferBytesLeft -= newBytesRead;
+  fRequestBytesAlreadySeen += newBytesRead;
 
   if (!endOfMsg) return; // subsequent reads will be needed to complete the request
 
@@ -433,8 +448,7 @@ static char const* dateHeader() {
 }
 
 static char const* allowedCommandNames
-//  = "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, GET_PARAMETER, SET_PARAMETER";
-= "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, SET_PARAMETER"; // TEMP HACK to stop VLC from using "GET_PARAMETER" as a client 'keep-alive' indicator; we don't need this, and it currently causes problems for RTP-over-TCP streams.
+= "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, GET_PARAMETER, SET_PARAMETER";
 
 void RTSPServer::RTSPClientSession::handleCmd_bad(char const* /*cseq*/) {
   // Don't do anything with "cseq", because it might be nonsense
@@ -990,10 +1004,9 @@ void RTSPServer::RTSPClientSession
       unsigned rtpTimestamp = 0;
       fStreamStates[i].subsession->startStream(fOurSessionId,
 					       fStreamStates[i].streamToken,
-					       (TaskFunc*)noteClientLiveness,
-					       this,
-					       rtpSeqNum,
-					       rtpTimestamp);
+					       (TaskFunc*)noteClientLiveness, this,
+					       rtpSeqNum, rtpTimestamp,
+					       handleAlternativeRequestByte, this);
       const char *urlSuffix = fStreamStates[i].subsession->trackId();
       char* prevRTPInfo = rtpInfo;
       unsigned rtpInfoSize = rtpInfoFmtSize

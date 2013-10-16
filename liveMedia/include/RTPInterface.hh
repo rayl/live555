@@ -35,6 +35,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 typedef void AuxHandlerFunc(void* clientData, unsigned char* packet,
 			    unsigned packetSize);
 
+typedef void ServerRequestAlternativeByteHandler(void* instance, u_int8_t requestByte);
+// A hack that allows a handler for RTP/RTCP packets received over TCP to process RTSP commands that may also appear within
+// the same TCP connection.  A RTSP server implementation would supply a function like this - as a parameter to
+// "ServerMediaSubsession::startStream()".
+
 class tcpStreamRecord {
 public:
   tcpStreamRecord(int streamSocketNum, unsigned char streamChannelId,
@@ -57,6 +62,7 @@ public:
   void setStreamSocket(int sockNum, unsigned char streamChannelId);
   void addStreamSocket(int sockNum, unsigned char streamChannelId);
   void removeStreamSocket(int sockNum, unsigned char streamChannelId);
+  void setServerRequestAlternativeByteHandler(ServerRequestAlternativeByteHandler* handler, void* clientData);
 
   void sendPacket(unsigned char* packet, unsigned packetSize);
   void startNetworkReading(TaskScheduler::BackgroundHandlerProc*
