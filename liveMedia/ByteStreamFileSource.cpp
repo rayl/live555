@@ -18,20 +18,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // A file source that is a plain byte stream (rather than frames)
 // Implementation
 
-#if (defined(__WIN32__) || defined(_WIN32)) && !defined(_WIN32_WCE)
-#include <io.h>
-#include <fcntl.h>
-#define READ_FROM_FILES_SYNCHRONOUSLY 1
-    // Because Windows is a silly toy operating system that doesn't (reliably) treat
-    // open files as being readable sockets (which can be handled within the default
-    // "BasicTaskScheduler" event loop, using "select()"), we implement file reading
-    // in Windows using synchronous, rather than asynchronous, I/O.  This can severely
-    // limit the scalability of servers using this code that run on Windows.
-    // If this is a problem for you, then either use a better operating system,
-    // or else write your own Windows-specific event loop ("TaskScheduler" subclass)
-    // that can handle readable data in Windows open files as an event.
-#endif
-
 #include "ByteStreamFileSource.hh"
 #include "InputFile.hh"
 #include "GroupsockHelper.hh"
@@ -90,12 +76,7 @@ ByteStreamFileSource::ByteStreamFileSource(UsageEnvironment& env, FILE* fid,
 #endif
 
   // Test whether the file is seekable
-  if (SeekFile64(fFid, 1, SEEK_CUR) >= 0) {
-    fFidIsSeekable = True;
-    SeekFile64(fFid, -1, SEEK_CUR);
-  } else {
-    fFidIsSeekable = False;
-  }
+  fFidIsSeekable = FileIsSeekable(fFid);
 }
 
 ByteStreamFileSource::~ByteStreamFileSource() {
@@ -141,6 +122,13 @@ void ByteStreamFileSource::fileReadableHandler(ByteStreamFileSource* source, int
   source->doReadFromFile();
 }
 
+static Boolean const readFromFilesSynchronously
+#ifdef READ_FROM_FILES_SYNCHRONOUSLY
+= True;
+#else
+= False;
+#endif
+
 void ByteStreamFileSource::doReadFromFile() {
   // Try to read as many bytes as will fit in the buffer provided (or "fPreferredFrameSize" if less)
   if (fLimitNumBytesToStream && fNumBytesToStream < (u_int64_t)fMaxSize) {
@@ -149,16 +137,12 @@ void ByteStreamFileSource::doReadFromFile() {
   if (fPreferredFrameSize > 0 && fPreferredFrameSize < fMaxSize) {
     fMaxSize = fPreferredFrameSize;
   }
-#ifdef READ_FROM_FILES_SYNCHRONOUSLY
-  fFrameSize = fread(fTo, 1, fMaxSize, fFid);
-#else
-  if (fFidIsSeekable) {
+  if (readFromFilesSynchronously || fFidIsSeekable) {
     fFrameSize = fread(fTo, 1, fMaxSize, fFid);
   } else {
     // For non-seekable files (e.g., pipes), call "read()" rather than "fread()", to ensure that the read doesn't block:
     fFrameSize = read(fileno(fFid), fTo, fMaxSize);
   }
-#endif
   if (fFrameSize == 0) {
     handleClosure(this);
     return;
