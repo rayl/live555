@@ -115,11 +115,7 @@ void HandlerSet
 		TaskScheduler::BackgroundHandlerProc* handlerProc,
 		void* clientData) {
   // First, see if there's already a handler for this socket:
-  HandlerDescriptor* handler;
-  HandlerIterator iter(*this);
-  while ((handler = iter.next()) != NULL) {
-    if (handler->socketNum == socketNum) break;
-  }
+  HandlerDescriptor* handler = lookupHandler(socketNum);
   if (handler == NULL) { // No existing handler, so create a new descr:
     handler = new HandlerDescriptor(fHandlers.fNextHandler);
     handler->socketNum = socketNum;
@@ -130,14 +126,24 @@ void HandlerSet
 }
 
 void HandlerSet::removeHandler(int socketNum) {
+  HandlerDescriptor* handler = lookupHandler(socketNum);
+  delete handler;
+}
+
+void HandlerSet::moveHandler(int oldSocketNum, int newSocketNum) {
+  HandlerDescriptor* handler = lookupHandler(oldSocketNum);
+  if (handler != NULL) {
+    handler->socketNum = newSocketNum;
+  }
+}
+
+HandlerDescriptor* HandlerSet::lookupHandler(int socketNum) {
   HandlerDescriptor* handler;
   HandlerIterator iter(*this);
   while ((handler = iter.next()) != NULL) {
-    if (handler->socketNum == socketNum) {
-      delete handler;
-      break;
-    }
+    if (handler->socketNum == socketNum) break;
   }
+  return handler;
 }
 
 HandlerIterator::HandlerIterator(HandlerSet& handlerSet)

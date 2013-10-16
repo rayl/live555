@@ -61,6 +61,7 @@ protected:
 				    BackgroundHandlerProc* handlerProc,
 				    void* clientData);
   virtual void turnOffBackgroundReadHandling(int socketNum);
+  virtual void moveSocketHandling(int oldSocketNum, int newSocketNum);
 
 protected:
   // To implement background reads:

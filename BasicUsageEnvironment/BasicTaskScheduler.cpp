@@ -18,7 +18,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 
-#ifndef IMN_PIM
 #include "BasicUsageEnvironment.hh"
 #include "HandlerSet.hh"
 #include <stdio.h>
@@ -144,8 +143,8 @@ void BasicTaskScheduler::turnOnBackgroundReadHandling(int socketNum,
 				BackgroundHandlerProc* handlerProc,
 				void* clientData) {
   if (socketNum < 0) return;
-  FD_SET((unsigned)socketNum, &fReadSet);
   fReadHandlers->assignHandler(socketNum, handlerProc, clientData);
+  FD_SET((unsigned)socketNum, &fReadSet);
 
   if (socketNum+1 > fMaxNumSockets) {
     fMaxNumSockets = socketNum+1;
@@ -161,5 +160,17 @@ void BasicTaskScheduler::turnOffBackgroundReadHandling(int socketNum) {
     --fMaxNumSockets;
   }
 }
-#endif
 
+void BasicTaskScheduler::moveSocketHandling(int oldSocketNum, int newSocketNum) {
+  if (oldSocketNum < 0 || newSocketNum < 0) return; // sanity check
+  FD_CLR((unsigned)oldSocketNum, &fReadSet);
+  fReadHandlers->moveHandler(oldSocketNum, newSocketNum);
+  FD_SET((unsigned)newSocketNum, &fReadSet);
+
+  if (oldSocketNum+1 == fMaxNumSockets) {
+    --fMaxNumSockets;
+  }
+  if (newSocketNum+1 > fMaxNumSockets) {
+    fMaxNumSockets = newSocketNum+1;
+  }
+}

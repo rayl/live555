@@ -48,6 +48,10 @@ public:
 		     TaskScheduler::BackgroundHandlerProc* handlerProc,
 		     void* clientData);
   void removeHandler(int socketNum);
+  void moveHandler(int oldSocketNum, int newSocketNum);
+
+private:
+  HandlerDescriptor* lookupHandler(int socketNum);
 
 private:
   friend class HandlerIterator;

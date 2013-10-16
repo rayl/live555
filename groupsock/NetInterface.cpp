@@ -95,15 +95,16 @@ Socket::~Socket() {
 }
 
 Boolean Socket::changePort(Port newPort) {
-  // Re-bind() the socket to a new port number:
-  netAddressBits addr = INADDR_ANY;
-  if (newPort.num() == 0) addr = ReceivingInterfaceAddr;
-  MAKE_SOCKADDR_IN(name, addr, newPort.num());
-  if (bind(fSocketNum, (struct sockaddr*)&name, sizeof name) != 0) {
-    char tmpBuffer[100];
-    sprintf(tmpBuffer, "bind() error (port number: %d): ", ntohs(newPort.num()));
-    fEnv.setResultErrMsg(tmpBuffer);
+  int oldSocketNum = fSocketNum;
+  closeSocket(fSocketNum);
+  fSocketNum = setupDatagramSocket(fEnv, newPort);
+  if (fSocketNum < 0) {
+    fEnv.taskScheduler().turnOffBackgroundReadHandling(oldSocketNum);
     return False;
+  }
+
+  if (fSocketNum != oldSocketNum) { // the socket number has changed, so move any event handling for it:
+    fEnv.taskScheduler().moveSocketHandling(oldSocketNum, fSocketNum);
   }
   return True;
 }

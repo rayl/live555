@@ -128,6 +128,8 @@ public:
 				BackgroundHandlerProc* handlerProc,
 				void* clientData) = 0;
   virtual void turnOffBackgroundReadHandling(int socketNum) = 0;
+  virtual void moveSocketHandling(int oldSocketNum, int newSocketNum) = 0;
+        // Changes any socket handling for "oldSocketNum" so that occurs with "newSocketNum" instead.
 
   virtual void doEventLoop(char* watchVariable = NULL) = 0;
 	// Stops the current thread of control from proceeding,
