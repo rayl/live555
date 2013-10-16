@@ -129,7 +129,7 @@ void BasicTaskScheduler0::deleteEventTrigger(EventTriggerId eventTriggerId) {
 void BasicTaskScheduler0::triggerEvent(EventTriggerId eventTriggerId, void* clientData) {
   // First, record the "clientData":
   if (eventTriggerId == fLastUsedTriggerMask) { // common-case optimization:
-    fTriggeredEventClientDatas[eventTriggerId] = clientData;
+    fTriggeredEventClientDatas[fLastUsedTriggerNum] = clientData;
   } else {
     EventTriggerId mask = 0x80000000;
     for (unsigned i = 0; i < MAX_NUM_EVENT_TRIGGERS; ++i) {

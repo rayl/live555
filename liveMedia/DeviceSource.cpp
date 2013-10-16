@@ -90,7 +90,7 @@ void DeviceSource::doGetNextFrame() {
   }
 
   // No new data is immediately available to be delivered.  We don't do anything more here.
-  // Instead, our event trigger must be called (e.g., from a separate thread) when new data becomes available:
+  // Instead, our event trigger must be called (e.g., from a separate thread) when new data becomes available.
 }
 
 void DeviceSource::deliverFrame0(void* clientData) {
