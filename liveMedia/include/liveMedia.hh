@@ -109,6 +109,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "ADTSAudioFileServerMediaSubsession.hh"
 #include "DVVideoFileServerMediaSubsession.hh"
 #include "AC3AudioFileServerMediaSubsession.hh"
+#include "MPEG2TransportUDPServerMediaSubsession.hh"
 #include "MatroskaFileServerDemux.hh"
 #include "DarwinInjector.hh"
 

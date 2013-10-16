@@ -685,7 +685,7 @@ unsigned H264VideoStreamParser::parse() {
 #endif
 	  thisNALUnitEndsAccessUnit = True;
 	} else {
-	  // The next NAL unit is also a VLC.  We need to examine it a little to figure out if it's a different 'access unit'.
+	  // The next NAL unit is also a VCL.  We need to examine it a little to figure out if it's a different 'access unit'.
 	  // (We use many of the criteria described in section 7.4.1.2.4 of the H.264 specification.)
 	  Boolean IdrPicFlag = nal_unit_type == 5;
 	  Boolean next_IdrPicFlag = next_nal_unit_type == 5;

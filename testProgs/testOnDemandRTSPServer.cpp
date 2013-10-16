@@ -327,6 +327,34 @@ int main(int argc, char** argv) {
     announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
+  // A MPEG-2 Transport Stream, coming from a live UDP (raw-UDP or RTP/UDP) source:
+  {
+    char const* streamName = "mpeg2TransportStreamFromUDPSourceTest";
+    char const* inputAddressStr = "239.255.42.42";
+        // This causes the server to take its input from the stream sent by the "testMPEG2TransportStreamer" demo application.
+        // (Note: If the input UDP source is unicast rather than multicast, then change this to NULL.)
+    portNumBits const inputPortNum = 1234;
+        // This causes the server to take its input from the stream sent by the "testMPEG2TransportStreamer" demo application.
+    Boolean const inputStreamIsRawUDP = False; 
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, streamName, streamName,
+				      descriptionString);
+    sms->addSubsession(MPEG2TransportUDPServerMediaSubsession
+		       ::createNew(*env, inputAddressStr, inputPortNum, inputStreamIsRawUDP));
+    rtspServer->addServerMediaSession(sms);
+
+    char* url = rtspServer->rtspURL(sms);
+    *env << "\n\"" << streamName << "\" stream, from a UDP Transport Stream input source \n\t(";
+    if (inputAddressStr != NULL) {
+      *env << "IP multicast address " << inputAddressStr << ",";
+    } else {
+      *env << "unicast;";
+    }
+    *env << " port " << inputPortNum << ")\n";
+    *env << "Play this stream using the URL \"" << url << "\"\n";
+    delete[] url;
+  }
+
   // Also, attempt to create a HTTP server for RTSP-over-HTTP tunneling.
   // Try first with the default HTTP port (80), and then with the alternative HTTP
   // port numbers (8000 and 8080).

@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 
   // Create an appropriate 'RTP sink' from the RTP 'groupsock':
   videoSink =
-    SimpleRTPSink::createNew(*env, &rtpGroupsock, 33, 90000, "video", "mp2t",
+    SimpleRTPSink::createNew(*env, &rtpGroupsock, 33, 90000, "video", "MP2T",
 			     1, True, False /*no 'M' bit*/);
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
