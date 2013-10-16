@@ -57,65 +57,6 @@ private:
 };
 
 
-////////// PresentationTimeSessionNormalizer and PresentationTimeSubsessionNormalizer definitions //////////
-
-// The following two classes are used by proxies to convert incoming streams' presentation times into wall-clock-aligned
-// presentation times that are suitable for our "RTPSink"s (for the corresponding outgoing streams).
-// (For multi-subsession (i.e., audio+video) sessions, the outgoing streams' presentation times retain the same relative
-//  separation as those of the incoming streams.)
-
-class PresentationTimeSubsessionNormalizer: public FramedFilter {
-public:
-  void setRTPSink(RTPSink* rtpSink) { fRTPSink = rtpSink; }
-
-private:
-  friend class PresentationTimeSessionNormalizer;
-  PresentationTimeSubsessionNormalizer(PresentationTimeSessionNormalizer& parent, FramedSource* inputSource, RTPSource* rtpSource,
-				       PresentationTimeSubsessionNormalizer* next);
-      // called only from within "PresentationTimeSessionNormalizer"
-  virtual ~PresentationTimeSubsessionNormalizer();
-
-  static void afterGettingFrame(void* clientData, unsigned frameSize,
-                                unsigned numTruncatedBytes,
-                                struct timeval presentationTime,
-                                unsigned durationInMicroseconds);
-  void afterGettingFrame(unsigned frameSize,
-			 unsigned numTruncatedBytes,
-			 struct timeval presentationTime,
-			 unsigned durationInMicroseconds);
-
-private: // redefined virtual functions:
-  virtual void doGetNextFrame();
-
-private:
-  PresentationTimeSessionNormalizer& fParent;
-  RTPSource* fRTPSource;
-  RTPSink* fRTPSink;
-  PresentationTimeSubsessionNormalizer* fNext;
-};
-
-class PresentationTimeSessionNormalizer: public Medium {
-public:
-  PresentationTimeSessionNormalizer(UsageEnvironment& env);
-  virtual ~PresentationTimeSessionNormalizer();
-
-  PresentationTimeSubsessionNormalizer*
-  createNewPresentationTimeSubsessionNormalizer(FramedSource* inputSource, RTPSource* rtpSource);
-
-private: // called only from within "~PresentationTimeSubsessionNormalizer":
-  friend class PresentationTimeSubsessionNormalizer;
-  void normalizePresentationTime(PresentationTimeSubsessionNormalizer* ssNormalizer,
-				 struct timeval& toPT, struct timeval const& fromPT);
-  void removePresentationTimeSubsessionNormalizer(PresentationTimeSubsessionNormalizer* ssNormalizer);
-
-private:
-  PresentationTimeSubsessionNormalizer* fSubsessionNormalizers;
-  PresentationTimeSubsessionNormalizer* fMasterSSNormalizer; // used for subsessions that have been RTCP-synced
-
-  struct timeval fPTAdjustment; // Added to (RTCP-synced) subsession presentation times to 'normalize' them with wall-clock time.
-};
-
-
 ////////// ProxyServerMediaSession implementation //////////
 
 UsageEnvironment& operator<<(UsageEnvironment& env, const ProxyServerMediaSession& psms) { // used for debugging
@@ -221,9 +162,8 @@ ProxyRTSPClient::ProxyRTSPClient(ProxyServerMediaSession& ourServerMediaSession,
   : RTSPClient(ourServerMediaSession.envir(), rtspURL, verbosityLevel, "ProxyRTSPClient",
 	       tunnelOverHTTPPortNum == (portNumBits)(~0) ? 0 : tunnelOverHTTPPortNum),
     fOurServerMediaSession(ourServerMediaSession), fOurURL(strDup(rtspURL)), fStreamRTPOverTCP(tunnelOverHTTPPortNum != 0),
-    fLivenessCommandTask(NULL), fDESCRIBECommandTask(NULL), fSubsessionTimerTask(NULL) {
-  reset();
-
+    fSetupQueueHead(NULL), fSetupQueueTail(NULL), fNumSetupsDone(0), fNextDESCRIBEDelay(1), fLastCommandWasPLAY(False),
+    fLivenessCommandTask(NULL), fDESCRIBECommandTask(NULL), fSubsessionTimerTask(NULL) { 
   if (username != NULL && password != NULL) {
     fOurAuthenticator = new Authenticator(username, password);
   } else {
@@ -240,6 +180,8 @@ void ProxyRTSPClient::reset() {
   fNumSetupsDone = 0;
   fNextDESCRIBEDelay = 1;
   fLastCommandWasPLAY = False;
+
+  RTSPClient::reset();
 }
 
 ProxyRTSPClient::~ProxyRTSPClient() {
@@ -277,12 +219,8 @@ void ProxyRTSPClient::continueAfterOPTIONS(int resultCode) {
     }
     reset();
 
-    // Also "reset()" each of our "ProxyServerMediaSubsession"s:
-    ServerMediaSubsessionIterator iter(fOurServerMediaSession);
-    ProxyServerMediaSubsession* psmss;
-    while ((psmss = (ProxyServerMediaSubsession*)(iter.next())) != NULL) {
-      psmss->reset();
-    }
+    // Also delete all of our "ProxyServerMediaSubsession"s; they'll get set up again once we get a response to the new "DESCRIBE".
+    fOurServerMediaSession.deleteAllSubsessions();
 
     // In case the back-end server rebooted, reset the back-end connection by sending another "DESCRIBE" command.
     // (This may be necessary if the back-end stream requires authentication.)
@@ -654,19 +592,18 @@ void PresentationTimeSessionNormalizer::normalizePresentationTime(PresentationTi
       fPTAdjustment.tv_sec = timeNow.tv_sec - fromPT.tv_sec;
       fPTAdjustment.tv_usec = timeNow.tv_usec - fromPT.tv_usec;
       // Note: It's OK if one or both of these fields underflows; the result still works out OK later.
-
-      // Also, because the relayed presentation times for this subsession will be accurate from now on,
-      // enable RTCP "SR" reports for its "RTPSink":
-      RTPSink* const rtpSink = ssNormalizer->fRTPSink;
-      if (rtpSink != NULL) { // sanity check; should always be true
-	rtpSink->enableRTCPReports() = True;
-      }
     }
 
     // Compute a normalized presentation time: toPT = fromPT + fPTAdjustment
     toPT.tv_sec = fromPT.tv_sec + fPTAdjustment.tv_sec - 1;
     toPT.tv_usec = fromPT.tv_usec + fPTAdjustment.tv_usec + MILLION;
     while (toPT.tv_usec > MILLION) { ++toPT.tv_sec; toPT.tv_usec -= MILLION; }
+
+    // Because "ssNormalizer"s relayed presentation times are accurate from now on, enable RTCP "SR" reports for its "RTPSink":
+    RTPSink* const rtpSink = ssNormalizer->fRTPSink;
+    if (rtpSink != NULL) { // sanity check; should always be true
+      rtpSink->enableRTCPReports() = True;
+    }
   }
 }
 

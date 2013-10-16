@@ -29,9 +29,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Helper routines and data structures, used to implement
 // sending/receiving RTP/RTCP over a TCP socket:
 
-static Boolean sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
-			      int socketNum, unsigned char streamChannelId);
-
 // Reading RTP-over-TCP is implemented using two levels of hash tables.
 // The top-level hash table maps TCP socket numbers to a
 // "SocketDescriptor" that contains a hash table for each of the
@@ -74,6 +71,7 @@ private:
   ServerRequestAlternativeByteHandler* fServerRequestAlternativeByteHandler;
   void* fServerRequestAlternativeByteHandlerClientData;
   u_int8_t fStreamChannelId, fSizeByte1;
+  Boolean fReadErrorOccurred;
   enum { AWAITING_DOLLAR, AWAITING_STREAM_CHANNEL_ID, AWAITING_SIZE1, AWAITING_SIZE2, AWAITING_PACKET_DATA } fTCPReadingState;
 };
 
@@ -195,8 +193,8 @@ Boolean RTPInterface::sendPacket(unsigned char* packet, unsigned packetSize) {
   // Also, send over each of our TCP sockets:
   for (tcpStreamRecord* streams = fTCPStreams; streams != NULL;
        streams = streams->fNext) {
-    if (!sendRTPOverTCP(packet, packetSize,
-			streams->fStreamSocketNum, streams->fStreamChannelId)) {
+    if (!sendRTPorRTCPPacketOverTCP(packet, packetSize,
+				    streams->fStreamSocketNum, streams->fStreamChannelId)) {
       success = False;
     }
   }
@@ -280,47 +278,77 @@ void RTPInterface::stopNetworkReading() {
 
 ////////// Helper Functions - Implementation /////////
 
-Boolean sendRTPOverTCP(unsigned char* packet, unsigned packetSize,
-                    int socketNum, unsigned char streamChannelId) {
+Boolean RTPInterface::sendRTPorRTCPPacketOverTCP(u_int8_t* packet, unsigned packetSize,
+						 int socketNum, unsigned char streamChannelId) {
 #ifdef DEBUG_SEND
-  fprintf(stderr, "sendRTPOverTCP: %d bytes over channel %d (socket %d)\n",
+  fprintf(stderr, "sendRTPorRTCPPacketOverTCP: %d bytes over channel %d (socket %d)\n",
 	  packetSize, streamChannelId, socketNum); fflush(stderr);
 #endif
-  // Send RTP over TCP, using the encoding defined in
-  // RFC 2326, section 10.12:
+  // Send a RTP/RTCP packet over TCP, using the encoding defined in RFC 2326, section 10.12:
+  //     $<streamChannelId><packetSize><packet>
+  // (If the initial "send()" of '$<streamChannelId><packetSize>' succeeds, then we force the subsequent "send()" for
+  //  the <packet> data to succeed, even if we have to do so with a blocking "send()".)
   do {
-    char const dollar = '$';
-    if (send(socketNum, &dollar, 1, 0) != 1) break;
-    if (send(socketNum, (char*)&streamChannelId, 1, 0) != 1) break;
+    u_int8_t framingHeader[4];
+    framingHeader[0] = '$';
+    framingHeader[1] = streamChannelId;
+    framingHeader[2] = (u_int8_t) ((packetSize&0xFF00)>>8);
+    framingHeader[3] = (u_int8_t) (packetSize&0xFF);
+    if (!sendDataOverTCP(socketNum, framingHeader, 4, False)) break;
 
-    char netPacketSize[2];
-    netPacketSize[0] = (char) ((packetSize&0xFF00)>>8);
-    netPacketSize[1] = (char) (packetSize&0xFF);
-    if (send(socketNum, netPacketSize, 2, 0) != 2) break;
-
-    if (send(socketNum, (char*)packet, packetSize, 0) != (int)packetSize) break;
-
+    if (!sendDataOverTCP(socketNum, packet, packetSize, True)) break;
 #ifdef DEBUG_SEND
-    fprintf(stderr, "sendRTPOverTCP: completed\n"); fflush(stderr);
+    fprintf(stderr, "sendRTPorRTCPPacketOverTCP: completed\n"); fflush(stderr);
 #endif
 
     return True;
   } while (0);
 
 #ifdef DEBUG_SEND
-  fprintf(stderr, "sendRTPOverTCP: failed!\n"); fflush(stderr);
+  fprintf(stderr, "sendRTPorRTCPPacketOverTCP: failed! (errno %d)\n", envir().getErrno()); fflush(stderr);
 #endif
   return False;
+}
+
+Boolean RTPInterface::sendDataOverTCP(int socketNum, u_int8_t const* data, unsigned dataSize, Boolean forceSendToSucceed) {
+  if (send(socketNum, (char const*)data, dataSize, 0/*flags*/) != (int)dataSize) {
+    // The TCP send() failed.
+
+    if (forceSendToSucceed && envir().getErrno() == EAGAIN) {
+      // The OS's TCP send buffer has filled up (because the stream's bitrate has exceeded the capacity of the TCP connection!).
+      // Force this data write to succeed, by blocking if necessary until it does:
+#ifdef DEBUG_SEND
+      fprintf(stderr, "sendDataOverTCP: resending %d-byte send (blocking)\n", dataSize); fflush(stderr);
+#endif
+      makeSocketBlocking(socketNum);
+      Boolean sendSuccess = send(socketNum, (char const*)data, dataSize, 0/*flags*/) == (int)dataSize;
+      makeSocketNonBlocking(socketNum);
+      return sendSuccess;
+    }
+    return False;
+  }
+
+  return True;
 }
 
 SocketDescriptor::SocketDescriptor(UsageEnvironment& env, int socketNum)
   :fEnv(env), fOurSocketNum(socketNum),
     fSubChannelHashTable(HashTable::create(ONE_WORD_HASH_KEYS)),
-   fServerRequestAlternativeByteHandler(NULL), fServerRequestAlternativeByteHandlerClientData(NULL),
+   fServerRequestAlternativeByteHandler(NULL), fServerRequestAlternativeByteHandlerClientData(NULL), fReadErrorOccurred(False),
    fTCPReadingState(AWAITING_DOLLAR) {
 }
 
 SocketDescriptor::~SocketDescriptor() {
+  fEnv.taskScheduler().turnOffBackgroundReadHandling(fOurSocketNum);
+  if (fServerRequestAlternativeByteHandler != NULL) {
+    // Hack: Pass a special character to our alternative byte handler, to tell it that either
+    // - an error occurred when reading the TCP socket, or
+    // - no error occurred, but it needs to take over control of the TCP socket once again.
+    u_int8_t specialChar = fReadErrorOccurred ? 0xFF : 0xFE;
+    (*fServerRequestAlternativeByteHandler)(fServerRequestAlternativeByteHandlerClientData, specialChar);
+  }
+  removeSocketDescription(fEnv, fOurSocketNum);
+
   if (fSubChannelHashTable != NULL) {
     while (fSubChannelHashTable->RemoveNext() != NULL) {} // remove the "RTPInterface"s from the table, but don't delete them
     delete fSubChannelHashTable;
@@ -359,14 +387,7 @@ void SocketDescriptor
   fSubChannelHashTable->Remove((char const*)(long)streamChannelId);
 
   if (fSubChannelHashTable->IsEmpty()) {
-    // No more interfaces are using us, so it's curtains for us now
-    fEnv.taskScheduler().turnOffBackgroundReadHandling(fOurSocketNum);
-    if (fServerRequestAlternativeByteHandler != NULL) {
-      // Hack: Pass the special character 0xFE to our alternative byte handler.
-      // This will tell it to take over control of the TCP socket once again:
-      (*fServerRequestAlternativeByteHandler)(fServerRequestAlternativeByteHandlerClientData, 0xFE);
-    }
-    removeSocketDescription(fEnv, fOurSocketNum);
+    // No more interfaces are using us, so it's curtains for us now:
     delete this;
   }
 }
@@ -392,13 +413,7 @@ void SocketDescriptor::tcpReadHandler1(int mask) {
 #ifdef DEBUG_RECEIVE
       fprintf(stderr, "SocketDescriptor(socket %d)::tcpReadHandler(): readSocket(1 byte) returned %d (error)\n", fOurSocketNum, result);
 #endif
-      fEnv.taskScheduler().turnOffBackgroundReadHandling(fOurSocketNum); // stops further calls to us
-      if (fServerRequestAlternativeByteHandler != NULL) {
-	// Hack: Pass the special 'error' character 0xFF to our alternative byte handler.
-	// This will tell it about the error, so it can (hopefully) handle it better.
-	(*fServerRequestAlternativeByteHandler)(fServerRequestAlternativeByteHandlerClientData, 0xFF);
-      }
-      removeSocketDescription(fEnv, fOurSocketNum);
+      fReadErrorOccurred = True;
       delete this;
       return;
     }
@@ -469,10 +484,22 @@ void SocketDescriptor::tcpReadHandler1(int mask) {
 #endif
 	  fTCPReadingState = AWAITING_PACKET_DATA;
 	  rtpInterface->fReadHandlerProc(rtpInterface->fOwner, mask);
-	}
+	} else {
 #ifdef DEBUG_RECEIVE
-	else fprintf(stderr, "SocketDescriptor(socket %d)::tcpReadHandler(): No handler proc for \"rtpInterface\" for channel %d\n", fOurSocketNum, fStreamChannelId);
+	  fprintf(stderr, "SocketDescriptor(socket %d)::tcpReadHandler(): No handler proc for \"rtpInterface\" for channel %d; need to skip %d remaining bytes\n", fOurSocketNum, fStreamChannelId, rtpInterface->fNextTCPReadSize);
 #endif
+	  int result = readSocket(fEnv, fOurSocketNum, &c, 1, fromAddress);
+	  if (result != 1) { // error reading TCP socket, so we will no longer handle it
+#ifdef DEBUG_RECEIVE
+	    fprintf(stderr, "SocketDescriptor(socket %d)::tcpReadHandler(): readSocket(1 byte) returned %d (error)\n", fOurSocketNum, result);
+#endif
+	    fReadErrorOccurred = True;
+	    delete this;
+	    return;
+	  }
+	  --rtpInterface->fNextTCPReadSize;
+	  fTCPReadingState = AWAITING_PACKET_DATA;
+	}
       }
 #ifdef DEBUG_RECEIVE
       else fprintf(stderr, "SocketDescriptor(socket %d)::tcpReadHandler(): No \"rtpInterface\" for channel %d\n", fOurSocketNum, fStreamChannelId);

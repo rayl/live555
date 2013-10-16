@@ -84,6 +84,12 @@ public:
   unsigned char nextTCPReadStreamChannelId() const { return fNextTCPReadStreamChannelId; }
 
 private:
+  // Helper functions for sending a RTP or RTCP packet over a TCP connection:
+  Boolean sendRTPorRTCPPacketOverTCP(unsigned char* packet, unsigned packetSize,
+				     int socketNum, unsigned char streamChannelId);
+  Boolean sendDataOverTCP(int socketNum, u_int8_t const* data, unsigned dataSize, Boolean forceSendToSucceed);
+
+private:
   friend class SocketDescriptor;
   Medium* fOwner;
   Groupsock* fGS;

@@ -95,6 +95,30 @@ private:
 };
 
 
+///////// AVIIndexRecord definition & implementation //////////
+
+class AVIIndexRecord {
+public:
+  AVIIndexRecord(unsigned chunkId, unsigned flags, unsigned offset, unsigned size)
+    : fNext(NULL), fChunkId(chunkId), fFlags(flags), fOffset(offset), fSize(size) {
+  }
+  virtual ~AVIIndexRecord() { delete fNext; }
+
+  AVIIndexRecord*& next() { return fNext; }
+  unsigned chunkId() const { return fChunkId; }
+  unsigned flags() const { return fFlags; }
+  unsigned offset() const { return fOffset; }
+  unsigned size() const { return fSize; }
+
+private:
+  AVIIndexRecord* fNext;
+  unsigned fChunkId;
+  unsigned fFlags;
+  unsigned fOffset;
+  unsigned fSize;
+};
+
+
 ////////// AVIFileSink implementation //////////
 
 AVIFileSink::AVIFileSink(UsageEnvironment& env,
@@ -104,6 +128,7 @@ AVIFileSink::AVIFileSink(UsageEnvironment& env,
 			 unsigned short movieWidth, unsigned short movieHeight,
 			 unsigned movieFPS, Boolean packetLossCompensate)
   : Medium(env), fInputSession(inputSession),
+    fIndexRecordsHead(NULL), fIndexRecordsTail(NULL), fNumIndexRecords(0),
     fBufferSize(bufferSize), fPacketLossCompensate(packetLossCompensate),
     fAreCurrentlyBeingPlayed(False), fNumSubsessions(0), fNumBytesWritten(0),
     fHaveCompletedOutputFile(False),
@@ -160,6 +185,9 @@ AVIFileSink::~AVIFileSink() {
 
     delete ioState;
   }
+
+  // Then, delete the index records:
+  delete fIndexRecordsHead;
 
   // Finally, close our output file:
   CloseOutputFile(fOutFid);
@@ -287,6 +315,16 @@ void AVIFileSink::onRTCPBye(void* clientData) {
   ioState->onSourceClosure();
 }
 
+void AVIFileSink::addIndexRecord(AVIIndexRecord* newIndexRecord) {
+  if (fIndexRecordsHead == NULL) {
+    fIndexRecordsHead = newIndexRecord;
+  } else {
+    fIndexRecordsTail->next() = newIndexRecord;
+  }
+  fIndexRecordsTail = newIndexRecord;
+  ++fNumIndexRecords;
+}
+
 void AVIFileSink::completeOutputFile() {
   if (fHaveCompletedOutputFile || fOutFid == NULL) return;
 
@@ -312,6 +350,15 @@ void AVIFileSink::completeOutputFile() {
   }
 
   //// Global fields:
+  add4ByteString("idx1");
+  addWord(fNumIndexRecords*4*4); // the size of all of the index records, which come next:
+  for (AVIIndexRecord* indexRecord = fIndexRecordsHead; indexRecord != NULL; indexRecord = indexRecord->next()) {
+    addWord(indexRecord->chunkId());
+    addWord(indexRecord->flags());
+    addWord(indexRecord->offset());
+    addWord(indexRecord->size());
+  }
+
   fRIFFSizeValue += fNumBytesWritten;
   setWord(fRIFFSizePosition, fRIFFSizeValue);
 
@@ -474,6 +521,14 @@ void AVISubsessionIOState::useFrame(SubsessionBuffer& buffer) {
       frameSource[i+1] = tmp;
     }
   }
+
+  // Add an index record for this frame:
+  AVIIndexRecord* newIndexRecord
+    = new AVIIndexRecord(fAVISubsessionTag, // chunk id
+			 frameSource[0] == 0x67 ? 0x10 : 0, // flags
+			 fOurSink.fMoviSizePosition + 8 + fOurSink.fNumBytesWritten, // offset (note: 8 == size + 'movi')
+			 frameSize + 4); // size
+  fOurSink.addIndexRecord(newIndexRecord);
 
   // Write the data into the file:
   fOurSink.fNumBytesWritten += fOurSink.addWord(fAVISubsessionTag);

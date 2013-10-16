@@ -1198,7 +1198,7 @@ void RTSPClient::handleAlternativeRequestByte(void* rtspClient, u_int8_t request
 void RTSPClient::handleAlternativeRequestByte1(u_int8_t requestByte) {
   if (requestByte == 0xFF) {
     // Hack: The new handler of the input TCP socket encountered an error reading it.  Indicate this:
-    handleResponseBytes(0);
+    handleResponseBytes(-1);
   } else if (requestByte == 0xFE) {
     // Another hack: The new handler of the input TCP socket no longer needs it, so take back control:
     envir().taskScheduler().setBackgroundHandling(fInputSocketNum, SOCKET_READABLE|SOCKET_EXCEPTION,

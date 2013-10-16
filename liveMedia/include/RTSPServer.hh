@@ -57,7 +57,9 @@ protected:
   Boolean fPasswordsAreMD5;
 };
 
+#ifndef RTSP_BUFFER_SIZE
 #define RTSP_BUFFER_SIZE 10000 // for incoming requests, and outgoing responses
+#endif
 
 class RTSPServer: public Medium {
 public:

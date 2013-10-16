@@ -80,7 +80,7 @@ ServerMediaSession::ServerMediaSession(UsageEnvironment& env,
 }
 
 ServerMediaSession::~ServerMediaSession() {
-  Medium::close(fSubsessionsHead);
+  deleteAllSubsessions();
   delete[] fStreamName;
   delete[] fInfoSDPString;
   delete[] fDescriptionSDPString;
@@ -189,6 +189,12 @@ float ServerMediaSession::duration() const {
   } else {
     return maxSubsessionDuration; // all subsession durations are the same
   }
+}
+
+void ServerMediaSession::deleteAllSubsessions() {
+  Medium::close(fSubsessionsHead);
+  fSubsessionsHead = fSubsessionsTail = NULL;
+  fSubsessionCounter = 0;
 }
 
 Boolean ServerMediaSession::isServerMediaSession() const {

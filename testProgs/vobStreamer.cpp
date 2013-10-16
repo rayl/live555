@@ -225,8 +225,8 @@ void afterPlaying(void* clientData) {
   // One of the sinks has ended playing.
   // Check whether any of the sources have a pending read.  If so,
   // wait until its sink ends playing also:
-  if (audioSource != NULL && audioSource->isCurrentlyAwaitingData()
-      || videoSource != NULL && videoSource->isCurrentlyAwaitingData()) {
+  if ((audioSource != NULL && audioSource->isCurrentlyAwaitingData()) ||
+      (videoSource != NULL && videoSource->isCurrentlyAwaitingData())) {
     return;
   }
 

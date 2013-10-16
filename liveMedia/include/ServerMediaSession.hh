@@ -73,6 +73,8 @@ public:
   void decrementReferenceCount() { if (fReferenceCount > 0) --fReferenceCount; }
   Boolean& deleteWhenUnreferenced() { return fDeleteWhenUnreferenced; }
 
+  void deleteAllSubsessions(); // removes and deletes all subsessions added by "addSubsession()", returning us to an 'empty' state
+
 protected:
   ServerMediaSession(UsageEnvironment& env, char const* streamName,
 		     char const* info, char const* description,

@@ -212,6 +212,7 @@ protected:
       // called only by createNew();
   virtual ~RTSPClient();
 
+  void reset();
   void setBaseURL(char const* url);
   virtual unsigned sendRequest(RequestRecord* request);
 
@@ -236,7 +237,6 @@ private:
     RequestRecord* fTail;
   };
 
-  void reset();
   void resetTCPSockets();
   void resetResponseBuffer();
   int openConnection(); // -1: failure; 0: pending; 1: success

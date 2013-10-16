@@ -738,7 +738,7 @@ void setupStreams() {
 						 fileSinkBufferSize, oneFilePerFrame);
 	} else if (strcmp(subsession->mediumName(), "video") == 0 &&
 	    (strcmp(subsession->codecName(), "H264") == 0)) {
-	  // For H.264 video stream, we use a special sink that insert start_codes:
+	  // For H.264 video stream, we use a special sink that adds 'start codes', and (at the start) the SPS and PPS NAL units:
 	  fileSink = H264VideoFileSink::createNew(*env, outFileName,
 						  subsession->fmtp_spropparametersets(),
 						  fileSinkBufferSize, oneFilePerFrame);

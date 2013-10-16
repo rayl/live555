@@ -58,12 +58,15 @@ private:
   static void onSourceClosure(void* clientData);
   void onSourceClosure1();
   static void onRTCPBye(void* clientData);
+  void addIndexRecord(class AVIIndexRecord* newIndexRecord);
   void completeOutputFile();
 
 private:
   friend class AVISubsessionIOState;
   MediaSession& fInputSession;
   FILE* fOutFid;
+  class AVIIndexRecord *fIndexRecordsHead, *fIndexRecordsTail;
+  unsigned fNumIndexRecords;
   unsigned fBufferSize;
   Boolean fPacketLossCompensate;
   Boolean fAreCurrentlyBeingPlayed;

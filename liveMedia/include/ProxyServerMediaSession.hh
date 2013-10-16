@@ -67,9 +67,9 @@ private:
   Boolean fStreamRTPOverTCP;
   class ProxyServerMediaSubsession *fSetupQueueHead, *fSetupQueueTail;
   unsigned fNumSetupsDone;
-  TaskToken fLivenessCommandTask, fDESCRIBECommandTask, fSubsessionTimerTask;
   unsigned fNextDESCRIBEDelay; // in seconds
   Boolean fLastCommandWasPLAY;
+  TaskToken fLivenessCommandTask, fDESCRIBECommandTask, fSubsessionTimerTask;
 };
 
 
@@ -115,6 +115,65 @@ private:
 private:
   int fVerbosityLevel;
   class PresentationTimeSessionNormalizer* fPresentationTimeSessionNormalizer;
+};
+
+
+////////// PresentationTimeSessionNormalizer and PresentationTimeSubsessionNormalizer definitions //////////
+
+// The following two classes are used by proxies to convert incoming streams' presentation times into wall-clock-aligned
+// presentation times that are suitable for our "RTPSink"s (for the corresponding outgoing streams).
+// (For multi-subsession (i.e., audio+video) sessions, the outgoing streams' presentation times retain the same relative
+//  separation as those of the incoming streams.)
+
+class PresentationTimeSubsessionNormalizer: public FramedFilter {
+public:
+  void setRTPSink(RTPSink* rtpSink) { fRTPSink = rtpSink; }
+
+private:
+  friend class PresentationTimeSessionNormalizer;
+  PresentationTimeSubsessionNormalizer(PresentationTimeSessionNormalizer& parent, FramedSource* inputSource, RTPSource* rtpSource,
+				       PresentationTimeSubsessionNormalizer* next);
+      // called only from within "PresentationTimeSessionNormalizer"
+  virtual ~PresentationTimeSubsessionNormalizer();
+
+  static void afterGettingFrame(void* clientData, unsigned frameSize,
+                                unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+                                unsigned durationInMicroseconds);
+  void afterGettingFrame(unsigned frameSize,
+			 unsigned numTruncatedBytes,
+			 struct timeval presentationTime,
+			 unsigned durationInMicroseconds);
+
+private: // redefined virtual functions:
+  virtual void doGetNextFrame();
+
+private:
+  PresentationTimeSessionNormalizer& fParent;
+  RTPSource* fRTPSource;
+  RTPSink* fRTPSink;
+  PresentationTimeSubsessionNormalizer* fNext;
+};
+
+class PresentationTimeSessionNormalizer: public Medium {
+public:
+  PresentationTimeSessionNormalizer(UsageEnvironment& env);
+  virtual ~PresentationTimeSessionNormalizer();
+
+  PresentationTimeSubsessionNormalizer*
+  createNewPresentationTimeSubsessionNormalizer(FramedSource* inputSource, RTPSource* rtpSource);
+
+private: // called only from within "~PresentationTimeSubsessionNormalizer":
+  friend class PresentationTimeSubsessionNormalizer;
+  void normalizePresentationTime(PresentationTimeSubsessionNormalizer* ssNormalizer,
+				 struct timeval& toPT, struct timeval const& fromPT);
+  void removePresentationTimeSubsessionNormalizer(PresentationTimeSubsessionNormalizer* ssNormalizer);
+
+private:
+  PresentationTimeSubsessionNormalizer* fSubsessionNormalizers;
+  PresentationTimeSubsessionNormalizer* fMasterSSNormalizer; // used for subsessions that have been RTCP-synced
+
+  struct timeval fPTAdjustment; // Added to (RTCP-synced) subsession presentation times to 'normalize' them with wall-clock time.
 };
 
 #endif

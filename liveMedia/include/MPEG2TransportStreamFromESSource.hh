@@ -39,15 +39,14 @@ protected:
       // called only by createNew()
   virtual ~MPEG2TransportStreamFromESSource();
 
+  void addNewInputSource(FramedSource* inputSource,
+			 u_int8_t streamId, int mpegVersion);
+  // used to implement addNew*Source() above
+
 private:
   // Redefined virtual functions:
   virtual void doStopGettingFrames();
   virtual void awaitNewBuffer(unsigned char* oldBuffer);
-
-private:
-  void addNewInputSource(FramedSource* inputSource,
-			 u_int8_t streamId, int mpegVersion);
-  // used to implement addNew*Source() above
 
 private:
   friend class InputESSourceRecord;
