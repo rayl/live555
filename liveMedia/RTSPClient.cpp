@@ -397,7 +397,8 @@ int RTSPClient::connectToServer(int socketNum, portNumBits remotePortNum) {
     envir() << "Opening connection to " << AddressString(remoteName).val() << ", port " << remotePortNum << "...\n";
   }
   if (connect(socketNum, (struct sockaddr*) &remoteName, sizeof remoteName) != 0) {
-    if (envir().getErrno() == EINPROGRESS) {
+    int const err = envir().getErrno();
+    if (err == EINPROGRESS || err == EWOULDBLOCK) {
       // The connection is pending; we'll need to handle it later.  Wait for our socket to be 'writable', or have an exception.
       envir().taskScheduler().setBackgroundHandling(socketNum, SOCKET_WRITABLE|SOCKET_EXCEPTION,
 						    (TaskScheduler::BackgroundHandlerProc*)&connectionHandler, this);

@@ -172,7 +172,9 @@ void StreamReplicator::removeStreamReplica(StreamReplica* replicaBeingRemoved) {
   }
 
   // Now handle the replica that's being removed the same way that we would if it were merely being deactivated:
-  deactivateStreamReplica(replicaBeingRemoved);
+  if (replicaBeingRemoved->fFrameIndex != -1) { // i.e., we haven't already done this
+    deactivateStreamReplica(replicaBeingRemoved);
+  }
 }
 
 void StreamReplicator::afterGettingFrame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,

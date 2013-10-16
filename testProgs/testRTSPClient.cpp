@@ -390,6 +390,16 @@ void shutdownStream(RTSPClient* rtspClient, int exitCode) {
     // The final stream has ended, so exit the application now.
     // (Of course, if you're embedding this code into your own application, you might want to comment this out.)
     exit(exitCode);
+
+    // If you choose *not* to "exit()" the application (i.e., if you comment out the call to "exit()" above),
+    // and you don't intend to do anything more with this "TaskScheduler" and "UsageEnvironment",
+    // then you can also reclaim the (small) memory used by these objects by doing the following.
+    // (However, you must not do this until after you have left the event loop.)
+    /*
+      TaskScheduler* scheduler = &(env.taskScheduler());
+      env.reclaim();
+      delete scheduler;
+    */
   }
 }
 
