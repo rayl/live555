@@ -690,7 +690,7 @@ unsigned RTSPClient::sendRequest(RequestRecord* request) {
 	cmdURLWasAllocated = True;
 	sprintf(cmdURL, "%s%s%s", prefix, separator, suffix);
 	
-	sessionId = request->subsession()->sessionId;
+	sessionId = request->subsession()->sessionId();
 	originalScale = request->subsession()->scale();
       }
 
@@ -957,7 +957,7 @@ Boolean RTSPClient::handleSETUPResponse(MediaSubsession& subsession, char const*
       envir().setResultMsg("Missing or bad \"Session:\" header");
       break;
     }
-    subsession.sessionId = strDup(sessionId);
+    subsession.setSessionId(sessionId);
     delete[] fLastSessionId; fLastSessionId = strDup(sessionId);
 
     // Also look for an optional "; timeout = " parameter following this:
@@ -994,6 +994,18 @@ Boolean RTSPClient::handleSETUPResponse(MediaSubsession& subsession, char const*
       netAddressBits destAddress = subsession.connectionEndpointAddress();
       if (destAddress == 0) destAddress = fServerAddress;
       subsession.setDestinations(destAddress);
+
+      // Hack: To increase the likelihood of UDP packets from the server reaching us, if we're behind a NAT, send a few 'dummy'
+      // UDP packets to the server now.  (We do this only for RTP, not RTCP, because for RTCP our regular RTCP "RR" packets will
+      // have the same effect.)                                                                                                     
+      if (subsession.rtpSource() != NULL) {
+        Groupsock* gs = subsession.rtpSource()->RTPgs();
+        if (gs != NULL) {
+          u_int32_t dummy = 0xFEEDFACE;
+          unsigned const numDummyPackets = 2;
+          for (unsigned i = 0; i < numDummyPackets; ++i) gs->output(envir(), 255, (unsigned char*)&dummy, sizeof dummy);
+	}
+      }
     }
 
     success = True;
@@ -1058,21 +1070,8 @@ Boolean RTSPClient::handlePLAYResponse(MediaSession& session, MediaSubsession& s
   return False;
 }
 
-Boolean RTSPClient::handleTEARDOWNResponse(MediaSession& session, MediaSubsession& subsession) {
-  if (&session != NULL) {
-    // The command was on the whole session
-    // Run through each subsession, deleting its "sessionId":
-    MediaSubsessionIterator iter(session);
-    MediaSubsession* subsession;
-    while ((subsession = iter.next()) != NULL) {
-      delete[] (char*)subsession->sessionId;
-      subsession->sessionId = NULL;
-    }
-  } else {
-    // The command was on a subsession
-    delete[] (char*)subsession.sessionId;
-    subsession.sessionId = NULL;
-  }
+Boolean RTSPClient::handleTEARDOWNResponse(MediaSession& /*session*/, MediaSubsession& /*subsession*/) {
+  // Because we don't expect to always get a response to "TEARDOWN", we don't need to do anything if we do get one:
   return True;
 }
 

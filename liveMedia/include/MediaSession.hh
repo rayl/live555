@@ -223,9 +223,11 @@ public:
       // the destination address and port of the RTP and RTCP objects.
       // This is typically called by RTSP clients after doing "SETUP".
 
+  char const* sessionId() const { return fSessionId; }
+  void setSessionId(char const* sessionId);
+
   // Public fields that external callers can use to keep state.
   // (They are responsible for all storage management on these fields)
-  char const* sessionId; // used by RTSP
   unsigned short serverPortNum; // in host byte order (used by RTSP)
   unsigned char rtpChannelId, rtcpChannelId; // used by RTSP (for RTP/TCP)
   MediaSink* sink; // callers can use this to keep track of who's playing us
@@ -313,6 +315,9 @@ protected:
   Groupsock* fRTPSocket; Groupsock* fRTCPSocket; // works even for unicast
   RTPSource* fRTPSource; RTCPInstance* fRTCPInstance;
   FramedSource* fReadSource;
+
+  // Other fields:
+  char* fSessionId; // used by RTSP
 };
 
 #endif

@@ -527,7 +527,7 @@ void MediaSubsessionIterator::reset() {
 ////////// MediaSubsession //////////
 
 MediaSubsession::MediaSubsession(MediaSession& parent)
-  : sessionId(NULL), serverPortNum(0), sink(NULL), miscPtr(NULL),
+  : serverPortNum(0), sink(NULL), miscPtr(NULL),
     fParent(parent), fNext(NULL),
     fConnectionEndpointName(NULL),
     fClientPortNum(0), fRTPPayloadFormat(0xFF),
@@ -544,7 +544,8 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fPlayStartTime(0.0), fPlayEndTime(0.0),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f), fNPT_PTS_Offset(0.0f),
     fRTPSocket(NULL), fRTCPSocket(NULL),
-    fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL) {
+    fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL),
+    fSessionId(NULL) {
   rtpInfo.seqNum = 0; rtpInfo.timestamp = 0; rtpInfo.infoIsNew = False;
 }
 
@@ -555,6 +556,7 @@ MediaSubsession::~MediaSubsession() {
   delete[] fMediumName; delete[] fCodecName; delete[] fProtocolName;
   delete[] fControlPath;
   delete[] fConfig; delete[] fMode; delete[] fSpropParameterSets; delete[] fEmphasis; delete[] fChannelOrder;
+  delete[] fSessionId;
 
   delete fNext;
 }
@@ -792,6 +794,11 @@ void MediaSubsession::setDestinations(netAddressBits defaultDestAddress) {
     fRTCPSocket->
       changeDestinationParameters(destAddr, destPort, destTTL);
   }
+}
+
+void MediaSubsession::setSessionId(char const* sessionId) {
+  delete[] fSessionId;
+  fSessionId = strDup(sessionId);
 }
 
 double MediaSubsession::getNormalPlayTime(struct timeval const& presentationTime) {

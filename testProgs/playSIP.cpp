@@ -80,7 +80,7 @@ void getSDPDescription(RTSPClient::responseHandler* afterFunc) {
 }
 
 void setupSubsession(MediaSubsession* subsession, Boolean /*streamUsingTCP*/, RTSPClient::responseHandler* afterFunc) {
-  subsession->sessionId = "mumble"; // anything that's non-NULL will work
+  subsession->setSessionId("mumble"); // anything that's non-NULL will work
 
   afterFunc(NULL, 0, NULL);
 }
