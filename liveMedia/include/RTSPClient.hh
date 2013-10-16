@@ -172,7 +172,7 @@ public: // Some compilers complain if this is "private:"
     virtual ~RequestRecord();
 
     RequestRecord*& next() { return fNext; }
-    unsigned cseq() { return fCSeq; }
+    unsigned& cseq() { return fCSeq; }
     char const* commandName() const { return fCommandName; }
     MediaSession* session() const { return fSession; }
     MediaSubsession* subsession() const { return fSubsession; }
