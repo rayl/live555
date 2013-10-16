@@ -1043,15 +1043,15 @@ Boolean RTSPClient::handleSETUPResponse(MediaSubsession& subsession, char const*
       subsession.setDestinations(destAddress);
 
       // Hack: To increase the likelihood of UDP packets from the server reaching us, if we're behind a NAT, send a few 'dummy'
-      // UDP packets to the server now.  (We do this only for RTP, not RTCP, because for RTCP our regular RTCP "RR" packets will
-      // have the same effect.)                                                                                                     
-      if (subsession.rtpSource() != NULL) {
-        Groupsock* gs = subsession.rtpSource()->RTPgs();
-        if (gs != NULL) {
-          u_int32_t dummy = 0xFEEDFACE;
-          unsigned const numDummyPackets = 2;
-          for (unsigned i = 0; i < numDummyPackets; ++i) gs->output(envir(), 255, (unsigned char*)&dummy, sizeof dummy);
-	}
+      // UDP packets to the server now.  (We do this on both our RTP port and our RTCP port.)
+      Groupsock* gs1 = NULL; Groupsock* gs2 = NULL;
+      if (subsession.rtpSource() != NULL) gs1 = subsession.rtpSource()->RTPgs();
+      if (subsession.rtcpInstance() != NULL) gs2 = subsession.rtcpInstance()->RTCPgs();
+      u_int32_t const dummy = 0xFEEDFACE;
+      unsigned const numDummyPackets = 2;
+      for (unsigned i = 0; i < numDummyPackets; ++i) {
+	if (gs1 != NULL) gs1->output(envir(), 255, (unsigned char*)&dummy, sizeof dummy);
+	if (gs2 != NULL) gs2->output(envir(), 255, (unsigned char*)&dummy, sizeof dummy);
       }
     }
 

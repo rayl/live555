@@ -201,7 +201,6 @@ void OnDemandServerMediaSubsession::startStream(unsigned clientSessionId,
 			      serverRequestAlternativeByteHandler, serverRequestAlternativeByteHandlerClientData);
     RTPSink* rtpSink = streamState->rtpSink(); // alias
     if (rtpSink != NULL) {
-      rtpSink->resetPresentationTimes();
       rtpSeqNum = rtpSink->currentSeqNo();
       rtpTimestamp = rtpSink->presetNextTimestamp();
     }
@@ -228,7 +227,10 @@ void OnDemandServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
   StreamState* streamState = (StreamState*)streamToken;
   if (streamState != NULL && streamState->mediaSource() != NULL) {
     seekStreamSource(streamState->mediaSource(), seekNPT, streamDuration, numBytes);
+
     streamState->startNPT() = seekNPT;
+    RTPSink* rtpSink = streamState->rtpSink(); // alias
+    if (rtpSink != NULL) rtpSink->resetPresentationTimes();
   }
 }
 
@@ -240,6 +242,16 @@ void OnDemandServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
   StreamState* streamState = (StreamState*)streamToken;
   if (streamState != NULL && streamState->mediaSource() != NULL) {
     seekStreamSource(streamState->mediaSource(), absStart, absEnd);
+  }
+}
+
+void OnDemandServerMediaSubsession::nullSeekStream(unsigned /*clientSessionId*/, void* streamToken) {
+  StreamState* streamState = (StreamState*)streamToken;
+  if (streamState != NULL && streamState->mediaSource() != NULL) {
+    // Because we're not seeking here, get the current NPT, and remember it as the new 'start' NPT:
+    streamState->startNPT() = getCurrentNPT(streamToken);
+    RTPSink* rtpSink = streamState->rtpSink(); // alias
+    if (rtpSink != NULL) rtpSink->resetPresentationTimes();
   }
 }
 
@@ -446,6 +458,12 @@ void StreamState
       fRTCPInstance->setSpecificRRHandler(dests->addr.s_addr, dests->rtcpPort,
 					  rtcpRRHandler, rtcpRRHandlerClientData);
     }
+  }
+
+  if (fRTCPInstance != NULL) {
+    // Hack: Send an initial RTCP "SR" packet, before the initial RTP packet, so that receivers will (likely) be able to
+    // get RTCP-synchronized presentation times immediately:
+    fRTCPInstance->sendReport();
   }
 
   if (!fAreCurrentlyPlaying && fMediaSource != NULL) {

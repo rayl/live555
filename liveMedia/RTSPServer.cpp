@@ -1638,6 +1638,11 @@ void RTSPServer::RTSPClientSession
 						    rangeStart, streamDuration, numBytes);
 	  }
 	}
+      } else {
+	// No "Range:" header was specified in the "PLAY", so we do a 'null' seek (i.e., we don't seek at all):
+	if (fStreamStates[i].subsession != NULL) {
+	  fStreamStates[i].subsession->nullSeekStream(fOurSessionId, fStreamStates[i].streamToken);
+	}
       }
     }
   }
