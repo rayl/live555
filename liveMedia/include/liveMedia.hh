@@ -81,7 +81,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "DeviceSource.hh"
 #include "AudioInputDevice.hh"
 #include "WAVAudioFileSource.hh"
-#include "RTSPServer.hh"
+#include "RTSPServerSupportingHTTPStreaming.hh"
 #include "RTSPClient.hh"
 #include "SIPClient.hh"
 #include "QuickTimeFileSink.hh"

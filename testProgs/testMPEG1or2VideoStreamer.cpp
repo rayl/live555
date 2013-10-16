@@ -134,6 +134,7 @@ int main(int argc, char** argv) {
 void afterPlaying(void* /*clientData*/) {
   *env << "...done reading from file\n";
 
+  videoSink->stopPlaying();
   Medium::close(videoSource);
 #ifdef SOURCE_IS_PROGRAM_STREAM
   Medium::close(mpegDemux);

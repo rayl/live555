@@ -119,7 +119,7 @@ protected:
 private: // redefined virtual functions
   virtual Boolean isRTSPServer() const;
 
-protected:
+public: // should be protected, but some old compilers complain otherwise
   // The state of each individual session handled by a RTSP server:
   class RTSPClientSession {
   public:
@@ -201,6 +201,7 @@ protected:
     } * fStreamStates;
   };
 
+protected:
   // If you subclass "RTSPClientSession", then you should also redefine this virtual function in order
   // to create new objects of your subclass:
   virtual RTSPClientSession*

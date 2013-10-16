@@ -28,7 +28,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <signal.h>
 #define USE_SIGNALS 1
 #endif
-#include <time.h> // for "strftime()" and "gmtime()"
 
 ////////// RTSPServer implementation //////////
 
@@ -36,18 +35,10 @@ RTSPServer*
 RTSPServer::createNew(UsageEnvironment& env, Port ourPort,
 		      UserAuthenticationDatabase* authDatabase,
 		      unsigned reclamationTestSeconds) {
-  int ourSocket = -1;
+  int ourSocket = setUpOurSocket(env, ourPort);
+  if (ourSocket == -1) return NULL;
 
-  do {
-    ourSocket = setUpOurSocket(env, ourPort);
-    if (ourSocket == -1) break;
-
-    return new RTSPServer(env, ourSocket, ourPort, authDatabase,
-			  reclamationTestSeconds);
-  } while (0);
-
-  if (ourSocket != -1) ::closeSocket(ourSocket);
-  return NULL;
+  return new RTSPServer(env, ourSocket, ourPort, authDatabase, reclamationTestSeconds);
 }
 
 Boolean RTSPServer::lookupByName(UsageEnvironment& env,
@@ -541,34 +532,6 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
 }
 
 // Handler routines for specific RTSP commands:
-
-// Generate a "Date:" header for use in a RTSP response:
-static char const* dateHeader() {
-  static char buf[200];
-#if !defined(_WIN32_WCE)
-  time_t tt = time(NULL);
-  strftime(buf, sizeof buf, "Date: %a, %b %d %Y %H:%M:%S GMT\r\n", gmtime(&tt));
-#else
-  // WinCE apparently doesn't have "time()", "strftime()", or "gmtime()",
-  // so generate the "Date:" header a different, WinCE-specific way.
-  // (Thanks to Pierre l'Hussiez for this code)
-  SYSTEMTIME SystemTime;
-  GetSystemTime(&SystemTime);
-  WCHAR dateFormat[] = L"ddd, MMM dd yyyy";
-  WCHAR timeFormat[] = L"HH:mm:ss GMT\r\n";
-  WCHAR inBuf[200];
-  DWORD locale = LOCALE_NEUTRAL;
-
-  int ret = GetDateFormat(locale, 0, &SystemTime,
-			  (LPTSTR)dateFormat, (LPTSTR)inBuf, sizeof inBuf);
-  inBuf[ret - 1] = ' ';
-  ret = GetTimeFormat(locale, 0, &SystemTime,
-		      (LPTSTR)timeFormat,
-		      (LPTSTR)inBuf + ret, (sizeof inBuf) - ret);
-  wcstombs(buf, inBuf, wcslen(inBuf));
-#endif
-  return buf;
-}
 
 static char const* allowedCommandNames
 = "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, GET_PARAMETER, SET_PARAMETER";

@@ -99,6 +99,7 @@ int main(int argc, char** argv) {
 void afterPlaying(void* /*clientData*/) {
   *env << "...done reading from file\n";
 
+  videoSink->stopPlaying();
   Medium::close(videoSource);
   // Note that this also closes the input file that this source read from.
 

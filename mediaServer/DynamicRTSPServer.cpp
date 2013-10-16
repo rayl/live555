@@ -26,23 +26,16 @@ DynamicRTSPServer*
 DynamicRTSPServer::createNew(UsageEnvironment& env, Port ourPort,
 			     UserAuthenticationDatabase* authDatabase,
 			     unsigned reclamationTestSeconds) {
-  int ourSocket = -1;
+  int ourSocket = setUpOurSocket(env, ourPort);
+  if (ourSocket == -1) return NULL;
 
-  do {
-    int ourSocket = setUpOurSocket(env, ourPort);
-    if (ourSocket == -1) break;
-
-    return new DynamicRTSPServer(env, ourSocket, ourPort, authDatabase, reclamationTestSeconds);
-  } while (0);
-
-  if (ourSocket != -1) ::closeSocket(ourSocket);
-  return NULL;
+  return new DynamicRTSPServer(env, ourSocket, ourPort, authDatabase, reclamationTestSeconds);
 }
 
 DynamicRTSPServer::DynamicRTSPServer(UsageEnvironment& env, int ourSocket,
 				     Port ourPort,
 				     UserAuthenticationDatabase* authDatabase, unsigned reclamationTestSeconds)
-  : RTSPServer(env, ourSocket, ourPort, authDatabase, reclamationTestSeconds) {
+  : RTSPServerSupportingHTTPStreaming(env, ourSocket, ourPort, authDatabase, reclamationTestSeconds) {
 }
 
 DynamicRTSPServer::~DynamicRTSPServer() {

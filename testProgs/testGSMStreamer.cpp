@@ -151,6 +151,8 @@ void play() {
 void afterPlaying(void* /*clientData*/) {
   *env << "...done streaming\n";
 
+  sessionState.sink->stopPlaying();
+
   // End this loop by closing the media:
 #ifdef IMPLEMENT_RTSP_SERVER
   Medium::close(rtspServer);

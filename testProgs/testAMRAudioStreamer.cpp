@@ -98,6 +98,7 @@ int main(int argc, char** argv) {
 void afterPlaying(void* /*clientData*/) {
   *env << "...done reading from file\n";
 
+  audioSink->stopPlaying();
   Medium::close(audioSource);
   // Note that this also closes the input file that this source read from.
 

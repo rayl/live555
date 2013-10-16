@@ -189,6 +189,8 @@ void play() {
 void afterPlaying(void* /*clientData*/) {
   *env << "...done streaming\n";
 
+  sessionState.sink->stopPlaying();
+
   // End this loop by closing the current source:
   Medium::close(sessionState.source);
 
