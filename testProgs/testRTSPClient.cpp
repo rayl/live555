@@ -60,6 +60,8 @@ void usage(UsageEnvironment& env, char const* progName) {
   env << "\t(where each <rtsp-url-i> is a \"rtsp://\" URL)\n";
 }
 
+char eventLoopWatchVariable = 0;
+
 int main(int argc, char** argv) {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
@@ -77,9 +79,18 @@ int main(int argc, char** argv) {
   }
 
   // All subsequent activity takes place within the event loop:
-  env->taskScheduler().doEventLoop(); // does not return
+  env->taskScheduler().doEventLoop(&eventLoopWatchVariable);
+    // This function call does not return, unless, at some point in time, "eventLoopWatchVariable" gets set to something non-zero.
 
-  return 0; // We never actually get to this line; this is only to prevent a possible compiler warning
+  return 0;
+
+  // If you choose to continue the application past this point (i.e., if you comment out the "return 0;" statement above),
+  // and if you don't intend to do anything more with the "TaskScheduler" and "UsageEnvironment" objects,
+  // then you can also reclaim the (small) memory used by these objects by uncommenting the following code:
+  /*
+    env->reclaim(); env = NULL;
+    delete scheduler; scheduler = NULL;
+  */
 }
 
 // Define a class to hold per-stream state that we maintain throughout each stream's lifetime:
@@ -388,18 +399,9 @@ void shutdownStream(RTSPClient* rtspClient, int exitCode) {
 
   if (--rtspClientCount == 0) {
     // The final stream has ended, so exit the application now.
-    // (Of course, if you're embedding this code into your own application, you might want to comment this out.)
+    // (Of course, if you're embedding this code into your own application, you might want to comment this out,
+    // and replace it with "eventLoopWatchVariable = 1;", so that we leave the LIVE555 event loop, and continue running "main()".)
     exit(exitCode);
-
-    // If you choose *not* to "exit()" the application (i.e., if you comment out the call to "exit()" above),
-    // and you don't intend to do anything more with this "TaskScheduler" and "UsageEnvironment",
-    // then you can also reclaim the (small) memory used by these objects by doing the following.
-    // (However, you must not do this until after you have left the event loop.)
-    /*
-      TaskScheduler* scheduler = &(env.taskScheduler());
-      env.reclaim();
-      delete scheduler;
-    */
   }
 }
 

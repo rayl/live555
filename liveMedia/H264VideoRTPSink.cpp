@@ -52,7 +52,11 @@ H264VideoRTPSink::~H264VideoRTPSink() {
   fSource = fOurFragmenter; // hack: in case "fSource" had gotten set to NULL before we were called
   delete[] fFmtpSDPLine;
   delete[] fSPS; delete[] fPPS;
-  stopPlaying();
+  stopPlaying(); // call this now, because we won't have our 'FUA fragmenter' when the base class destructor calls it later.
+
+  // Close our 'FUA fragmenter' as well:
+  Medium::close(fOurFragmenter);
+  fSource = NULL; // for the base class destructor, which gets called next
 }
 
 H264VideoRTPSink*
@@ -103,19 +107,13 @@ Boolean H264VideoRTPSink::continuePlaying() {
   if (fOurFragmenter == NULL) {
     fOurFragmenter = new H264FUAFragmenter(envir(), fSource, OutPacketBuffer::maxSize,
 					   ourMaxPacketSize() - 12/*RTP hdr size*/);
-    fSource = fOurFragmenter;
+  } else {
+    fOurFragmenter->reassignInputSource(fSource);
   }
+  fSource = fOurFragmenter;
 
   // Then call the parent class's implementation:
   return MultiFramedRTPSink::continuePlaying();
-}
-
-void H264VideoRTPSink::stopPlaying() {
-  // First, call the parent class's implementation, to stop our fragmenter object (and its source):
-  MultiFramedRTPSink::stopPlaying();
-
-  // Then, close our 'fragmenter' object:
-  Medium::close(fOurFragmenter); fOurFragmenter = NULL;
 }
 
 void H264VideoRTPSink::doSpecialFrameHandling(unsigned /*fragmentationOffset*/,

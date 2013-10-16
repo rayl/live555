@@ -770,6 +770,7 @@ void RTSPServer::RTSPClientSession
 
   do {
     // First, make sure the specified stream name exists:
+    ServerMediaSession* prevSMS = fOurServerMediaSession;
     fOurServerMediaSession = fOurServer.lookupServerMediaSession(streamName);
     if (fOurServerMediaSession == NULL) {
       // Check for the special case (noted above), before we give up:
@@ -790,7 +791,10 @@ void RTSPServer::RTSPClientSession
       break;
     }
 
-    fOurServerMediaSession->incrementReferenceCount();
+    if (fOurServerMediaSession != prevSMS) {
+      // We're accessing the "ServerMediaSession" for the first time.
+      fOurServerMediaSession->incrementReferenceCount();
+    }
 
     if (fStreamStates == NULL) {
       // This is the first "SETUP" for this session.  Set up our array of states for all of this session's subsessions (tracks):

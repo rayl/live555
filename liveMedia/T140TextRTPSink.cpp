@@ -30,7 +30,11 @@ T140TextRTPSink::T140TextRTPSink(UsageEnvironment& env, Groupsock* RTPgs, unsign
 
 T140TextRTPSink::~T140TextRTPSink() {
   fSource = fOurIdleFilter; // hack: in case "fSource" had gotten set to NULL before we were called
-  stopPlaying();
+  stopPlaying(); // call this now, because we won't have our 'idle filter' when the base class destructor calls it later.
+
+  // Close our 'idle filter' as well:
+  Medium::close(fOurIdleFilter);
+  fSource = NULL; // for the base class destructor, which gets called next
 }
 
 T140TextRTPSink*
@@ -43,19 +47,13 @@ Boolean T140TextRTPSink::continuePlaying() {
   // First, check whether we have an 'idle filter' set up yet. If not, create it now, and insert it in front of our existing source:
   if (fOurIdleFilter == NULL) {
     fOurIdleFilter = new T140IdleFilter(envir(), fSource);
-    fSource = fOurIdleFilter;
+  } else {
+    fOurIdleFilter->reassignInputSource(fSource);
   }
+  fSource = fOurIdleFilter;
 
   // Then call the parent class's implementation:
   return MultiFramedRTPSink::continuePlaying();
-}
-
-void T140TextRTPSink::stopPlaying() {
-  // First, call the parent class's implementation, to stop our idle filter (and its source):
-  MultiFramedRTPSink::stopPlaying();
-
-  // Then, close our idle filter:
-  Medium::close(fOurIdleFilter); fOurIdleFilter = NULL;
 }
 
 void T140TextRTPSink::doSpecialFrameHandling(unsigned /*fragmentationOffset*/,
@@ -95,7 +93,10 @@ T140IdleFilter::~T140IdleFilter() {
 
 void T140IdleFilter::doGetNextFrame() {
   // First, see if we have buffered data that we can deliver:
-  if (deliverFromBuffer()) return;
+  if (fNumBufferedBytes > 0) {
+    deliverFromBuffer();
+    return;
+  }
 
   // We don't have any buffered data, so ask our input source for data (unless we've already done so).
   // But also set a timer to expire if this doesn't arrive promptly:
@@ -147,9 +148,7 @@ void T140IdleFilter::handleIdleTimeout() {
   deliverEmptyFrame();
 }
 
-Boolean T140IdleFilter::deliverFromBuffer() {
-  if (fNumBufferedBytes == 0) return False; // no data in buffer
-
+void T140IdleFilter::deliverFromBuffer() {
   if (fNumBufferedBytes <= fMaxSize) { // common case
     fNumTruncatedBytes = fBufferedNumTruncatedBytes;
     fFrameSize = fNumBufferedBytes;
@@ -165,7 +164,6 @@ Boolean T140IdleFilter::deliverFromBuffer() {
   fNumBufferedBytes = 0; // reset buffer
   
   FramedSource::afterGetting(this); // complete delivery
-  return True;
 }
 
 void T140IdleFilter::deliverEmptyFrame() {

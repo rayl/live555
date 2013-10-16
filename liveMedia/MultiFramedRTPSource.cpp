@@ -580,12 +580,18 @@ BufferedPacket* ReorderingPacketBuffer
   // We're still waiting for our desired packet to arrive.  However, if
   // our time threshold has been exceeded, then forget it, and return
   // the head packet instead:
-  struct timeval timeNow;
-  gettimeofday(&timeNow, NULL);
-  unsigned uSecondsSinceReceived
-    = (timeNow.tv_sec - fHeadPacket->timeReceived().tv_sec)*1000000
-    + (timeNow.tv_usec - fHeadPacket->timeReceived().tv_usec);
-  if (uSecondsSinceReceived > fThresholdTime) {
+  Boolean timeThresholdHasBeenExceeded;
+  if (fThresholdTime == 0) {
+    timeThresholdHasBeenExceeded = True; // optimization
+  } else {
+    struct timeval timeNow;
+    gettimeofday(&timeNow, NULL);
+    unsigned uSecondsSinceReceived
+      = (timeNow.tv_sec - fHeadPacket->timeReceived().tv_sec)*1000000
+      + (timeNow.tv_usec - fHeadPacket->timeReceived().tv_usec);
+    timeThresholdHasBeenExceeded = uSecondsSinceReceived > fThresholdTime;
+  }
+  if (timeThresholdHasBeenExceeded) {
     fNextExpectedSeqNo = fHeadPacket->rtpSeqNo();
         // we've given up on earlier packets now
     packetLossPreceded = True;

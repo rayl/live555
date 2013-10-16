@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 #ifdef USE_SSM
     = "232.255.42.42";
 #else
-    = "239.255.42.42";
+  = "239.255.42.42";
   // Note: This is a multicast address.  If you wish to stream using
   // unicast instead, then replace this string with the unicast address
   // of the (single) destination.  (You may also need to make a similar
