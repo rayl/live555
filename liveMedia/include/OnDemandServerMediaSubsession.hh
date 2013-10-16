@@ -76,7 +76,8 @@ protected: // new virtual functions, defined by all subclasses
 				    FramedSource* inputSource) = 0;
 
 private:
-  void setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource);
+  void setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource,
+			      unsigned estBitrate);
       // used to implement "sdpLines()"
 
 private:

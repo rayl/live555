@@ -54,6 +54,7 @@ public:
                               RTCPInstance*& resultInstance);
 
   unsigned numMembers() const;
+  unsigned totSessionBW() const { return fTotSessionBW; }
 
   void setByeHandler(TaskFunc* handlerTask, void* clientData,
 		     Boolean handleActiveParticipantsOnly = True);

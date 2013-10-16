@@ -77,7 +77,7 @@ OnDemandServerMediaSubsession::sdpLines() {
     // subsession (as a unicast stream).  To do so, we first create
     // dummy (unused) source and "RTPSink" objects,
     // whose parameters we use for the SDP lines:
-    unsigned estBitrate; // unused
+    unsigned estBitrate;
     FramedSource* inputSource = createNewStreamSource(0, estBitrate);
     if (inputSource == NULL) return NULL; // file not found
 
@@ -88,7 +88,7 @@ OnDemandServerMediaSubsession::sdpLines() {
     RTPSink* dummyRTPSink
       = createNewRTPSink(&dummyGroupsock, rtpPayloadType, inputSource);
 
-    setSDPLinesFromRTPSink(dummyRTPSink, inputSource);
+    setSDPLinesFromRTPSink(dummyRTPSink, inputSource, estBitrate);
     Medium::close(dummyRTPSink);
     closeStreamSource(inputSource);
   }
@@ -228,6 +228,14 @@ void OnDemandServerMediaSubsession
     if (rtpGroupsock != NULL) rtpGroupsock->removeAllDestinations();
     if (rtcpGroupsock != NULL) rtcpGroupsock->removeAllDestinations();
 
+    if (rtpGroupsock != NULL) {
+      // Try to use a big send buffer for RTP -  at least 0.1 second of
+      // specified bandwidth and at least 50 KB
+      unsigned rtpBufSize = streamBitrate * 25 / 2; // 1 kbps * 0.1 s = 12.5 bytes
+      if (rtpBufSize < 50 * 1024) rtpBufSize = 50 * 1024;
+      increaseSendBufferTo(envir(), rtpGroupsock->socketNum(), rtpBufSize);
+    }
+
     // Set up the state of the stream.  The stream will get started later:
     streamToken = fLastStreamToken
       = new StreamState(*this, serverRTPPort, serverRTCPPort, rtpSink, udpSink,
@@ -347,7 +355,8 @@ void OnDemandServerMediaSubsession::closeStreamSource(FramedSource *inputSource)
 }
 
 void OnDemandServerMediaSubsession
-::setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource) {
+::setSDPLinesFromRTPSink(RTPSink* rtpSink, FramedSource* inputSource,
+			 unsigned estBitrate) {
   if (rtpSink == NULL) return;
 
   char const* mediaType = rtpSink->sdpMediaType();
@@ -362,6 +371,7 @@ void OnDemandServerMediaSubsession
   char const* const sdpFmt =
     "m=%s %u RTP/AVP %d\r\n"
     "c=IN IP4 %s\r\n"
+    "b=AS:%u\r\n"
     "%s"
     "%s"
     "%s"
@@ -369,6 +379,7 @@ void OnDemandServerMediaSubsession
   unsigned sdpFmtSize = strlen(sdpFmt)
     + strlen(mediaType) + 5 /* max short len */ + 3 /* max char len */
     + strlen(ipAddressStr)
+    + 20 /* max int len */
     + strlen(rtpmapLine)
     + strlen(rangeLine)
     + strlen(auxSDPLine)
@@ -379,6 +390,7 @@ void OnDemandServerMediaSubsession
 	  fPortNumForSDP, // m= <port>
 	  rtpPayloadType, // m= <fmt list>
 	  ipAddressStr, // c= address
+	  estBitrate, // b=AS:<bandwidth>
 	  rtpmapLine, // a=rtpmap:... (if present)
 	  rangeLine, // a=range:... (if present)
 	  auxSDPLine, // optional extra SDP line

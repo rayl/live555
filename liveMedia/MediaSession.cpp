@@ -211,6 +211,7 @@ Boolean MediaSession::initializeWithSDP(char const* sdpDescription) {
 
       // Check for various special SDP lines that we understand:
       if (subsession->parseSDPLine_c(sdpLine)) continue;
+      if (subsession->parseSDPLine_b(sdpLine)) continue;
       if (subsession->parseSDPAttribute_rtpmap(sdpLine)) continue;
       if (subsession->parseSDPAttribute_control(sdpLine)) continue;
       if (subsession->parseSDPAttribute_range(sdpLine)) continue;
@@ -540,7 +541,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fClientPortNum(0), fRTPPayloadFormat(0xFF),
     fSavedSDPLines(NULL), fMediumName(NULL), fCodecName(NULL), fProtocolName(NULL),
     fRTPTimestampFrequency(0), fControlPath(NULL),
-    fSourceFilterAddr(parent.sourceFilterAddr()),
+    fSourceFilterAddr(parent.sourceFilterAddr()), fBandwidth(0),
     fAuxiliarydatasizelength(0), fConstantduration(0), fConstantsize(0),
     fCRC(0), fCtsdeltalength(0), fDe_interleavebuffersize(0), fDtsdeltalength(0),
     fIndexdeltalength(0), fIndexlength(0), fInterleaving(0), fMaxdisplacement(0),
@@ -689,6 +690,13 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 
       if (!success) break; // a fatal error occurred trying to create the RTP and RTCP sockets; we can't continue
     }
+
+    // Try to use a big receive buffer for RTP - at least 0.1 second of
+    // specified bandwidth and at least 50 KB
+    unsigned rtpBufSize = fBandwidth * 25 / 2; // 1 kbps * 0.1 s = 12.5 bytes
+    if (rtpBufSize < 50 * 1024)
+      rtpBufSize = 50 * 1024;
+    increaseReceiveBufferTo(env(), fRTPSocket->socketNum(), rtpBufSize);
 
     // ASSERT: fRTPSocket != NULL && fRTCPSocket != NULL
     if (isSSM()) {
@@ -887,7 +895,10 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 
     // Finally, create our RTCP instance. (It starts running automatically)
     if (fRTPSource != NULL) {
-      unsigned totSessionBandwidth = 500; // HACK - later get from SDP#####
+      // If bandwidth is specified, use it and add 5% for RTCP overhead.
+      // Otherwise make a guess at 500 kbps.
+      unsigned totSessionBandwidth
+	= fBandwidth ? fBandwidth + fBandwidth / 20 : 500;
       fRTCPInstance = RTCPInstance::createNew(env(), fRTCPSocket,
 					      totSessionBandwidth,
 					      (unsigned char const*)
@@ -1021,6 +1032,12 @@ Boolean MediaSubsession::parseSDPLine_c(char const* sdpLine) {
   }
 
   return False;
+}
+
+Boolean MediaSubsession::parseSDPLine_b(char const* sdpLine) {
+  // Check for "b=<bwtype>:<bandwidth>" line
+  // RTP applications are expected to use bwtype="AS"
+  return sscanf(sdpLine, "b=AS:%u", &fBandwidth) == 1;
 }
 
 Boolean MediaSubsession::parseSDPAttribute_rtpmap(char const* sdpLine) {

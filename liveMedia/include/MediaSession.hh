@@ -249,6 +249,7 @@ protected:
   void setNext(MediaSubsession* next) { fNext = next; }
 
   Boolean parseSDPLine_c(char const* sdpLine);
+  Boolean parseSDPLine_b(char const* sdpLine);
   Boolean parseSDPAttribute_rtpmap(char const* sdpLine);
   Boolean parseSDPAttribute_control(char const* sdpLine);
   Boolean parseSDPAttribute_range(char const* sdpLine);
@@ -274,6 +275,7 @@ protected:
   unsigned fRTPTimestampFrequency;
   char* fControlPath; // holds optional a=control: string
   struct in_addr fSourceFilterAddr; // used for SSM
+  unsigned fBandwidth; // in kilobits-per-second, from b= line
 
   // Parameters set by "a=fmtp:" SDP lines:
   unsigned fAuxiliarydatasizelength, fConstantduration, fConstantsize;

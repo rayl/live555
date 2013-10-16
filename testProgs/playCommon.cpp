@@ -712,7 +712,7 @@ int main(int argc, char** argv) {
 						 fileSinkBufferSize, oneFilePerFrame);
 	} else if (strcmp(subsession->mediumName(), "video") == 0 &&
 	    (strcmp(subsession->codecName(), "H264") == 0)) {
-      // For H.264 video stream, we use a special sink that insert start_codes:
+	  // For H.264 video stream, we use a special sink that insert start_codes:
 	  fileSink = H264VideoFileSink::createNew(*env, outFileName,
 						 fileSinkBufferSize, oneFilePerFrame);
 	} else {
