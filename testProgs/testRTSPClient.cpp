@@ -111,7 +111,7 @@ public:
 // If you're streaming just a single stream (i.e., just from a single URL, once), then you can define and use just a single
 // "StreamClientState" structure, as a global variable in your application.  However, because - in this demo application - we're
 // showing how to play multiple streams, concurrently, we can't do that.  Instead, we have to have a separate "StreamClientState"
-// struture for each "RTSPClient".  To do this, we subclass "RTSPClient", and add a "StreamClientState" field to the subclass:
+// structure for each "RTSPClient".  To do this, we subclass "RTSPClient", and add a "StreamClientState" field to the subclass:
 
 class ourRTSPClient: public RTSPClient {
 public:

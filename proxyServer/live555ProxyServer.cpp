@@ -35,7 +35,7 @@ void usage() {
        << " [-v|-V]"
        << " [-t|-T <http-port>]"
        << " [-u <username> <password>]"
-       << " <rtsp-url-1> .. <rtsp-url-n>\n";
+       << " <rtsp-url-1> ... <rtsp-url-n>\n";
   exit(1);
 }
 
@@ -43,6 +43,10 @@ int main(int argc, char** argv) {
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
   env = BasicUsageEnvironment::createNew(*scheduler);
+
+  *env << "LIVE555 Proxy Server\n"
+       << "\t(LIVE555 Streaming Media library version "
+       << LIVEMEDIA_LIBRARY_VERSION_STRING << ")\n\n";
 
   // Check command-line arguments: optional parameters, then one or more rtsp:// URLs (of streams to be proxied):
   progName = argv[0];
