@@ -178,4 +178,31 @@ private:
 			  unsigned durationInMicroseconds);
 };
 
+
+////////// 24-bit values: little-endian <-> big-endian //////////
+
+class EndianSwap24: public FramedFilter {
+public:
+  static EndianSwap24* createNew(UsageEnvironment& env, FramedSource* inputSource);
+
+protected:
+  EndianSwap24(UsageEnvironment& env, FramedSource* inputSource);
+      // called only by createNew()
+  virtual ~EndianSwap24();
+
+private:
+  // Redefined virtual functions:
+  virtual void doGetNextFrame();
+
+private:
+  static void afterGettingFrame(void* clientData, unsigned frameSize,
+				unsigned numTruncatedBytes,
+				struct timeval presentationTime,
+				unsigned durationInMicroseconds);
+  void afterGettingFrame1(unsigned frameSize,
+			  unsigned numTruncatedBytes,
+			  struct timeval presentationTime,
+			  unsigned durationInMicroseconds);
+};
+
 #endif

@@ -126,7 +126,7 @@ VorbisAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,
 }
 
 #define ADVANCE(n) do { p += (n); rem -= (n); } while (0)
-#define GET_ENCODED_VAL(n) do { u_int8_t byte; n = 0; do { if (rem == 0) break; byte = *p; n = n*128 + byte&0x7F; ADVANCE(1); } while (byte&0x80); } while (0); if (rem == 0) break
+#define GET_ENCODED_VAL(n) do { u_int8_t byte; n = 0; do { if (rem == 0) break; byte = *p; n = (n*128) + (byte&0x7F); ADVANCE(1); } while (byte&0x80); } while (0); if (rem == 0) break
 
 VorbisAudioRTPSink*
 VorbisAudioRTPSink::createNew(UsageEnvironment& env, Groupsock* RTPgs,

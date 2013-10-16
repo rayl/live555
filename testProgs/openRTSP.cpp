@@ -46,6 +46,10 @@ void startPlayingSession(MediaSession* session, double start, double end, float 
   ourRTSPClient->sendPlayCommand(*session, afterFunc, start, end, scale, ourAuthenticator);
 }
 
+void startPlayingSession(MediaSession* session, char const* absStartTime, char const* absEndTime, float scale, RTSPClient::responseHandler* afterFunc) {
+  ourRTSPClient->sendPlayCommand(*session, afterFunc, absStartTime, absEndTime, scale, ourAuthenticator);
+}
+
 void tearDownSession(MediaSession* session, RTSPClient::responseHandler* afterFunc) {
   ourRTSPClient->sendTeardownCommand(*session, afterFunc, ourAuthenticator);
 }

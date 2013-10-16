@@ -74,6 +74,7 @@ int verbosityLevel = 1; // by default, print verbose output
 double duration = 0;
 double durationSlop = -1.0; // extra seconds to play at the end
 double initialSeekTime = 0.0f;
+char* initialAbsoluteSeekTime = NULL;
 float scale = 1.0f;
 double endTime;
 unsigned interPacketGapMaxTime = 0;
@@ -116,7 +117,7 @@ void usage() {
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-M <mime-subtype-name>]" : "")
-       << " [-s <initial-seek-time>] [-z <scale>]"
+       << " [-s <initial-seek-time>]|[-U <absolute-seek-time>] [-z <scale>]"
        << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] [-B <input-socket-buffer-size>] [-I <input-interface-ip-address>] [-m] <url> (or " << progName << " -o [-V] <url>)\n";
   shutdown();
 }
@@ -427,6 +428,13 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 'U': {
+      // specify initial absolute seek time (trick play), using a string of the form "YYYYMMDDTHHMMSSZ" or "YYYYMMDDTHHMMSS.<frac>Z
+      initialAbsoluteSeekTime = argv[2];
+      ++argv; --argc;
+      break;
+    }
+
     case 'z': { // scale (trick play)
       float arg;
       if (sscanf(argv[2], "%g", &arg) != 1 || arg == 0.0f) {
@@ -473,6 +481,10 @@ int main(int argc, char** argv) {
   }
   if (sendOptionsRequestOnly && !sendOptionsRequest) {
     *env << "The -o and -O options cannot both be used!\n";
+    usage();
+  }
+  if (initialAbsoluteSeekTime != NULL && initialSeekTime != 0.0f) {
+    *env << "The -s and -U options cannot both be used!\n";
     usage();
   }
   if (tunnelOverHTTPPortNum > 0) {
@@ -796,7 +808,14 @@ void setupStreams() {
     if (endTime < 0) endTime = 0.0f;
   }
 
-  startPlayingSession(session, initialSeekTime, endTime, scale, continueAfterPLAY);
+  char const* absStartTime = initialAbsoluteSeekTime != NULL ? initialAbsoluteSeekTime : session->absStartTime();
+  if (absStartTime != NULL) {
+    // Either we or the server have specified that seeking should be done by 'absolute' time:
+    startPlayingSession(session, absStartTime, session->absEndTime(), scale, continueAfterPLAY);
+  } else {
+    // Normal case: Seek by relative time (NPT):
+    startPlayingSession(session, initialSeekTime, endTime, scale, continueAfterPLAY);
+  }
 }
 
 void continueAfterPLAY(RTSPClient*, int resultCode, char* resultString) {

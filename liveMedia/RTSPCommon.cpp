@@ -92,18 +92,27 @@ Boolean parseRTSPRequestString(char const* reqStr,
       unsigned k1 = k;
       while (k1 > i && reqStr[k1] != '/') --k1;
 
+      // ASSERT: At this point
+      //   i: first space or slash after "host" or "host:port"
+      //   k: first non-space before "RTSP/"
+      //   k1: first slash before k
+
       // The URL suffix comes from [k1+1,k]
       // Copy "resultURLSuffix":
-      if (k - k1 + 1 > resultURLSuffixMaxSize) return False; // there's no room
       unsigned n = 0, k2 = k1+1;
-      while (k2 <= k) resultURLSuffix[n++] = reqStr[k2++];
+      if (i <= k) { // There's a slash after "host" or "host:port"
+        if (k - k1 + 1 > resultURLSuffixMaxSize) return False; // there's no room
+        while (k2 <= k) resultURLSuffix[n++] = reqStr[k2++];
+      }
       resultURLSuffix[n] = '\0';
 
       // The URL 'pre-suffix' comes from [i+1,k1-1]
       // Copy "resultURLPreSuffix":
-      if (k1 - i > resultURLPreSuffixMaxSize) return False; // there's no room
       n = 0; k2 = i + 1;
-      while (k2 <= k1 - 1) resultURLPreSuffix[n++] = reqStr[k2++];
+      if (i <= k) { // There's a slash after "host" or "host:port"
+        if (k1 - i > resultURLPreSuffixMaxSize) return False; // there's no room
+        while (k2 <= k1 - 1) resultURLPreSuffix[n++] = reqStr[k2++];
+      }
       resultURLPreSuffix[n] = '\0';
 
       i = k + 7; // to go past " RTSP/"

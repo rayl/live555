@@ -516,7 +516,7 @@ void MP3FrameParams::getSideInfo(MP3SideInfo& si) {
   if (hasCRC) getBits(16);
 
   int single = -1;
-  int ms_stereo, i_stereo;
+  int ms_stereo;
   int sfreq = samplingFreqIndex;
 
   if (stereo == 1) {
@@ -524,7 +524,6 @@ void MP3FrameParams::getSideInfo(MP3SideInfo& si) {
   }
 
   ms_stereo = (mode == MPG_MD_JOINT_STEREO) && (mode_ext & 0x2);
-  i_stereo = (mode == MPG_MD_JOINT_STEREO) && (mode_ext & 0x1);
 
   if (isMPEG2) {
     getSideInfo2(*this, si, stereo, ms_stereo, sfreq, single);

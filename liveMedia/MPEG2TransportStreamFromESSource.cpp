@@ -99,6 +99,7 @@ MPEG2TransportStreamFromESSource
 }
 
 MPEG2TransportStreamFromESSource::~MPEG2TransportStreamFromESSource() {
+  doStopGettingFrames();
   delete fInputSources;
 }
 

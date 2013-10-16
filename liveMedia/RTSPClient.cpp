@@ -959,6 +959,7 @@ Boolean RTSPClient::parseScaleParam(char const* paramStr, float& scale) {
 }
 
 Boolean RTSPClient::parseRTPInfoParams(char const*& paramsStr, u_int16_t& seqNum, u_int32_t& timestamp) {
+  if (paramsStr == NULL || paramsStr[0] == '\0') return False;
   while (paramsStr[0] == ',') ++paramsStr;
 
   // "paramsStr" now consists of a ';'-separated list of parameters, ending with ',' or '\0'.
@@ -1019,7 +1020,10 @@ Boolean RTSPClient::handleSETUPResponse(MediaSubsession& subsession, char const*
 	subsession.rtpSource()->setStreamSocket(fInputSocketNum, subsession.rtpChannelId);
 	subsession.rtpSource()->setServerRequestAlternativeByteHandler(fInputSocketNum, handleAlternativeRequestByte, this);
       }
-      if (subsession.rtcpInstance() != NULL) subsession.rtcpInstance()->setStreamSocket(fInputSocketNum, subsession.rtcpChannelId);
+      // Hack: Don't do the same for RTCP, yet, because we don't want the server to receive RTCP "RR" packets from us until
+      // after it has responded to the future "PLAY" command (because the server won't know how to handle RTCP packets embedded
+      // in the RTSP TCP connection until then).  Instead, flag that we need to defer this until after the "PLAY" response:
+      subsession.deferRTCPSetup = True;
     } else {
       // Normal case.
       // Set the RTP and RTCP sockets' destination address and port from the information in the SETUP response (if present):
@@ -1059,18 +1063,23 @@ Boolean RTSPClient::handlePLAYResponse(MediaSession& session, MediaSubsession& s
 						     session._absStartTime(), session._absEndTime())) break;
       rangeOK = True;
 
-      u_int16_t seqNum; u_int32_t timestamp;
-      if (rtpInfoParamsStr != NULL) {
-	if (!parseRTPInfoParams(rtpInfoParamsStr, seqNum, timestamp)) break;
-	// This is data for our first subsession.  Fill it in, and do the same for our other subsessions:
-	MediaSubsessionIterator iter(session);
-	MediaSubsession* subsession;
-	while ((subsession = iter.next()) != NULL) {
+      MediaSubsessionIterator iter(session);
+      MediaSubsession* subsession;
+      while ((subsession = iter.next()) != NULL) {
+	u_int16_t seqNum; u_int32_t timestamp;
+	subsession->rtpInfo.infoIsNew = False;
+	if (parseRTPInfoParams(rtpInfoParamsStr, seqNum, timestamp)) {
 	  subsession->rtpInfo.seqNum = seqNum;
 	  subsession->rtpInfo.timestamp = timestamp;
 	  subsession->rtpInfo.infoIsNew = True;
+	}
 
-	  if (!parseRTPInfoParams(rtpInfoParamsStr, seqNum, timestamp)) break;
+	if (subsession->deferRTCPSetup) {
+	  // Hack: See above.
+	  if (subsession->rtcpInstance() != NULL) {
+	    subsession->rtcpInstance()->setStreamSocket(fInputSocketNum, subsession->rtcpChannelId);
+	  }
+	  subsession->deferRTCPSetup = False; // because we do this only once, for the first "PLAY" after "SETUP"
 	}
       }
     } else {
@@ -1082,11 +1091,19 @@ Boolean RTSPClient::handlePLAYResponse(MediaSession& session, MediaSubsession& s
       rangeOK = True;
 
       u_int16_t seqNum; u_int32_t timestamp;
-      if (rtpInfoParamsStr != NULL) {
-	if (!parseRTPInfoParams(rtpInfoParamsStr, seqNum, timestamp)) break;
+      subsession.rtpInfo.infoIsNew = False;
+      if (parseRTPInfoParams(rtpInfoParamsStr, seqNum, timestamp)) {
 	subsession.rtpInfo.seqNum = seqNum;
 	subsession.rtpInfo.timestamp = timestamp;
 	subsession.rtpInfo.infoIsNew = True;
+      }
+
+      if (subsession.deferRTCPSetup) {
+	// Hack: See above.
+	if (subsession.rtcpInstance() != NULL) {
+	  subsession.rtcpInstance()->setStreamSocket(fInputSocketNum, subsession.rtcpChannelId);
+	}
+	subsession.deferRTCPSetup = False; // because we do this only once, for the first "PLAY" after "SETUP"
       }
     }
 
@@ -1382,7 +1399,7 @@ static char* getLine(char* startOfLine) {
 
 void RTSPClient::handleResponseBytes(int newBytesRead) {
   do {
-    if (newBytesRead > 0 && (unsigned)newBytesRead < fResponseBufferBytesLeft) break; // data was read OK; process it below
+    if (newBytesRead >= 0 && (unsigned)newBytesRead < fResponseBufferBytesLeft) break; // data was read OK; process it below
 
     if (newBytesRead >= (int)fResponseBufferBytesLeft) {
       // We filled up our response buffer.  Treat this as an error (for the first response handler):

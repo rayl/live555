@@ -618,7 +618,7 @@ void RTSPServer::RTSPClientConnection::handleAlternativeRequestByte(void* instan
 void RTSPServer::RTSPClientConnection::handleAlternativeRequestByte1(u_int8_t requestByte) {
   if (requestByte == 0xFF) {
     // Hack: The new handler of the input TCP socket encountered an error reading it.  Indicate this:
-    handleRequestBytes(0);
+    handleRequestBytes(-1);
   } else if (requestByte == 0xFE) {
     // Another hack: The new handler of the input TCP socket no longer needs it, so take back control of it:
     envir().taskScheduler().setBackgroundHandling(fClientInputSocket, SOCKET_READABLE|SOCKET_EXCEPTION,
@@ -638,7 +638,7 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
   do {
     RTSPServer::RTSPClientSession* clientSession = NULL;
 
-    if (newBytesRead <= 0 || (unsigned)newBytesRead >= fRequestBufferBytesLeft) {
+    if (newBytesRead < 0 || (unsigned)newBytesRead >= fRequestBufferBytesLeft) {
       // Either the client socket has died, or the request was too big for us.
       // Terminate this connection:
 #ifdef DEBUG
@@ -712,7 +712,7 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
     char urlSuffix[RTSP_PARAM_STRING_MAX];
     char cseq[RTSP_PARAM_STRING_MAX];
     char sessionIdStr[RTSP_PARAM_STRING_MAX];
-    unsigned contentLength;
+    unsigned contentLength = 0;
     *fLastCRLF = '\0'; // temporarily, for parsing
     Boolean parseSucceeded = parseRTSPRequestString((char*)fRequestBuffer, fRequestBytesAlreadySeen,
 						    cmdName, sizeof cmdName,
@@ -998,7 +998,7 @@ void RTSPServer::RTSPClientConnection
   snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,
 	   "RTSP/1.0 %s\r\n"
 	   "CSeq: %s\r\n"
-	   "%s\r\n"
+	   "%s"
 	   "Session: %08X\r\n\r\n",
 	   responseStr,
 	   fCurrentCSeq,
@@ -1248,8 +1248,8 @@ void RTSPServer::RTSPClientSession
 			 clientsDestinationAddressStr, clientsDestinationTTL,
 			 clientRTPPortNum, clientRTCPPortNum,
 			 rtpChannelId, rtcpChannelId);
-    if (streamingMode == RTP_TCP && rtpChannelId == 0xFF ||
-	streamingMode != RTP_TCP && ourClientConnection->fClientOutputSocket != ourClientConnection->fClientInputSocket) {
+    if ((streamingMode == RTP_TCP && rtpChannelId == 0xFF) ||
+	(streamingMode != RTP_TCP && ourClientConnection->fClientOutputSocket != ourClientConnection->fClientInputSocket)) {
       // An anomolous situation, caused by a buggy client.  Either:
       //     1/ TCP streaming was requested, but with no "interleaving=" fields.  (QuickTime Player sometimes does this.), or
       //     2/ TCP streaming was not requested, but we're doing RTSP-over-HTTP tunneling (which implies TCP streaming).

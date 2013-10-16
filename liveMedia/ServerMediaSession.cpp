@@ -356,8 +356,10 @@ void ServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
   numBytes = 0;
 }
 void ServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
-				       void* /*streamToken*/, char*& /*absStart*/, char*& /*absEnd*/) {
-  // default implementation: do nothing
+				       void* /*streamToken*/, char*& absStart, char*& absEnd) {
+  // default implementation: do nothing (but delete[] and assign "absStart" and "absEnd" to NULL, to show that we don't handle this)
+  delete[] absStart; absStart = NULL;
+  delete[] absEnd; absEnd = NULL;
 }
 FramedSource* ServerMediaSubsession::getStreamSource(void* /*streamToken*/) {
   // default implementation: return NULL

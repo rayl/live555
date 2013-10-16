@@ -100,8 +100,7 @@ void MatroskaFileParser::continueParsing() {
     }
   }
 
-  // We successfully parsed the file's 'Track' headers (or else there was no input source, because the specified file name
-  // didn't exist).  Call our 'done' function now:
+  // We successfully parsed the file's 'Track' headers.  Call our 'done' function now:
   if (fOnEndFunc != NULL) (*fOnEndFunc)(fOnEndClientData);
 }
 
@@ -1130,25 +1129,12 @@ Boolean MatroskaFileParser::parseEBMLVal_unsigned(EBMLDataSize& size, unsigned& 
 }
 
 Boolean MatroskaFileParser::parseEBMLVal_float(EBMLDataSize& size, float& result) {
-  switch (size.val()) {
-    case 4: {
-      unsigned resultAsUnsigned;
+  unsigned resultAsUnsigned;
+  if (!parseEBMLVal_unsigned(size, resultAsUnsigned)) return False;
 
-      if (!parseEBMLVal_unsigned(size, resultAsUnsigned)) return False;
-      result = *(float*)&resultAsUnsigned;
-      return True;
-    }
-    case 8: {
-      u_int64_t resultAsU64;
-
-      if (!parseEBMLVal_unsigned64(size, resultAsU64)) return False;
-      result = (float)*(double*)&resultAsU64;
-      return True;
-    }
-    default: {
-      return False;
-    }
-  }
+  if (sizeof result != sizeof resultAsUnsigned) return False;
+  memcpy(&result, &resultAsUnsigned, sizeof result);
+  return True;
 }
 
 Boolean MatroskaFileParser::parseEBMLVal_string(EBMLDataSize& size, char*& result) {

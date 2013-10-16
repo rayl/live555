@@ -65,10 +65,12 @@ private:
   virtual Boolean setInputPort(int portIndex);
   virtual double getAverageLevel() const;
 
+protected:
+  unsigned fPreferredFrameSize;
+
 private:
   FILE* fFid;
   double fPlayTimePerSample; // useconds
-  unsigned fPreferredFrameSize;
   Boolean fFidIsSeekable;
   unsigned fLastPlayTime; // useconds
   Boolean fHaveStartedReading;

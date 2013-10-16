@@ -298,8 +298,10 @@ void OnDemandServerMediaSubsession::seekStreamSource(FramedSource* /*inputSource
 }
 
 void OnDemandServerMediaSubsession::seekStreamSource(FramedSource* /*inputSource*/,
-						     char*& /*absStart*/, char*& /*absEnd*/) {
-  // Default implementation: Do nothing
+						     char*& absStart, char*& absEnd) {
+  // Default implementation: do nothing (but delete[] and assign "absStart" and "absEnd" to NULL, to show that we don't handle this)
+  delete[] absStart; absStart = NULL;
+  delete[] absEnd; absEnd = NULL;
 }
 
 void OnDemandServerMediaSubsession

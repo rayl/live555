@@ -95,6 +95,9 @@ void startPlayingSession(MediaSession* /*session*/, double /*start*/, double /*e
     afterFunc(NULL, -1, strDup(ourSIPClient->envir().getResultMsg()));
   }
 }
+void startPlayingSession(MediaSession* /*session*/, const char* /*start*/, const char* /*end*/, float /*scale*/, RTSPClient::responseHandler* afterFunc) {
+	startPlayingSession(NULL,(double)0,(double)0,0,afterFunc);
+}
 
 void tearDownSession(MediaSession* /*session*/, RTSPClient::responseHandler* afterFunc) {
   if (ourSIPClient == NULL || ourSIPClient->sendBYE()) {

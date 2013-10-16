@@ -574,7 +574,7 @@ void MediaSubsessionIterator::reset() {
 ////////// MediaSubsession //////////
 
 MediaSubsession::MediaSubsession(MediaSession& parent)
-  : serverPortNum(0), sink(NULL), miscPtr(NULL),
+  : serverPortNum(0), sink(NULL), miscPtr(NULL), deferRTCPSetup(False),
     fParent(parent), fNext(NULL),
     fConnectionEndpointName(NULL),
     fClientPortNum(0), fRTPPayloadFormat(0xFF),

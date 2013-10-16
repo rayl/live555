@@ -170,6 +170,6 @@ void MPEG1or2VideoRTPSink
 }
 
 unsigned MPEG1or2VideoRTPSink::specialHeaderSize() const {
-  // There's a 4 byte special audio header:
+  // There's a 4 byte special video header:
   return 4;
 }

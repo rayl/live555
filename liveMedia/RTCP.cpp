@@ -379,7 +379,12 @@ void RTCPInstance::incomingReportHandler1() {
     }
 
 #ifdef DEBUG
-    fprintf(stderr, "[%p]saw incoming RTCP packet (from address %s, port %d)\n", this, AddressString(fromAddress).val(), ntohs(fromAddress.sin_port));
+    fprintf(stderr, "[%p]saw incoming RTCP packet", this);
+    if (tcpReadStreamSocketNum < 0) {
+      // Note that "fromAddress" is valid only if we're receiving over UDP (not over TCP):
+      fprintf(stderr, " (from address %s, port %d)", AddressString(fromAddress).val(), ntohs(fromAddress.sin_port));
+    }
+    fprintf(stderr, "\n");
     for (unsigned i = 0; i < packetSize; ++i) {
       if (i%4 == 0) fprintf(stderr, " ");
       fprintf(stderr, "%02x", pkt[i]);

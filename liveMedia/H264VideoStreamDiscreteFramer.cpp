@@ -63,7 +63,8 @@ void H264VideoStreamDiscreteFramer
   u_int8_t nal_unit_type = frameSize == 0 ? 0xFF : fTo[0]&0x1F;
 
   // Check for a (likely) common error: NAL units that (erroneously) begin with a 0x00000001 or 0x000001 'start code'
-  //     (Those start codes should only be in byte-stream data; not data that consists of discrete NAL units.)
+  //     (Those start codes should only be in byte-stream data; *not* data that consists of discrete NAL units.)
+  //     Once again, to be clear: The NAL units that you feed to a "H264VideoStreamDiscreteFramer" MUST NOT include start codes.
   if (nal_unit_type == 0) {
     if (frameSize >= 4 && fTo[0] == 0 && fTo[1] == 0 && ((fTo[2] == 0 && fTo[3] == 1) || fTo[2] == 1)) {
       envir() << "H264VideoStreamDiscreteFramer error: MPEG 'start code' seen in the input\n";

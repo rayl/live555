@@ -292,6 +292,9 @@ int readSocket(UsageEnvironment& env,
     }
     //##### END HACK
     socketErr(env, "recvfrom() error: ");
+  } else if (bytesRead == 0) {
+    // "recvfrom()" on a stream socket can return 0 if the remote end has closed the connection.  Treat this as an error:
+    return -1;
   }
 
   return bytesRead;

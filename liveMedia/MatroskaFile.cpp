@@ -72,10 +72,14 @@ MatroskaFile::MatroskaFile(UsageEnvironment& env, char const* fileName, onCreati
     fChosenVideoTrackNumber(0), fChosenAudioTrackNumber(0), fChosenSubtitleTrackNumber(0) {
   fDemuxesTable = HashTable::create(ONE_WORD_HASH_KEYS);
 
-  // Initialize ourselves by parsing the file's 'Track' headers:
-  fParserForInitialization
-    = new MatroskaFileParser(*this, ByteStreamFileSource::createNew(envir(), fileName),
-			     handleEndOfTrackHeaderParsing, this, NULL);
+  FramedSource* inputSource = ByteStreamFileSource::createNew(envir(), fileName);
+  if (inputSource == NULL) {
+    // The specified input file does not exist!
+    fParserForInitialization = NULL;
+  } else {
+    // Initialize ourselves by parsing the file's 'Track' headers:
+    fParserForInitialization = new MatroskaFileParser(*this, inputSource, handleEndOfTrackHeaderParsing, this, NULL);
+  }
 }
 
 MatroskaFile::~MatroskaFile() {

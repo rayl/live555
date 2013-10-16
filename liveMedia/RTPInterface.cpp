@@ -247,7 +247,7 @@ Boolean RTPInterface::handleRead(unsigned char* buffer, unsigned bufferMaxSize,
     if (fNextTCPReadSize == 0) {
       // We've read all of the data that we asked for
       readSuccess = True;
-    } else if (curBytesRead <= 0) {
+    } else if (curBytesRead < 0) {
       // There was an error reading the socket
       bytesRead = 0;
       readSuccess = False;

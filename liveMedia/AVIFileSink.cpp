@@ -477,7 +477,13 @@ void AVISubsessionIOState::useFrame(SubsessionBuffer& buffer) {
 
   // Write the data into the file:
   fOurSink.fNumBytesWritten += fOurSink.addWord(fAVISubsessionTag);
-  fOurSink.fNumBytesWritten += fOurSink.addWord(frameSize);
+  if (strcmp(fOurSubsession.codecName(), "H264") == 0) {
+    // Insert a 'start code' (0x00 0x00 0x00 0x01) in front of the frame:
+    fOurSink.fNumBytesWritten += fOurSink.addWord(4+frameSize);
+    fOurSink.fNumBytesWritten += fOurSink.addWord(fourChar(0x00, 0x00, 0x00, 0x01));//add start code
+  } else {
+    fOurSink.fNumBytesWritten += fOurSink.addWord(frameSize);
+  }
   fwrite(frameSource, 1, frameSize, fOurSink.fOutFid);
   fOurSink.fNumBytesWritten += frameSize;
   // Pad to an even length:
