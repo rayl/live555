@@ -16,7 +16,7 @@ $(USAGE_ENVIRONMENT_LIB): $(OBJS)
 	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS) $<
 
 UsageEnvironment.$(CPP):	include/UsageEnvironment.hh
-include/UsageEnvironment.hh:	include/UsageEnvironment_version.hh include/strDup.hh
+include/UsageEnvironment.hh:	include/UsageEnvironment_version.hh include/Boolean.hh include/strDup.hh
 HashTable.$(CPP):		include/HashTable.hh
 include/HashTable.hh:		include/Boolean.hh
 strDup.$(CPP):			include/strDup.hh

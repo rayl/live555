@@ -67,8 +67,6 @@ private:
 
 class HandlerSet; // forward
 
-#define MAX_NUM_EVENT_TRIGGERS 32
-
 // An abstract base class, useful for subclassing
 // (e.g., to redefine the implementation of socket event handling)
 class BasicTaskScheduler0: public TaskScheduler {
@@ -88,10 +86,6 @@ public:
 
   virtual void doEventLoop(char* watchVariable);
 
-  virtual EventTriggerId createEventTrigger(TaskFunc* eventHandlerProc);
-  virtual void deleteEventTrigger(EventTriggerId eventTriggerId);
-  virtual void triggerEvent(EventTriggerId eventTriggerId, void* clientData = NULL);
-
 protected:
   BasicTaskScheduler0();
 
@@ -102,12 +96,6 @@ protected:
   // To implement background reads:
   HandlerSet* fHandlers;
   int fLastHandledSocketNum;
-
-  // To implement event triggers:
-  EventTriggerId fTriggersAwaitingHandling, fLastUsedTriggerMask; // implemented as 32-bit bitmaps
-  TaskFunc* fTriggeredEventHandlers[MAX_NUM_EVENT_TRIGGERS];
-  void* fTriggeredEventClientDatas[MAX_NUM_EVENT_TRIGGERS];
-  unsigned fLastUsedTriggerNum; // in the range [0,MAX_NUM_EVENT_TRIGGERS)
 };
 
 #endif
