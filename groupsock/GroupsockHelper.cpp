@@ -23,6 +23,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #if defined(__WIN32__) || defined(_WIN32)
 #include <time.h>
 extern "C" int initializeWinsockIfNecessary();
+#define USE_GETHOSTBYNAME 1 /*because at least some Windows don't have getaddrinfo()*/
 #else
 #include <stdarg.h>
 #include <time.h>
@@ -544,12 +545,12 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
     } while (0);
 
     if (!loopbackWorks) do {
-      // We couldn't find our address using multicast loopback
-      // so try instead to look it up directly.
+      // We couldn't find our address using multicast loopback,
+      // so try instead to look it up directly - by first getting our host name, and then resolving this host name
       char hostname[100];
       hostname[0] = '\0';
-      gethostname(hostname, sizeof hostname);
-      if (hostname[0] == '\0') {
+      int result = gethostname(hostname, sizeof hostname);
+      if (result != 0 || hostname[0] == '\0') {
 	env.setResultErrMsg("initial gethostname() failed");
 	break;
       }
@@ -558,25 +559,55 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
 #include <hostLib.h>
       if (ERROR == (ourAddress = hostGetByName( hostname ))) break;
 #else
-      struct hostent* hstent
-	= (struct hostent*)gethostbyname(hostname);
+      // Try to resolve "hostname" to an IP address
+#ifdef USE_GETHOSTBYNAME
+      struct hostent* hstent = (struct hostent*)gethostbyname(hostname);
       if (hstent == NULL || hstent->h_length != 4) {
-	env.setResultErrMsg("initial gethostbyname() failed");
+	env.setResultErrMsg("gethostbyname() failed");
 	break;
       }
-      // Take the first address that's not bad
-      // (This code, like many others, won't handle IPv6)
+
+      unsigned i = 0;
+#else
+      // Use "getaddrinfo()" (rather than the older, deprecated "gethostbyname()"):
+      struct addrinfo addrinfoHints;
+      memset(&addrinfoHints, 0, sizeof addrinfoHints);
+      addrinfoHints.ai_family = AF_INET; // For now, we're interested in IPv4 addresses only
+      struct addrinfo* addrinfoResultPtr = NULL;
+      result = getaddrinfo(hostname, NULL, &addrinfoHints, &addrinfoResultPtr);
+      if (result != 0 || addrinfoResultPtr == NULL) {
+	env.setResultErrMsg("getaddrinfo() failed");
+	break;
+      }
+
+      const struct addrinfo* p = addrinfoResultPtr;
+#endif
+      // Take the first address that's not bad:
       netAddressBits addr = 0;
-      for (unsigned i = 0; ; ++i) {
+      while (1) {
+	netAddressBits a;
+#ifdef USE_GETHOSTBYNAME
 	char* addrPtr = hstent->h_addr_list[i];
 	if (addrPtr == NULL) break;
 
-	netAddressBits a = *(netAddressBits*)addrPtr;
+	a = *(netAddressBits*)addrPtr;
+	++i;
+#else
+	if (p == NULL) break;
+
+	a = ((struct sockaddr_in*)p->ai_addr)->sin_addr.s_addr;
+	p = p->ai_next;
+#endif
 	if (!badAddress(a)) {
 	  addr = a;
 	  break;
 	}
       }
+#ifdef USE_GETHOSTBYNAME
+#else
+      freeaddrinfo(addrinfoResultPtr);
+#endif
+
       if (addr != 0) {
 	fromAddr.sin_addr.s_addr = addr;
       } else {

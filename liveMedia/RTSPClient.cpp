@@ -469,7 +469,7 @@ static char* createScaleString(float scale, float currentScale) {
     // This is the default value; we don't need a "Scale:" header:
     buf[0] = '\0';
   } else {
-    Locale l("C", LC_NUMERIC);
+    Locale l("C", Numeric);
     sprintf(buf, "Scale: %f\r\n", scale);
   }
 
@@ -483,11 +483,11 @@ static char* createRangeString(double start, double end) {
     buf[0] = '\0';
   } else if (end < 0) {
     // There's no end time:
-    Locale l("C", LC_NUMERIC);
+    Locale l("C", Numeric);
     sprintf(buf, "Range: npt=%.3f-\r\n", start);
   } else {
     // There's both a start and an end time; include them both in the "Range:" hdr
-    Locale l("C", LC_NUMERIC);
+    Locale l("C", Numeric);
     sprintf(buf, "Range: npt=%.3f-%.3f\r\n", start, end);
   }
 
@@ -921,7 +921,7 @@ Boolean RTSPClient::parseTransportParams(char const* paramsStr,
 }
 
 Boolean RTSPClient::parseScaleParam(char const* paramStr, float& scale) {
-  Locale l("C", LC_NUMERIC);
+  Locale l("C", Numeric);
   return sscanf(paramStr, "%f", &scale) == 1;
 }
 

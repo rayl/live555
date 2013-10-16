@@ -89,29 +89,21 @@ NetAddressList::NetAddressList(char const* hostname)
     // Check first whether "hostname" is an IP address string:
     netAddressBits addr = our_inet_addr((char*)hostname);
     if (addr != INADDR_NONE) { // yes it was an IP address string
-      //##### host = gethostbyaddr((char*)&addr, sizeof (netAddressBits), AF_INET);
-      host = NULL; // don't bother calling gethostbyaddr(); we only want 1 addr
+      // For now at least, just return a 1-element list with this address:
+      fNumAddresses = 1;
+      fAddressArray = new NetAddress*[fNumAddresses];
+      if (fAddressArray == NULL) return;
 
-      if (host == NULL) {
-	// For some unknown reason, gethostbyaddr() failed, so just
-	// return a 1-element list with the address we were given:
-	fNumAddresses = 1;
-	fAddressArray = new NetAddress*[fNumAddresses];
-	if (fAddressArray == NULL) return;
-
-	fAddressArray[0] = new NetAddress((u_int8_t*)&addr,
-					  sizeof (netAddressBits));
-	return;
-      }
-    } else { // Try resolving "hostname" as a real host name
-
+      fAddressArray[0] = new NetAddress((u_int8_t*)&addr, sizeof (netAddressBits));
+      return;
+    } else {
+      // "hostname" is not an IP address string; try resolving it as a real host name instead:
 #if defined(VXWORKS)
       char hostentBuf[512];
       host = (struct hostent*)resolvGetHostByName((char*)hostname,(char*)&hostentBuf,sizeof hostentBuf);
 #else
-      host = our_gethostbyname((char*)hostname);
+      host = gethostbyname((char*)hostname);
 #endif
-
       if (host == NULL) {
 	// It was a host name, and we couldn't resolve it.  We're SOL.
 	return;

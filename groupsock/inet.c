@@ -1,9 +1,3 @@
-/* Some systems (e.g., SunOS) have header files that erroneously declare
- * inet_addr() and gethostbyname() as taking no arguments.
- * This confuses C++.  To overcome this, we use our own routines,
- * implemented in C.
- */
-
 #ifndef _NET_COMMON_H
 #include "NetCommon.h"
 #endif
@@ -13,6 +7,10 @@
 #ifdef VXWORKS
 #include <inetLib.h>
 #endif
+
+/* Some systems (e.g., SunOS) have header files that erroneously declare inet_addr() as taking no arguments.
+ * This confuses C++.  To overcome this, we use our own routine, implemented in C.
+ */
 
 unsigned our_inet_addr(cp)
 	char const* cp;
@@ -55,16 +53,6 @@ int initializeWinsockIfNecessary(void) { return 1; }
 
 #ifndef NULL
 #define NULL 0
-#endif
-
-#if !defined(VXWORKS)
-struct hostent* our_gethostbyname(name)
-     char* name;
-{
-	if (!initializeWinsockIfNecessary()) return NULL;
-
-	return (struct hostent*) gethostbyname(name);
-}
 #endif
 
 #ifdef USE_SYSTEM_RANDOM

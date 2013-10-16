@@ -150,7 +150,7 @@ Boolean parseRTSPRequestString(char const* reqStr,
 Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeEnd) {
   double start, end;
   int numCharsMatched = 0;
-  Locale l("C", LC_NUMERIC);
+  Locale l("C", Numeric);
   if (sscanf(paramStr, "npt = %lf - %lf", &start, &end) == 2) {
     rangeStart = start;
     rangeEnd = end;

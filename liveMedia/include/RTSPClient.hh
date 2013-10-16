@@ -161,6 +161,8 @@ protected:
       // called only by createNew();
   virtual ~RTSPClient();
 
+  void setBaseURL(char const* url);
+
 private: // redefined virtual functions
   virtual Boolean isRTSPClient() const;
 
@@ -217,7 +219,6 @@ private:
   void reset();
   void resetTCPSockets();
   void resetResponseBuffer();
-  void setBaseURL(char const* url);
   int openConnection(); // -1: failure; 0: pending; 1: success
   int connectToServer(int socketNum, portNumBits remotePortNum); // used to implement "openConnection()"; result values are the same
   char* createAuthenticatorString(char const* cmd, char const* url);

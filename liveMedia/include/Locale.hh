@@ -15,35 +15,62 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
-// Support for temporarily setting the locale (e.g., to POSIX) for (e.g.) parsing or printing
+// Support for temporarily setting the locale (e.g., to "C" or "POSIX") for (e.g.) parsing or printing
 // floating-point numbers in protocol headers, or calling toupper()/tolower() on human-input strings.
 // C++ header
 
 #ifndef _LOCALE_HH
 #define _LOCALE_HH
 
-// If you're on a system that (for whatever reason) doesn't have the "setlocale()" function, then
+// If you're on a system that (for whatever reason) doesn't have either the "setlocale()" or the "newlocale()" function, then
 // add "-DLOCALE_NOT_USED" to your "config.*" file.
 
-#ifndef LOCALE_NOT_USED
-#include <locale.h>
+// If you're on a system that (for whatever reason) has "setlocale()" but not "newlocale()", then
+// add "-DXLOCALE_NOT_USED" to your "config.*" file.
+// (Note that -DLOCALE_NOT_USED implies -DXLOCALE_NOT_USED; you do not need both.)
+// Also, for Windows systems, we define "XLOCALE_NOT_USED" by default, because at least some Windows systems
+// (or their development environments) don't have "newlocale()".  If, however, your Windows system *does* have "newlocale()",
+// then you can override this by defining "XLOCAL_USED" before #including this file.
+
+#ifdef XLOCALE_USED
+#undef LOCALE_NOT_USED
+#undef XLOCALE_NOT_USED
 #else
-#ifndef LC_ALL
-#define LC_ALL 0
-#endif
-#ifndef LC_NUMERIC
-#define LC_NUMERIC 4
+#if defined(__WIN32__) || defined(_WIN32)
+#define XLOCALE_NOT_USED 1
 #endif
 #endif
+
+#ifndef LOCALE_NOT_USED
+#ifndef XLOCALE_NOT_USED
+#include <xlocale.h>
+#ifndef LC_ALL_MASK
+// Hack: We had a header file "xlocale.h", but if didn't give us all that we wanted.  Use the old "setlocale()" instead:
+#define XLOCALE_NOT_USED 1
+#include <locale.h>
+#endif
+#else
+#include <locale.h>
+#endif
+#endif
+
+
+typedef enum LocaleCategory { All, Numeric }; // define and implement more categories later, as needed
 
 class Locale {
 public:
-  Locale(char const* newLocale, int category = LC_ALL);
+  Locale(char const* newLocale, LocaleCategory category = All);
   virtual ~Locale();
 
 private:
-  int fCategory;
+#ifndef LOCALE_NOT_USED
+#ifndef XLOCALE_NOT_USED
+  locale_t fLocale, fPrevLocale;
+#else
+  int fCategoryNum;
   char* fPrevLocale;
+#endif
+#endif
 };
 
 #endif
