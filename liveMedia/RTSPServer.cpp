@@ -212,6 +212,14 @@ Boolean RTSPServer
   return True;
 }
 
+Boolean RTSPServer
+::specialClientUserAccessCheck(int /*clientSocket*/, struct sockaddr_in& /*clientAddr*/,
+			       char const* /*urlSuffix*/, char const * /*username*/) {
+  // default implementation; no further access restrictions:
+  return True;
+}
+
+
 RTSPServer::RTSPServer(UsageEnvironment& env,
 		       int ourSocket, Port ourPort,
 		       UserAuthenticationDatabase* authDatabase,
@@ -559,6 +567,9 @@ Boolean RTSPServer::RTSPClientConnection
 ::handleHTTPCmd_TunnelingPOST(char const* sessionCookie, unsigned char const* extraData, unsigned extraDataSize) {
   // Use the "sessionCookie" string to look up the separate "RTSPClientConnection" object that should have been used to handle
   // an earlier HTTP "GET" request:
+  if (fOurServer.fClientConnectionsForHTTPTunneling == NULL) {
+    fOurServer.fClientConnectionsForHTTPTunneling = HashTable::create(STRING_HASH_KEYS);
+  }
   RTSPServer::RTSPClientConnection* prevClientConnection
     = (RTSPServer::RTSPClientConnection*)(fOurServer.fClientConnectionsForHTTPTunneling->Lookup(sessionCookie));
   if (prevClientConnection == NULL) {
@@ -590,10 +601,13 @@ void RTSPServer::RTSPClientConnection::resetRequestBuffer() {
 }
 
 void RTSPServer::RTSPClientConnection::closeSockets() {
-  // Turn off background read (and exception) handling on our input socket:
-  envir().taskScheduler().disableBackgroundHandling(fClientInputSocket);
+  // Turn off background handling on our input socket (and output socket, if different); then close it (or them):
+  if (fClientOutputSocket != fClientInputSocket) {
+    envir().taskScheduler().disableBackgroundHandling(fClientOutputSocket);
+    ::closeSocket(fClientOutputSocket);
+  }
 
-  if (fClientOutputSocket != fClientInputSocket) ::closeSocket(fClientOutputSocket);
+  envir().taskScheduler().disableBackgroundHandling(fClientInputSocket);
   ::closeSocket(fClientInputSocket);
 
   fClientInputSocket = fClientOutputSocket = -1;
@@ -965,11 +979,24 @@ Boolean RTSPServer::RTSPClientConnection
     fCurrentAuthenticator.reclaimDigestResponse(ourResponse);
   } while (0);
 
-  delete[] (char*)username; delete[] (char*)realm; delete[] (char*)nonce;
+  delete[] (char*)realm; delete[] (char*)nonce;
   delete[] (char*)uri; delete[] (char*)response;
+
+  if (success) {
+    // The user has been authenticated.
+    // Now allow subclasses a chance to validate the user against the IP address and/or URL suffix.
+    if (!fOurServer.specialClientUserAccessCheck(fClientInputSocket, fClientAddr, urlSuffix, username)) {
+      // Note: We don't return a "WWW-Authenticate" header here, because the user is valid,
+      // even though the server has decided that they should not have access.
+      setRTSPResponse("401 Unauthorized");
+      delete[] (char*)username;
+      return False;
+    }
+  }
+  delete[] (char*)username;
   if (success) return True;
 
-  // If we get here, there was some kind of authentication failure.
+  // If we get here, we failed to authenticate the user.
   // Send back a "401 Unauthorized" response, with a new random nonce:
   fCurrentAuthenticator.setRealmAndRandomNonce(fOurServer.fAuthDB->realm());
   snprintf((char*)fResponseBuffer, sizeof fResponseBuffer,

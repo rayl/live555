@@ -18,8 +18,7 @@ all: $(ALL)
 extra:	testGSMStreamer$(EXE)
 
 .$(C).$(OBJ):
-	$(C_COMPILER) -c $(C_FLAGS) $<       
-
+	$(C_COMPILER) -c $(C_FLAGS) $<
 .$(CPP).$(OBJ):
 	$(CPLUSPLUS_COMPILER) -c $(CPLUSPLUS_FLAGS) $<
 
