@@ -1316,6 +1316,7 @@ Boolean MediaSubsession::createSourceObjects(int useSpecialRTPoffset) {
 		   || strcmp(fCodecName, "G726-32") == 0 // G.726, 32 kbps
 		   || strcmp(fCodecName, "G726-40") == 0 // G.726, 40 kbps
 		   || strcmp(fCodecName, "SPEEX") == 0 // SPEEX audio
+		   || strcmp(fCodecName, "ILBC") == 0 // iLBC audio
 		   || strcmp(fCodecName, "T140") == 0 // T.140 text (RFC 4103)
 		   || strcmp(fCodecName, "DAT12") == 0 // 12-bit nonlinear audio (RFC 3190)
 		   || strcmp(fCodecName, "VND.ONVIF.METADATA") == 0 // 'ONVIF' 'metadata' (a XML document)

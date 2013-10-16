@@ -239,6 +239,7 @@ public: // should be protected, but some old compilers complain otherwise
     ServerMediaSession* fOurServerMediaSession;
     Boolean fIsMulticast, fStreamAfterSETUP;
     unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
+    Boolean usesTCPTransport() const { return fTCPStreamIdCount > 0; }
     TaskToken fLivenessCheckTask;
     unsigned fNumStreamStates;
     struct streamState {

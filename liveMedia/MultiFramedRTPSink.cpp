@@ -102,7 +102,7 @@ void MultiFramedRTPSink::setMarkerBit() {
 }
 
 void MultiFramedRTPSink::setTimestamp(struct timeval framePresentationTime) {
-  // First, convert the presentatoin time to a 32-bit RTP timestamp:
+  // First, convert the presentation time to a 32-bit RTP timestamp:
   fCurrentTimestamp = convertToRTPTimestamp(framePresentationTime);
 
   // Then, insert it into the RTP packet:

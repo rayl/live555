@@ -62,6 +62,7 @@ private:
   friend class ProxyServerMediaSession;
   friend class ProxyServerMediaSubsession;
   ProxyServerMediaSession& fOurServerMediaSession;
+  char* fOurURL;
   Authenticator* fOurAuthenticator;
   Boolean fStreamRTPOverTCP;
   class ProxyServerMediaSubsession *fSetupQueueHead, *fSetupQueueTail;
@@ -113,6 +114,7 @@ private:
 
 private:
   int fVerbosityLevel;
+  class PresentationTimeSessionNormalizer* fPresentationTimeSessionNormalizer;
 };
 
 #endif

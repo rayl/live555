@@ -284,6 +284,8 @@ private:
 
 protected:
   int fVerbosityLevel;
+  unsigned fCSeq; // sequence number, used in consecutive requests
+  Authenticator fCurrentAuthenticator;
 
 private:
   portNumBits fTunnelOverHTTPPortNum;
@@ -291,9 +293,7 @@ private:
   unsigned fUserAgentHeaderStrLen;
   int fInputSocketNum, fOutputSocketNum;
   netAddressBits fServerAddress;
-  unsigned fCSeq; // sequence number, used in consecutive requests
   char* fBaseURL;
-  Authenticator fCurrentAuthenticator;
   unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
   char* fLastSessionId;
   unsigned fSessionTimeoutParameter; // optionally set in response "Session:" headers

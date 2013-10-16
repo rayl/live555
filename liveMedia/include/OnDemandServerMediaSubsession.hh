@@ -100,11 +100,11 @@ private:
 
 protected:
   char* fSDPLines;
+  HashTable* fDestinationsHashTable; // indexed by client session id
 
 private:
   Boolean fReuseFirstSource;
   portNumBits fInitialPortNum;
-  HashTable* fDestinationsHashTable; // indexed by client session id
   void* fLastStreamToken;
   char fCNAME[100]; // for RTCP
   friend class StreamState;
@@ -114,6 +114,7 @@ private:
 // A class that represents the state of an ongoing stream.  This is used only internally, in the implementation of
 // "OnDemandServerMediaSubsession", but we expose the definition here, in case subclasses of "OnDemandServerMediaSubsession"
 // want to access it.
+
 class Destinations {
 public:
   Destinations(struct in_addr const& destAddr,

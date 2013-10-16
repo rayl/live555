@@ -1257,7 +1257,7 @@ void RTSPServer::RTSPClientSession
       streamingMode = RTP_TCP;
       rtpChannelId = fTCPStreamIdCount; rtcpChannelId = fTCPStreamIdCount+1;
     }
-    fTCPStreamIdCount += 2;
+    if (streamingMode == RTP_TCP) fTCPStreamIdCount += 2;
 
     Port clientRTPPort(clientRTPPortNum);
     Port clientRTCPPort(clientRTCPPortNum);

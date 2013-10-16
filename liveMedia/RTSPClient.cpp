@@ -297,10 +297,10 @@ RTSPClient::RTSPClient(UsageEnvironment& env, char const* rtspURL,
 		       int verbosityLevel, char const* applicationName,
 		       portNumBits tunnelOverHTTPPortNum)
   : Medium(env),
-    fVerbosityLevel(verbosityLevel), fTunnelOverHTTPPortNum(tunnelOverHTTPPortNum),
-    fUserAgentHeaderStr(NULL), fUserAgentHeaderStrLen(0), fInputSocketNum(-1), fOutputSocketNum(-1), fServerAddress(0), fCSeq(1),
-    fBaseURL(NULL), fTCPStreamIdCount(0), fLastSessionId(NULL), fSessionTimeoutParameter(0),
-    fSessionCookieCounter(0), fHTTPTunnelingConnectionIsPending(False) {
+    fVerbosityLevel(verbosityLevel), fCSeq(1),
+    fTunnelOverHTTPPortNum(tunnelOverHTTPPortNum), fUserAgentHeaderStr(NULL), fUserAgentHeaderStrLen(0),
+    fInputSocketNum(-1), fOutputSocketNum(-1), fServerAddress(0), fBaseURL(NULL), fTCPStreamIdCount(0),
+    fLastSessionId(NULL), fSessionTimeoutParameter(0), fSessionCookieCounter(0), fHTTPTunnelingConnectionIsPending(False) {
   setBaseURL(rtspURL);
 
   fResponseBuffer = new char[responseBufferSize+1];

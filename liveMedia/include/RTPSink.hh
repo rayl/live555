@@ -70,6 +70,7 @@ public:
   }
 
   Boolean nextTimestampHasBeenPreset() const { return fNextTimestampHasBeenPreset; }
+  Boolean& enableRTCPReports() { return fEnableRTCPReports; }
 
   void setStreamSocket(int sockNum, unsigned char streamChannelId) {
     fRTPInterface.setStreamSocket(sockNum, streamChannelId);
@@ -114,6 +115,7 @@ private:
   u_int32_t fSSRC, fTimestampBase;
   unsigned fTimestampFrequency;
   Boolean fNextTimestampHasBeenPreset;
+  Boolean fEnableRTCPReports; // whether RTCP "SR" reports should be sent for this sink (default: True)
   char const* fRTPPayloadFormatName;
   unsigned fNumChannels;
   struct timeval fCreationTime;

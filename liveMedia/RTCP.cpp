@@ -620,11 +620,6 @@ void RTCPInstance::onReceive(int typeOfPacket, int totPacketSize,
 }
 
 void RTCPInstance::sendReport() {
-  // Hack: Don't send a SR during those (brief) times when the timestamp of the
-  // next outgoing RTP packet has been preset, to ensure that that timestamp gets
-  // used for that outgoing packet. (David Bertrand, 2006.07.18)
-  if (fSink != NULL && fSink->nextTimestampHasBeenPreset()) return;
-
 #ifdef DEBUG
   fprintf(stderr, "sending REPORT\n");
 #endif
@@ -701,9 +696,15 @@ void RTCPInstance::onExpire(RTCPInstance* instance) {
 // Member functions to build specific kinds of report:
 
 void RTCPInstance::addReport() {
-  // Include a SR or a RR, depending on whether we
-  // have an associated sink or source:
+  // Include a SR or a RR, depending on whether we have an associated sink or source:
   if (fSink != NULL) {
+    if (!fSink->enableRTCPReports()) return;
+
+    // Hack: Don't send a SR during those (brief) times when the timestamp of the
+    // next outgoing RTP packet has been preset, to ensure that that timestamp gets
+    // used for that outgoing packet. (David Bertrand, 2006.07.18)
+    if (fSink->nextTimestampHasBeenPreset()) return;
+
     addSR();
   } else if (fSource != NULL) {
     addRR();

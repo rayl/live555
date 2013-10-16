@@ -413,7 +413,8 @@ void SocketDescriptor::tcpReadHandler1(int mask) {
 	fTCPReadingState = AWAITING_STREAM_CHANNEL_ID;
       } else {
 	// This character is part of a RTSP request or command, which is handled separately:
-	if (fServerRequestAlternativeByteHandler != NULL) {
+	if (fServerRequestAlternativeByteHandler != NULL && c != 0xFF && c != 0xFE) {
+	  // Hack: 0xFF and 0xFE are used as special signaling characters, so don't send them
 	  (*fServerRequestAlternativeByteHandler)(fServerRequestAlternativeByteHandlerClientData, c);
 	}
       }

@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
 
     char* proxyStreamURL = rtspServer->rtspURL(sms);
     *env << "RTSP stream, proxying the stream \"" << proxiedStreamURL << "\"\n";
-    *env << "\tPlay this stream using the URL \"" << proxyStreamURL << "\"\n";
+    *env << "\tPlay this stream using the URL: " << proxyStreamURL << "\n";
     delete[] proxyStreamURL;
   }
 

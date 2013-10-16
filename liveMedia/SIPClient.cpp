@@ -679,7 +679,7 @@ Boolean SIPClient::sendBYE() {
       "Via: SIP/2.0/UDP %s:%u\r\n"
       "To: %s;tag=%s\r\n"
       "Call-ID: %u@%s\r\n"
-      "CSeq: %d ACK\r\n"
+      "CSeq: %d BYE\r\n"
       "Content-Length: 0\r\n\r\n";
     unsigned cmdSize = strlen(cmdFmt)
       + fURLSize
