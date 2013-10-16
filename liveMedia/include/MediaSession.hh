@@ -64,8 +64,7 @@ public:
 			      MediaSession*& resultSession);
 
   Boolean hasSubsessions() const { return fSubsessionsHead != NULL; }
-  double& playStartTime() { return fMaxPlayStartTime; }
-  double& playEndTime() { return fMaxPlayEndTime; }
+
   char* connectionEndpointName() const { return fConnectionEndpointName; }
   char const* CNAME() const { return fCNAME; }
   struct in_addr const& sourceFilterAddr() const { return fSourceFilterAddr; }
@@ -74,6 +73,14 @@ public:
   char* sessionName() const { return fSessionName; }
   char* sessionDescription() const { return fSessionDescription; }
   char const* controlPath() const { return fControlPath; }
+
+  double& playStartTime() { return fMaxPlayStartTime; }
+  double& playEndTime() { return fMaxPlayEndTime; }
+  char* absStartTime() const;
+  char* absEndTime() const;
+  // Used only to set the local fields:
+  char*& _absStartTime() { return fAbsStartTime; }
+  char*& _absEndTime() { return fAbsEndTime; }
 
   Boolean initiateByMediaType(char const* mimeType,
 			      MediaSubsession*& resultSubsession,
@@ -119,6 +126,8 @@ protected:
   char* fConnectionEndpointName;
   double fMaxPlayStartTime;
   double fMaxPlayEndTime;
+  char* fAbsStartTime;
+  char* fAbsEndTime;
   struct in_addr fSourceFilterAddr; // used for SSM
   float fScale; // set from a RTSP "Scale:" header
   char* fMediaSessionType; // holds a=type value
@@ -130,14 +139,14 @@ protected:
 
 class MediaSubsessionIterator {
 public:
-  MediaSubsessionIterator(MediaSession& session);
+  MediaSubsessionIterator(MediaSession const& session);
   virtual ~MediaSubsessionIterator();
 
   MediaSubsession* next(); // NULL if none
   void reset();
 
 private:
-  MediaSession& fOurSession;
+  MediaSession const& fOurSession;
   MediaSubsession* fNextPtr;
 };
 
@@ -173,9 +182,13 @@ public:
 
   double playStartTime() const;
   double playEndTime() const;
+  char* absStartTime() const;
+  char* absEndTime() const;
   // Used only to set the local fields:
   double& _playStartTime() { return fPlayStartTime; }
   double& _playEndTime() { return fPlayEndTime; }
+  char*& _absStartTime() { return fAbsStartTime; }
+  char*& _absEndTime() { return fAbsEndTime; }
 
   Boolean initiate(int useSpecialRTPoffset = -1);
       // Creates a "RTPSource" for this subsession. (Has no effect if it's
@@ -311,6 +324,8 @@ protected:
 
   double fPlayStartTime;
   double fPlayEndTime;
+  char* fAbsStartTime;
+  char* fAbsEndTime;
   unsigned short fVideoWidth, fVideoHeight;
      // screen dimensions (set by an optional a=x-dimensions: <w>,<h> line)
   unsigned fVideoFPS;

@@ -48,14 +48,13 @@ protected:
   virtual ~RTSPServerSupportingHTTPStreaming();
 
 protected: // redefined virtual functions
-  virtual RTSPClientSession* createNewClientSession(unsigned sessionId, int clientSocket, struct sockaddr_in clientAddr);
+  virtual RTSPClientConnection* createNewClientConnection(int clientSocket, struct sockaddr_in clientAddr);
 
 public: // should be protected, but some old compilers complain otherwise
-  class RTSPClientSessionSupportingHTTPStreaming: public RTSPServer::RTSPClientSession {
+  class RTSPClientConnectionSupportingHTTPStreaming: public RTSPServer::RTSPClientConnection {
   public:
-    RTSPClientSessionSupportingHTTPStreaming(RTSPServer& ourServer, unsigned sessionId,
-                                              int clientSocket, struct sockaddr_in clientAddr);
-    virtual ~RTSPClientSessionSupportingHTTPStreaming();
+    RTSPClientConnectionSupportingHTTPStreaming(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr);
+    virtual ~RTSPClientConnectionSupportingHTTPStreaming();
 
   protected: // redefined virtual functions
     virtual void handleHTTPCmd_StreamingGET(char const* urlSuffix, char const* fullRequestStr);
@@ -64,6 +63,7 @@ public: // should be protected, but some old compilers complain otherwise
     static void afterStreaming(void* clientData);
 
   private:
+    u_int32_t fClientSessionId;
     ByteStreamMemoryBufferSource* fPlaylistSource;
     TCPStreamSink* fTCPSink;
   };

@@ -168,6 +168,12 @@ float ServerMediaSession::duration() const {
   float maxSubsessionDuration = 0.0;
   for (ServerMediaSubsession* subsession = fSubsessionsHead; subsession != NULL;
        subsession = subsession->fNext) {
+    // Hack: If any subsession supports seeking by 'absolute' time, then return a negative value, to indicate that only subsessions
+    // will have a "a=range:" attribute:
+    char* absStartTime = NULL; char* absEndTime = NULL;
+    subsession->getAbsoluteTimeRange(absStartTime, absEndTime);
+    if (absStartTime != NULL) return -1.0f;
+
     float ssduration = subsession->duration();
     if (subsession == fSubsessionsHead) { // this is the first subsession
       minSubsessionDuration = maxSubsessionDuration = ssduration;
@@ -349,6 +355,10 @@ void ServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
   // default implementation: do nothing
   numBytes = 0;
 }
+void ServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
+				       void* /*streamToken*/, char*& /*absStart*/, char*& /*absEnd*/) {
+  // default implementation: do nothing
+}
 FramedSource* ServerMediaSubsession::getStreamSource(void* /*streamToken*/) {
   // default implementation: return NULL
   return NULL;
@@ -372,6 +382,11 @@ float ServerMediaSubsession::duration() const {
   return 0.0;
 }
 
+void ServerMediaSubsession::getAbsoluteTimeRange(char*& absStartTime, char*& absEndTime) const {
+  // default implementation: We don't support seeking by 'absolute' time, so indicate this by setting both parameters to NULL:
+  absStartTime = absEndTime = NULL;
+}
+
 void ServerMediaSubsession::setServerAddressAndPortForSDP(netAddressBits addressBits,
 							  portNumBits portBits) {
   fServerAddressForSDP = addressBits;
@@ -380,6 +395,20 @@ void ServerMediaSubsession::setServerAddressAndPortForSDP(netAddressBits address
 
 char const*
 ServerMediaSubsession::rangeSDPLine() const {
+  // First, check for the special case where we support seeking by 'absolute' time:
+  char* absStart = NULL; char* absEnd = NULL;
+  getAbsoluteTimeRange(absStart, absEnd);
+  if (absStart != NULL) {
+    char buf[100];
+
+    if (absEnd != NULL) {
+      sprintf(buf, "a=range:clock=%s-%s\r\n", absStart, absEnd);
+    } else {
+      sprintf(buf, "a=range:clock=%s-\r\n", absStart);
+    }
+    return strDup(buf);
+  }
+
   if (fParentSession == NULL) return NULL;
 
   // If all of our parent's subsessions have the same duration

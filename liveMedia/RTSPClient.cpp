@@ -77,6 +77,20 @@ unsigned RTSPClient::sendPlayCommand(MediaSubsession& subsession, responseHandle
   return sendRequest(new RequestRecord(++fCSeq, "PLAY", responseHandler, NULL, &subsession, 0, start, end, scale));
 }
 
+unsigned RTSPClient::sendPlayCommand(MediaSession& session, responseHandler* responseHandler,
+				     char const* absStartTime, char const* absEndTime, float scale,
+                                     Authenticator* authenticator) {
+  if (authenticator != NULL) fCurrentAuthenticator = *authenticator;
+  return sendRequest(new RequestRecord(++fCSeq, responseHandler, absStartTime, absEndTime, scale, &session, NULL));
+}
+
+unsigned RTSPClient::sendPlayCommand(MediaSubsession& subsession, responseHandler* responseHandler,
+				     char const* absStartTime, char const* absEndTime, float scale,
+                                     Authenticator* authenticator) {
+  if (authenticator != NULL) fCurrentAuthenticator = *authenticator;
+  return sendRequest(new RequestRecord(++fCSeq, responseHandler, absStartTime, absEndTime, scale, NULL, &subsession));
+}
+
 unsigned RTSPClient::sendPauseCommand(MediaSession& session, responseHandler* responseHandler, Authenticator* authenticator) {
   if (authenticator != NULL) fCurrentAuthenticator = *authenticator;
   return sendRequest(new RequestRecord(++fCSeq, "PAUSE", responseHandler, &session));
@@ -382,7 +396,7 @@ int RTSPClient::openConnection() {
     if (connectResult < 0) break;
     else if (connectResult > 0) {
       // The connection succeeded.  Arrange to handle responses to requests sent on it:
-      envir().taskScheduler().setBackgroundHandling(fInputSocketNum, SOCKET_READABLE,
+      envir().taskScheduler().setBackgroundHandling(fInputSocketNum, SOCKET_READABLE|SOCKET_EXCEPTION,
 						    (TaskScheduler::BackgroundHandlerProc*)&incomingDataHandler, this);
     }
     return connectResult;
@@ -478,19 +492,34 @@ static char* createScaleString(float scale, float currentScale) {
   return strDup(buf);
 }
 
-static char* createRangeString(double start, double end) {
+static char* createRangeString(double start, double end, char const* absStartTime, char const* absEndTime) {
   char buf[100];
-  if (start < 0) {
-    // We're resuming from a PAUSE; there's no "Range:" header at all
-    buf[0] = '\0';
-  } else if (end < 0) {
-    // There's no end time:
-    Locale l("C", Numeric);
-    sprintf(buf, "Range: npt=%.3f-\r\n", start);
+
+  if (absStartTime != NULL) {
+    // Create a "Range:" header that specifies 'absolute' time values:
+
+    if (absEndTime == NULL) {
+      // There's no end time:
+      snprintf(buf, sizeof buf, "Range: clock=%s-\r\n", absStartTime);
+    } else {
+      // There's both a start and an end time; include them both in the "Range:" hdr
+      snprintf(buf, sizeof buf, "Range: clock=%s-%s\r\n", absStartTime, absEndTime);
+    }
   } else {
-    // There's both a start and an end time; include them both in the "Range:" hdr
-    Locale l("C", Numeric);
-    sprintf(buf, "Range: npt=%.3f-%.3f\r\n", start, end);
+    // Create a "Range:" header that specifies relative (i.e., NPT) time values:
+
+    if (start < 0) {
+      // We're resuming from a PAUSE; there's no "Range:" header at all
+      buf[0] = '\0';
+    } else if (end < 0) {
+      // There's no end time:
+      Locale l("C", Numeric);
+      sprintf(buf, "Range: npt=%.3f-\r\n", start);
+    } else {
+      // There's both a start and an end time; include them both in the "Range:" hdr
+      Locale l("C", Numeric);
+      sprintf(buf, "Range: npt=%.3f-%.3f\r\n", start, end);
+    }
   }
 
   return strDup(buf);
@@ -699,7 +728,7 @@ unsigned RTSPClient::sendRequest(RequestRecord* request) {
 	// Create "Session:", "Scale:", and "Range:" headers; these make up the 'extra headers':
 	char* sessionStr = createSessionString(sessionId);
 	char* scaleStr = createScaleString(request->scale(), originalScale);
-	char* rangeStr = createRangeString(request->start(), request->end());
+	char* rangeStr = createRangeString(request->start(), request->end(), request->absStartTime(), request->absEndTime());
 	extraHeaders = new char[strlen(sessionStr) + strlen(scaleStr) + strlen(rangeStr) + 1];
 	extraHeadersWereAllocated = True;
 	sprintf(extraHeaders, "%s%s%s", sessionStr, scaleStr, rangeStr);
@@ -813,12 +842,14 @@ void RTSPClient::handleIncomingRequest() {
   char urlPreSuffix[RTSP_PARAM_STRING_MAX];
   char urlSuffix[RTSP_PARAM_STRING_MAX];
   char cseq[RTSP_PARAM_STRING_MAX];
+  char sessionId[RTSP_PARAM_STRING_MAX];
   unsigned contentLength;
   if (!parseRTSPRequestString(fResponseBuffer, fResponseBytesAlreadySeen,
 			      cmdName, sizeof cmdName,
 			      urlPreSuffix, sizeof urlPreSuffix,
 			      urlSuffix, sizeof urlSuffix,
 			      cseq, sizeof cseq,
+			      sessionId, sizeof sessionId,
 			      contentLength)) {
     return;
   } else {
@@ -1024,7 +1055,8 @@ Boolean RTSPClient::handlePLAYResponse(MediaSession& session, MediaSubsession& s
       // The command was on the whole session
       if (scaleParamsStr != NULL && !parseScaleParam(scaleParamsStr, session.scale())) break;
       scaleOK = True;
-      if (rangeParamsStr != NULL && !parseRangeParam(rangeParamsStr, session.playStartTime(), session.playEndTime())) break;
+      if (rangeParamsStr != NULL && !parseRangeParam(rangeParamsStr, session.playStartTime(), session.playEndTime(),
+						     session._absStartTime(), session._absEndTime())) break;
       rangeOK = True;
 
       u_int16_t seqNum; u_int32_t timestamp;
@@ -1045,7 +1077,8 @@ Boolean RTSPClient::handlePLAYResponse(MediaSession& session, MediaSubsession& s
       // The command was on a subsession
       if (scaleParamsStr != NULL && !parseScaleParam(scaleParamsStr, subsession.scale())) break;
       scaleOK = True;
-      if (rangeParamsStr != NULL && !parseRangeParam(rangeParamsStr, subsession._playStartTime(), subsession._playEndTime())) break;
+      if (rangeParamsStr != NULL && !parseRangeParam(rangeParamsStr, subsession._playStartTime(), subsession._playEndTime(),
+						     subsession._absStartTime(), subsession._absEndTime())) break;
       rangeOK = True;
 
       u_int16_t seqNum; u_int32_t timestamp;
@@ -1152,8 +1185,18 @@ void RTSPClient::handleAlternativeRequestByte(void* rtspClient, u_int8_t request
 }
 
 void RTSPClient::handleAlternativeRequestByte1(u_int8_t requestByte) {
-  fResponseBuffer[fResponseBytesAlreadySeen] = requestByte;
-  handleResponseBytes(1);
+  if (requestByte == 0xFF) {
+    // Hack: The new handler of the input TCP socket encountered an error reading it.  Indicate this:
+    handleResponseBytes(0);
+  } else if (requestByte == 0xFE) {
+    // Another hack: The new handler of the input TCP socket no longer needs it, so take back control:
+    envir().taskScheduler().setBackgroundHandling(fInputSocketNum, SOCKET_READABLE|SOCKET_EXCEPTION,
+						  (TaskScheduler::BackgroundHandlerProc*)&incomingDataHandler, this);
+  } else {
+    // Normal case:
+    fResponseBuffer[fResponseBytesAlreadySeen] = requestByte;
+    handleResponseBytes(1);
+  }
 }
 
 static Boolean isAbsoluteURL(char const* url) {
@@ -1269,7 +1312,7 @@ void RTSPClient::connectionHandler(void* instance, int /*mask*/) {
 void RTSPClient::connectionHandler1() {
   // Restore normal handling on our sockets:
   envir().taskScheduler().disableBackgroundHandling(fOutputSocketNum);
-  envir().taskScheduler().setBackgroundHandling(fInputSocketNum, SOCKET_READABLE,
+  envir().taskScheduler().setBackgroundHandling(fInputSocketNum, SOCKET_READABLE|SOCKET_EXCEPTION,
 						(TaskScheduler::BackgroundHandlerProc*)&incomingDataHandler, this);
 
   // Move all requests awaiting connection into a new, temporary queue, to clear "fRequestsAwaitingConnection"
@@ -1364,7 +1407,7 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
 	delete request;
       }
     }
-    return;    
+    return;
   } while (0);
 
   fResponseBufferBytesLeft -= newBytesRead;
@@ -1626,13 +1669,22 @@ RTSPClient::RequestRecord::RequestRecord(unsigned cseq, char const* commandName,
 					 MediaSession* session, MediaSubsession* subsession, u_int32_t booleanFlags,
 					 double start, double end, float scale, char const* contentStr)
   : fNext(NULL), fCSeq(cseq), fCommandName(commandName), fSession(session), fSubsession(subsession), fBooleanFlags(booleanFlags),
-    fStart(start), fEnd(end), fScale(scale), fContentStr(strDup(contentStr)), fHandler(handler) {
+    fStart(start), fEnd(end), fAbsStartTime(NULL), fAbsEndTime(NULL), fScale(scale), fContentStr(strDup(contentStr)), fHandler(handler) {
+}
+
+RTSPClient::RequestRecord::RequestRecord(unsigned cseq, responseHandler* handler,
+					 char const* absStartTime, char const* absEndTime, float scale,
+					 MediaSession* session, MediaSubsession* subsession)
+  : fNext(NULL), fCSeq(cseq), fCommandName("PLAY"), fSession(session), fSubsession(subsession), fBooleanFlags(0),
+    fStart(0.0f), fEnd(-1.0f), fAbsStartTime(strDup(absStartTime)), fAbsEndTime(strDup(absEndTime)), fScale(scale),
+    fContentStr(NULL), fHandler(handler) {
 }
 
 RTSPClient::RequestRecord::~RequestRecord() {
   // Delete the rest of the list first:
   delete fNext;
 
+  delete[] fAbsStartTime; delete[] fAbsEndTime;
   delete[] fContentStr;
 }
 

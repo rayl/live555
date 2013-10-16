@@ -589,7 +589,9 @@ unsigned H264VideoStreamParser::parse() {
       // We hit EOF the last time that we tried to parse this data, so we know that any remaining unparsed data
       // forms a complete NAL unit, and that there's no 'start code' at the end:
       unsigned remainingDataSize = totNumValidBytes() - curOffset();
+#ifdef DEBUG
       unsigned const trailingNALUnitSize = remainingDataSize;
+#endif
       while (remainingDataSize > 0) {
 	u_int8_t nextByte = get1Byte();
 	if (!fHaveSeenFirstByteOfNALUnit) {
@@ -600,9 +602,9 @@ unsigned H264VideoStreamParser::parse() {
 	--remainingDataSize;
       }
 
+#ifdef DEBUG
       u_int8_t nal_ref_idc = (fFirstByteOfNALUnit&0x60)>>5;
       u_int8_t nal_unit_type = fFirstByteOfNALUnit&0x1F;
-#ifdef DEBUG
       fprintf(stderr, "Parsed trailing %d-byte NAL-unit (nal_ref_idc: %d, nal_unit_type: %d (\"%s\"))\n",
 	      trailingNALUnitSize, nal_ref_idc, nal_unit_type, nal_unit_type_description[nal_unit_type]);
 #endif

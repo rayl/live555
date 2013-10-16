@@ -59,7 +59,8 @@ Boolean MediaSession::lookupByName(UsageEnvironment& env,
 MediaSession::MediaSession(UsageEnvironment& env)
   : Medium(env),
     fSubsessionsHead(NULL), fSubsessionsTail(NULL),
-    fConnectionEndpointName(NULL), fMaxPlayStartTime(0.0f), fMaxPlayEndTime(0.0f),
+    fConnectionEndpointName(NULL),
+    fMaxPlayStartTime(0.0f), fMaxPlayEndTime(0.0f), fAbsStartTime(NULL), fAbsEndTime(NULL),
     fScale(1.0f), fMediaSessionType(NULL), fSessionName(NULL), fSessionDescription(NULL),
     fControlPath(NULL) {
   fSourceFilterAddr.s_addr = 0;
@@ -81,6 +82,7 @@ MediaSession::~MediaSession() {
   delete fSubsessionsHead;
   delete[] fCNAME;
   delete[] fConnectionEndpointName;
+  delete[] fAbsStartTime; delete[] fAbsEndTime;
   delete[] fMediaSessionType;
   delete[] fSessionName;
   delete[] fSessionDescription;
@@ -343,10 +345,6 @@ Boolean MediaSession::parseSDPAttribute_type(char const* sdpLine) {
   return parseSuccess;
 }
 
-static Boolean parseRangeAttribute(char const* sdpLine, double& startTime, double& endTime) {
-  return sscanf(sdpLine, "a=range: npt = %lg - %lg", &startTime, &endTime) == 2;
-}
-
 Boolean MediaSession::parseSDPAttribute_control(char const* sdpLine) {
   // Check for a "a=control:<control-path>" line:
   Boolean parseSuccess = False;
@@ -359,6 +357,29 @@ Boolean MediaSession::parseSDPAttribute_control(char const* sdpLine) {
   delete[] controlPath;
 
   return parseSuccess;
+}
+
+static Boolean parseRangeAttribute(char const* sdpLine, double& startTime, double& endTime) {
+  return sscanf(sdpLine, "a=range: npt = %lg - %lg", &startTime, &endTime) == 2;
+}
+
+static Boolean parseRangeAttribute(char const* sdpLine, char*& absStartTime, char*& absEndTime) {
+  size_t len = strlen(sdpLine) + 1;
+  char* as = new char[len];
+  char* ae = new char[len];
+  int sscanfResult = sscanf(sdpLine, "a=range: clock = %[^-\r\n]-%[^\r\n]", as, ae);
+  if (sscanfResult == 2) {
+    absStartTime = as;
+    absEndTime = ae;
+  } else if (sscanfResult == 1) {
+    absStartTime = as;
+    delete[] ae;
+  } else {
+    delete[] as; delete[] ae;
+    return False;
+  }
+
+  return True;
 }
 
 Boolean MediaSession::parseSDPAttribute_range(char const* sdpLine) {
@@ -376,6 +397,8 @@ Boolean MediaSession::parseSDPAttribute_range(char const* sdpLine) {
     if (playEndTime > fMaxPlayEndTime) {
       fMaxPlayEndTime = playEndTime;
     }
+  } else if (parseRangeAttribute(sdpLine, _absStartTime(), _absEndTime())) {
+    parseSuccess = True;
   }
 
   return parseSuccess;
@@ -468,6 +491,30 @@ unsigned MediaSession::guessRTPTimestampFrequency(char const* mediumName,
   return 8000; // for "audio", and any other medium
 }
 
+char* MediaSession::absStartTime() const {
+  if (fAbsStartTime != NULL) return fAbsStartTime;
+
+  // If a subsession has an 'absolute' start time, then use that:
+  MediaSubsessionIterator iter(*this);
+  MediaSubsession* subsession;
+  while ((subsession = iter.next()) != NULL) {
+    if (subsession->_absStartTime() != NULL) return subsession->_absStartTime();
+  }
+  return NULL;
+}
+
+char* MediaSession::absEndTime() const {
+  if (fAbsEndTime != NULL) return fAbsEndTime;
+
+  // If a subsession has an 'absolute' end time, then use that:
+  MediaSubsessionIterator iter(*this);
+  MediaSubsession* subsession;
+  while ((subsession = iter.next()) != NULL) {
+    if (subsession->_absEndTime() != NULL) return subsession->_absEndTime();
+  }
+  return NULL;
+}
+
 Boolean MediaSession
 ::initiateByMediaType(char const* mimeType,
 		      MediaSubsession*& resultSubsession,
@@ -504,7 +551,7 @@ Boolean MediaSession
 
 ////////// MediaSubsessionIterator //////////
 
-MediaSubsessionIterator::MediaSubsessionIterator(MediaSession& session)
+MediaSubsessionIterator::MediaSubsessionIterator(MediaSession const& session)
   : fOurSession(session) {
   reset();
 }
@@ -541,7 +588,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fSizelength(0), fStreamstateindication(0), fStreamtype(0),
     fCpresent(False), fRandomaccessindication(False),
     fConfig(NULL), fMode(NULL), fSpropParameterSets(NULL), fEmphasis(NULL), fChannelOrder(NULL),
-    fPlayStartTime(0.0), fPlayEndTime(0.0),
+    fPlayStartTime(0.0), fPlayEndTime(0.0), fAbsStartTime(NULL), fAbsEndTime(NULL),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f), fNPT_PTS_Offset(0.0f),
     fRTPSocket(NULL), fRTCPSocket(NULL),
     fRTPSource(NULL), fRTCPInstance(NULL), fReadSource(NULL), fReceiveRawMP3ADUs(False),
@@ -556,6 +603,7 @@ MediaSubsession::~MediaSubsession() {
   delete[] fMediumName; delete[] fCodecName; delete[] fProtocolName;
   delete[] fControlPath;
   delete[] fConfig; delete[] fMode; delete[] fSpropParameterSets; delete[] fEmphasis; delete[] fChannelOrder;
+  delete[] fAbsStartTime; delete[] fAbsEndTime;
   delete[] fSessionId;
 
   delete fNext;
@@ -576,6 +624,18 @@ double MediaSubsession::playEndTime() const {
   if (fPlayEndTime > 0) return fPlayEndTime;
 
   return fParent.playEndTime();
+}
+
+char* MediaSubsession::absStartTime() const {
+  if (fAbsStartTime != NULL) return fAbsStartTime;
+
+  return fParent.absStartTime();
+}
+
+char* MediaSubsession::absEndTime() const {
+  if (fAbsEndTime != NULL) return fAbsEndTime;
+
+  return fParent.absEndTime();
 }
 
 Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
@@ -930,6 +990,8 @@ Boolean MediaSubsession::parseSDPAttribute_range(char const* sdpLine) {
 	fParent.playEndTime() = playEndTime;
       }
     }
+  } else if (parseRangeAttribute(sdpLine, _absStartTime(), _absEndTime())) {
+    parseSuccess = True;
   }
 
   return parseSuccess;

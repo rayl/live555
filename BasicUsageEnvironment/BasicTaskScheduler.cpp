@@ -28,25 +28,28 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// BasicTaskScheduler //////////
 
-BasicTaskScheduler* BasicTaskScheduler::createNew() {
-	return new BasicTaskScheduler();
+BasicTaskScheduler* BasicTaskScheduler::createNew(unsigned maxSchedulerGranularity) {
+	return new BasicTaskScheduler(maxSchedulerGranularity);
 }
 
-#define MAX_SCHEDULER_GRANULARITY 10000 // 10 microseconds: We will return to the event loop at least this often
-static void schedulerTickTask(void* clientData) {
-  ((BasicTaskScheduler*)clientData)->scheduleDelayedTask(MAX_SCHEDULER_GRANULARITY, schedulerTickTask, clientData);
-}
-
-BasicTaskScheduler::BasicTaskScheduler()
-  : fMaxNumSockets(0) {
+BasicTaskScheduler::BasicTaskScheduler(unsigned maxSchedulerGranularity)
+  : fMaxSchedulerGranularity(maxSchedulerGranularity), fMaxNumSockets(0) {
   FD_ZERO(&fReadSet);
   FD_ZERO(&fWriteSet);
   FD_ZERO(&fExceptionSet);
 
-  schedulerTickTask(this); // ensures that we handle events frequently
+  if (maxSchedulerGranularity > 0) schedulerTickTask(); // ensures that we handle events frequently
 }
 
 BasicTaskScheduler::~BasicTaskScheduler() {
+}
+
+void BasicTaskScheduler::schedulerTickTask(void* clientData) {
+  ((BasicTaskScheduler*)clientData)->schedulerTickTask();
+}
+
+void BasicTaskScheduler::schedulerTickTask() {
+  scheduleDelayedTask(fMaxSchedulerGranularity, schedulerTickTask, this);
 }
 
 #ifndef MILLION

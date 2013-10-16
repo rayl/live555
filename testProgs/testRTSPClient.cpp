@@ -243,8 +243,13 @@ void setupNextSubsession(RTSPClient* rtspClient) {
   }
 
   // We've finished setting up all of the subsessions.  Now, send a RTSP "PLAY" command to start the streaming:
-  scs.duration = scs.session->playEndTime() - scs.session->playStartTime();
-  rtspClient->sendPlayCommand(*scs.session, continueAfterPLAY);
+  if (scs.session->absStartTime() != NULL) {
+    // Special case: The stream is indexed by 'absolute' time, so send an appropriate "PLAY" command:
+    rtspClient->sendPlayCommand(*scs.session, continueAfterPLAY, scs.session->absStartTime(), scs.session->absEndTime());
+  } else {
+    scs.duration = scs.session->playEndTime() - scs.session->playStartTime();
+    rtspClient->sendPlayCommand(*scs.session, continueAfterPLAY);
+  }
 }
 
 void continueAfterSETUP(RTSPClient* rtspClient, int resultCode, char* resultString) {

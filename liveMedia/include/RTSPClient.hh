@@ -97,6 +97,16 @@ public:
       // (Note: start=-1 means 'resume'; end=-1 means 'play to end')
       // (The "responseHandler" and "authenticator" parameters are as described for "sendDescribeCommand".)
 
+  // Alternative forms of "sendPlayCommand()", used to send "PLAY" commands that include an 'absolute' time range:
+  // (The "absStartTime" string (and "absEndTime" string, if present) *must* be of the form
+  //  "YYYYMMDDTHHMMSSZ" or "YYYYMMDDTHHMMSS.<frac>Z")
+  unsigned sendPlayCommand(MediaSession& session, responseHandler* responseHandler,
+			   char const* absStartTime, char const* absEndTime = NULL, float scale = 1.0f,
+			   Authenticator* authenticator = NULL);
+  unsigned sendPlayCommand(MediaSubsession& subsession, responseHandler* responseHandler,
+			   char const* absStartTime, char const* absEndTime = NULL, float scale = 1.0f,
+			   Authenticator* authenticator = NULL);
+
   unsigned sendPauseCommand(MediaSession& session, responseHandler* responseHandler, Authenticator* authenticator = NULL);
       // Issues an aggregate RTSP "PAUSE" command on "session", then returns the "CSeq" sequence number that was used in the command.
       // (The "responseHandler" and "authenticator" parameters are as described for "sendDescribeCommand".)
@@ -162,6 +172,10 @@ public: // Some compilers complain if this is "private:"
     RequestRecord(unsigned cseq, char const* commandName, responseHandler* handler,
 		  MediaSession* session = NULL, MediaSubsession* subsession = NULL, u_int32_t booleanFlags = 0,
 		  double start = 0.0f, double end = -1.0f, float scale = 1.0f, char const* contentStr = NULL);
+    RequestRecord(unsigned cseq, responseHandler* handler,
+		  char const* absStartTime, char const* absEndTime = NULL, float scale = 1.0f,
+		  MediaSession* session = NULL, MediaSubsession* subsession = NULL);
+        // alternative constructor for creating "PLAY" requests that include 'absolute' time values
     virtual ~RequestRecord();
 
     RequestRecord*& next() { return fNext; }
@@ -172,6 +186,8 @@ public: // Some compilers complain if this is "private:"
     u_int32_t booleanFlags() const { return fBooleanFlags; }
     double start() const { return fStart; }
     double end() const { return fEnd; }
+    char const* absStartTime() const { return fAbsStartTime; }
+    char const* absEndTime() const { return fAbsEndTime; }
     float scale() const { return fScale; }
     char* contentStr() const { return fContentStr; }
     responseHandler*& handler() { return fHandler; }
@@ -184,6 +200,7 @@ public: // Some compilers complain if this is "private:"
     MediaSubsession* fSubsession;
     u_int32_t fBooleanFlags;
     double fStart, fEnd;
+    char *fAbsStartTime, *fAbsEndTime; // used for optional 'absolute' (i.e., "time=") range specifications
     float fScale;
     char* fContentStr;
     responseHandler* fHandler;

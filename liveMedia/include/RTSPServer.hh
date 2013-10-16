@@ -75,9 +75,30 @@ public:
 			      RTSPServer*& resultServer);
 
   void addServerMediaSession(ServerMediaSession* serverMediaSession);
+
   virtual ServerMediaSession* lookupServerMediaSession(char const* streamName);
+
   void removeServerMediaSession(ServerMediaSession* serverMediaSession);
+      // Removes the "ServerMediaSession" object from our lookup table, so it will no longer be accessible by new RTSP clients.
+      // (However, any *existing* RTSP client sessions that use this "ServerMediaSession" object will continue streaming.
+      //  The "ServerMediaSession" object will not get deleted until all of these RTSP client sessions have closed.)
+      // (To both delete the "ServerMediaSession" object *and* close all RTSP client sessions that use it,
+      //  call "deleteServerMediaSession(serverMediaSession)" instead.)
   void removeServerMediaSession(char const* streamName);
+     // ditto
+
+  void closeAllClientSessionsForServerMediaSession(ServerMediaSession* serverMediaSession);
+      // Closes (from the server) all RTSP client sessions that are currently using this "ServerMediaSession" object.
+      // Note, however, that the "ServerMediaSession" object remains accessible by new RTSP clients.
+  void closeAllClientSessionsForServerMediaSession(char const* streamName);
+     // ditto
+
+  void deleteServerMediaSession(ServerMediaSession* serverMediaSession);
+      // Equivalent to:
+      //     "closeAllClientSessionsForServerMediaSession(serverMediaSession); removeServerMediaSession(serverMediaSession);"
+  void deleteServerMediaSession(char const* streamName);
+      // Equivalent to:
+      //     "closeAllClientSessionsForServerMediaSession(streamName); removeServerMediaSession(streamName);
 
   char* rtspURL(ServerMediaSession const* serverMediaSession, int clientSocket = -1) const;
       // returns a "rtsp://" URL that could be used to access the
@@ -120,38 +141,25 @@ private: // redefined virtual functions
   virtual Boolean isRTSPServer() const;
 
 public: // should be protected, but some old compilers complain otherwise
-  // The state of each individual session handled by a RTSP server:
-  class RTSPClientSession {
+  class RTSPClientSession; // forward
+  // The state of a TCP connection used by a RTSP client:
+  class RTSPClientConnection {
   public:
-    RTSPClientSession(RTSPServer& ourServer, unsigned sessionId,
-		      int clientSocket, struct sockaddr_in clientAddr);
-    virtual ~RTSPClientSession();
+    RTSPClientConnection(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr);
+    virtual ~RTSPClientConnection();
   protected:
+    friend class RTSPClientSession;
     // Make the handler functions for each command virtual, to allow subclasses to redefine them:
-    virtual void handleCmd_bad(char const* cseq);
-    virtual void handleCmd_notSupported(char const* cseq);
-    virtual void handleCmd_notFound(char const* cseq);
-    virtual void handleCmd_unsupportedTransport(char const* cseq);
-    virtual void handleCmd_OPTIONS(char const* cseq);
-    virtual void handleCmd_DESCRIBE(char const* cseq,
-				    char const* urlPreSuffix, char const* urlSuffix,
+    virtual void handleCmd_OPTIONS();
+    virtual void handleCmd_GET_PARAMETER(char const* fullRequestStr); // when operating on the entire server
+    virtual void handleCmd_SET_PARAMETER(char const* fullRequestStr); // when operating on the entire server
+    virtual void handleCmd_DESCRIBE(char const* urlPreSuffix, char const* urlSuffix,
 				    char const* fullRequestStr);
-    virtual void handleCmd_SETUP(char const* cseq,
-				 char const* urlPreSuffix, char const* urlSuffix,
-				 char const* fullRequestStr);
-    virtual void handleCmd_withinSession(char const* cmdName,
-					 char const* urlPreSuffix, char const* urlSuffix,
-					 char const* cseq, char const* fullRequestStr);
-    virtual void handleCmd_TEARDOWN(ServerMediaSubsession* subsession,
-				    char const* cseq);
-    virtual void handleCmd_PLAY(ServerMediaSubsession* subsession,
-				char const* cseq, char const* fullRequestStr);
-    virtual void handleCmd_PAUSE(ServerMediaSubsession* subsession,
-				 char const* cseq);
-    virtual void handleCmd_GET_PARAMETER(ServerMediaSubsession* subsession,
-					 char const* cseq, char const* fullRequestStr);
-    virtual void handleCmd_SET_PARAMETER(ServerMediaSubsession* subsession,
-					 char const* cseq, char const* fullRequestStr);
+    virtual void handleCmd_bad();
+    virtual void handleCmd_notSupported();
+    virtual void handleCmd_notFound();
+    virtual void handleCmd_sessionNotFound();
+    virtual void handleCmd_unsupportedTransport();
     // Support for optional RTSP-over-HTTP tunneling:
     virtual Boolean parseHTTPRequestString(char* resultCmdName, unsigned resultCmdNameMaxSize,
 					   char* urlSuffix, unsigned urlSuffixMaxSize,
@@ -164,51 +172,91 @@ public: // should be protected, but some old compilers complain otherwise
     virtual void handleHTTPCmd_StreamingGET(char const* urlSuffix, char const* fullRequestStr);
   protected:
     UsageEnvironment& envir() { return fOurServer.envir(); }
-    void closeSockets();
-    void reclaimStreamStates();
     void resetRequestBuffer();
-    Boolean authenticationOK(char const* cmdName, char const* cseq,
-                             char const* urlSuffix,
-                             char const* fullRequestStr);
-    Boolean isMulticast() const { return fIsMulticast; }
+    void closeSockets();
     static void incomingRequestHandler(void*, int /*mask*/);
     void incomingRequestHandler1();
     static void handleAlternativeRequestByte(void*, u_int8_t requestByte);
     void handleAlternativeRequestByte1(u_int8_t requestByte);
     void handleRequestBytes(int newBytesRead);
-    void noteLiveness();
-    static void noteClientLiveness(RTSPClientSession* clientSession);
-    static void livenessTimeoutTask(RTSPClientSession* clientSession);
+    Boolean authenticationOK(char const* cmdName, char const* urlSuffix, char const* fullRequestStr);
     void changeClientInputSocket(int newSocketNum, unsigned char const* extraData, unsigned extraDataSize);
+      // used to implement RTSP-over-HTTP tunneling
+    // Shortcuts for setting up a RTSP response (prior to sending it):
+    void setRTSPResponse(char const* responseStr);
+    void setRTSPResponse(char const* responseStr, u_int32_t sessionId);
   protected:
     RTSPServer& fOurServer;
-    unsigned fOurSessionId;
-    ServerMediaSession* fOurServerMediaSession;
+    Boolean fIsActive;
     int fClientInputSocket, fClientOutputSocket;
     struct sockaddr_in fClientAddr;
-    char* fSessionCookie; // used for optional RTSP-over-HTTP tunneling
-    TaskToken fLivenessCheckTask;
     unsigned char fRequestBuffer[RTSP_BUFFER_SIZE];
     unsigned fRequestBytesAlreadySeen, fRequestBufferBytesLeft;
     unsigned char* fLastCRLF;
-    unsigned fBase64RemainderCount; // used for optional RTSP-over-HTTP tunneling (possible values: 0,1,2,3)
     unsigned char fResponseBuffer[RTSP_BUFFER_SIZE];
-    Boolean fIsMulticast, fSessionIsActive, fStreamAfterSETUP;
+    unsigned fRecursionCount;
+    char const* fCurrentCSeq;
     Authenticator fCurrentAuthenticator; // used if access control is needed
+    char* fOurSessionCookie; // used for optional RTSP-over-HTTP tunneling
+    unsigned fBase64RemainderCount; // used for optional RTSP-over-HTTP tunneling (possible values: 0,1,2,3)
+  };
+
+  // The state of an individual client session (using one or more sequential TCP connections) handled by a RTSP server:
+  class RTSPClientSession {
+  public:
+    RTSPClientSession(RTSPServer& ourServer, u_int32_t sessionId);
+    virtual ~RTSPClientSession();
+  protected:
+    friend class RTSPServer;
+    friend class RTSPClientConnection;
+    // Make the handler functions for each command virtual, to allow subclasses to redefine them:
+    virtual void handleCmd_SETUP(RTSPClientConnection* ourClientConnection,
+				 char const* urlPreSuffix, char const* urlSuffix, char const* fullRequestStr);
+    virtual void handleCmd_withinSession(RTSPClientConnection* ourClientConnection,
+					 char const* cmdName,
+					 char const* urlPreSuffix, char const* urlSuffix,
+					 char const* fullRequestStr);
+    virtual void handleCmd_TEARDOWN(RTSPClientConnection* ourClientConnection,
+				    ServerMediaSubsession* subsession);
+    virtual void handleCmd_PLAY(RTSPClientConnection* ourClientConnection,
+				ServerMediaSubsession* subsession, char const* fullRequestStr);
+    virtual void handleCmd_PAUSE(RTSPClientConnection* ourClientConnection,
+				 ServerMediaSubsession* subsession);
+    virtual void handleCmd_GET_PARAMETER(RTSPClientConnection* ourClientConnection,
+					 ServerMediaSubsession* subsession, char const* fullRequestStr);
+    virtual void handleCmd_SET_PARAMETER(RTSPClientConnection* ourClientConnection,
+					 ServerMediaSubsession* subsession, char const* fullRequestStr);
+  protected:
+    UsageEnvironment& envir() { return fOurServer.envir(); }
+    void reclaimStreamStates();
+    Boolean isMulticast() const { return fIsMulticast; }
+    void noteLiveness();
+    static void noteClientLiveness(RTSPClientSession* clientSession);
+    static void livenessTimeoutTask(RTSPClientSession* clientSession);
+  protected:
+    RTSPServer& fOurServer;
+    u_int32_t fOurSessionId;
+    ServerMediaSession* fOurServerMediaSession;
+    Boolean fIsMulticast, fStreamAfterSETUP;
     unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
+    TaskToken fLivenessCheckTask;
     unsigned fNumStreamStates;
     struct streamState {
       ServerMediaSubsession* subsession;
       void* streamToken;
     } * fStreamStates;
-    unsigned fRecursionCount;
   };
 
 protected:
-  // If you subclass "RTSPClientSession", then you should also redefine this virtual function in order
+  // If you subclass "RTSPClientConnection", then you must also redefine this virtual function in order
+  // to create new objects of your subclass:
+  virtual RTSPClientConnection*
+  createNewClientConnection(int clientSocket, struct sockaddr_in clientAddr);
+
+  // If you subclass "RTSPClientSession", then you must also redefine this virtual function in order
   // to create new objects of your subclass:
   virtual RTSPClientSession*
-  createNewClientSession(unsigned sessionId, int clientSocket, struct sockaddr_in clientAddr);
+  createNewClientSession(u_int32_t sessionId);
 
   // An iterator over our "ServerMediaSession" objects:
   class ServerMediaSessionIterator {
@@ -231,16 +279,20 @@ private:
   void incomingConnectionHandler(int serverSocket);
 
 private:
+  friend class RTSPClientConnection;
   friend class RTSPClientSession;
   friend class ServerMediaSessionIterator;
   int fRTSPServerSocket;
   Port fRTSPServerPort;
   int fHTTPServerSocket; // for optional RTSP-over-HTTP tunneling
   Port fHTTPServerPort; // ditto
-  HashTable* fClientSessionsForHTTPTunneling; // ditto (maps 'session cookie' strings to "RTSPClientSession"s)
+  HashTable* fServerMediaSessions; // maps 'stream name' strings to "ServerMediaSession" objects
+  HashTable* fClientConnections; // the "ClientConnection" objects that we're using
+  HashTable* fClientConnectionsForHTTPTunneling; // maps client-supplied 'session cookie' strings to "RTSPClientConnection"s
+    // (used only for optional RTSP-over-HTTP tunneling)
+  HashTable* fClientSessions; // maps 'session id' strings to "RTSPClientSession" objects
   UserAuthenticationDatabase* fAuthDB;
   unsigned fReclamationTestSeconds;
-  HashTable* fServerMediaSessions;
 };
 
 #endif

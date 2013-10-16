@@ -40,9 +40,10 @@ Boolean parseRTSPRequestString(char const* reqStr,
 			       unsigned resultURLSuffixMaxSize,
 			       char* resultCSeq,
 			       unsigned resultCSeqMaxSize,
+                               char* resultSessionIdStr,
+                               unsigned resultSessionIdStrMaxSize,
 			       unsigned& contentLength) {
   // This parser is currently rather dumb; it should be made smarter #####
-  contentLength = 0; // default value
 
   // Read everything up to the first space as the command name:
   Boolean parseSucceeded = False;
@@ -112,7 +113,7 @@ Boolean parseRTSPRequestString(char const* reqStr,
   }
   if (!parseSucceeded) return False;
 
-  // Look for "CSeq:" (case insensitive), skip whitespace,
+  // Look for "CSeq:" (mandatory, case insensitive), skip whitespace,
   // then read everything up to the next \r or \n as 'CSeq':
   parseSucceeded = False;
   for (j = i; (int)j < (int)(reqStrSize-5); ++j) {
@@ -135,7 +136,29 @@ Boolean parseRTSPRequestString(char const* reqStr,
   }
   if (!parseSucceeded) return False;
 
+  // Look for "Session:" (optional, case insensitive), skip whitespace,
+  // then read everything up to the next \r or \n as 'Session':
+  resultSessionIdStr[0] = '\0'; // default value (empty string)
+  for (j = i; (int)j < (int)(reqStrSize-8); ++j) {
+    if (_strncasecmp("Session:", &reqStr[j], 8) == 0) {
+      j += 8;
+      while (j < reqStrSize && (reqStr[j] ==  ' ' || reqStr[j] == '\t')) ++j;
+      unsigned n;
+      for (n = 0; n < resultSessionIdStrMaxSize-1 && j < reqStrSize; ++n,++j) {
+	char c = reqStr[j];
+	if (c == '\r' || c == '\n') {
+	  break;
+	}
+
+	resultSessionIdStr[n] = c;
+      }
+      resultSessionIdStr[n] = '\0';
+      break;
+    }
+  }
+
   // Also: Look for "Content-Length:" (optional, case insensitive)
+  contentLength = 0; // default value
   for (j = i; (int)j < (int)(reqStrSize-15); ++j) {
     if (_strncasecmp("Content-Length:", &(reqStr[j]), 15) == 0) {
       j += 15;
@@ -149,7 +172,9 @@ Boolean parseRTSPRequestString(char const* reqStr,
   return True;
 }
 
-Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeEnd) {
+Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeEnd, char*& absStartTime, char*& absEndTime) {
+  delete[] absStartTime; delete[] absEndTime;
+  absStartTime = absEndTime = NULL; // by default, unless "paramStr" is a "clock=..." string
   double start, end;
   int numCharsMatched = 0;
   Locale l("C", Numeric);
@@ -168,9 +193,25 @@ Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeE
   } else if (strcmp(paramStr, "npt=now-") == 0) {
     rangeStart = 0.0;
     rangeEnd = 0.0;
-  } else if (sscanf(paramStr, "clock = %*s%n", &numCharsMatched) == 0 && numCharsMatched > 0) {
-    // We accept "clock=" parameters, but currently do not interpret them.
-  } else if (sscanf(paramStr, "smtpe = %*s%n", &numCharsMatched) == 0 && numCharsMatched > 0) {
+  } else if (sscanf(paramStr, "clock = %n", &numCharsMatched) == 0 && numCharsMatched > 0) {
+    rangeStart = rangeEnd = 0.0;
+
+    char const* utcTimes = &paramStr[numCharsMatched];
+    size_t len = strlen(utcTimes) + 1;
+    char* as = new char[len];
+    char* ae = new char[len];
+    int sscanfResult = sscanf(utcTimes, "%[^-]-%s", as, ae);
+    if (sscanfResult == 2) {
+      absStartTime = as;
+      absEndTime = ae;
+    } else if (sscanfResult == 1) {
+      absStartTime = as;
+      delete[] ae;
+    } else {
+      delete[] as; delete[] ae;
+      return False;
+    }
+  } else if (sscanf(paramStr, "smtpe = %n", &numCharsMatched) == 0 && numCharsMatched > 0) {
     // We accept "smtpe=" parameters, but currently do not interpret them.
   } else {
     return False; // The header is malformed
@@ -179,7 +220,7 @@ Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeE
   return True;
 }
 
-Boolean parseRangeHeader(char const* buf, double& rangeStart, double& rangeEnd) {
+Boolean parseRangeHeader(char const* buf, double& rangeStart, double& rangeEnd, char*& absStartTime, char*& absEndTime) {
   // First, find "Range:"
   while (1) {
     if (*buf == '\0') return False; // not found
@@ -190,7 +231,7 @@ Boolean parseRangeHeader(char const* buf, double& rangeStart, double& rangeEnd) 
   // Then, run through each of the fields, looking for ones we handle:
   char const* fields = buf + 7;
   while (*fields == ' ') ++fields;
-  return parseRangeParam(fields, rangeStart, rangeEnd);
+  return parseRangeParam(fields, rangeStart, rangeEnd, absStartTime, absEndTime);
 }
 
 char const* dateHeader() {

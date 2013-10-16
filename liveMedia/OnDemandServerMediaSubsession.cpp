@@ -220,13 +220,23 @@ void OnDemandServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
 					       void* streamToken, double& seekNPT, double streamDuration, u_int64_t& numBytes) {
   numBytes = 0; // by default: unknown
 
-  // Seeking isn't allowed if multiple clients are receiving data from
-  // the same source:
+  // Seeking isn't allowed if multiple clients are receiving data from the same source:
   if (fReuseFirstSource) return;
 
   StreamState* streamState = (StreamState*)streamToken;
   if (streamState != NULL && streamState->mediaSource() != NULL) {
     seekStreamSource(streamState->mediaSource(), seekNPT, streamDuration, numBytes);
+  }
+}
+
+void OnDemandServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
+					       void* streamToken, char*& absStart, char*& absEnd) {
+  // Seeking isn't allowed if multiple clients are receiving data from the same source:
+  if (fReuseFirstSource) return;
+
+  StreamState* streamState = (StreamState*)streamToken;
+  if (streamState != NULL && streamState->mediaSource() != NULL) {
+    seekStreamSource(streamState->mediaSource(), absStart, absEnd);
   }
 }
 
@@ -284,6 +294,11 @@ char const* OnDemandServerMediaSubsession
 
 void OnDemandServerMediaSubsession::seekStreamSource(FramedSource* /*inputSource*/,
 						     double& /*seekNPT*/, double /*streamDuration*/, u_int64_t& numBytes) {
+  // Default implementation: Do nothing
+}
+
+void OnDemandServerMediaSubsession::seekStreamSource(FramedSource* /*inputSource*/,
+						     char*& /*absStart*/, char*& /*absEnd*/) {
   // Default implementation: Do nothing
 }
 

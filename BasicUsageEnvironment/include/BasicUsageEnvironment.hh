@@ -46,12 +46,19 @@ protected:
 
 class BasicTaskScheduler: public BasicTaskScheduler0 {
 public:
-  static BasicTaskScheduler* createNew();
+  static BasicTaskScheduler* createNew(unsigned maxSchedulerGranularity = 10000/*microseconds*/);
+    // "maxSchedulerGranularity" (default value: 10 ms) specifies the maximum time that we wait (in "select()") before
+    // returning to the event loop to handle non-socket or non-timer-based events, such as 'triggered events'.
+    // You can change this is you wish (but only if you know what you're doing!), or set it to 0, to specify no such maximum time.
+    // (You should set it to 0 only if you know that you will not be using 'event triggers'.)
   virtual ~BasicTaskScheduler();
 
 protected:
-  BasicTaskScheduler();
+  BasicTaskScheduler(unsigned maxSchedulerGranularity);
       // called only by "createNew()"
+
+  static void schedulerTickTask(void* clientData);
+  void schedulerTickTask();
 
 protected:
   // Redefined virtual functions:
@@ -61,6 +68,8 @@ protected:
   virtual void moveSocketHandling(int oldSocketNum, int newSocketNum);
 
 protected:
+  unsigned fMaxSchedulerGranularity;
+
   // To implement background operations:
   int fMaxNumSockets;
   fd_set fReadSet;

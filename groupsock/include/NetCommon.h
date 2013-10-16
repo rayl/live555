@@ -32,6 +32,18 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <string.h>
 
 #define closeSocket closesocket
+#ifdef EWOULDBLOCK
+#undef EWOULDBLOCK
+#endif
+#ifdef EINPROGRESS
+#undef EINPROGRESS
+#endif
+#ifdef EAGAIN
+#undef EAGAIN
+#endif
+#ifdef EINTR
+#undef EINTR
+#endif
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #define EINPROGRESS WSAEWOULDBLOCK
 #define EAGAIN WSAEWOULDBLOCK
