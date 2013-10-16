@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2012 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2013 Live Networks, Inc.  All rights reserved.
 // A subclass of "ServerMediaSession" that can be used to create a (unicast) RTSP servers that acts as a 'proxy' for
 // another (unicast or multicast) RTSP/RTP stream.
 // C++ header
@@ -76,6 +76,7 @@ private:
 class ProxyServerMediaSession: public ServerMediaSession {
 public:
   static ProxyServerMediaSession* createNew(UsageEnvironment& env,
+					    RTSPServer* ourRTSPServer, // Note: We can be used by just one "RTSPServer"
 					    char const* inputStreamURL, // the "rtsp://" URL of the stream we'll be proxying
 					    char const* streamName = NULL,
 					    char const* username = NULL, char const* password = NULL,
@@ -95,7 +96,8 @@ public:
     // This can be used - along with "describeCompletdFlag" - to check whether the back-end "DESCRIBE" completed *successfully*.
 
 protected:
-  ProxyServerMediaSession(UsageEnvironment& env, char const* inputStreamURL, char const* streamName,
+  ProxyServerMediaSession(UsageEnvironment& env, RTSPServer* ourRTSPServer,
+			  char const* inputStreamURL, char const* streamName,
 			  char const* username, char const* password, portNumBits tunnelOverHTTPPortNum, int verbosityLevel);
 
   // If you subclass "ProxyRTSPClient", then you should also subclass "ProxyServerMediaSession" and redefine this virtual function
@@ -104,6 +106,7 @@ protected:
 						    portNumBits tunnelOverHTTPPortNum, int verbosityLevel);
 
 protected:
+  RTSPServer* fOurRTSPServer;
   ProxyRTSPClient* fProxyRTSPClient;
   MediaSession* fClientMediaSession;
 
@@ -111,6 +114,7 @@ private:
   friend class ProxyRTSPClient;
   friend class ProxyServerMediaSubsession;
   void continueAfterDESCRIBE(char const* sdpDescription);
+  void resetDESCRIBEState(); // undoes what was done by "contineAfterDESCRIBE()"
 
 private:
   int fVerbosityLevel;

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2012 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2013 Live Networks, Inc.  All rights reserved.
 // A class that encapsulates a Matroska file.
 // Implementation
 
@@ -76,6 +76,7 @@ MatroskaFile::MatroskaFile(UsageEnvironment& env, char const* fileName, onCreati
   if (inputSource == NULL) {
     // The specified input file does not exist!
     fParserForInitialization = NULL;
+    handleEndOfTrackHeaderParsing(); // we have no file, and thus no tracks, but we still need to signal this
   } else {
     // Initialize ourselves by parsing the file's 'Track' headers:
     fParserForInitialization = new MatroskaFileParser(*this, inputSource, handleEndOfTrackHeaderParsing, this, NULL);

@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2012 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2013 Live Networks, Inc.  All rights reserved.
 // A subclass of "ServerMediaSession" that can be used to create a (unicast) RTSP servers that acts as a 'proxy' for
 // another (unicast or multicast) RTSP/RTP stream.
 // Implementation
@@ -65,17 +65,19 @@ UsageEnvironment& operator<<(UsageEnvironment& env, const ProxyServerMediaSessio
 }
 
 ProxyServerMediaSession* ProxyServerMediaSession
-::createNew(UsageEnvironment& env, char const* inputStreamURL, char const* streamName,
+::createNew(UsageEnvironment& env, RTSPServer* ourRTSPServer,
+	    char const* inputStreamURL, char const* streamName,
 	    char const* username, char const* password, portNumBits tunnelOverHTTPPortNum, int verbosityLevel) {
-  return new ProxyServerMediaSession(env, inputStreamURL, streamName, username, password, tunnelOverHTTPPortNum, verbosityLevel);
+  return new ProxyServerMediaSession(env, ourRTSPServer, inputStreamURL, streamName, username, password, tunnelOverHTTPPortNum, verbosityLevel);
 }
 
 
-ProxyServerMediaSession::ProxyServerMediaSession(UsageEnvironment& env, char const* inputStreamURL, char const* streamName,
+ProxyServerMediaSession::ProxyServerMediaSession(UsageEnvironment& env, RTSPServer* ourRTSPServer,
+						 char const* inputStreamURL, char const* streamName,
 						 char const* username, char const* password,
 						 portNumBits tunnelOverHTTPPortNum, int verbosityLevel)
   : ServerMediaSession(env, streamName, NULL, NULL, False, NULL),
-    describeCompletedFlag(0), fClientMediaSession(NULL),
+    describeCompletedFlag(0), fOurRTSPServer(ourRTSPServer), fClientMediaSession(NULL),
     fVerbosityLevel(verbosityLevel), fPresentationTimeSessionNormalizer(new PresentationTimeSessionNormalizer(envir())) {
   // Open a RTSP connection to the input stream, and send a "DESCRIBE" command.
   // We'll use the SDP description in the response to set ourselves up.
@@ -85,8 +87,8 @@ ProxyServerMediaSession::ProxyServerMediaSession(UsageEnvironment& env, char con
 }
 
 ProxyServerMediaSession::~ProxyServerMediaSession() {
-  Medium::close(fProxyRTSPClient);
   Medium::close(fClientMediaSession);
+  Medium::close(fProxyRTSPClient);
   delete fPresentationTimeSessionNormalizer;
 }
 
@@ -122,6 +124,17 @@ void ProxyServerMediaSession::continueAfterDESCRIBE(char const* sdpDescription) 
   } while (0);
 }
 
+void ProxyServerMediaSession::resetDESCRIBEState() {
+  // Delete the client "MediaSession" object that we had set up after receiving the response to the previous "DESCRIBE":
+  Medium::close(fClientMediaSession); fClientMediaSession = NULL;
+
+  // Also delete all of our "ProxyServerMediaSubsession"s; they'll get set up again once we get a response to the new "DESCRIBE".
+  if (fOurRTSPServer != NULL) {
+    // First, close any RTSP client connections that may have already been set up:
+    fOurRTSPServer->closeAllClientSessionsForServerMediaSession(this);
+  }
+  deleteAllSubsessions();
+}
 
 ///////// RTSP 'response handlers' //////////
 
@@ -213,18 +226,16 @@ void ProxyRTSPClient::continueAfterOPTIONS(int resultCode) {
   if (resultCode < 0) {
     // The "OPTIONS" command failed without getting a response from the server (otherwise "resultCode" would have been >= 0).
     // From this, we infer that the server (which had previously been running) has now failed - perhaps temporarily.
-    // We handle this by resetting our connection state with this server.  Any current clients will have to time out, but
+    // We handle this by resetting our connection state with this server.  Any current clients will be closed, but
     // subsequent clients will cause new RTSP "SETUP"s and "PLAY"s to get done, restarting the stream.
     if (fVerbosityLevel > 0) {
       envir() << *this << ": lost connection to server ('errno': " << -resultCode << ").  Resetting...\n";
     }
     reset();
 
-    // Also delete all of our "ProxyServerMediaSubsession"s; they'll get set up again once we get a response to the new "DESCRIBE".
-    fOurServerMediaSession.deleteAllSubsessions();
+    fOurServerMediaSession.resetDESCRIBEState();
 
-    // In case the back-end server rebooted, reset the back-end connection by sending another "DESCRIBE" command.
-    // (This may be necessary if the back-end stream requires authentication.)
+    // In case the back-end server comes alive again, try to restore the back-end connection by sending more "DESCRIBE" commands.
     setBaseURL(fOurURL); // because we'll be sending an initial "DESCRIBE" all over again
     sendDESCRIBE(this);
     return;
@@ -281,7 +292,7 @@ void ProxyRTSPClient::continueAfterSETUP() {
 void ProxyRTSPClient::scheduleLivenessCommand() {
   // Delay a random time before sending "GET_PARAMETER":
   unsigned secondsToDelay = 30 + (our_random()&0x1F); // [30..61] seconds
-  envir().taskScheduler().scheduleDelayedTask(secondsToDelay*MILLION, sendLivenessCommand, this);
+  fLivenessCommandTask = envir().taskScheduler().scheduleDelayedTask(secondsToDelay*MILLION, sendLivenessCommand, this);
 }
 
 void ProxyRTSPClient::sendLivenessCommand(void* clientData) {
@@ -302,7 +313,7 @@ void ProxyRTSPClient::scheduleDESCRIBECommand() {
   if (fVerbosityLevel > 0) {
     envir() << *this << ": RTSP \"DESCRIBE\" command failed; trying again in " << secondsToDelay << " seconds\n";
   }
-  envir().taskScheduler().scheduleDelayedTask(secondsToDelay*MILLION, sendDESCRIBE, this);
+  fDESCRIBECommandTask = envir().taskScheduler().scheduleDelayedTask(secondsToDelay*MILLION, sendDESCRIBE, this);
 }
 
 void ProxyRTSPClient::sendDESCRIBE(void* clientData) {
@@ -330,9 +341,6 @@ ProxyServerMediaSubsession::ProxyServerMediaSubsession(MediaSubsession& mediaSub
 }
 
 ProxyServerMediaSubsession::~ProxyServerMediaSubsession() {
-  if (fClientMediaSubsession.rtcpInstance() != NULL) {
-    fClientMediaSubsession.rtcpInstance()->setByeHandler(NULL, NULL);
-  }
 }
 
 UsageEnvironment& operator<<(UsageEnvironment& env, const ProxyServerMediaSubsession& psmss) { // used for debugging

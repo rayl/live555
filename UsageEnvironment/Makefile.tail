@@ -1,6 +1,7 @@
 ##### End of variables to change
 
-USAGE_ENVIRONMENT_LIB = libUsageEnvironment.$(LIB_SUFFIX)
+NAME = libUsageEnvironment
+USAGE_ENVIRONMENT_LIB = $(NAME).$(LIB_SUFFIX)
 ALL = $(USAGE_ENVIRONMENT_LIB)
 all:	$(ALL)
 

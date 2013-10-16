@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2012 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2013 Live Networks, Inc.  All rights reserved.
 // A RTSP server
 // Implementation
 
@@ -92,6 +92,7 @@ void RTSPServer::closeAllClientSessionsForServerMediaSession(ServerMediaSession*
       delete clientSession;
     }
   }
+  delete iter;
 }
 
 void RTSPServer::closeAllClientSessionsForServerMediaSession(char const* streamName) {
@@ -1262,7 +1263,7 @@ void RTSPServer::RTSPClientSession
     Port clientRTPPort(clientRTPPortNum);
     Port clientRTCPPort(clientRTCPPortNum);
 
-    // Next, check whether a "Range:" of "x-playNow:" header is present in the request.
+    // Next, check whether a "Range:" or "x-playNow:" header is present in the request.
     // This isn't legal, but some clients do this to combine "SETUP" and "PLAY":
     double rangeStart = 0.0, rangeEnd = 0.0;
     char* absStart = NULL; char* absEnd = NULL;

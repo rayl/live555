@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2012, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2013, Live Networks, Inc.  All rights reserved
 // LIVE555 Proxy Server
 // main program
 
@@ -155,7 +155,8 @@ int main(int argc, char** argv) {
       sprintf(streamName, "proxyStream-%d", i); // there's more than one stream; distinguish them by name
     }
     ServerMediaSession* sms
-      = ProxyServerMediaSession::createNew(*env, proxiedStreamURL, streamName,
+      = ProxyServerMediaSession::createNew(*env, rtspServer,
+					   proxiedStreamURL, streamName,
 					   username, password, tunnelOverHTTPPortNum, verbosityLevel);
     rtspServer->addServerMediaSession(sms);
 

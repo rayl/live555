@@ -1,6 +1,7 @@
 ##### End of variables to change
 
-LIVEMEDIA_LIB = libliveMedia.$(LIB_SUFFIX)
+NAME = libliveMedia
+LIVEMEDIA_LIB = $(NAME).$(LIB_SUFFIX)
 ALL = $(LIVEMEDIA_LIB)
 all:	$(ALL)
 
