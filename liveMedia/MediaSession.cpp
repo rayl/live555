@@ -535,7 +535,7 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fObjecttype(0), fOctetalign(0), fProfile_level_id(0), fRobustsorting(0),
     fSizelength(0), fStreamstateindication(0), fStreamtype(0),
     fCpresent(False), fRandomaccessindication(False),
-    fConfig(NULL), fMode(NULL), fSpropParameterSets(NULL),
+    fConfig(NULL), fMode(NULL), fSpropParameterSets(NULL), fEmphasis(NULL), fChannelOrder(NULL),
     fPlayStartTime(0.0), fPlayEndTime(0.0),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f), fNPT_PTS_Offset(0.0f),
     fRTPSocket(NULL), fRTCPSocket(NULL),
@@ -548,7 +548,8 @@ MediaSubsession::~MediaSubsession() {
 
   delete[] fConnectionEndpointName; delete[] fSavedSDPLines;
   delete[] fMediumName; delete[] fCodecName; delete[] fProtocolName;
-  delete[] fControlPath; delete[] fConfig; delete[] fMode; delete[] fSpropParameterSets;
+  delete[] fControlPath;
+  delete[] fConfig; delete[] fMode; delete[] fSpropParameterSets; delete[] fEmphasis; delete[] fChannelOrder;
 
   delete fNext;
 }
@@ -833,16 +834,19 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
       } else if (  strcmp(fCodecName, "PCMU") == 0 // PCM u-law audio
 		   || strcmp(fCodecName, "GSM") == 0 // GSM audio
 		   || strcmp(fCodecName, "PCMA") == 0 // PCM a-law audio
-		   || strcmp(fCodecName, "L16") == 0 // 16-bit linear audio
 		   || strcmp(fCodecName, "MP1S") == 0 // MPEG-1 System Stream
 		   || strcmp(fCodecName, "MP2P") == 0 // MPEG-2 Program Stream
 		   || strcmp(fCodecName, "L8") == 0 // 8-bit linear audio
+		   || strcmp(fCodecName, "L16") == 0 // 16-bit linear audio
+		   || strcmp(fCodecName, "L20") == 0 // 20-bit linear audio (RFC 3190)
+		   || strcmp(fCodecName, "L24") == 0 // 24-bit linear audio (RFC 3190)
 		   || strcmp(fCodecName, "G726-16") == 0 // G.726, 16 kbps
 		   || strcmp(fCodecName, "G726-24") == 0 // G.726, 24 kbps
 		   || strcmp(fCodecName, "G726-32") == 0 // G.726, 32 kbps
 		   || strcmp(fCodecName, "G726-40") == 0 // G.726, 40 kbps
 		   || strcmp(fCodecName, "SPEEX") == 0 // SPEEX audio
 		   || strcmp(fCodecName, "T140") == 0 // T.140 text (RFC 4103)
+		   || strcmp(fCodecName, "DAT12") == 0 // 12-bit nonlinear audio (RFC 3190)
 		   ) {
 	createSimpleRTPSource = True;
 	useSpecialRTPoffset = 0;
@@ -1166,6 +1170,11 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
       } else if (sscanf(sdpLine, " sprop-parameter-sets = %[^; \t\r\n]", valueStr) == 1) {
 	// Note: We used "sdpLine" here, because the value is case-sensitive.
 	delete[] fSpropParameterSets; fSpropParameterSets = strDup(valueStr);
+      } else if (sscanf(line, " emphasis = %[^; \t\r\n]", valueStr) == 1) {
+	delete[] fEmphasis; fEmphasis = strDup(valueStr);
+      } else if (sscanf(sdpLine, " channel-order = %[^; \t\r\n]", valueStr) == 1) {
+	// Note: We used "sdpLine" here, because the value is case-sensitive.
+	delete[] fChannelOrder; fChannelOrder = strDup(valueStr);
       } else {
 	// Some of the above parameters are Boolean.  Check whether the parameter
 	// names appear alone, without a "= 1" at the end:

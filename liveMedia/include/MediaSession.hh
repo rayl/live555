@@ -188,6 +188,8 @@ public:
   char const* fmtp_config() const { return fConfig; }
   char const* fmtp_mode() const { return fMode; }
   char const* fmtp_spropparametersets() const { return fSpropParameterSets; }
+  char const* fmtp_emphasis() const { return fEmphasis; }
+  char const* fmtp_channelorder() const { return fChannelOrder; }
 
   netAddressBits connectionEndpointAddress() const;
       // Converts "fConnectionEndpointName" to an address (or 0 if unknown)
@@ -266,7 +268,7 @@ protected:
   unsigned fOctetalign, fProfile_level_id, fRobustsorting;
   unsigned fSizelength, fStreamstateindication, fStreamtype;
   Boolean fCpresent, fRandomaccessindication;
-  char *fConfig, *fMode, *fSpropParameterSets;
+  char *fConfig, *fMode, *fSpropParameterSets, *fEmphasis, *fChannelOrder;
 
   double fPlayStartTime;
   double fPlayEndTime;
