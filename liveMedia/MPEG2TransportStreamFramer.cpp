@@ -24,15 +24,29 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <GroupsockHelper.hh> // for "gettimeofday()"
 
 #define TRANSPORT_PACKET_SIZE 188
+
+////////// Definitions of constants that control the behavior of this code /////////
+
+#if !defined(NEW_DURATION_WEIGHT)
 #define NEW_DURATION_WEIGHT 0.5
   // How much weight to give to the latest duration measurement (must be <= 1)
+#endif
+
+#if !defined(TIME_ADJUSTMENT_FACTOR)
 #define TIME_ADJUSTMENT_FACTOR 0.8
   // A factor by which to adjust the duration estimate to ensure that the overall
   // packet transmission times remains matched with the PCR times (which will be the
   // times that we expect receivers to play the incoming packets).
   // (must be <= 1)
+#endif
+
+#if !defined(MAX_PLAYOUT_BUFFER_DURATION)
 #define MAX_PLAYOUT_BUFFER_DURATION 0.1 // (seconds)
+#endif
+
+#if !defined(PCR_PERIOD_VARIATION_RATIO)
 #define PCR_PERIOD_VARIATION_RATIO 0.5
+#endif
 
 ////////// PIDStatus //////////
 

@@ -86,6 +86,9 @@ private:
 
   virtual ~DarwinInjector();
 
+  static void genericResponseHandler(RTSPClient* rtspClient, int responseCode, char* responseString);
+  void genericResponseHandler1(int responseCode, char* responseString);
+
 private:
   char const* fApplicationName;
   int fVerbosityLevel;
@@ -95,6 +98,9 @@ private:
   SubstreamDescriptor* fTailSubstream;
   MediaSession* fSession;
   unsigned fLastTrackId;
+  char fWatchVariable;
+  int fResultCode;
+  char* fResultString;
 };
 
 #endif
