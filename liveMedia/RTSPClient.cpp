@@ -1140,7 +1140,7 @@ Boolean RTSPClient::handleAuthenticationFailure(char const* paramsStr) {
 
 Boolean RTSPClient::resendCommand(RequestRecord* request) {
   if (fVerbosityLevel >= 1) envir() << "Resending...\n";
-  if (request != NULL) request->cseq() = ++fCSeq;
+  if (request != NULL && strcmp(request->commandName(), "GET") != 0) request->cseq() = ++fCSeq;
   return sendRequest(request) != 0;
 }
 
