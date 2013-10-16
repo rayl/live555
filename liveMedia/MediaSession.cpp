@@ -649,12 +649,14 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	} else {
 	  fRTCPSocket = new Groupsock(env(), tempAddr, rtcpPortNum, 255);
 	}
-	if (fRTCPSocket != NULL) {
+	if (fRTCPSocket != NULL && fRTCPSocket->socketNum() >= 0) {
 	  // Success! Use these two sockets.
 	  success = True;
 	  break;
 	} else {
 	  // We couldn't create the RTCP socket (perhaps that port number's already in use elsewhere?).
+	  delete fRTCPSocket;
+
 	  // Record the first socket in our table, and keep trying:
 	  unsigned key = (unsigned)fClientPortNum;
 	  Groupsock* existing = (Groupsock*)socketHashTable->Add((char const*)key, fRTPSocket);
