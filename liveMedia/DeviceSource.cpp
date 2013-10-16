@@ -72,7 +72,8 @@ void DeviceSource::deliverFrame() {
   //         bigger than "fMaxSize", in which case it's set to the number of bytes
   //         that have been omitted.
   //     fPresentationTime: Should be set to the frame's presentation time
-  //         (seconds, microseconds).
+  //         (seconds, microseconds).  This time must be aligned with 'wall-clock time' - i.e., the time that you would get
+  //         by calling "gettimeofday()".
   //     fDurationInMicroseconds: Should be set to the frame's duration, if known.
   if (!isCurrentlyAwaitingData()) return; // we're not ready for the data yet
 

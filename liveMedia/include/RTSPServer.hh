@@ -94,6 +94,7 @@ public:
   Boolean setUpTunnelingOverHTTP(Port httpPort);
       // (Attempts to) enable RTSP-over-HTTP tunneling on the specified port.
       // Returns True iff the specified port can be used in this way (i.e., it's not already being used for a separate HTTP server).
+      // Note: RTSP-over-HTTP tunneling is described in http://developer.apple.com/quicktime/icefloe/dispatch028.html
   portNumBits httpServerPortNum() const; // in host byte order.  (Returns 0 if not present.)
 
 protected:
@@ -148,9 +149,7 @@ protected:
 					 char const* cseq, char const* fullRequestStr);
     // Support for optional RTSP-over-HTTP tunneling:
     virtual Boolean parseHTTPRequestString(char* resultCmdName, unsigned resultCmdNameMaxSize,
-					   char* sessionCookie, unsigned sessionCookieMaxSize,
-					   char* acceptStr, unsigned acceptStrMaxSize,
-					   char* contentTypeStr, unsigned contentTypeStrMaxSize);
+					   char* sessionCookie, unsigned sessionCookieMaxSize);
     virtual void handleHTTPCmd_notSupported();
     virtual void handleHTTPCmd_GET(char const* sessionCookie);
     virtual Boolean handleHTTPCmd_POST(char const* sessionCookie);

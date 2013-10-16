@@ -467,22 +467,13 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
 #endif
     // The request was not (valid) RTSP, but check for a special case: HTTP commands (for setting up RTSP-over-HTTP tunneling):
     char sessionCookie[RTSP_PARAM_STRING_MAX];
-    char acceptStr[RTSP_PARAM_STRING_MAX];
-    char contentTypeStr[RTSP_PARAM_STRING_MAX];
-    if (parseHTTPRequestString(cmdName, sizeof cmdName,
-			       sessionCookie, sizeof sessionCookie,
-			       acceptStr, sizeof acceptStr,
-			       contentTypeStr, sizeof contentTypeStr)) {
+    if (parseHTTPRequestString(cmdName, sizeof cmdName, sessionCookie, sizeof sessionCookie)) {
 #ifdef DEBUG
-      fprintf(stderr, "parseHTTPRequestString() succeeded, returning cmdName \"%s\", sessionCookie \"%s\", acceptStr \"%s\", contentTypeStr \"%s\"\n", cmdName, sessionCookie, acceptStr, contentTypeStr);
+      fprintf(stderr, "parseHTTPRequestString() succeeded, returning cmdName \"%s\", sessionCookie \"%s\"\n", cmdName, sessionCookie);
 #endif
-      // Check that the HTTP command is valid for RTSP-over-HTTP tunneling:
-      // There must be a 'session cookie', and an "Accept:" or "Content-Type:" string of "application/x-rtsp-tunnelled".
-      char const* rtspTunnelledStr = "application/x-rtsp-tunnelled";
+      // Check that the HTTP command is valid for RTSP-over-HTTP tunneling: There must be a 'session cookie'.
       Boolean isValidHTTPTunnelingCmd = True;
-      if (sessionCookie[0] == '\0' ||
-	  (strncmp(acceptStr, rtspTunnelledStr, sizeof acceptStr) != 0 &&
-	   strncmp(contentTypeStr, rtspTunnelledStr, sizeof contentTypeStr) != 0)) {
+      if (sessionCookie[0] == '\0') {
 	isValidHTTPTunnelingCmd = False;
       } else if (strcmp(cmdName, "GET") == 0) {
 	handleHTTPCmd_GET(sessionCookie);
@@ -810,10 +801,13 @@ void RTSPServer::RTSPClientSession
 		       clientsDestinationAddressStr, clientsDestinationTTL,
 		       clientRTPPortNum, clientRTCPPortNum,
 		       rtpChannelId, rtcpChannelId);
-  if (streamingMode == RTP_TCP && rtpChannelId == 0xFF) {
-    // TCP streaming was requested, but with no "interleaving=" fields.
-    // (QuickTime Player sometimes does this.)  Set the RTP and RTCP channel ids to
-    // proper values:
+  if (streamingMode == RTP_TCP && rtpChannelId == 0xFF ||
+      streamingMode != RTP_TCP && fClientOutputSocket != fClientInputSocket) {
+    // An anomolous situation, caused by a buggy client.  Either:
+    //     1/ TCP streaming was requested, but with no "interleaving=" fields.  (QuickTime Player sometimes does this.), or
+    //     2/ TCP streaming was not requested, but we're doing RTSP-over-HTTP tunneling (which implies TCP streaming).
+    // In either case, we assume TCP streaming, and set the RTP and RTCP channel ids to proper values:
+    streamingMode = RTP_TCP;
     rtpChannelId = fTCPStreamIdCount; rtcpChannelId = fTCPStreamIdCount+1;
   }
   fTCPStreamIdCount += 2;
@@ -1226,9 +1220,7 @@ static void lookForHeader(char const* headerName, char const* source, unsigned s
 }
 
 Boolean RTSPServer::RTSPClientSession::parseHTTPRequestString(char* resultCmdName, unsigned resultCmdNameMaxSize,
-							   char* sessionCookie, unsigned sessionCookieMaxSize,
-							   char* acceptStr, unsigned acceptStrMaxSize,
-							   char* contentTypeStr, unsigned contentTypeStrMaxSize) {
+							      char* sessionCookie, unsigned sessionCookieMaxSize) {
   // Check for the limited HTTP requests that we expect for specifying RTSP-over-HTTP tunneling.
   // This parser is currently rather dumb; it should be made smarter #####
   char const* reqStr = (char const*)fRequestBuffer;
@@ -1262,8 +1254,6 @@ Boolean RTSPServer::RTSPClientSession::parseHTTPRequestString(char* resultCmdNam
 
   // Look for various headers that we're interested in:
   lookForHeader("x-sessioncookie", &reqStr[i], reqStrSize-i, sessionCookie, sessionCookieMaxSize);
-  lookForHeader("Accept", &reqStr[i], reqStrSize-i, acceptStr, acceptStrMaxSize);
-  lookForHeader("Content-Type", &reqStr[i], reqStrSize-i, contentTypeStr, contentTypeStrMaxSize);
 
   return True;
 }
