@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
 
   // Then create a network (UDP) 'sink' object to receive a replica of the input stream, and start it.
   // If you wish, you can duplicate this line - with different network addresses and ports - to create multiple output UDP streams:
+  startReplicaUDPSink(replicator, "239.255.43.43", 4444);
 
   // Then create a file 'sink' object to receive a replica of the input stream, and start it.
   // If you wish, you can duplicate this line - with a different file name - to create multiple output files:

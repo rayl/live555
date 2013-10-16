@@ -63,9 +63,9 @@ void RTSPServer::addServerMediaSession(ServerMediaSession* serverMediaSession) {
 
   char const* sessionName = serverMediaSession->streamName();
   if (sessionName == NULL) sessionName = "";
-  ServerMediaSession* existingSession
-    = (ServerMediaSession*)(fServerMediaSessions->Add(sessionName, (void*)serverMediaSession));
-  removeServerMediaSession(existingSession); // if any
+  removeServerMediaSession(sessionName); // in case an existing "ServerMediaSession" with this name already exists
+
+  fServerMediaSessions->Add(sessionName, (void*)serverMediaSession);
 }
 
 ServerMediaSession* RTSPServer::lookupServerMediaSession(char const* streamName) {

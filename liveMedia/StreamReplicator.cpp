@@ -143,18 +143,24 @@ void StreamReplicator::deactivateStreamReplica(StreamReplica* replicaBeingDeacti
     }
   } else {
     // The replica that's being removed was not our 'master replica', but make sure it's not on any of our queues:
-    for (StreamReplica*& r1 = fReplicasAwaitingCurrentFrame; r1 != NULL; r1 = r1->fNext) {
+    for (StreamReplica* r1 = fReplicasAwaitingCurrentFrame; r1 != NULL;) {
       if (r1 == replicaBeingDeactivated) {
-	r1 = replicaBeingDeactivated->fNext;
+	if (r1 == fReplicasAwaitingCurrentFrame) fReplicasAwaitingCurrentFrame = r1->fNext;
+	r1 = r1->fNext;
 	replicaBeingDeactivated->fNext = NULL;
 	break;
+      } else {
+	r1 = r1->fNext;
       }
     }
-    for (StreamReplica*& r2 = fReplicasAwaitingNextFrame; r2 != NULL; r2 = r2->fNext) {
+    for (StreamReplica* r2 = fReplicasAwaitingNextFrame; r2 != NULL;) {
       if (r2 == replicaBeingDeactivated) {
-	r2 = replicaBeingDeactivated->fNext;
+	if (r2 == fReplicasAwaitingNextFrame) fReplicasAwaitingNextFrame = r2->fNext;
+	r2 = r2->fNext;
 	replicaBeingDeactivated->fNext = NULL;
 	break;
+      } else {
+	r2 = r2->fNext;
       }
     }
   }
