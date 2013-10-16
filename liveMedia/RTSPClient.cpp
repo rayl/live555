@@ -1341,7 +1341,7 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
   do {
     if (newBytesRead > 0 && (unsigned)newBytesRead < fResponseBufferBytesLeft) break; // data was read OK; process it below
 
-    if ((unsigned)newBytesRead >= fResponseBufferBytesLeft) {
+    if (newBytesRead >= (int)fResponseBufferBytesLeft) {
       // We filled up our response buffer.  Treat this as an error (for the first response handler):
       envir().setResultMsg("RTSP response was truncated. Increase \"RTSPClient::responseBufferSize\"");
     }

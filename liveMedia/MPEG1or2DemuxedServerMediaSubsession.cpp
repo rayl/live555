@@ -64,7 +64,7 @@ FramedSource* MPEG1or2DemuxedServerMediaSubsession
 						  fIFramesOnly, fVSHPeriod);
     } else if (fStreamIdTag == 0xBD /*AC-3 audio*/) {
       estBitrate = 192; // kbps, estimate
-      return AC3AudioStreamFramer::createNew(envir(), es);
+      return AC3AudioStreamFramer::createNew(envir(), es, 0x80);
     } else { // unknown stream type
       break;
     }
