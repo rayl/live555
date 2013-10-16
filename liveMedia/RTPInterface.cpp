@@ -414,7 +414,7 @@ void SocketDescriptor
   if (fSubChannelHashTable->IsEmpty()) {
     // No more interfaces are using us, so it's curtains for us now:
     if (fAreInReadHandlerLoop) {
-      fDeleteMyselfNext = True; // we can't delete ourself yet, by we'll do so from "tcpReadHandler()" below
+      fDeleteMyselfNext = True; // we can't delete ourself yet, but we'll do so from "tcpReadHandler()" below
     } else {
       delete this;
     }
@@ -426,8 +426,8 @@ void SocketDescriptor::tcpReadHandler(SocketDescriptor* socketDescriptor, int ma
   unsigned count = 2000;
   socketDescriptor->fAreInReadHandlerLoop = True;
   while (!socketDescriptor->fDeleteMyselfNext && socketDescriptor->tcpReadHandler1(mask) && --count > 0) {}
-  socketDescriptor->fAreInReadHandlerLoop = False;
   if (socketDescriptor->fDeleteMyselfNext) delete socketDescriptor;
+  socketDescriptor->fAreInReadHandlerLoop = False; // do this here, in case the 'delete' caused "deregister...()" to be called
 }
 
 Boolean SocketDescriptor::tcpReadHandler1(int mask) {
