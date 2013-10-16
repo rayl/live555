@@ -68,8 +68,7 @@ public:
   void startNetworkReading(TaskScheduler::BackgroundHandlerProc*
                            handlerProc);
   Boolean handleRead(unsigned char* buffer, unsigned bufferMaxSize,
-		     unsigned& bytesRead,
-		     struct sockaddr_in& fromAddress);
+		     unsigned& bytesRead, struct sockaddr_in& fromAddress, Boolean& packetReadWasIncomplete);
   void stopNetworkReading();
 
   UsageEnvironment& envir() const { return fOwner->envir(); }

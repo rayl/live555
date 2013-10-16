@@ -149,6 +149,7 @@ RTCPInstance::RTCPInstance(UsageEnvironment& env, Groupsock* RTCPgs,
   fKnownMembers = new RTCPMemberDatabase(*this);
   fInBuf = new unsigned char[maxPacketSize];
   if (fKnownMembers == NULL || fInBuf == NULL) return;
+  fNumBytesAlreadyRead = 0;
 
   // A hack to save buffer space, because RTCP packets are always small:
   unsigned savedMaxSize = OutPacketBuffer::maxSize;
@@ -319,18 +320,24 @@ void RTCPInstance::incomingReportHandler(RTCPInstance* instance,
 }
 
 void RTCPInstance::incomingReportHandler1() {
-  unsigned char* pkt = fInBuf;
-  unsigned packetSize;
-  struct sockaddr_in fromAddress;
-  int typeOfPacket = PACKET_UNKNOWN_TYPE;
-
   do {
     int tcpReadStreamSocketNum = fRTCPInterface.nextTCPReadStreamSocketNum();
     unsigned char tcpReadStreamChannelId = fRTCPInterface.nextTCPReadStreamChannelId();
-    if (!fRTCPInterface.handleRead(pkt, maxPacketSize,
-				   packetSize, fromAddress)) {
-      break;
+    unsigned packetSize = 0;
+    unsigned numBytesRead;
+    struct sockaddr_in fromAddress;
+    Boolean packetReadWasIncomplete;
+    Boolean readResult
+      = fRTCPInterface.handleRead(&fInBuf[fNumBytesAlreadyRead], maxPacketSize - fNumBytesAlreadyRead,
+				  numBytesRead, fromAddress, packetReadWasIncomplete);
+    if (packetReadWasIncomplete) {
+      fNumBytesAlreadyRead += numBytesRead;
+      return; // more reads are needed to get the entire packet
+    } else { // normal case: We've read the entire packet 
+      packetSize = fNumBytesAlreadyRead + numBytesRead;
+      fNumBytesAlreadyRead = 0; // for next time
     }
+    if (!readResult) break;
 
     // Ignore the packet if it was looped-back from ourself:
     if (RTCPgs()->wasLoopedBackFromUs(envir(), fromAddress)) {
@@ -346,6 +353,7 @@ void RTCPInstance::incomingReportHandler1() {
       }
     }
 
+    unsigned char* pkt = fInBuf;
     if (fIsSSMSource) {
       // This packet was received via unicast.  'Reflect' it by resending
       // it to the multicast group.
@@ -360,10 +368,9 @@ void RTCPInstance::incomingReportHandler1() {
 
 #ifdef DEBUG
     fprintf(stderr, "[%p]saw incoming RTCP packet (from address %s, port %d)\n", this, our_inet_ntoa(fromAddress.sin_addr), ntohs(fromAddress.sin_port));
-    unsigned char* p = pkt;
     for (unsigned i = 0; i < packetSize; ++i) {
       if (i%4 == 0) fprintf(stderr, " ");
-      fprintf(stderr, "%02x", p[i]);
+      fprintf(stderr, "%02x", pkt[i]);
     }
     fprintf(stderr, "\n");
 #endif
@@ -384,6 +391,7 @@ void RTCPInstance::incomingReportHandler1() {
 
     // Process each of the individual RTCP 'subpackets' in (what may be)
     // a compound RTCP packet.
+    int typeOfPacket = PACKET_UNKNOWN_TYPE;
     unsigned reportSenderSSRC = 0;
     Boolean packetOK = False;
     while (1) {

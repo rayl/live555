@@ -72,7 +72,7 @@ private:
   ServerRequestAlternativeByteHandler* fServerRequestAlternativeByteHandler;
   void* fServerRequestAlternativeByteHandlerClientData;
   u_int8_t fStreamChannelId, fSizeByte1;
-  enum { AWAITING_DOLLAR, AWAITING_STREAM_CHANNEL_ID, AWAITING_SIZE1, AWAITING_SIZE2 } fTCPReadingState;
+  enum { AWAITING_DOLLAR, AWAITING_STREAM_CHANNEL_ID, AWAITING_SIZE1, AWAITING_SIZE2, AWAITING_PACKET_DATA } fTCPReadingState;
 };
 
 static SocketDescriptor* lookupSocketDescriptor(UsageEnvironment& env, int sockNum, Boolean createIfNotFound = True) {
@@ -213,10 +213,9 @@ void RTPInterface
   }
 }
 
-Boolean RTPInterface::handleRead(unsigned char* buffer,
-				 unsigned bufferMaxSize,
-				 unsigned& bytesRead,
-				 struct sockaddr_in& fromAddress) {
+Boolean RTPInterface::handleRead(unsigned char* buffer, unsigned bufferMaxSize,
+				 unsigned& bytesRead, struct sockaddr_in& fromAddress, Boolean& packetReadWasIncomplete) {
+  packetReadWasIncomplete = False; // by default
   Boolean readSuccess;
   if (fNextTCPReadStreamSocketNum < 0) {
     // Normal case: read from the (datagram) 'groupsock':
@@ -235,7 +234,11 @@ Boolean RTPInterface::handleRead(unsigned char* buffer,
       if (bytesRead >= totBytesToRead) break;
       curBytesToRead -= curBytesRead;
     }
-    if (curBytesRead <= 0) {
+    fNextTCPReadSize -= bytesRead;
+    if (curBytesRead == 0 && curBytesToRead > 0) {
+      packetReadWasIncomplete = True;
+      return True;
+    } else if (curBytesRead < 0) {
       bytesRead = 0;
       readSuccess = False;
     } else {
@@ -357,12 +360,14 @@ void SocketDescriptor::tcpReadHandler1(int mask) {
   u_int8_t c;
   struct sockaddr_in fromAddress;
   while (1) {
-    int result = readSocket(fEnv, fOurSocketNum, &c, 1, fromAddress);
-    if (result != 1) { // error reading TCP socket, or no more data available
-      if (result < 0) { // error
-	fEnv.taskScheduler().turnOffBackgroundReadHandling(fOurSocketNum); // stops further calls to us
+    if (fTCPReadingState != AWAITING_PACKET_DATA) {
+      int result = readSocket(fEnv, fOurSocketNum, &c, 1, fromAddress);
+      if (result != 1) { // error reading TCP socket, or no more data available
+	if (result < 0) { // error
+	  fEnv.taskScheduler().turnOffBackgroundReadHandling(fOurSocketNum); // stops further calls to us
+	}
+	return;
       }
-      return;
     }
     
     switch (fTCPReadingState) {
@@ -392,14 +397,26 @@ void SocketDescriptor::tcpReadHandler1(int mask) {
       case AWAITING_SIZE2: {
 	// The byte that we read is the second (low) byte of the 16-bit RTP or RTCP packet 'size'.
 	unsigned short size = (fSizeByte1<<8)|c;
-	fTCPReadingState = AWAITING_DOLLAR;
 	
-	// Now that we know how much packet data to read, call this subchannel's read handler:
+	// Record the information about the packet data that will be read next:
 	RTPInterface* rtpInterface = lookupRTPInterface(fStreamChannelId);
 	if (rtpInterface != NULL) {
 	  rtpInterface->fNextTCPReadSize = size;
 	  rtpInterface->fNextTCPReadStreamSocketNum = fOurSocketNum;
 	  rtpInterface->fNextTCPReadStreamChannelId = fStreamChannelId;
+	}
+	fTCPReadingState = AWAITING_PACKET_DATA;
+	break;
+      }
+      case AWAITING_PACKET_DATA: {
+	// Call the appropriate read handler to get the packet data from the TCP stream:
+	RTPInterface* rtpInterface = lookupRTPInterface(fStreamChannelId);
+	if (rtpInterface != NULL) {
+	  if (rtpInterface->fNextTCPReadSize == 0) {
+	    // We've already read all the data for this packet.
+	    fTCPReadingState = AWAITING_DOLLAR;
+	    break;
+	  }
 	  if (rtpInterface->fReadHandlerProc != NULL) {
 #ifdef DEBUG
 	    fprintf(stderr, "SocketDescriptor::tcpReadHandler() reading %d bytes on channel %d\n", rtpInterface->fNextTCPReadSize, rtpInterface->fNextTCPReadStreamChannelId);

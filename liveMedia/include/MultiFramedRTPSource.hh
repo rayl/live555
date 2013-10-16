@@ -65,9 +65,10 @@ private:
   void doGetNextFrame1();
 
   static void networkReadHandler(MultiFramedRTPSource* source, int /*mask*/);
-  friend void networkReadHandler(MultiFramedRTPSource*, int);
+  void networkReadHandler1();
 
   Boolean fAreDoingNetworkReads;
+  BufferedPacket* fPacketReadInProgress;
   Boolean fNeedDelivery;
   Boolean fPacketLossInFragmentedFrame;
   unsigned char* fSavedTo;
@@ -90,7 +91,7 @@ public:
   Boolean hasUsableData() const { return fTail > fHead; }
   unsigned useCount() const { return fUseCount; }
 
-  Boolean fillInData(RTPInterface& rtpInterface);
+  Boolean fillInData(RTPInterface& rtpInterface, Boolean& packetReadWasIncomplete);
   void assignMiscParams(unsigned short rtpSeqNo, unsigned rtpTimestamp,
 			struct timeval presentationTime,
 			Boolean hasBeenSyncedUsingRTCP,

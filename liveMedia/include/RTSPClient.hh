@@ -79,6 +79,7 @@ public:
   unsigned sendSetupCommand(MediaSubsession& subsession, responseHandler* responseHandler,
 			    Boolean streamOutgoing = False,
 			    Boolean streamUsingTCP = False,
+			    Boolean forceMulticastOnUnspecified = False,
 			    Authenticator* authenticator = NULL);
       // Issues a RTSP "SETUP" command, then returns the "CSeq" sequence number that was used in the command.
       // (The "responseHandler" and "authenticator" parameters are as described for "sendDescribeCommand".)
