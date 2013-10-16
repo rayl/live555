@@ -75,7 +75,7 @@ void BasicTaskScheduler::SingleStep(unsigned maxDelayTime) {
     // For some unknown reason, select() in Windoze sometimes fails with WSAEINVAL if
     // it was called with no entries set in "readSet".  If this happens, ignore it:
     if (err == WSAEINVAL && readSet.fd_count == 0) {
-      err = 0;
+      err = EINTR;
       // To stop this from happening again, create a dummy readable socket:
       int dummySocketNum = socket(AF_INET, SOCK_DGRAM, 0);
       FD_SET((unsigned)dummySocketNum, &fReadSet);

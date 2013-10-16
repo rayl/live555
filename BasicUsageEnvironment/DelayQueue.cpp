@@ -193,6 +193,11 @@ DelayQueueEntry* DelayQueue::findEntryByToken(long tokenToFind) {
 void DelayQueue::synchronize() {
   // First, figure out how much time has elapsed since the last sync:
   EventTime timeNow = TimeNow();
+  if (timeNow < fLastSyncTime) {
+    // The system clock has apparently gone back in time; reset our sync time and return:
+    fLastSyncTime  = timeNow;
+    return;
+  }
   DelayInterval timeSinceLastSync = timeNow - fLastSyncTime;
   fLastSyncTime = timeNow;
 
@@ -215,10 +220,6 @@ EventTime TimeNow() {
   gettimeofday(&tvNow, NULL);
 
   return EventTime(tvNow.tv_sec, tvNow.tv_usec);
-}
-
-DelayInterval TimeRemainingUntil(const EventTime& futureEvent) {
-  return futureEvent - TimeNow();
 }
 
 const EventTime THE_END_OF_TIME(INT_MAX);

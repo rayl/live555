@@ -127,9 +127,6 @@ public:
 
 EventTime TimeNow();
 
-DelayInterval TimeRemainingUntil(EventTime const& futureEvent);
-// Returns DELAY_ZERO if "futureEvent" has already occurred.
-
 extern EventTime const THE_END_OF_TIME;
 
 

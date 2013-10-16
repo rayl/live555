@@ -47,6 +47,9 @@ protected:
 
   virtual ~H264VideoRTPSink();
 
+protected: // redefined virtual functions:
+  virtual char const* auxSDPLine();
+
 private: // redefined virtual functions:
   virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
   virtual Boolean continuePlaying();
@@ -58,7 +61,6 @@ private: // redefined virtual functions:
                                       unsigned numRemainingBytes);
   virtual Boolean frameCanAppearAfterPacketStart(unsigned char const* frameStart,
 						 unsigned numBytesInFrame) const;
-  virtual char const* auxSDPLine();
 
 protected:
   H264FUAFragmenter* fOurFragmenter;
