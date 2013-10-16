@@ -146,6 +146,10 @@ protected:
 
   static int setUpOurSocket(UsageEnvironment& env, Port& ourPort);
 
+  virtual char const* allowedCommandNames(); // used to implement "RTSPClientConnection::handleCmd_OPTIONS()"
+  virtual Boolean weImplementREGISTER(); // used to implement "RTSPClientConnection::handleCmd_REGISTER()"
+  virtual void implementCmd_REGISTER(char const* url, char const* urlSuffix, int socketToRemoteServer); // ditto
+
   virtual Boolean specialClientAccessCheck(int clientSocket, struct sockaddr_in& clientAddr,
 					   char const* urlSuffix);
       // a hook that allows subclassed servers to do server-specific access checking
@@ -166,15 +170,30 @@ public: // should be protected, but some old compilers complain otherwise
   public:
     RTSPClientConnection(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr);
     virtual ~RTSPClientConnection();
+    // A data structure that's used to implement the "REGISTER" command:
+    class ParamsForREGISTER {
+    public:
+      ParamsForREGISTER(RTSPClientConnection* ourConnection, char const* url, char const* urlSuffix, Boolean registerRemote);
+      virtual ~ParamsForREGISTER();
+    private:
+      friend class RTSPClientConnection;
+      RTSPClientConnection* fOurConnection;
+      char* fURL;
+      char* fURLSuffix;
+      Boolean fRegisterRemote;
+    };
   protected:
     friend class RTSPClientSession;
-    // Make the handler functions for each command virtual, to allow subclasses to redefine them:
+    // Make the handler functions for each command virtual, to allow subclasses to reimplement them, if necessary:
     virtual void handleCmd_OPTIONS();
+        // You probably won't need to subclass/reimplement this function; reimplement "RTSPServer::allowedCommandNames()" instead.
     virtual void handleCmd_GET_PARAMETER(char const* fullRequestStr); // when operating on the entire server
     virtual void handleCmd_SET_PARAMETER(char const* fullRequestStr); // when operating on the entire server
     virtual void handleCmd_DESCRIBE(char const* urlPreSuffix, char const* urlSuffix,
 				    char const* fullRequestStr);
     virtual void handleCmd_REGISTER(char const* url, char const* urlSuffix, Boolean registerRemote);
+        // You probably won't need to subclass/reimplement this function;
+        //     reimplement "RTSPServer::weImplementREGISTER()" and "RTSPServer::implementCmd_REGISTER()" instead.
     virtual void handleCmd_bad();
     virtual void handleCmd_notSupported();
     virtual void handleCmd_notFound();
@@ -202,6 +221,8 @@ public: // should be protected, but some old compilers complain otherwise
     Boolean authenticationOK(char const* cmdName, char const* urlSuffix, char const* fullRequestStr);
     void changeClientInputSocket(int newSocketNum, unsigned char const* extraData, unsigned extraDataSize);
       // used to implement RTSP-over-HTTP tunneling
+    static void continueHandlingREGISTER(ParamsForREGISTER* params);
+    virtual void continueHandlingREGISTER1(ParamsForREGISTER* params);
 
     // Shortcuts for setting up a RTSP response (prior to sending it):
     void setRTSPResponse(char const* responseStr);
@@ -317,6 +338,7 @@ public: // Some compilers complain if this is "private:"
 
     UsageEnvironment& envir() { return fOurServer.envir(); }
     int& socketNum() { return fSocketNum; }
+    struct sockaddr_in& remoteAddress() { return fRemoteAddress; }
     ServerMediaSession* serverMediaSession() { return fServerMediaSession; }
 
     static void connectionHandler(void*, int /*mask*/);
@@ -329,6 +351,7 @@ public: // Some compilers complain if this is "private:"
 
   private:
     int fSocketNum;
+    struct sockaddr_in fRemoteAddress;
     RTSPServer& fOurServer;
     ServerMediaSession* fServerMediaSession;
     responseHandlerForREGISTER* fHandler;
@@ -337,13 +360,15 @@ public: // Some compilers complain if this is "private:"
 private:
   int continueRegisterStream(RegisterRequestRecord* registerRequest);
 
+protected:
+  Port fRTSPServerPort;
+
 private:
   friend class RTSPClientConnection;
   friend class RTSPClientSession;
   friend class ServerMediaSessionIterator;
   friend class RegisterRequestRecord;
   int fRTSPServerSocket;
-  Port fRTSPServerPort;
   int fHTTPServerSocket; // for optional RTSP-over-HTTP tunneling
   Port fHTTPServerPort; // ditto
   HashTable* fServerMediaSessions; // maps 'stream name' strings to "ServerMediaSession" objects
@@ -372,17 +397,12 @@ protected:
   virtual ~RTSPServerWithREGISTERProxying();
 
 protected: // redefined virtual functions
-  virtual RTSPClientConnection* createNewClientConnection(int clientSocket, struct sockaddr_in clientAddr);
+  virtual char const* allowedCommandNames();
+  virtual Boolean weImplementREGISTER(); // used to implement "RTSPClientConnection::handleCmd_REGISTER()"
+  virtual void implementCmd_REGISTER(char const* url, char const* urlSuffix, int socketToRemoteServer); // ditto
 
-public: // should be protected, but some old compilers complain otherwise
-  class RTSPClientConnectionWithREGISTERProxying: public RTSPServer::RTSPClientConnection {
-  public:
-    RTSPClientConnectionWithREGISTERProxying(RTSPServer& ourServer, int clientSocket, struct sockaddr_in clientAddr);
-    virtual ~RTSPClientConnectionWithREGISTERProxying();
-
-  protected: // redefined virtual functions
-    virtual void handleCmd_REGISTER(char const* url, char const* urlSuffix, Boolean registerRemote);
-  };
+private:
+  char* fAllowedCommandNames;
 }; 
 
 #endif

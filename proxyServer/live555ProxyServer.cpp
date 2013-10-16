@@ -22,6 +22,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 char const* progName;
 UsageEnvironment* env;
+UserAuthenticationDatabase* authDB;
 
 // Default values of command-line parameters:
 int verbosityLevel = 0;
@@ -29,12 +30,22 @@ Boolean streamRTPOverTCP = False;
 portNumBits tunnelOverHTTPPortNum = 0;
 char* username = NULL;
 char* password = NULL;
+Boolean proxyREGISTERRequests = False;
+
+static RTSPServer* createRTSPServer(Port port) {
+  if (proxyREGISTERRequests) {
+    return RTSPServerWithREGISTERProxying::createNew(*env, port, authDB);
+  } else {
+    return RTSPServer::createNew(*env, port, authDB);
+  }
+}
 
 void usage() {
   *env << "Usage: " << progName
        << " [-v|-V]"
        << " [-t|-T <http-port>]"
        << " [-u <username> <password>]"
+       << " [-R]"
        << " <rtsp-url-1> ... <rtsp-url-n>\n";
   exit(1);
 }
@@ -102,6 +113,11 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 'R': { // Handle incoming "REGISTER" requests by proxying the specified stream:
+      proxyREGISTERRequests = True;
+      break;
+    }
+
     default: {
       usage();
       break;
@@ -110,7 +126,7 @@ int main(int argc, char** argv) {
 
     ++argv; --argc;
   }
-  if (argc < 2) usage(); // there must be at least one "rtsp://" URL at the end 
+  if (argc < 2 && !proxyREGISTERRequests) usage(); // there must be at least one "rtsp://" URL at the end 
   // Make sure that the remaining arguments appear to be "rtsp://" URLs:
   int i;
   for (i = 1; i < argc; ++i) {
@@ -126,7 +142,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  UserAuthenticationDatabase* authDB = NULL;
+  authDB = NULL;
 #ifdef ACCESS_CONTROL
   // To implement client access control to the RTSP server, do the following:
   authDB = new UserAuthenticationDatabase;
@@ -139,10 +155,10 @@ int main(int argc, char** argv) {
   // and then with the alternative port number (8554):
   RTSPServer* rtspServer;
   portNumBits rtspServerPortNum = 554;
-  rtspServer = RTSPServer::createNew(*env, rtspServerPortNum, authDB);
+  rtspServer = createRTSPServer(rtspServerPortNum);
   if (rtspServer == NULL) {
     rtspServerPortNum = 8554;
-    rtspServer = RTSPServer::createNew(*env, rtspServerPortNum, authDB);
+    rtspServer = createRTSPServer(rtspServerPortNum);
   }
   if (rtspServer == NULL) {
     *env << "Failed to create RTSP server: " << env->getResultMsg() << "\n";
@@ -168,6 +184,10 @@ int main(int argc, char** argv) {
     *env << "RTSP stream, proxying the stream \"" << proxiedStreamURL << "\"\n";
     *env << "\tPlay this stream using the URL: " << proxyStreamURL << "\n";
     delete[] proxyStreamURL;
+  }
+
+  if (proxyREGISTERRequests) {
+    *env << "(We handle incoming \"REGISTER\" requests on port " << rtspServerPortNum << ")\n";
   }
 
   // Also, attempt to create a HTTP server for RTSP-over-HTTP tunneling.

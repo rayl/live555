@@ -30,9 +30,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 RTSPClient* RTSPClient::createNew(UsageEnvironment& env, char const* rtspURL,
 				  int verbosityLevel,
 				  char const* applicationName,
-				  portNumBits tunnelOverHTTPPortNum) {
+				  portNumBits tunnelOverHTTPPortNum,
+				  int socketNumToServer) {
   return new RTSPClient(env, rtspURL,
-			verbosityLevel, applicationName, tunnelOverHTTPPortNum);
+			verbosityLevel, applicationName, tunnelOverHTTPPortNum, socketNumToServer);
 }
 
 unsigned RTSPClient::sendDescribeCommand(responseHandler* responseHandler, Authenticator* authenticator) {
@@ -295,7 +296,7 @@ unsigned RTSPClient::responseBufferSize = 20000; // default value; you can reass
 
 RTSPClient::RTSPClient(UsageEnvironment& env, char const* rtspURL,
 		       int verbosityLevel, char const* applicationName,
-		       portNumBits tunnelOverHTTPPortNum)
+		       portNumBits tunnelOverHTTPPortNum, int socketNumToServer)
   : Medium(env),
     fVerbosityLevel(verbosityLevel), fCSeq(1),
     fTunnelOverHTTPPortNum(tunnelOverHTTPPortNum), fUserAgentHeaderStr(NULL), fUserAgentHeaderStrLen(0),
@@ -305,6 +306,14 @@ RTSPClient::RTSPClient(UsageEnvironment& env, char const* rtspURL,
 
   fResponseBuffer = new char[responseBufferSize+1];
   resetResponseBuffer();
+
+  if (socketNumToServer >= 0) {
+    // This socket number is (assumed to be) already connected to the server.
+    // Use it, and arrange to handle responses to requests sent on it:
+    fInputSocketNum = fOutputSocketNum = socketNumToServer;
+    envir().taskScheduler().setBackgroundHandling(fInputSocketNum, SOCKET_READABLE|SOCKET_EXCEPTION,
+						  (TaskScheduler::BackgroundHandlerProc*)&incomingDataHandler, this);
+  }
 
   // Set the "User-Agent:" header to use in each request:
   char const* const libName = "LIVE555 Streaming Media v";
@@ -538,7 +547,7 @@ unsigned RTSPClient::sendRequest(RequestRecord* request) {
       else if (connectResult == 0) {
 	// A connection is pending
         connectionIsPending = True;
-      } // else the connection succeeded.  Continue sending the command.u
+      } // else the connection succeeded.  Continue sending the command.
     }
     if (connectionIsPending) {
       fRequestsAwaitingConnection.enqueue(request);
@@ -1031,6 +1040,7 @@ Boolean RTSPClient::handleSETUPResponse(MediaSubsession& subsession, char const*
       if (subsession.rtpSource() != NULL) {
 	subsession.rtpSource()->setStreamSocket(fInputSocketNum, subsession.rtpChannelId);
 	subsession.rtpSource()->setServerRequestAlternativeByteHandler(fInputSocketNum, handleAlternativeRequestByte, this);
+	  // So that we continue to receive & handle RTSP commands and responses from the server
 	subsession.rtpSource()->enableRTCPReports() = False;
 	  // To avoid confusing the server (which won't start handling RTP/RTCP-over-TCP until "PLAY"), don't send RTCP "RR"s yet
       }
@@ -1270,6 +1280,7 @@ void RTSPClient::responseHandlerForHTTP_GET(RTSPClient* rtspClient, int response
 void RTSPClient::responseHandlerForHTTP_GET1(int responseCode, char* responseString) {
   RequestRecord* request;
   do {
+    delete[] responseString; // we don't need it (but are responsible for deleting it)
     if (responseCode != 0) break; // The HTTP "GET" failed.
 
     // Having successfully set up (using the HTTP "GET" command) the server->client link, set up a second TCP connection
@@ -1755,4 +1766,48 @@ RTSPClient::RequestRecord* RTSPClient::RequestQueue::findByCSeq(unsigned cseq) {
     if (request->cseq() == cseq) return request;
   }
   return NULL;
+}
+
+
+////////// HandlerServerForREGISTERCommand implementation /////////
+
+HandlerServerForREGISTERCommand* HandlerServerForREGISTERCommand
+::createNew(UsageEnvironment& env, onRTSPClientCreationFunc* creationFunc, Port ourPort,
+	    int verbosityLevel, char const* applicationName) {
+  int ourSocket = setUpOurSocket(env, ourPort);
+  if (ourSocket == -1) return NULL;
+
+  return new HandlerServerForREGISTERCommand(env, creationFunc, ourSocket, ourPort, verbosityLevel, applicationName);
+}
+
+HandlerServerForREGISTERCommand
+::HandlerServerForREGISTERCommand(UsageEnvironment& env, onRTSPClientCreationFunc* creationFunc, int ourSocket, Port ourPort,
+                                  int verbosityLevel, char const* applicationName)
+  : RTSPServer(env, ourSocket, ourPort, NULL, 30/*small reclamationTestSeconds*/),
+    fCreationFunc(creationFunc), fVerbosityLevel(verbosityLevel), fApplicationName(strDup(applicationName)) {
+}
+
+HandlerServerForREGISTERCommand::~HandlerServerForREGISTERCommand() {
+  delete[] fApplicationName;
+}
+
+RTSPClient* HandlerServerForREGISTERCommand
+::createNewRTSPClient(char const* rtspURL, int verbosityLevel, char const* applicationName, int socketNumToServer) {
+  // Default implementation: create a basic "RTSPClient":
+  return RTSPClient::createNew(envir(), rtspURL, verbosityLevel, applicationName, 0, socketNumToServer);
+}
+
+char const* HandlerServerForREGISTERCommand::allowedCommandNames() {
+  return "OPTIONS, REGISTER";
+}
+
+Boolean HandlerServerForREGISTERCommand::weImplementREGISTER() {
+  return True;
+}
+
+void HandlerServerForREGISTERCommand::implementCmd_REGISTER(char const* url, char const* urlSuffix, int socketToRemoteServer) {
+  // Create a new "RTSPClient" object, and call our 'creation function' with it:
+  RTSPClient* newRTSPClient = createNewRTSPClient(url, fVerbosityLevel, fApplicationName, socketToRemoteServer);
+
+  if (fCreationFunc != NULL) (*fCreationFunc)(newRTSPClient);
 }

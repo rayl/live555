@@ -443,6 +443,7 @@ void StreamState
     if (fRTPSink != NULL) {
       fRTPSink->addStreamSocket(dests->tcpSocketNum, dests->rtpChannelId);
       fRTPSink->setServerRequestAlternativeByteHandler(dests->tcpSocketNum, serverRequestAlternativeByteHandler, serverRequestAlternativeByteHandlerClientData);
+        // So that we continue to handle RTSP commands from the client
     }
     if (fRTCPInstance != NULL) {
       fRTCPInstance->addStreamSocket(dests->tcpSocketNum, dests->rtcpChannelId);
@@ -496,6 +497,7 @@ void StreamState::endPlaying(Destinations* dests) {
 
   if (dests->isTCP) {
     if (fRTPSink != NULL) {
+      fRTPSink->setServerRequestAlternativeByteHandler(dests->tcpSocketNum, NULL, NULL);
       fRTPSink->removeStreamSocket(dests->tcpSocketNum, dests->rtpChannelId);
     }
     if (fRTCPInstance != NULL) {
