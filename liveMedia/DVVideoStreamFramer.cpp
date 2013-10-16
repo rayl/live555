@@ -20,6 +20,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // (Thanks to Ben Hutchings for a prototype implementation.)
 
 #include "DVVideoStreamFramer.hh"
+#include "GroupsockHelper.hh"
 
 ////////// DVVideoStreamFramer implementation //////////
 
@@ -42,19 +43,25 @@ DVVideoStreamFramer::createNew(UsageEnvironment& env, FramedSource* inputSource)
 struct DVVideoProfile {
   char const* name;
   unsigned apt;
+  unsigned sType;
   unsigned sequenceCount;
   unsigned channelCount;
-  unsigned frameDuration; // in microseconds
+  unsigned dvFrameSize; // in bytes (== sequenceCount*channelCount*150*80)
+  double frameDuration; // duration of the above, in microseconds.  (1000000/this == frame rate)
 };
 
 static DVVideoProfile const profiles[] = {
-   { "SD-VCR/525-60",  0, 10, 1, (1000000*1001)/30000 },
-   { "SD-VCR/625-50",  0, 12, 1, 1000000/25 },
-   { "314M-25/525-60", 1, 10, 1, (1000000*1001)/30000 },
-   { "314M-25/625-50", 1, 12, 1, 1000000/25 },
-   { "314M-50/525-60", 1, 10, 2, (1000000*1001)/30000 },
-   { "314M-50/625-50", 1, 12, 2, 1000000/25 },
-   { NULL, 0, 0, 0, 0 }
+   { "SD-VCR/525-60",  0, 0x00, 10, 1, 120000, (1000000*1001)/30000.0 },
+   { "SD-VCR/625-50",  0, 0x00, 12, 1, 144000, 1000000/25.0 },
+   { "314M-25/525-60", 1, 0x00, 10, 1, 120000, (1000000*1001)/30000.0 },
+   { "314M-25/625-50", 1, 0x00, 12, 1, 144000, 1000000/25.0 },
+   { "314M-50/525-60", 1, 0x04, 10, 2, 240000, (1000000*1001)/30000.0 },
+   { "314M-50/625-50", 1, 0x04, 12, 2, 288000, 1000000/25.0 },
+   { "370M/1080-60i",  1, 0x14, 10, 4, 480000, (1000000*1001)/30000.0 },
+   { "370M/1080-50i",  1, 0x14, 12, 4, 576000, 1000000/25.0 },
+   { "370M/720-60p",   1, 0x18, 10, 2, 240000, (1000000*1001)/60000.0 },
+   { "370M/720-50p",   1, 0x18, 12, 2, 288000, 1000000/50.0 },
+   { NULL, 0, 0, 0, 0, 0, 0.0 }
   };
 
 
@@ -144,12 +151,12 @@ void DVVideoStreamFramer::afterGettingFrame1(unsigned frameSize, unsigned numTru
 	&& (packHeaderNum == DV_PACK_HEADER_10 || packHeaderNum == DV_PACK_HEADER_12)
 	&& (sectionVAUX >= DV_SECTION_VAUX_MIN && sectionVAUX <= DV_SECTION_VAUX_MAX)) {
       u_int8_t const apt = DVData(0,1)&0x07;
+      u_int8_t const sType = DVData(5,48)&0x1F;
       u_int8_t const sequenceCount = (packHeaderNum == DV_PACK_HEADER_10) ? 10 : 12;
-      u_int8_t const channelCount = (DVData(5,45) == DV_PACK_VIDEO_SOURCE && (DVData(5,48)&0x04) != 0) ? 2 : 1;
 
-      // Use these three parameters (apt, sequenceCount, channelCount) to look up the DV profile:
+      // Use these three parameters (apt, sType, sequenceCount) to look up the DV profile:
       for (DVVideoProfile const* profile = profiles; profile->name != NULL; ++profile) {
-	if (profile->apt == apt && profile->sequenceCount == sequenceCount && profile->channelCount == channelCount) {
+	if (profile->apt == apt && profile->sType == sType && profile->sequenceCount == sequenceCount) {
 	  fOurProfile = profile;
 	  fprintf(stderr, "#####@@@@@DVVideoStreamFramer::afterGettingFrame3(%d,%d) parsed data -> profile name: %s\n", frameSize, numTruncatedBytes, ((DVVideoProfile const*)fOurProfile)->name);
 	  break;
@@ -166,11 +173,13 @@ void DVVideoStreamFramer::afterGettingFrame1(unsigned frameSize, unsigned numTru
     // based on the length of this frame:
     fPresentationTime = fNextFramePresentationTime;
 
-    fDurationInMicroseconds = (fFrameSize/DV_DIF_BLOCK_SIZE) * ((DVVideoProfile const*)fOurProfile)->frameDuration;
+    DVVideoProfile const* ourProfile =(DVVideoProfile const*)fOurProfile;
+    double durationInMicroseconds = (fFrameSize*ourProfile->frameDuration)/ourProfile->dvFrameSize;
+    fDurationInMicroseconds = (unsigned)durationInMicroseconds;
     fNextFramePresentationTime.tv_usec += fDurationInMicroseconds;
     fNextFramePresentationTime.tv_sec += fNextFramePresentationTime.tv_usec/MILLION;
     fNextFramePresentationTime.tv_usec %= MILLION;
-    fprintf(stderr, "#####@@@@@DVVideoStreamFramer::afterGettingFrame4(): fFrameSize %u (%u), profile name %s, frame duration %u, fPresentationTime %u.%06u, fDurationInMicroseconds %u\n", fFrameSize, fFrameSize/DV_DIF_BLOCK_SIZE, ((DVVideoProfile const*)fOurProfile)->name, ((DVVideoProfile const*)fOurProfile)->frameDuration, fPresentationTime.tv_sec, fPresentationTime.tv_usec, fDurationInMicroseconds);
+    fprintf(stderr, "#####@@@@@DVVideoStreamFramer::afterGettingFrame4(): fFrameSize %u (%u), profile name %s, frame duration %f, fPresentationTime %u.%06u, durationInMicroseconds %f=>%u\n", fFrameSize, ourProfile->dvFrameSize, ourProfile->name, ourProfile->frameDuration, fPresentationTime.tv_sec, fPresentationTime.tv_usec, durationInMicroseconds, fDurationInMicroseconds);
   }
 
   afterGetting(this);

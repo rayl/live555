@@ -30,7 +30,6 @@ RTPSink* videoSink;
 void play(); // forward
 
 int main(int argc, char** argv) {
-  fprintf(stderr, "THIS CODE IS STILL UNDER DEVELOPMENT; DO NOT USE IT.\n"); exit(0);//#####@@@@@
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
   env = BasicUsageEnvironment::createNew(*scheduler);
@@ -58,7 +57,7 @@ int main(int argc, char** argv) {
   videoSink = DVVideoRTPSink::createNew(*env, &rtpGroupsock, 96);
 
   // Create (and start) a 'RTCP instance' for this RTP sink:
-  const unsigned estimatedSessionBandwidth = 500; // in kbps; for RTCP b/w share
+  const unsigned estimatedSessionBandwidth = 50000; // in kbps; for RTCP b/w share
   const unsigned maxCNAMElen = 100;
   unsigned char CNAME[maxCNAMElen+1];
   gethostname((char*)CNAME, maxCNAMElen);
