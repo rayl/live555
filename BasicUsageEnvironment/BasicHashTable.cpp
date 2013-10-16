@@ -95,7 +95,7 @@ unsigned BasicHashTable::numEntries() const {
   return fNumEntries;
 }
 
-BasicHashTable::Iterator::Iterator(BasicHashTable& table)
+BasicHashTable::Iterator::Iterator(BasicHashTable const& table)
   : fTable(table), fNextIndex(0), fNextEntry(NULL) {
 }
 
@@ -119,9 +119,9 @@ HashTable* HashTable::create(int keyType) {
   return new BasicHashTable(keyType);
 }
 
-HashTable::Iterator* HashTable::Iterator::create(HashTable& hashTable) {
+HashTable::Iterator* HashTable::Iterator::create(HashTable const& hashTable) {
   // "hashTable" is assumed to be a BasicHashTable
-  return new BasicHashTable::Iterator((BasicHashTable&)hashTable);
+  return new BasicHashTable::Iterator((BasicHashTable const&)hashTable);
 }
 
 ////////// Implementation of internal member functions //////////

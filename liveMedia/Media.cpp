@@ -21,30 +21,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "Media.hh"
 #include "HashTable.hh"
 
-// A data structure for looking up a Medium by its string name
-class MediaLookupTable {
-public:
-  static MediaLookupTable* ourMedia(UsageEnvironment& env);
-
-  Medium* lookup(char const* name) const;
-      // Returns NULL if none already exists
-
-  void addNew(Medium* medium, char* mediumName);
-  void remove(char const* name);
-
-  void generateNewName(char* mediumName, unsigned maxLen);
-
-protected:
-  MediaLookupTable(UsageEnvironment& env);
-  virtual ~MediaLookupTable();
-
-private:
-  UsageEnvironment& fEnv;
-  HashTable* fTable;
-  unsigned fNameGenerator;
-};
-
-
 ////////// Medium //////////
 
 Medium::Medium(UsageEnvironment& env)
@@ -149,7 +125,7 @@ MediaLookupTable* MediaLookupTable::ourMedia(UsageEnvironment& env) {
     // this environment:
     ourTables->mediaTable = new MediaLookupTable(env);
   }
-  return (MediaLookupTable*)(ourTables->mediaTable);
+  return ourTables->mediaTable;
 }
 
 Medium* MediaLookupTable::lookup(char const* name) const {

@@ -44,13 +44,13 @@ public:
   class Iterator; friend class Iterator; // to make Sun's C++ compiler happy
   class Iterator: public HashTable::Iterator {
   public:
-    Iterator(BasicHashTable& table);
+    Iterator(BasicHashTable const& table);
 
   private: // implementation of inherited pure virtual functions
     void* next(char const*& key); // returns 0 if none
 
   private:
-    BasicHashTable& fTable;
+    BasicHashTable const& fTable;
     unsigned fNextIndex; // index of next bucket to be enumerated after this
     TableEntry* fNextEntry; // next entry in the current bucket
   };
