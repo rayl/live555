@@ -25,8 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "NetAddress.hh"
 #endif
 
-int setupDatagramSocket(UsageEnvironment& env,
-			Port port, Boolean setLoopback = True);
+int setupDatagramSocket(UsageEnvironment& env, Port port);
 int setupStreamSocket(UsageEnvironment& env,
 		      Port port, Boolean makeNonBlocking = True);
 

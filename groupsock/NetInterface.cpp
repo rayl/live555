@@ -24,6 +24,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef NO_SSTREAM
 #include <sstream>
 #endif
+#include <stdio.h>
 
 ////////// NetInterface //////////
 
@@ -84,9 +85,9 @@ DirectedNetInterface* DirectedNetInterfaceSet::Iterator::next() {
 
 int Socket::DebugLevel = 1; // default value
 
-Socket::Socket(UsageEnvironment& env, Port port, Boolean setLoopback)
-  : fEnv(DefaultUsageEnvironment != NULL ? *DefaultUsageEnvironment : env), fPort(port), fSetLoopback(setLoopback) {
-  fSocketNum = setupDatagramSocket(fEnv, port, setLoopback);
+Socket::Socket(UsageEnvironment& env, Port port)
+  : fEnv(DefaultUsageEnvironment != NULL ? *DefaultUsageEnvironment : env), fPort(port) {
+  fSocketNum = setupDatagramSocket(fEnv, port);
 }
 
 Socket::~Socket() {
@@ -94,9 +95,17 @@ Socket::~Socket() {
 }
 
 Boolean Socket::changePort(Port newPort) {
-  closeSocket(fSocketNum);
-  fSocketNum = setupDatagramSocket(fEnv, newPort, fSetLoopback);
-  return fSocketNum >= 0;
+  // Re-bind() the socket to a new port number:
+  netAddressBits addr = INADDR_ANY;
+  if (newPort.num() == 0) addr = ReceivingInterfaceAddr;
+  MAKE_SOCKADDR_IN(name, addr, newPort.num());
+  if (bind(fSocketNum, (struct sockaddr*)&name, sizeof name) != 0) {
+    char tmpBuffer[100];
+    sprintf(tmpBuffer, "bind() error (port number: %d): ", ntohs(newPort.num()));
+    fEnv.setResultErrMsg(tmpBuffer);
+    return False;
+  }
+  return True;
 }
 
 UsageEnvironment& operator<<(UsageEnvironment& s, const Socket& sock) {

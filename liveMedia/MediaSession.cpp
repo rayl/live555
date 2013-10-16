@@ -823,6 +823,11 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	  = H264VideoRTPSource::createNew(env(), fRTPSocket,
 					  fRTPPayloadFormat,
 					  fRTPTimestampFrequency);
+      } else if (strcmp(fCodecName, "DV") == 0) {
+	fReadSource = fRTPSource
+	  = DVVideoRTPSource::createNew(env(), fRTPSocket,
+					fRTPPayloadFormat,
+					fRTPTimestampFrequency);
       } else if (strcmp(fCodecName, "JPEG") == 0) { // motion JPEG
 	fReadSource = fRTPSource
 	  = JPEGVideoRTPSource::createNew(env(), fRTPSocket,
@@ -853,10 +858,6 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	fRTPSource = NULL; // Note!
 	parentSession().isRealNetworksRDT = True;
 #endif
-      } else if (strcmp(fCodecName, "DV") == 0) {
-	createSimpleRTPSource = True;
-	useSpecialRTPoffset = 0;
-	doNormalMBitRule = True;
       } else if (  strcmp(fCodecName, "PCMU") == 0 // PCM u-law audio
 		   || strcmp(fCodecName, "GSM") == 0 // GSM audio
 		   || strcmp(fCodecName, "PCMA") == 0 // PCM a-law audio

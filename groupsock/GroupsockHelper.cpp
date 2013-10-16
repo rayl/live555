@@ -49,13 +49,7 @@ NoReuse::~NoReuse() {
   reuseFlag = 1;
 }
 
-int setupDatagramSocket(UsageEnvironment& env, Port port,
-#ifdef IP_MULTICAST_LOOP
-			Boolean setLoopback
-#else
-			Boolean
-#endif
-) {
+int setupDatagramSocket(UsageEnvironment& env, Port port) {
   if (!initializeWinsockIfNecessary()) {
     socketErr(env, "Failed to initialize 'winsock': ");
     return -1;
@@ -87,7 +81,7 @@ int setupDatagramSocket(UsageEnvironment& env, Port port,
 #endif
 
 #ifdef IP_MULTICAST_LOOP
-  const u_int8_t loop = (u_int8_t)setLoopback;
+  const u_int8_t loop = 1;
   if (setsockopt(newSocket, IPPROTO_IP, IP_MULTICAST_LOOP,
 		 (const char*)&loop, sizeof loop) < 0) {
     socketErr(env, "setsockopt(IP_MULTICAST_LOOP) error: ");

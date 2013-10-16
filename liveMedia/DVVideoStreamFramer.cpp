@@ -24,9 +24,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 ////////// DVVideoStreamFramer implementation //////////
 
-DVVideoStreamFramer::DVVideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource)
+DVVideoStreamFramer::DVVideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource, Boolean sourceIsSeekable)
   : FramedFilter(env, inputSource),
-    fOurProfile(NULL), fInitialBlocksPresent(False) {
+    fOurProfile(NULL), fInitialBlocksPresent(False), fSourceIsSeekable(sourceIsSeekable) {
   fTo = NULL; // hack used when reading "fSavedInitialBlocks"
   // Use the current wallclock time as the initial 'presentation time':
   gettimeofday(&fNextFramePresentationTime, NULL);
@@ -36,8 +36,8 @@ DVVideoStreamFramer::~DVVideoStreamFramer() {
 }
 
 DVVideoStreamFramer*
-DVVideoStreamFramer::createNew(UsageEnvironment& env, FramedSource* inputSource) {
-  return new DVVideoStreamFramer(env, inputSource);
+DVVideoStreamFramer::createNew(UsageEnvironment& env, FramedSource* inputSource, Boolean sourceIsSeekable) {
+  return new DVVideoStreamFramer(env, inputSource, sourceIsSeekable);
 }
 
 // Define the parameters for the profiles that we understand:
@@ -82,14 +82,12 @@ Boolean DVVideoStreamFramer::getFrameParameters(unsigned& frameSize, double& fra
 }
 
 void DVVideoStreamFramer::getProfile() {
-  //  fprintf(stderr, "#####@@@@@getProfile()1\n");
   // To determine the stream's profile, we need to first read a chunk of data that we can parse:
   fInputSource->getNextFrame(fSavedInitialBlocks, DV_SAVED_INITIAL_BLOCKS_SIZE,
 			     afterGettingFrame, this, FramedSource::handleClosure, this);
   
   // Handle events until the requested data arrives:
   envir().taskScheduler().doEventLoop(&fInitialBlocksPresent);
-  //  fprintf(stderr, "#####@@@@@getProfile()9\n");
 }
 
 Boolean DVVideoStreamFramer::isDVVideoStreamFramer() const {
@@ -99,8 +97,8 @@ Boolean DVVideoStreamFramer::isDVVideoStreamFramer() const {
 void DVVideoStreamFramer::doGetNextFrame() {
   fFrameSize = 0; // initially, until we deliver data
 
-  // If we have saved initial blocks, use this data first.
-  if (fInitialBlocksPresent) {
+  // If we have saved initial blocks (and won't be seeking back to re-read this data), so use this data first.
+  if (fInitialBlocksPresent && !fSourceIsSeekable) {
     // For simplicity, we require the downstream object's buffer to be >= this data's size:
     if (fMaxSize < DV_SAVED_INITIAL_BLOCKS_SIZE) {
       fNumTruncatedBytes = fMaxSize;
@@ -109,7 +107,6 @@ void DVVideoStreamFramer::doGetNextFrame() {
     }
 
     memmove(fTo, fSavedInitialBlocks, DV_SAVED_INITIAL_BLOCKS_SIZE);
-    //    fprintf(stderr, "#####@@@@@delivered initial blocks (%d bytes)\n", DV_SAVED_INITIAL_BLOCKS_SIZE);
     fFrameSize = DV_SAVED_INITIAL_BLOCKS_SIZE;
     fTo += DV_SAVED_INITIAL_BLOCKS_SIZE;
     fInitialBlocksPresent = False; // for the future
@@ -189,7 +186,6 @@ void DVVideoStreamFramer::afterGettingFrame1(unsigned frameSize, unsigned numTru
       = fOurProfile != NULL ? ((DVVideoProfile const*)fOurProfile)->dvFrameSize : DV_SMALLEST_POSSIBLE_FRAME_SIZE;
     fFrameSize += frameSize;
     fTo += frameSize;
-    //    fprintf(stderr, "######@@@@@delivered %d bytes (%d bytes total so far; tot frame size %d, fMaxSize %d)\n", frameSize, fFrameSize, totFrameSize, fMaxSize);
 
     if (fFrameSize < totFrameSize && fFrameSize < fMaxSize && numTruncatedBytes == 0) {
       // We have more data to deliver; get it now:
@@ -210,7 +206,6 @@ void DVVideoStreamFramer::afterGettingFrame1(unsigned frameSize, unsigned numTru
 	fNextFramePresentationTime.tv_sec += fNextFramePresentationTime.tv_usec/MILLION;
 	fNextFramePresentationTime.tv_usec %= MILLION;
       }
-      //      fprintf(stderr, "#####@@@@@completed delivery of %d bytes (%d truncated), duration %u us, presentation time %u.%08u\n", fFrameSize, fNumTruncatedBytes, fDurationInMicroseconds, fPresentationTime.tv_sec, fPresentationTime.tv_usec);
 
       afterGetting(this);
     }

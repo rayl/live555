@@ -40,21 +40,22 @@ DVVideoFileServerMediaSubsession::~DVVideoFileServerMediaSubsession() {
 
 FramedSource* DVVideoFileServerMediaSubsession
 ::createNewStreamSource(unsigned /*clientSessionId*/, unsigned& estBitrate) {
-  estBitrate = 50000; // kbps, estimate ??
-
   // Create the video source:
   ByteStreamFileSource* fileSource = ByteStreamFileSource::createNew(envir(), fFileName);
   if (fileSource == NULL) return NULL;
   fFileSize = fileSource->fileSize();
 
   // Create a framer for the Video Elementary Stream:
-  DVVideoStreamFramer* framer = DVVideoStreamFramer::createNew(envir(), fileSource);
+  DVVideoStreamFramer* framer = DVVideoStreamFramer::createNew(envir(), fileSource, True/*the file source is seekable*/);
   
   // Use the framer to figure out the file's duration:
   unsigned frameSize;
   double frameDuration;
   if (framer->getFrameParameters(frameSize, frameDuration)) {
     fFileDuration = (float)(((int64_t)fFileSize*frameDuration)/(frameSize*1000000.0));
+    estBitrate = (unsigned)((8000.0*frameSize)/frameDuration); // in kbps
+  } else {
+    estBitrate = 50000; // kbps, estimate
   }
 
   return framer;
