@@ -538,7 +538,7 @@ unsigned char MPEGProgramStreamParser::parsePESPacket() {
   unsigned char stream_id = get1Byte();
 #if defined(DEBUG) || defined(DEBUG_TIMESTAMPS)
   unsigned char streamNum = stream_id;
-  char* streamTypeStr;
+  char const* streamTypeStr;
   if ((stream_id&0xE0) == 0xC0) {
     streamTypeStr = "audio";
     streamNum = stream_id&~0xE0;

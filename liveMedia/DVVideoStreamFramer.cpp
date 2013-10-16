@@ -24,7 +24,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 DVVideoStreamFramer::DVVideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource)
   : FramedFilter(env, inputSource),
-    fProfileName(NULL) {
+    fProfileName(NULL), fInitialBlockPresent(False) {
 }
 
 DVVideoStreamFramer::~DVVideoStreamFramer() {
@@ -38,6 +38,11 @@ DVVideoStreamFramer::createNew(UsageEnvironment& env, FramedSource* inputSource)
 char const* DVVideoStreamFramer::profileName() const {
 #if 0
   if (fProfileName == NULL) {
+read into fSavedInitialBlock
+retry
+
+  need 6 blocks (480 bytes) to parse format?
+
     unsigned char* fSavedFrame;
     unsigned fSavedFrameSize;
     char fSavedFrameFlag;
@@ -54,4 +59,11 @@ Boolean DVVideoStreamFramer::isDVVideoStreamFramer() const {
 
 void DVVideoStreamFramer::doGetNextFrame() {
   // COMPLETE THIS #####@@@@@
+#if 0
+  if we have a saved initial block, use it
+	  (don't allow fMaxSize to be < 80)
+  then read rest of data
+  numInitialBytesUsed
+check packet buffer max size
+#endif
 }

@@ -51,7 +51,7 @@ void DVVideoRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
 					      unsigned numRemainingBytes) {
   if (fragmentationOffset == 0) {
     // This packet contains the first (or only) fragment of the frame.  Read its header to figure out our profile:
-
+    // TO COMPLETE #####@@@@@
     
   }
 
@@ -64,8 +64,6 @@ void DVVideoRTPSink::doSpecialFrameHandling(unsigned fragmentationOffset,
   // Also set the RTP timestamp:
   setTimestamp(frameTimestamp);
 }
-
-#define DV_DIF_BLOCK_SIZE 80
 
 unsigned DVVideoRTPSink::computeOverflowForNewFrame(unsigned newFrameSize) const {
   unsigned initialOverflow = MultiFramedRTPSink::computeOverflowForNewFrame(newFrameSize);

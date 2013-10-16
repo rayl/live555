@@ -431,7 +431,8 @@ static char const* dateHeader() {
 }
 
 static char const* allowedCommandNames
-  = "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, GET_PARAMETER, SET_PARAMETER";
+//  = "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, GET_PARAMETER, SET_PARAMETER";
+= "OPTIONS, DESCRIBE, SETUP, TEARDOWN, PLAY, PAUSE, SET_PARAMETER"; // TEMP HACK to stop VLC from using "GET_PARAMETER" as a client 'keep-alive' indicator; we don't need this, and it currently causes problems for RTP-over-TCP streams.
 
 void RTSPServer::RTSPClientSession::handleCmd_bad(char const* /*cseq*/) {
   // Don't do anything with "cseq", because it might be nonsense

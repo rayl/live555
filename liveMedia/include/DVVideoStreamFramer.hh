@@ -25,6 +25,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "FramedFilter.hh"
 #endif
 
+#define DV_DIF_BLOCK_SIZE 80
+
 class DVVideoStreamFramer: public FramedFilter {
 public:
   static DVVideoStreamFramer*
@@ -45,6 +47,8 @@ private:
 
 private:
   char const* fProfileName;
+  unsigned char fSavedInitialBlock[DV_DIF_BLOCK_SIZE];
+  Boolean fInitialBlockPresent;
 };
 
 #endif
