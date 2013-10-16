@@ -135,7 +135,7 @@ MP3ADUdescriptor.$(CPP):	MP3ADUdescriptor.hh
 MP3ADUinterleaving.$(CPP):	include/MP3ADUinterleaving.hh MP3ADUdescriptor.hh
 include/MP3ADUinterleaving.hh:	include/FramedFilter.hh
 MP3ADUTranscoder.$(CPP):	include/MP3ADUTranscoder.hh MP3Internals.hh
-MP3StreamState.$(CPP):	MP3StreamState.hh
+MP3StreamState.$(CPP):	MP3StreamState.hh include/InputFile.hh
 MP3Internals.$(CPP):	MP3InternalsHuffman.hh
 MP3InternalsHuffman.hh:	MP3Internals.hh
 MP3InternalsHuffman.$(CPP):	MP3InternalsHuffman.hh
@@ -286,7 +286,7 @@ QuickTimeGenericRTPSource.$(CPP):	include/QuickTimeGenericRTPSource.hh
 include/QuickTimeGenericRTPSource.hh:	include/MultiFramedRTPSource.hh
 DarwinInjector.$(CPP):	include/DarwinInjector.hh
 include/DarwinInjector.hh:	include/RTSPClient.hh include/RTCP.hh
-AVIFileSink.$(CPP):	include/AVIFileSink.hh include/OutputFile.hh
+AVIFileSink.$(CPP):	include/AVIFileSink.hh include/InputFile.hh include/OutputFile.hh
 include/AVIFileSink.hh:	include/MediaSession.hh
 BitVector.$(CPP):	BitVector.hh
 StreamParser.$(CPP):	StreamParser.hh

@@ -45,10 +45,8 @@ ByteStreamFileSource::createNew(UsageEnvironment& env, char const* fileName,
   FILE* fid = OpenInputFile(env, fileName);
   if (fid == NULL) return NULL;
 
-  Boolean deleteFidOnClose = fid == stdin ? False : True;
   ByteStreamFileSource* newSource
-    = new ByteStreamFileSource(env, fid, deleteFidOnClose,
-			       preferredFrameSize, playTimePerFrame);
+    = new ByteStreamFileSource(env, fid, preferredFrameSize, playTimePerFrame);
   newSource->fFileSize = GetFileSize(fileName, fid);
 
   return newSource;
@@ -56,14 +54,11 @@ ByteStreamFileSource::createNew(UsageEnvironment& env, char const* fileName,
 
 ByteStreamFileSource*
 ByteStreamFileSource::createNew(UsageEnvironment& env, FILE* fid,
-				Boolean deleteFidOnClose,
 				unsigned preferredFrameSize,
 				unsigned playTimePerFrame) {
   if (fid == NULL) return NULL;
 
-  ByteStreamFileSource* newSource
-    = new ByteStreamFileSource(env, fid, deleteFidOnClose,
-			       preferredFrameSize, playTimePerFrame);
+  ByteStreamFileSource* newSource = new ByteStreamFileSource(env, fid, preferredFrameSize, playTimePerFrame);
   newSource->fFileSize = GetFileSize(NULL, fid);
 
   return newSource;
@@ -81,16 +76,22 @@ void ByteStreamFileSource::seekToByteRelative(int64_t offset) {
 }
 
 ByteStreamFileSource::ByteStreamFileSource(UsageEnvironment& env, FILE* fid,
-					   Boolean deleteFidOnClose,
 					   unsigned preferredFrameSize,
 					   unsigned playTimePerFrame)
   : FramedFileSource(env, fid), fPreferredFrameSize(preferredFrameSize),
     fPlayTimePerFrame(playTimePerFrame), fLastPlayTime(0), fFileSize(0),
-    fDeleteFidOnClose(deleteFidOnClose), fHaveStartedReading(False),
-    fLimitNumBytesToStream(False), fNumBytesToStream(0) {
+    fHaveStartedReading(False), fLimitNumBytesToStream(False), fNumBytesToStream(0) {
 #ifndef READ_FROM_FILES_SYNCHRONOUSLY
   makeSocketNonBlocking(fileno(fFid));
 #endif
+
+  // Test whether the file is seekable
+  if (SeekFile64(fFid, 1, SEEK_CUR) >= 0) {
+    fFidIsSeekable = True;
+    SeekFile64(fFid, -1, SEEK_CUR);
+  } else {
+    fFidIsSeekable = False;
+  }
 }
 
 ByteStreamFileSource::~ByteStreamFileSource() {
@@ -100,7 +101,7 @@ ByteStreamFileSource::~ByteStreamFileSource() {
   envir().taskScheduler().turnOffBackgroundReadHandling(fileno(fFid));
 #endif
 
-  if (fDeleteFidOnClose) fclose(fFid);
+  CloseInputFile(fFid);
 }
 
 void ByteStreamFileSource::doGetNextFrame() {
@@ -147,7 +148,12 @@ void ByteStreamFileSource::doReadFromFile() {
 #ifdef READ_FROM_FILES_SYNCHRONOUSLY
   fFrameSize = fread(fTo, 1, fMaxSize, fFid);
 #else
-  fFrameSize = read(fileno(fFid), fTo, fMaxSize);
+  if (fFidIsSeekable) {
+    fFrameSize = fread(fTo, 1, fMaxSize, fFid);
+  } else {
+    // For non-seekable files (e.g., pipes), call "read()" rather than "fread()", to ensure that the read doesn't block:
+    fFrameSize = read(fileno(fFid), fTo, fMaxSize);
+  }
 #endif
   if (fFrameSize == 0) {
     handleClosure(this);

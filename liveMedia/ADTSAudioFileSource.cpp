@@ -72,7 +72,7 @@ ADTSAudioFileSource::createNew(UsageEnvironment& env, char const* fileName) {
 #ifndef _WIN32_WCE
     rewind(fid);
 #else
-    fseek(fid, SEEK_SET,0);
+    SeekFile64(fid, SEEK_SET,0);
 #endif
 #ifdef DEBUG
     fprintf(stderr, "Read first frame: profile %d, "
@@ -138,7 +138,7 @@ void ADTSAudioFileSource::doGetNextFrame() {
 
   // If there's a 'crc_check' field, skip it:
   if (!protection_absent) {
-    fseek(fFid, 2, SEEK_CUR);
+    SeekFile64(fFid, 2, SEEK_CUR);
     numBytesToRead = numBytesToRead > 2 ? numBytesToRead - 2 : 0;
   }
 

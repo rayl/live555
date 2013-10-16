@@ -53,13 +53,13 @@ unsigned WAVAudioFileSource::numPCMBytes() const {
 void WAVAudioFileSource::setScaleFactor(int scale) {
   fScaleFactor = scale;
 
-  if (fScaleFactor < 0 && ftell(fFid) > 0) {
+  if (fScaleFactor < 0 && TellFile64(fFid) > 0) {
     // Because we're reading backwards, seek back one sample, to ensure that
     // (i)  we start reading the last sample before the start point, and
     // (ii) we don't hit end-of-file on the first read.
     int bytesPerSample = (fNumChannels*fBitsPerSample)/8;
     if (bytesPerSample == 0) bytesPerSample = 1;
-    fseek(fFid, -bytesPerSample, SEEK_CUR);
+    SeekFile64(fFid, -bytesPerSample, SEEK_CUR);
   }
 }
 
@@ -67,7 +67,7 @@ void WAVAudioFileSource::seekToPCMByte(unsigned byteNumber, unsigned numBytesToS
   byteNumber += fWAVHeaderSize;
   if (byteNumber > fFileSize) byteNumber = fFileSize;
 
-  fseek(fFid, byteNumber, SEEK_SET);
+  SeekFile64(fFid, byteNumber, SEEK_SET);
 
   fNumBytesToStream = numBytesToStream;
   fLimitNumBytesToStream = fNumBytesToStream > 0;
@@ -171,7 +171,7 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
     if (!skipBytes(fid, 4)) break;
 
     // The header is good; the remaining data are the sample bytes.
-    fWAVHeaderSize = ftell(fid);
+    fWAVHeaderSize = (unsigned)TellFile64(fid);
     success = True;
   } while (0);
 
@@ -232,7 +232,7 @@ void WAVAudioFileSource::doGetNextFrame() {
       bytesToRead -= bytesRead;
 
       // Seek to the appropriate place for the next sample:
-      fseek(fFid, (fScaleFactor-1)*bytesPerSample, SEEK_CUR);
+      SeekFile64(fFid, (fScaleFactor-1)*bytesPerSample, SEEK_CUR);
     }
   }
 

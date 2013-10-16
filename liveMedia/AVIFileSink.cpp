@@ -19,6 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "AVIFileSink.hh"
+#include "InputFile.hh"
 #include "OutputFile.hh"
 #include "GroupsockHelper.hh"
 
@@ -520,15 +521,15 @@ unsigned AVIFileSink::add4ByteString(char const* str) {
 
 void AVIFileSink::setWord(unsigned filePosn, unsigned size) {
   do {
-    if (fseek(fOutFid, filePosn, SEEK_SET) < 0) break;
+    if (SeekFile64(fOutFid, filePosn, SEEK_SET) < 0) break;
     addWord(size);
-    if (fseek(fOutFid, 0, SEEK_END) < 0) break; // go back to where we were
+    if (SeekFile64(fOutFid, 0, SEEK_END) < 0) break; // go back to where we were
 
     return;
   } while (0);
 
-  // One of the fseek()s failed, probable because we're not a seekable file
-  envir() << "AVIFileSink::setWord(): fseek failed (err "
+  // One of the SeekFile64()s failed, probable because we're not a seekable file
+  envir() << "AVIFileSink::setWord(): SeekFile64 failed (err "
 	  << envir().getErrno() << ")\n";
 }
 
@@ -537,7 +538,7 @@ void AVIFileSink::setWord(unsigned filePosn, unsigned size) {
 #define addFileHeader(tag,name) \
     unsigned AVIFileSink::addFileHeader_##name() { \
         add4ByteString("" #tag ""); \
-        unsigned headerSizePosn = ftell(fOutFid); addWord(0); \
+        unsigned headerSizePosn = (unsigned)TellFile64(fOutFid); addWord(0); \
         add4ByteString("" #name ""); \
         unsigned ignoredSize = 8;/*don't include size of tag or size fields*/ \
         unsigned size = 12
@@ -545,7 +546,7 @@ void AVIFileSink::setWord(unsigned filePosn, unsigned size) {
 #define addFileHeader1(name) \
     unsigned AVIFileSink::addFileHeader_##name() { \
         add4ByteString("" #name ""); \
-        unsigned headerSizePosn = ftell(fOutFid); addWord(0); \
+        unsigned headerSizePosn = (unsigned)TellFile64(fOutFid); addWord(0); \
         unsigned ignoredSize = 8;/*don't include size of name or size fields*/ \
         unsigned size = 8
 
@@ -602,11 +603,11 @@ addFileHeaderEnd;
 addFileHeader1(avih);
     unsigned usecPerFrame = fMovieFPS == 0 ? 0 : 1000000/fMovieFPS;
     size += addWord(usecPerFrame); // dwMicroSecPerFrame
-    fAVIHMaxBytesPerSecondPosition = ftell(fOutFid);
+    fAVIHMaxBytesPerSecondPosition = (unsigned)TellFile64(fOutFid);
     size += addWord(0); // dwMaxBytesPerSec (fill in later)
     size += addWord(0); // dwPaddingGranularity
     size += addWord(AVIF_TRUSTCKTYPE|AVIF_HASINDEX|AVIF_ISINTERLEAVED); // dwFlags
-    fAVIHFrameCountPosition = ftell(fOutFid);
+    fAVIHFrameCountPosition = (unsigned)TellFile64(fOutFid);
     size += addWord(0); // dwTotalFrames (fill in later)
     size += addWord(0); // dwInitialFrame
     size += addWord(fNumSubsessions); // dwStreams
@@ -634,7 +635,7 @@ addFileHeader1(strh);
     size += addWord(fCurrentIOState->fAVIScale); // dwScale
     size += addWord(fCurrentIOState->fAVIRate); // dwRate
     size += addWord(0); // dwStart
-    fCurrentIOState->fSTRHFrameCountPosition = ftell(fOutFid);
+    fCurrentIOState->fSTRHFrameCountPosition = (unsigned)TellFile64(fOutFid);
     size += addWord(0); // dwLength (fill in later)
     size += addWord(fBufferSize); // dwSuggestedBufferSize
     size += addWord((unsigned)-1); // dwQuality

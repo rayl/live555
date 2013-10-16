@@ -36,7 +36,6 @@ public:
 
   static ByteStreamFileSource* createNew(UsageEnvironment& env,
 					 FILE* fid,
-					 Boolean deleteFidOnClose = False,
 					 unsigned preferredFrameSize = 0,
 					 unsigned playTimePerFrame = 0);
       // an alternative version of "createNew()" that's used if you already have
@@ -51,7 +50,7 @@ public:
 
 protected:
   ByteStreamFileSource(UsageEnvironment& env,
-		       FILE* fid, Boolean deleteFidOnClose,
+		       FILE* fid,
 		       unsigned preferredFrameSize,
 		       unsigned playTimePerFrame);
 	// called only by createNew()
@@ -69,9 +68,9 @@ private:
 private:
   unsigned fPreferredFrameSize;
   unsigned fPlayTimePerFrame;
+  Boolean fFidIsSeekable;
   unsigned fLastPlayTime;
   u_int64_t fFileSize;
-  Boolean fDeleteFidOnClose;
   Boolean fHaveStartedReading;
   Boolean fLimitNumBytesToStream;
   u_int64_t fNumBytesToStream; // used iff "fLimitNumBytesToStream" is True

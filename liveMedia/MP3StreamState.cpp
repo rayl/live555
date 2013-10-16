@@ -19,6 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "MP3StreamState.hh"
+#include "InputFile.hh"
 #include "GroupsockHelper.hh"
 
 #if defined(__WIN32__) || defined(_WIN32)
@@ -38,7 +39,7 @@ MP3StreamState::~MP3StreamState() {
       long fid_long = (long)fFid;
       closeSocket((int)fid_long);
     } else {
-      fclose(fFid);
+      CloseInputFile(fFid);
     }
   }
 }
@@ -109,7 +110,7 @@ unsigned MP3StreamState::getByteNumberFromPositionFraction(float fraction) {
 void MP3StreamState::seekWithinFile(unsigned seekByteNumber) {
   if (fFidIsReallyASocket) return; // it's not seekable
 
-  fseek(fFid, seekByteNumber, SEEK_SET);
+  SeekFile64(fFid, seekByteNumber, SEEK_SET);
 }
 
 unsigned MP3StreamState::findNextHeader(struct timeval& presentationTime) {
