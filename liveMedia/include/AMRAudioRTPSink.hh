@@ -59,7 +59,7 @@ private: // redefined virtual functions:
 
 private:
   Boolean fSourceIsWideband;
-  char* fAuxSDPLine;
+  char* fFmtpSDPLine;
 };
 
 #endif

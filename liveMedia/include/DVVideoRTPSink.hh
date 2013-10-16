@@ -15,48 +15,36 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2009 Live Networks, Inc.  All rights reserved.
-// RTP sink for MPEG-4 Elementary Stream video (RFC 3016)
+// RTP sink for DV video (RFC 3189)
+// (Thanks to Ben Hutchings for prototyping this.)
 // C++ header
 
-#ifndef _MPEG4ES_VIDEO_RTP_SINK_HH
-#define _MPEG4ES_VIDEO_RTP_SINK_HH
+#ifndef _DV_VIDEO_RTP_SINK_HH
+#define _DV_VIDEO_RTP_SINK_HH
 
 #ifndef _VIDEO_RTP_SINK_HH
 #include "VideoRTPSink.hh"
 #endif
 
-class MPEG4ESVideoRTPSink: public VideoRTPSink {
+class DVVideoRTPSink: public VideoRTPSink {
 public:
-  static MPEG4ESVideoRTPSink* createNew(UsageEnvironment& env,
-					Groupsock* RTPgs,
-					unsigned char rtpPayloadFormat,
-					u_int32_t rtpTimestampFrequency = 90000);
+  static DVVideoRTPSink* createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat);
 
 protected:
-  MPEG4ESVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
-		      unsigned char rtpPayloadFormat,
-		      u_int32_t rtpTimestampFrequency);
+  DVVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat);
 	// called only by createNew()
 
-  virtual ~MPEG4ESVideoRTPSink();
+  virtual ~DVVideoRTPSink();
 
-protected: // redefined virtual functions:
+private: // redefined virtual functions:
   virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
-
   virtual void doSpecialFrameHandling(unsigned fragmentationOffset,
                                       unsigned char* frameStart,
                                       unsigned numBytesInFrame,
                                       struct timeval frameTimestamp,
                                       unsigned numRemainingBytes);
-  virtual Boolean allowFragmentationAfterStart() const;
-  virtual Boolean
-  frameCanAppearAfterPacketStart(unsigned char const* frameStart,
-				 unsigned numBytesInFrame) const;
-
+  virtual unsigned computeOverflowForNewFrame(unsigned newFrameSize) const;
   virtual char const* auxSDPLine();
-
-protected:
-  Boolean fVOPIsPresent;
 
 private:
   char* fFmtpSDPLine;

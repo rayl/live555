@@ -41,6 +41,7 @@ public:
   virtual Boolean isMPEG1or2VideoStreamFramer() const;
   virtual Boolean isMPEG4VideoStreamFramer() const;
   virtual Boolean isH264VideoStreamFramer() const;
+  virtual Boolean isDVVideoStreamFramer() const;
   virtual Boolean isJPEGVideoSource() const;
   virtual Boolean isAMRAudioSource() const;
 

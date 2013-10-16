@@ -336,7 +336,7 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
 	  char* ptr = &firstLine[bytesRead];
 	  int bytesRead2 = readSocket(envir(), fInputSocketNum, (unsigned char*)ptr,
 				      numExtraBytesNeeded, fromAddress);
-	  if (bytesRead2 < 0) break;
+	  if (bytesRead2 <= 0) break;
 	  ptr[bytesRead2] = '\0';
 	  if (fVerbosityLevel >= 1) {
 	    envir() << "Read " << bytesRead2 << " extra bytes: "
@@ -1636,7 +1636,7 @@ Boolean RTSPClient::getMediaSessionParameter(MediaSession& /*session*/,
 	  char* ptr = &firstLine[bytesRead];
 	  int bytesRead2 = readSocket(envir(), fInputSocketNum, (unsigned char*)ptr,
 				      numExtraBytesNeeded, fromAddress);
-	  if (bytesRead2 < 0) break;
+	  if (bytesRead2 <= 0) break;
 	  ptr[bytesRead2] = '\0';
 	  if (fVerbosityLevel >= 1) {
 	    envir() << "Read " << bytesRead2 << " extra bytes: "

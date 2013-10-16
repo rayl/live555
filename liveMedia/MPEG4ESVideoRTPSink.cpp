@@ -26,11 +26,11 @@ MPEG4ESVideoRTPSink
 		      unsigned char rtpPayloadFormat,
 		      u_int32_t rtpTimestampFrequency)
   : VideoRTPSink(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency, "MP4V-ES"),
-    fVOPIsPresent(False), fAuxSDPLine(NULL) {
+    fVOPIsPresent(False), fFmtpSDPLine(NULL) {
 }
 
 MPEG4ESVideoRTPSink::~MPEG4ESVideoRTPSink() {
-  delete[] fAuxSDPLine;
+  delete[] fFmtpSDPLine;
 }
 
 MPEG4ESVideoRTPSink*
@@ -123,8 +123,8 @@ char const* MPEG4ESVideoRTPSink::auxSDPLine() {
   }
   sprintf(endPtr, "\r\n");
 
-  delete[] fAuxSDPLine;
-  fAuxSDPLine = strDup(fmtp);
+  delete[] fFmtpSDPLine;
+  fFmtpSDPLine = strDup(fmtp);
   delete[] fmtp;
-  return fAuxSDPLine;
+  return fFmtpSDPLine;
 }

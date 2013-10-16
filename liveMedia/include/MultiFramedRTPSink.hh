@@ -56,10 +56,10 @@ protected:
 					 unsigned numBytesInFrame) const;
       // whether this frame can appear in position >1 in a pkt (default: True)
   virtual unsigned specialHeaderSize() const;
-      // returns the size of any special header used (following the RTP header)
+      // returns the size of any special header used (following the RTP header) (default: 0)
   virtual unsigned frameSpecificHeaderSize() const;
       // returns the size of any frame-specific header used (before each frame
-      // within the packet)
+      // within the packet) (default: 0)
   virtual unsigned computeOverflowForNewFrame(unsigned newFrameSize) const;
       // returns the number of overflow bytes that would be produced by adding a new
       // frame of size "newFrameSize" to the current RTP packet.

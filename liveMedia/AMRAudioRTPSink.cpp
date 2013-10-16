@@ -41,11 +41,11 @@ AMRAudioRTPSink
 		 sourceIsWideband ? 16000 : 8000,
 		 sourceIsWideband ? "AMR-WB": "AMR",
 		 numChannelsInSource),
-  fSourceIsWideband(sourceIsWideband), fAuxSDPLine(NULL) {
+  fSourceIsWideband(sourceIsWideband), fFmtpSDPLine(NULL) {
 }
 
 AMRAudioRTPSink::~AMRAudioRTPSink() {
-  delete[] fAuxSDPLine;
+  delete[] fFmtpSDPLine;
 }
 
 Boolean AMRAudioRTPSink::sourceIsCompatibleWithUs(MediaSource& source) {
@@ -123,12 +123,12 @@ unsigned AMRAudioRTPSink::specialHeaderSize() const {
 }
 
 char const* AMRAudioRTPSink::auxSDPLine() {
-  if (fAuxSDPLine == NULL) {
+  if (fFmtpSDPLine == NULL) {
     // Generate a "a=fmtp:" line with "octet-aligned=1"
     // (That is the only non-default parameter.)
     char buf[100];
     sprintf(buf, "a=fmtp:%d octet-align=1\r\n", rtpPayloadType());
-    delete[] fAuxSDPLine; fAuxSDPLine = strDup(buf);
+    delete[] fFmtpSDPLine; fFmtpSDPLine = strDup(buf);
   }
-  return fAuxSDPLine;
+  return fFmtpSDPLine;
 }

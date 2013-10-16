@@ -29,8 +29,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 #include <time.h> // for "strftime()" and "gmtime()"
 
-#define RTPINFO_INCLUDE_RTPTIME 1
-
 ////////// RTSPServer implementation //////////
 
 RTSPServer*
@@ -935,7 +933,7 @@ void RTSPServer::RTSPClientSession
     duration = -duration;
   }
 
-  if (rangeEnd < 0.0 || rangeEnd > duration) rangeEnd = duration;
+  if (rangeEnd <= 0.0 || rangeEnd > duration) rangeEnd = duration;
   if (rangeStart < 0.0) {
     rangeStart = 0.0;
   } else if (rangeEnd > 0.0 && scale > 0.0 && rangeStart > rangeEnd) {
@@ -958,9 +956,7 @@ void RTSPServer::RTSPClientSession
     "%s" // comma separator, if needed
     "url=%s/%s"
     ";seq=%d"
-#ifdef RTPINFO_INCLUDE_RTPTIME
     ";rtptime=%u"
-#endif
     ;
   unsigned rtpInfoFmtSize = strlen(rtpInfoFmt);
   char* rtpInfo = strDup("RTP-Info: ");
@@ -1002,19 +998,15 @@ void RTSPServer::RTSPClientSession
 	+ 1
 	+ rtspURLSize + strlen(urlSuffix)
 	+ 5 /*max unsigned short len*/
-#ifdef RTPINFO_INCLUDE_RTPTIME
 	+ 10 /*max unsigned (32-bit) len*/
-#endif
 	+ 2 /*allows for trailing \r\n at final end of string*/;
       rtpInfo = new char[rtpInfoSize];
       sprintf(rtpInfo, rtpInfoFmt,
 	      prevRTPInfo,
 	      numRTPInfoItems++ == 0 ? "" : ",",
 	      rtspURL, urlSuffix,
-	      rtpSeqNum
-#ifdef RTPINFO_INCLUDE_RTPTIME
-	      ,rtpTimestamp
-#endif
+	      rtpSeqNum,
+	      rtpTimestamp
 	      );
       delete[] prevRTPInfo;
     }
