@@ -217,8 +217,8 @@ void RTPReceptionStats::init(u_int32_t SSRC) {
 }
 
 void RTPReceptionStats::initSeqNum(u_int16_t initialSeqNum) {
-    fBaseExtSeqNumReceived = initialSeqNum-1;
-    fHighestExtSeqNumReceived = initialSeqNum;
+    fBaseExtSeqNumReceived = 0x10000 | initialSeqNum;
+    fHighestExtSeqNumReceived = 0x10000 | initialSeqNum;
     fHaveSeenInitialSequenceNumber = True;
 }
 
@@ -245,18 +245,32 @@ void RTPReceptionStats
 
   // Check whether the new sequence number is the highest yet seen:
   unsigned oldSeqNum = (fHighestExtSeqNumReceived&0xFFFF);
+  unsigned seqNumCycle = (fHighestExtSeqNumReceived&0xFFFF0000);
+  unsigned seqNumDifference = (unsigned)((int)seqNum-(int)oldSeqNum);
+  unsigned newSeqNum = 0;
   if (seqNumLT((u_int16_t)oldSeqNum, seqNum)) {
     // This packet was not an old packet received out of order, so check it:
-    unsigned seqNumCycle = (fHighestExtSeqNumReceived&0xFFFF0000);
-    unsigned seqNumDifference = (unsigned)((int)seqNum-(int)oldSeqNum);
+    
     if (seqNumDifference >= 0x8000) {
       // The sequence number wrapped around, so start a new cycle:
       seqNumCycle += 0x10000;
     }
-
-    unsigned newSeqNum = seqNumCycle|seqNum;
+    
+    newSeqNum = seqNumCycle|seqNum;
     if (newSeqNum > fHighestExtSeqNumReceived) {
       fHighestExtSeqNumReceived = newSeqNum;
+    }
+  } else if (fTotNumPacketsReceived > 1) {
+    // This packet was an old packet received out of order
+    
+    if ((int)seqNumDifference >= 0x8000) {
+      // The sequence number wrapped around, so switch to an old cycle:
+      seqNumCycle -= 0x10000;
+    }
+    
+    newSeqNum = seqNumCycle|seqNum;
+    if (newSeqNum < fBaseExtSeqNumReceived) {
+      fBaseExtSeqNumReceived = newSeqNum;
     }
   }
 
