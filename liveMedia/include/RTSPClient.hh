@@ -155,17 +155,6 @@ public:
 
   static unsigned responseBufferSize;
 
-protected:
-  RTSPClient(UsageEnvironment& env, char const* rtspURL,
-	     int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
-      // called only by createNew();
-  virtual ~RTSPClient();
-
-  void setBaseURL(char const* url);
-
-private: // redefined virtual functions
-  virtual Boolean isRTSPClient() const;
-
 public: // Some compilers complain if this is "private:"
   // The state of a request-in-progress:
   class RequestRecord {
@@ -199,6 +188,19 @@ public: // Some compilers complain if this is "private:"
     char* fContentStr;
     responseHandler* fHandler;
   };
+
+protected:
+  RTSPClient(UsageEnvironment& env, char const* rtspURL,
+	     int verbosityLevel, char const* applicationName, portNumBits tunnelOverHTTPPortNum);
+      // called only by createNew();
+  virtual ~RTSPClient();
+
+  void setBaseURL(char const* url);
+  virtual unsigned sendRequest(RequestRecord* request);
+
+private: // redefined virtual functions
+  virtual Boolean isRTSPClient() const;
+
 private:
   class RequestQueue {
   public:
@@ -223,7 +225,6 @@ private:
   int openConnection(); // -1: failure; 0: pending; 1: success
   int connectToServer(int socketNum, portNumBits remotePortNum); // used to implement "openConnection()"; result values are the same
   char* createAuthenticatorString(char const* cmd, char const* url);
-  unsigned sendRequest(RequestRecord* request);
   void handleRequestError(RequestRecord* request);
   Boolean parseResponseCode(char const* line, unsigned& responseCode, char const*& responseString);
   void handleIncomingRequest();

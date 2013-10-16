@@ -22,46 +22,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "liveMedia.hh"
 #include "GroupsockHelper.hh" // for "our_random()"
 
-// A subclass of "RTSPClient", used to refer to the particular "ProxyServerMediaSession" object being used.  Definition:
-
-class ProxyRTSPClient: public RTSPClient {
-public:
-  ProxyRTSPClient(class ProxyServerMediaSession& ourServerMediaSession, char const* rtspURL,
-		  char const* username, char const* password,
-		  portNumBits tunnelOverHTTPPortNum, int verbosityLevel);
-  virtual ~ProxyRTSPClient();
-
-  Authenticator* auth() { return fOurAuthenticator; }
-
-  void continueAfterDESCRIBE(char const* sdpDescription);
-  void continueAfterOPTIONS(int resultCode);
-  void continueAfterSETUP();
-
-  void scheduleLivenessCommand();
-  static void sendLivenessCommand(void* clientData);
-
-  void scheduleDESCRIBECommand();
-  static void sendDESCRIBE(void* clientData);
-
-  static void subsessionTimeout(void* clientData);
-  void handleSubsessionTimeout();
-
-private:
-  void reset();
-
-private:
-  friend class ProxyServerMediaSubsession;
-  ProxyServerMediaSession& fOurServerMediaSession;
-  Authenticator* fOurAuthenticator;
-  Boolean fStreamRTPOverTCP;
-  class ProxyServerMediaSubsession *fSetupQueueHead, *fSetupQueueTail;
-  unsigned fNumSetupsDone;
-  TaskToken fLivenessCommandTask, fDESCRIBECommandTask, fSubsessionTimerTask;
-  unsigned fNextDESCRIBEDelay; // in seconds
-  Boolean fLastCommandWasPLAY;
-};
-
-
 // A "OnDemandServerMediaSubsession" subclass, used to implement a unicast RTSP server that's proxying another RTSP stream:
 
 class ProxyServerMediaSubsession: public OnDemandServerMediaSubsession {
@@ -113,8 +73,8 @@ ProxyServerMediaSession::ProxyServerMediaSession(UsageEnvironment& env, char con
 
   // Open a RTSP connection to the input stream, and send a "DESCRIBE" command.
   // We'll use the SDP description in the response to set ourselves up.
-  fProxyRTSPClient = new ProxyRTSPClient(*this, inputStreamURL, username, password,
-					 tunnelOverHTTPPortNum, verbosityLevel > 0 ? verbosityLevel-1 : verbosityLevel);
+  fProxyRTSPClient = createNewProxyRTSPClient(inputStreamURL, username, password,
+					      tunnelOverHTTPPortNum, verbosityLevel > 0 ? verbosityLevel-1 : verbosityLevel);
   ProxyRTSPClient::sendDESCRIBE(fProxyRTSPClient);
 }
 
@@ -125,6 +85,13 @@ ProxyServerMediaSession::~ProxyServerMediaSession() {
 
 char const* ProxyServerMediaSession::url() const {
   return fProxyRTSPClient == NULL ? NULL : fProxyRTSPClient->url();
+}
+
+ProxyRTSPClient* ProxyServerMediaSession
+::createNewProxyRTSPClient(char const* rtspURL, char const* username, char const* password,
+			   portNumBits tunnelOverHTTPPortNum, int verbosityLevel){
+  // default implementation:
+  return new ProxyRTSPClient(*this, rtspURL, username, password, tunnelOverHTTPPortNum, verbosityLevel);
 }
 
 void ProxyServerMediaSession::continueAfterDESCRIBE(char const* sdpDescription) {
