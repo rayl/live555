@@ -862,6 +862,8 @@ Boolean RTSPClient::parseTransportParams(char const* paramsStr,
 
   char* foundServerAddressStr = NULL;
   Boolean foundServerPortNum = False;
+  portNumBits clientPortNum = 0;
+  Boolean foundClientPortNum = False;
   Boolean foundChannelIds = False;
   unsigned rtpCid, rtcpCid;
   Boolean isMulticast = True; // by default
@@ -875,6 +877,8 @@ Boolean RTSPClient::parseTransportParams(char const* paramsStr,
   while (sscanf(fields, "%[^;]", field) == 1) {
     if (sscanf(field, "server_port=%hu", &serverPortNum) == 1) {
       foundServerPortNum = True;
+    } else if (sscanf(field, "client_port=%hu", &clientPortNum) == 1) {
+      foundClientPortNum = True;
     } else if (_strncasecmp(field, "source=", 7) == 0) {
       delete[] foundServerAddressStr;
       foundServerAddressStr = strDup(field+7);
@@ -909,7 +913,15 @@ Boolean RTSPClient::parseTransportParams(char const* paramsStr,
   }
   delete[] foundDestinationStr;
 
-  if (foundServerPortNum || foundChannelIds) {
+  // We have a valid "Transport:" header if any of the following are true:
+  //   - We saw a "interleaved=" field, indicating RTP/RTCP-over-TCP streaming, or
+  //   - We saw a "server_port=" field, or
+  //   - We saw a "client_port=" field.
+  //     If we didn't also see a "server_port=" field, then the server port is assumed to be the same as the client port.
+  if (foundChannelIds || foundServerPortNum || foundClientPortNum) {
+    if (foundClientPortNum && !foundServerPortNum) {
+      serverPortNum = clientPortNum;
+    }
     serverAddressStr = foundServerAddressStr;
     return True;
   }
@@ -1076,7 +1088,7 @@ Boolean RTSPClient::handleGET_PARAMETERResponse(char const* parameterName, char*
 
   // The rest of "resultValueStr" should be our desired result, but first trim off any \r and/or \n characters at the end:
   unsigned resultLen = strlen(resultValueString);
-  while (resultLen > 0 && resultValueString[resultLen-1] == '\r' || resultValueString[resultLen-1] == '\n') --resultLen;
+  while (resultLen > 0 && (resultValueString[resultLen-1] == '\r' || resultValueString[resultLen-1] == '\n')) --resultLen;
   resultValueString[resultLen] = '\0';
   return True;
 }
