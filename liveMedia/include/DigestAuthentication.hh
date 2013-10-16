@@ -32,7 +32,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class Authenticator {
 public:
   Authenticator();
-  Authenticator(char const* username, char const* password);
+  Authenticator(char const* username, char const* password, Boolean passwordIsMD5 = False);
+      // If "passwordIsMD5" is True, then "password" is actually the value computed
+      // by md5(<username>:<realm>:<actual-password>)
   Authenticator(const Authenticator& orig);
   Authenticator& operator=(const Authenticator& rightSide);
   virtual ~Authenticator();
@@ -42,8 +44,7 @@ public:
   void setRealmAndRandomNonce(char const* realm);
       // as above, except that the nonce is created randomly.
       // (This is used by servers.)
-  void setUsernameAndPassword(char const* username, char const* password,
-			      Boolean passwordIsMD5 = False);
+  void setUsernameAndPassword(char const* username, char const* password, Boolean passwordIsMD5 = False);
       // If "passwordIsMD5" is True, then "password" is actually the value computed
       // by md5(<username>:<realm>:<actual-password>)
 
@@ -59,8 +60,7 @@ private:
   void resetRealmAndNonce();
   void resetUsernameAndPassword();
   void assignRealmAndNonce(char const* realm, char const* nonce);
-  void assignUsernameAndPassword(char const* username, char const* password,
-				 Boolean passwordIsMD5);
+  void assignUsernameAndPassword(char const* username, char const* password, Boolean passwordIsMD5);
   void assign(char const* realm, char const* nonce,
 	      char const* username, char const* password, Boolean passwordIsMD5);
 

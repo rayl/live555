@@ -1482,6 +1482,9 @@ Boolean RTSPServer::RTSPClientSession
 }
 
 void RTSPServer::RTSPClientSession::noteLiveness() {
+#ifdef DEBUG
+  fprintf(stderr, "Liveness indication from client at %s\n", our_inet_ntoa(fClientAddr.sin_addr));
+#endif
   if (fOurServer.fReclamationTestSeconds > 0) {
     envir().taskScheduler()
       .rescheduleDelayedTask(fLivenessCheckTask,

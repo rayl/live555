@@ -30,18 +30,16 @@ Authenticator::Authenticator() {
   assign(NULL, NULL, NULL, NULL, False);
 }
 
-Authenticator::Authenticator(char const* username, char const* password) {
-  setUsernameAndPassword(username, password);
+Authenticator::Authenticator(char const* username, char const* password, Boolean passwordIsMD5) {
+  assign(NULL, NULL, username, password, passwordIsMD5);
 }
 
 Authenticator::Authenticator(const Authenticator& orig) {
-  assign(orig.realm(), orig.nonce(), orig.username(), orig.password(),
-	 orig.fPasswordIsMD5);
+  assign(orig.realm(), orig.nonce(), orig.username(), orig.password(), orig.fPasswordIsMD5);
 }
 
 Authenticator& Authenticator::operator=(const Authenticator& rightSide) {
   if (&rightSide != this) {
-    reset();
     assign(rightSide.realm(), rightSide.nonce(),
 	   rightSide.username(), rightSide.password(), rightSide.fPasswordIsMD5);
   }
@@ -145,17 +143,14 @@ void Authenticator::assignRealmAndNonce(char const* realm, char const* nonce) {
   fNonce = strDup(nonce);
 }
 
-void Authenticator
-::assignUsernameAndPassword(char const* username, char const* password,
-			    Boolean passwordIsMD5) {
+void Authenticator::assignUsernameAndPassword(char const* username, char const* password, Boolean passwordIsMD5) {
   fUsername = strDup(username);
   fPassword = strDup(password);
   fPasswordIsMD5 = passwordIsMD5;
 }
 
 void Authenticator::assign(char const* realm, char const* nonce,
-			   char const* username, char const* password,
-			   Boolean passwordIsMD5) {
+			   char const* username, char const* password, Boolean passwordIsMD5) {
   assignRealmAndNonce(realm, nonce);
   assignUsernameAndPassword(username, password, passwordIsMD5);
 }
