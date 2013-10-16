@@ -31,6 +31,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class ProxyServerMediaSubsession: public OnDemandServerMediaSubsession {
 public:
   ProxyServerMediaSubsession(MediaSubsession& mediaSubsession);
+  virtual ~ProxyServerMediaSubsession();
 
   char const* codecName() const { return fClientMediaSubsession.codecName(); }
 
@@ -326,6 +327,12 @@ void ProxyRTSPClient::handleSubsessionTimeout() {
 ProxyServerMediaSubsession::ProxyServerMediaSubsession(MediaSubsession& mediaSubsession)
   : OnDemandServerMediaSubsession(mediaSubsession.parentSession().envir(), True/*reuseFirstSource*/),
     fClientMediaSubsession(mediaSubsession), fNext(NULL), fHaveSetupStream(False) {
+}
+
+ProxyServerMediaSubsession::~ProxyServerMediaSubsession() {
+  if (fClientMediaSubsession.rtcpInstance() != NULL) {
+    fClientMediaSubsession.rtcpInstance()->setByeHandler(NULL, NULL);
+  }
 }
 
 UsageEnvironment& operator<<(UsageEnvironment& env, const ProxyServerMediaSubsession& psmss) { // used for debugging

@@ -1283,7 +1283,7 @@ void QuickTimeFileSink::setWord64(int64_t filePosn, u_int64_t size) {
   } while (0);
 
   // One of the SeekFile64()s failed, probable because we're not a seekable file
-  envir() << "QuickTimeFileSink::setWord(): SeekFile64 failed (err "
+  envir() << "QuickTimeFileSink::setWord64(): SeekFile64 failed (err "
 	  << envir().getErrno() << ")\n";
 }
 

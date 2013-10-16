@@ -20,6 +20,20 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "playCommon.hh"
 #include "SIPClient.hh"
 
+static char* getLine(char* startOfLine) {
+  // returns the start of the next line, or NULL if none
+  for (char* ptr = startOfLine; *ptr != '\0'; ++ptr) {
+    if (*ptr == '\r' || *ptr == '\n') {
+      // We found the end of the line
+      *ptr++ = '\0';
+      if (*ptr == '\n') ++ptr;
+      return ptr;
+    }
+  }
+  
+  return NULL;
+}
+
 SIPClient* ourSIPClient = NULL;
 Medium* createClient(UsageEnvironment& env, char const* /*url*/, int verbosityLevel, char const* applicationName) {
   // First, trim any directory prefixes from "applicationName":
@@ -81,6 +95,55 @@ void getSDPDescription(RTSPClient::responseHandler* afterFunc) {
 
 void setupSubsession(MediaSubsession* subsession, Boolean /*streamUsingTCP*/, RTSPClient::responseHandler* afterFunc) {
   subsession->setSessionId("mumble"); // anything that's non-NULL will work
+
+  ////////// BEGIN hack code that should really be implemented in SIPClient //////////
+  // Parse the "Transport:" header parameters:
+  // We do not send audio, but we need port for RTCP
+  char* serverAddressStr;
+  portNumBits serverPortNum;
+  unsigned char rtpChannelId, rtcpChannelId;
+
+  rtpChannelId = rtcpChannelId = 0xff;
+  serverPortNum = 0;
+  serverAddressStr = NULL;
+
+  char* sdp = strDup(ourSIPClient->getInviteSdpReply());
+
+  char* lineStart;
+  char* nextLineStart = sdp;
+  while (1) {
+    lineStart = nextLineStart;
+    if (lineStart == NULL) {
+      break;
+    }
+    nextLineStart = getLine(lineStart);
+
+    char* toTagStr = strDupSize(lineStart);
+
+    if (sscanf(lineStart, "m=audio %[^/\r\n]", toTagStr) == 1) {
+      sscanf(toTagStr, "%hu", &serverPortNum);
+    } else if (sscanf(lineStart, "c=IN IP4 %[^/\r\n]", toTagStr) == 1) {
+      serverAddressStr = strDup(toTagStr);
+    }
+    delete[] toTagStr;
+  }
+
+  if(sdp != NULL) {
+    delete[] sdp;
+  }
+
+  delete[] subsession->connectionEndpointName();
+  subsession->connectionEndpointName() = serverAddressStr;
+  subsession->serverPortNum = serverPortNum;
+  subsession->rtpChannelId = rtpChannelId;
+  subsession->rtcpChannelId = rtcpChannelId;
+
+  // Set the RTP and RTCP sockets' destination address and port from the information in the SETUP response (if present):
+  netAddressBits destAddress = subsession->connectionEndpointAddress();
+  if (destAddress != 0) {
+    subsession->setDestinations(destAddress);
+  }
+  ////////// END hack code that should really be implemented in SIPClient //////////
 
   afterFunc(NULL, 0, NULL);
 }

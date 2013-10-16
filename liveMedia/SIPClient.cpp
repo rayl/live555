@@ -49,7 +49,8 @@ SIPClient::SIPClient(UsageEnvironment& env,
     fCSeq(0), fURL(NULL), fURLSize(0),
     fToTagStr(NULL), fToTagStrSize(0),
     fUserName(NULL), fUserNameSize(0),
-    fInviteSDPDescription(NULL), fInviteCmd(NULL), fInviteCmdSize(0){
+    fInviteSDPDescription(NULL), fInviteSDPDescriptionReturned(NULL),
+    fInviteCmd(NULL), fInviteCmdSize(0) {
   if (mimeSubtype == NULL) mimeSubtype = "";
   fMIMESubtype = strDup(mimeSubtype);
   fMIMESubtypeSize = strlen(fMIMESubtype);
@@ -243,6 +244,7 @@ char* SIPClient::invite1(Authenticator* authenticator) {
       "INVITE %s SIP/2.0\r\n"
       "From: %s <sip:%s@%s>;tag=%u\r\n"
       "Via: SIP/2.0/UDP %s:%u\r\n"
+      "Max-Forwards: 70\r\n"
       "To: %s\r\n"
       "Contact: sip:%s@%s:%u\r\n"
       "Call-ID: %u@%s\r\n"
@@ -432,6 +434,7 @@ void SIPClient::doInviteStateTerminated(unsigned responseCode) {
   if (responseCode < 200 || responseCode > 299) {
     // We failed, so return NULL;
     delete[] fInviteSDPDescription; fInviteSDPDescription = NULL;
+    delete[] fInviteSDPDescriptionReturned; fInviteSDPDescriptionReturned = NULL;
   }
 
   // Unblock the event loop:
@@ -595,6 +598,7 @@ unsigned SIPClient::getResponseCode() {
       }
 
       bodyStart[contentLength] = '\0'; // trims any extra data
+      delete[] fInviteSDPDescriptionReturned; fInviteSDPDescriptionReturned = strDup(bodyStart);
     }
   } while (0);
 
@@ -636,6 +640,7 @@ Boolean SIPClient::sendACK() {
       "ACK %s SIP/2.0\r\n"
       "From: %s <sip:%s@%s>;tag=%u\r\n"
       "Via: SIP/2.0/UDP %s:%u\r\n"
+      "Max-Forwards: 70\r\n"
       "To: %s;tag=%s\r\n"
       "Call-ID: %u@%s\r\n"
       "CSeq: %d ACK\r\n"
@@ -677,6 +682,7 @@ Boolean SIPClient::sendBYE() {
       "BYE %s SIP/2.0\r\n"
       "From: %s <sip:%s@%s>;tag=%u\r\n"
       "Via: SIP/2.0/UDP %s:%u\r\n"
+      "Max-Forwards: 70\r\n"
       "To: %s;tag=%s\r\n"
       "Call-ID: %u@%s\r\n"
       "CSeq: %d BYE\r\n"

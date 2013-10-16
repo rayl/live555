@@ -67,6 +67,7 @@ public:
   static Boolean parseSIPURLUsernamePassword(char const* url,
 					     char*& username,
 					     char*& password);
+  char const* getInviteSdpReply() const { return fInviteSDPDescriptionReturned; }
 
 protected:
   virtual ~SIPClient();
@@ -108,34 +109,35 @@ private:
   // Set for all calls:
   unsigned char fDesiredAudioRTPPayloadFormat;
   char* fMIMESubtype;
-      unsigned fMIMESubtypeSize;
+  unsigned fMIMESubtypeSize;
   int fVerbosityLevel;
   unsigned fCSeq; // sequence number, used in consecutive requests
   char const* fApplicationName;
-      unsigned fApplicationNameSize;
+  unsigned fApplicationNameSize;
   char const* fOurAddressStr;
-      unsigned fOurAddressStrSize;
+  unsigned fOurAddressStrSize;
   portNumBits fOurPortNum;
   Groupsock* fOurSocket;
   char* fUserAgentHeaderStr;
-      unsigned fUserAgentHeaderStrSize;
+  unsigned fUserAgentHeaderStrSize;
 
   // Set for each call:
   char const* fURL;
-      unsigned fURLSize;
+  unsigned fURLSize;
   struct in_addr fServerAddress;
   portNumBits fServerPortNum; // in host order
   portNumBits fClientStartPortNum; // in host order
   unsigned fCallId, fFromTag; // set by us
   char const* fToTagStr; // set by the responder
-      unsigned fToTagStrSize;
+  unsigned fToTagStrSize;
   Authenticator fValidAuthenticator;
   char const* fUserName; // 'user' name used in "From:" & "Contact:" lines
-      unsigned fUserNameSize;
+  unsigned fUserNameSize;
 
   char* fInviteSDPDescription;
+  char* fInviteSDPDescriptionReturned;
   char* fInviteCmd;
-      unsigned fInviteCmdSize;
+  unsigned fInviteCmdSize;
   Authenticator* fWorkingAuthenticator;
   inviteClientState fInviteClientState;
   char fEventLoopStopFlag;

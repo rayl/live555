@@ -73,8 +73,7 @@ RTPSink::~RTPSink() {
 u_int32_t RTPSink::convertToRTPTimestamp(struct timeval tv) {
   // Begin by converting from "struct timeval" units to RTP timestamp units:
   u_int32_t timestampIncrement = (fTimestampFrequency*tv.tv_sec);
-  timestampIncrement += (u_int32_t)((2.0*fTimestampFrequency*tv.tv_usec + 1000000.0)/2000000);
-       // note: rounding
+  timestampIncrement += (u_int32_t)(fTimestampFrequency*(tv.tv_usec/1000000.0) + 0.5); // note: rounding
 
   // Then add this to our 'timestamp base':
   if (fNextTimestampHasBeenPreset) {
