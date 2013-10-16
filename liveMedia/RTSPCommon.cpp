@@ -32,8 +32,10 @@ Boolean parseRTSPRequestString(char const* reqStr,
 			       char* resultURLSuffix,
 			       unsigned resultURLSuffixMaxSize,
 			       char* resultCSeq,
-			       unsigned resultCSeqMaxSize) {
+			       unsigned resultCSeqMaxSize,
+			       unsigned& contentLength) {
   // This parser is currently rather dumb; it should be made smarter #####
+  contentLength = 0; // default value
 
   // Read everything up to the first space as the command name:
   Boolean parseSucceeded = False;
@@ -114,8 +116,8 @@ Boolean parseRTSPRequestString(char const* reqStr,
     if (reqStr[j] == 'C' && reqStr[j+1] == 'S' && reqStr[j+2] == 'e' &&
 	reqStr[j+3] == 'q' && reqStr[j+4] == ':') {
       j += 5;
-      unsigned n;
       while (j < reqStrSize && (reqStr[j] ==  ' ' || reqStr[j] == '\t')) ++j;
+      unsigned n;
       for (n = 0; n < resultCSeqMaxSize-1 && j < reqStrSize; ++n,++j) {
 	char c = reqStr[j];
 	if (c == '\r' || c == '\n') {
@@ -131,6 +133,20 @@ Boolean parseRTSPRequestString(char const* reqStr,
   }
   if (!parseSucceeded) return False;
 
+  // Also: Look for "Content-Length:" (optional)
+  for (j = i; (int)j < (int)(reqStrSize-15); ++j) {
+    if (reqStr[j] == 'C' && reqStr[j+1] == 'o' && reqStr[j+2] == 'n' && reqStr[j+3] == 't' && reqStr[j+4] == 'e' &&
+	reqStr[j+5] == 'n' && reqStr[j+6] == 't' && reqStr[j+7] == '-' && (reqStr[j+8] == 'L' || reqStr[j+8] == 'l') &&
+	reqStr[j+9] == 'e' && reqStr[j+10] == 'n' && reqStr[j+11] == 'g' && reqStr[j+12] == 't' && reqStr[j+13] == 'h' &&
+	reqStr[j+14] == ':') {
+      j += 15;
+      while (j < reqStrSize && (reqStr[j] ==  ' ' || reqStr[j] == '\t')) ++j;
+      unsigned num;
+      if (sscanf(&reqStr[j], "%u", &num) == 1) {
+	contentLength = num;
+      }
+    }
+  }
   return True;
 }
 

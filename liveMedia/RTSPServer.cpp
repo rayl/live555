@@ -445,14 +445,19 @@ void RTSPServer::RTSPClientSession::handleRequestBytes(int newBytesRead) {
   char urlPreSuffix[RTSP_PARAM_STRING_MAX];
   char urlSuffix[RTSP_PARAM_STRING_MAX];
   char cseq[RTSP_PARAM_STRING_MAX];
+  unsigned contentLength;
   if (parseRTSPRequestString((char*)fRequestBuffer, fRequestBytesAlreadySeen,
 			     cmdName, sizeof cmdName,
 			     urlPreSuffix, sizeof urlPreSuffix,
 			     urlSuffix, sizeof urlSuffix,
-			     cseq, sizeof cseq)) {
+			     cseq, sizeof cseq,
+			     contentLength)) {
 #ifdef DEBUG
-    fprintf(stderr, "parseRTSPRequestString() succeeded, returning cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\"\n", cmdName, urlPreSuffix, urlSuffix);
+    fprintf(stderr, "parseRTSPRequestString() succeeded, returning cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\", CSeq \"%s\", Content-Length %u\n", cmdName, urlPreSuffix, urlSuffix, cseq, contentLength);
 #endif
+    // If there was a "Content-Length:" header, then make sure we've received all of the data that it specified:
+    if (ptr + newBytesRead < tmpPtr + 2 + contentLength) return; // we still need more data; subsequent reads will give it to us 
+
     if (strcmp(cmdName, "OPTIONS") == 0) {
       handleCmd_OPTIONS(cseq);
     } else if (strcmp(cmdName, "DESCRIBE") == 0) {

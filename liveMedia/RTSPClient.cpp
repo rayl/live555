@@ -541,7 +541,7 @@ unsigned RTSPClient::sendRequest(RequestRecord* request) {
     unsigned contentStrLen = strlen(contentStr);
     if (contentStrLen > 0) {
       char const* contentLengthHeaderFmt =
-	"Content-length: %d\r\n";
+	"Content-Length: %d\r\n";
       unsigned contentLengthHeaderSize = strlen(contentLengthHeaderFmt)
 	+ 20 /* max int len */;
       contentLengthHeader = new char[contentLengthHeaderSize];
@@ -811,11 +811,13 @@ void RTSPClient::handleIncomingRequest() {
   char urlPreSuffix[RTSP_PARAM_STRING_MAX];
   char urlSuffix[RTSP_PARAM_STRING_MAX];
   char cseq[RTSP_PARAM_STRING_MAX];
+  unsigned contentLength;
   if (!parseRTSPRequestString(fResponseBuffer, fResponseBytesAlreadySeen,
 			      cmdName, sizeof cmdName,
 			      urlPreSuffix, sizeof urlPreSuffix,
 			      urlSuffix, sizeof urlSuffix,
-			      cseq, sizeof cseq)) {
+			      cseq, sizeof cseq,
+			      contentLength)) {
     return;
   } else {
     if (fVerbosityLevel >= 1) {
@@ -1484,7 +1486,7 @@ void RTSPClient::handleResponseBytes(int newBytesRead) {
       unsigned remainingBufferSize = responseBufferSize - fResponseBytesAlreadySeen;
       if (numExtraBytesNeeded > remainingBufferSize) {
         char tmpBuf[200];
-	sprintf(tmpBuf, "Response buffer size (%d) is too small for \"Content-length:\" %d (need a buffer size of >= %d bytes\n",
+	sprintf(tmpBuf, "Response buffer size (%d) is too small for \"Content-Length:\" %d (need a buffer size of >= %d bytes\n",
                 responseBufferSize, contentLength, fResponseBytesAlreadySeen + numExtraBytesNeeded);
 	envir().setResultMsg(tmpBuf);
         break;

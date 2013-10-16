@@ -250,7 +250,7 @@ char* SIPClient::invite1(Authenticator* authenticator) {
       "Content-Type: application/sdp\r\n"
       "%s" /* Proxy-Authorization: line (if any) */
       "%s" /* User-Agent: line */
-      "Content-length: %d\r\n\r\n"
+      "Content-Length: %d\r\n\r\n"
       "%s";
     unsigned inviteCmdSize = strlen(cmdFmt)
       + fURLSize
@@ -528,9 +528,9 @@ unsigned SIPClient::getResponseCode() {
       delete[] toTagStr;
 
       if (sscanf(lineStart, "Content-Length: %d", &contentLength) == 1
-          || sscanf(lineStart, "Content-length: %d", &contentLength) == 1) {
+          || sscanf(lineStart, "Content-Length: %d", &contentLength) == 1) {
         if (contentLength < 0) {
-          envir().setResultMsg("Bad \"Content-length:\" header: \"",
+          envir().setResultMsg("Bad \"Content-Length:\" header: \"",
                                lineStart, "\"");
           break;
         }
@@ -544,11 +544,11 @@ unsigned SIPClient::getResponseCode() {
     }
 
     // Use the remaining data as the SDP descr, but first, check
-    // the "Content-length:" header (if any) that we saw.  We may need to
+    // the "Content-Length:" header (if any) that we saw.  We may need to
     // read more data, or we may have extraneous data in the buffer.
     char* bodyStart = nextLineStart;
     if (bodyStart != NULL && contentLength >= 0) {
-      // We saw a "Content-length:" header
+      // We saw a "Content-Length:" header
       unsigned numBodyBytes = &readBuf[bytesRead] - bodyStart;
       if (contentLength > (int)numBodyBytes) {
         // We need to read more data.  First, make sure we have enough
@@ -560,7 +560,7 @@ unsigned SIPClient::getResponseCode() {
           = readBufSize - (bytesRead + (readBuf - readBuffer));
         if (numExtraBytesNeeded > remainingBufferSize) {
           char tmpBuf[200];
-          sprintf(tmpBuf, "Read buffer size (%d) is too small for \"Content-length:\" %d (need a buffer size of >= %d bytes\n",
+          sprintf(tmpBuf, "Read buffer size (%d) is too small for \"Content-Length:\" %d (need a buffer size of >= %d bytes\n",
                   readBufSize, contentLength,
                   readBufSize + numExtraBytesNeeded - remainingBufferSize);
           envir().setResultMsg(tmpBuf);
@@ -639,7 +639,7 @@ Boolean SIPClient::sendACK() {
       "To: %s;tag=%s\r\n"
       "Call-ID: %u@%s\r\n"
       "CSeq: %d ACK\r\n"
-      "Content-length: 0\r\n\r\n";
+      "Content-Length: 0\r\n\r\n";
     unsigned cmdSize = strlen(cmdFmt)
       + fURLSize
       + 2*fUserNameSize + fOurAddressStrSize + 20 /* max int len */
@@ -680,7 +680,7 @@ Boolean SIPClient::sendBYE() {
       "To: %s;tag=%s\r\n"
       "Call-ID: %u@%s\r\n"
       "CSeq: %d ACK\r\n"
-      "Content-length: 0\r\n\r\n";
+      "Content-Length: 0\r\n\r\n";
     unsigned cmdSize = strlen(cmdFmt)
       + fURLSize
       + 2*fUserNameSize + fOurAddressStrSize + 20 /* max int len */
