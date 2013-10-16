@@ -91,6 +91,10 @@ public:
       // each session's "rtsp://" URL.
       // This string is dynamically allocated; caller should delete[]
 
+  UserAuthenticationDatabase* setAuthenticationDatabase(UserAuthenticationDatabase* newDB);
+      // Changes the server's authentication database to "newDB", returning a pointer to the old database (if there was one).
+      // "newDB" may be NULL (you can use this to disable authentication at runtime, if desired).
+
   Boolean setUpTunnelingOverHTTP(Port httpPort);
       // (Attempts to) enable RTSP-over-HTTP tunneling on the specified port.
       // Returns True iff the specified port can be used in this way (i.e., it's not already being used for a separate HTTP server).

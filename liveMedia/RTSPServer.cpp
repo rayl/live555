@@ -96,6 +96,18 @@ void RTSPServer::removeServerMediaSession(char const* streamName) {
   removeServerMediaSession(lookupServerMediaSession(streamName));
 }
 
+char* RTSPServer
+::rtspURL(ServerMediaSession const* serverMediaSession, int clientSocket) const {
+  char* urlPrefix = rtspURLPrefix(clientSocket);
+  char const* sessionName = serverMediaSession->streamName();
+
+  char* resultURL = new char[strlen(urlPrefix) + strlen(sessionName) + 1];
+  sprintf(resultURL, "%s%s", urlPrefix, sessionName);
+
+  delete[] urlPrefix;
+  return resultURL;
+}
+
 char* RTSPServer::rtspURLPrefix(int clientSocket) const {
   struct sockaddr_in ourAddress;
   if (clientSocket < 0) {
@@ -121,16 +133,11 @@ char* RTSPServer::rtspURLPrefix(int clientSocket) const {
   return strDup(urlBuffer);
 }
 
-char* RTSPServer
-::rtspURL(ServerMediaSession const* serverMediaSession, int clientSocket) const {
-  char* urlPrefix = rtspURLPrefix(clientSocket);
-  char const* sessionName = serverMediaSession->streamName();
+UserAuthenticationDatabase* RTSPServer::setAuthenticationDatabase(UserAuthenticationDatabase* newDB) {
+  UserAuthenticationDatabase* oldDB = fAuthDB;
+  fAuthDB = newDB;
 
-  char* resultURL = new char[strlen(urlPrefix) + strlen(sessionName) + 1];
-  sprintf(resultURL, "%s%s", urlPrefix, sessionName);
-
-  delete[] urlPrefix;
-  return resultURL;
+  return oldDB;
 }
 
 Boolean RTSPServer::setUpTunnelingOverHTTP(Port httpPort) {
