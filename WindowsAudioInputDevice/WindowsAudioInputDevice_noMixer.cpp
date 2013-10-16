@@ -154,7 +154,13 @@ void AudioInputPort::open(unsigned numChannels, unsigned samplingFrequency, unsi
 	    name[0] = '\0';
 	    break;
 	}
-    strncpy(name, wic.szPname, MAXPNAMELEN);
+    
+    #ifdef UNICODE
+    // Copy the mixer name:
+        wcstombs(name, wic.szPname, MAXPNAMELEN);
+    #else
+        strncpy(name, wic.szPname, MAXPNAMELEN);
+    #endif
 
 	if (!WindowsAudioInputDevice_common::openWavInPort(index, numChannels, samplingFrequency, granularityInMS)) break;
 
@@ -172,3 +178,5 @@ void AudioInputPort::open() {
 void AudioInputPort::close() {
   WindowsAudioInputDevice_common::waveIn_close();
 }
+
+

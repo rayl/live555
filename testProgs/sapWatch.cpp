@@ -49,13 +49,11 @@ int main(int argc, char** argv) {
   struct sockaddr_in fromAddress;
   while (inputGroupsock.handleRead(packet, maxPacketSize,
 				   packetSize, fromAddress)) {
-    printf("\n[packet from %s (%d bytes)]\n",
-	   our_inet_ntoa(fromAddress.sin_addr), packetSize);
+    printf("\n[packet from %s (%d bytes)]\n", AddressString(fromAddress).val(), packetSize);
 
     // Ignore the first 8 bytes (SAP header).
     if (packetSize < 8) {
-      *env << "Ignoring short packet from "
-	   << our_inet_ntoa(fromAddress.sin_addr) << "%s!\n";
+      *env << "Ignoring short packet from " << AddressString(fromAddress).val() << "%s!\n";
       continue;
     }
 

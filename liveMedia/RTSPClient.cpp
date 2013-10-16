@@ -394,7 +394,7 @@ int RTSPClient::openConnection() {
 int RTSPClient::connectToServer(int socketNum, portNumBits remotePortNum) {
   MAKE_SOCKADDR_IN(remoteName, fServerAddress, htons(remotePortNum));
   if (fVerbosityLevel >= 1) {
-    envir() << "Opening connection to " << our_inet_ntoa(remoteName.sin_addr) << ", port " << remotePortNum << "...\n";
+    envir() << "Opening connection to " << AddressString(remoteName).val() << ", port " << remotePortNum << "...\n";
   }
   if (connect(socketNum, (struct sockaddr*) &remoteName, sizeof remoteName) != 0) {
     if (envir().getErrno() == EINPROGRESS) {

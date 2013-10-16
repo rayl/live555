@@ -302,8 +302,7 @@ void OnDemandServerMediaSubsession
 
   char const* mediaType = rtpSink->sdpMediaType();
   unsigned char rtpPayloadType = rtpSink->rtpPayloadType();
-  struct in_addr serverAddrForSDP; serverAddrForSDP.s_addr = fServerAddressForSDP;
-  char* const ipAddressStr = strDup(our_inet_ntoa(serverAddrForSDP));
+  AddressString ipAddressStr(fServerAddressForSDP);
   char* rtpmapLine = rtpSink->rtpmapLine();
   char const* rangeLine = rangeSDPLine();
   char const* auxSDPLine = getAuxSDPLine(rtpSink, inputSource);
@@ -319,7 +318,7 @@ void OnDemandServerMediaSubsession
     "a=control:%s\r\n";
   unsigned sdpFmtSize = strlen(sdpFmt)
     + strlen(mediaType) + 5 /* max short len */ + 3 /* max char len */
-    + strlen(ipAddressStr)
+    + strlen(ipAddressStr.val())
     + 20 /* max int len */
     + strlen(rtpmapLine)
     + strlen(rangeLine)
@@ -330,13 +329,13 @@ void OnDemandServerMediaSubsession
 	  mediaType, // m= <media>
 	  fPortNumForSDP, // m= <port>
 	  rtpPayloadType, // m= <fmt list>
-	  ipAddressStr, // c= address
+	  ipAddressStr.val(), // c= address
 	  estBitrate, // b=AS:<bandwidth>
 	  rtpmapLine, // a=rtpmap:... (if present)
 	  rangeLine, // a=range:... (if present)
 	  auxSDPLine, // optional extra SDP line
 	  trackId()); // a=control:<track-id>
-  delete[] (char*)rangeLine; delete[] rtpmapLine; delete[] ipAddressStr;
+  delete[] (char*)rangeLine; delete[] rtpmapLine;
 
   fSDPLines = strDup(sdpLines);
   delete[] sdpLines;

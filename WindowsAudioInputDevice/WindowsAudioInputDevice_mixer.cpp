@@ -244,8 +244,12 @@ void Mixer::open(unsigned numChannels, unsigned samplingFrequency, unsigned gran
     MIXERCAPS mc;
     if (mixerGetDevCaps(index, &mc, sizeof mc) != MMSYSERR_NOERROR) break;
 
+    #ifdef UNICODE
     // Copy the mixer name:
-    strncpy(name, mc.szPname, MAXPNAMELEN);
+        wcstombs(name, mc.szPname, MAXPNAMELEN);
+    #else
+        strncpy(name, mc.szPname, MAXPNAMELEN);
+    #endif
 
     // Find the correct line for this mixer:
     unsigned i, uWavIn;
@@ -257,7 +261,13 @@ void Mixer::open(unsigned numChannels, unsigned samplingFrequency, unsigned gran
       MIXERLINE ml;
       ml.cbStruct = sizeof ml;
       ml.Target.dwType  = MIXERLINE_TARGETTYPE_WAVEIN;
-      strncpy(ml.Target.szPname, wic.szPname, MAXPNAMELEN);
+
+    #ifdef UNICODE
+          wcsncpy(ml.Target.szPname, wic.szPname, MAXPNAMELEN);
+    #else
+          strncpy(ml.Target.szPname, wic.szPname, MAXPNAMELEN);
+    #endif
+
       ml.Target.vDriverVersion = wic.vDriverVersion;
       ml.Target.wMid = wic.wMid;
       ml.Target.wPid = wic.wPid;
@@ -315,7 +325,11 @@ void Mixer::getPortsInfo() {
     mixerGetLineInfo((HMIXEROBJ)hMixer, &mlc, MIXER_GETLINEINFOF_SOURCE/*|MIXER_OBJECTF_HMIXER*/);
     ports[i].tag = mlc.dwLineID;
 	ports[i].dwComponentType = mlc.dwComponentType;
+#ifdef UNICODE
+    wcstombs(ports[i].name, mlc.szName, MIXER_LONG_NAME_CHARS);
+#else
     strncpy(ports[i].name, mlc.szName, MIXER_LONG_NAME_CHARS);
+#endif
   }
 
   // Make the microphone the first port in the list:
@@ -361,8 +375,15 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
     return False;
   }
 
-  char portname[MIXER_LONG_NAME_CHARS+1];
-  strncpy(portname, ml.szName, MIXER_LONG_NAME_CHARS);
+  
+
+  #ifdef UNICODE
+    wchar_t portname[MIXER_LONG_NAME_CHARS+1];
+    wcsncpy(portname, ml.szName, MIXER_LONG_NAME_CHARS);
+  #else
+    char portname[MIXER_LONG_NAME_CHARS+1];
+    strncpy(portname, ml.szName, MIXER_LONG_NAME_CHARS);
+  #endif
 
   memset(&ml, 0, sizeof (MIXERLINE));
   ml.cbStruct = sizeof (MIXERLINE);
@@ -418,12 +439,22 @@ Boolean Mixer::enableInputPort(unsigned portIndex, char const*& errReason, MMRES
       }
     }
 
+    #ifdef UNICODE
     for (unsigned i = 0; i < mcd.cMultipleItems; ++i) {
-      if (strcmp(mcdlText[i].szName, portname) == 0) {
-	matchLine = i;
-	break;
-      }
+        if (wcscmp(mcdlText[i].szName, portname) == 0) {
+	    matchLine = i;
+	    break;
+        }
     }
+    #else
+    for (unsigned i = 0; i < mcd.cMultipleItems; ++i) {
+        if (strcmp(mcdlText[i].szName, portname) == 0) {
+	    matchLine = i;
+	    break;
+        }
+    }
+    #endif
+    
     delete[] mcdlText;
   }
 

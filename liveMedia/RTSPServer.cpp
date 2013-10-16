@@ -115,10 +115,10 @@ char* RTSPServer::rtspURLPrefix(int clientSocket) const {
 
   portNumBits portNumHostOrder = ntohs(fRTSPServerPort.num());
   if (portNumHostOrder == 554 /* the default port number */) {
-    sprintf(urlBuffer, "rtsp://%s/", our_inet_ntoa(ourAddress.sin_addr));
+    sprintf(urlBuffer, "rtsp://%s/", AddressString(ourAddress).val());
   } else {
     sprintf(urlBuffer, "rtsp://%s:%hu/",
-	    our_inet_ntoa(ourAddress.sin_addr), portNumHostOrder);
+	    AddressString(ourAddress).val(), portNumHostOrder);
   }
 
   return strDup(urlBuffer);
@@ -266,7 +266,7 @@ void RTSPServer::incomingConnectionHandler(int serverSocket) {
   increaseSendBufferTo(envir(), clientSocket, 50*1024);
 
 #ifdef DEBUG
-  envir() << "accept()ed connection from " << our_inet_ntoa(clientAddr.sin_addr) << "\n";
+  envir() << "accept()ed connection from " << AddressString(clientAddr).val() << "\n";
 #endif
 
   // Create a new object for this RTSP session.
@@ -884,9 +884,8 @@ void RTSPServer::RTSPClientSession
     SendingInterfaceAddr = origSendingInterfaceAddr;
     ReceivingInterfaceAddr = origReceivingInterfaceAddr;
     
-    struct in_addr destinationAddr; destinationAddr.s_addr = destinationAddress;
-    char* destAddrStr = strDup(our_inet_ntoa(destinationAddr));
-    char* sourceAddrStr = strDup(our_inet_ntoa(sourceAddr.sin_addr));
+    AddressString destAddrStr(destinationAddress);
+    AddressString sourceAddrStr(sourceAddr);
     if (fIsMulticast) {
       switch (streamingMode) {
         case RTP_UDP:
@@ -898,7 +897,7 @@ void RTSPServer::RTSPClientSession
 		   "Session: %08X\r\n\r\n",
 		   cseq,
 		   dateHeader(),
-		   destAddrStr, sourceAddrStr, ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()), destinationTTL,
+		   destAddrStr.val(), sourceAddrStr.val(), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()), destinationTTL,
 		   fOurSessionId);
 	  break;
         case RTP_TCP:
@@ -914,7 +913,7 @@ void RTSPServer::RTSPClientSession
 		   "Session: %08X\r\n\r\n",
 		   cseq,
 		   dateHeader(),
-		   streamingModeString, destAddrStr, sourceAddrStr, ntohs(serverRTPPort.num()), destinationTTL,
+		   streamingModeString, destAddrStr.val(), sourceAddrStr.val(), ntohs(serverRTPPort.num()), destinationTTL,
 		   fOurSessionId);
 	  break;
       }
@@ -929,7 +928,7 @@ void RTSPServer::RTSPClientSession
 		   "Session: %08X\r\n\r\n",
 		   cseq,
 		   dateHeader(),
-		   destAddrStr, sourceAddrStr, ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
+		   destAddrStr.val(), sourceAddrStr.val(), ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
 		   fOurSessionId);
 	  break;
 	}
@@ -942,7 +941,7 @@ void RTSPServer::RTSPClientSession
 		   "Session: %08X\r\n\r\n",
 		   cseq,
 		   dateHeader(),
-		   destAddrStr, sourceAddrStr, rtpChannelId, rtcpChannelId,
+		   destAddrStr.val(), sourceAddrStr.val(), rtpChannelId, rtcpChannelId,
 		   fOurSessionId);
 	  break;
 	}
@@ -955,13 +954,13 @@ void RTSPServer::RTSPClientSession
 		   "Session: %08X\r\n\r\n",
 		   cseq,
 		   dateHeader(),
-		   streamingModeString, destAddrStr, sourceAddrStr, ntohs(clientRTPPort.num()), ntohs(serverRTPPort.num()),
+		   streamingModeString, destAddrStr.val(), sourceAddrStr.val(), ntohs(clientRTPPort.num()), ntohs(serverRTPPort.num()),
 		   fOurSessionId);
 	  break;
 	}
       }
     }
-    delete[] destAddrStr; delete[] sourceAddrStr; delete[] streamingModeString;
+    delete[] streamingModeString;
   } while (0);
 
   delete[] concatenatedStreamName;
@@ -1524,7 +1523,7 @@ Boolean RTSPServer::RTSPClientSession
 
 void RTSPServer::RTSPClientSession::noteLiveness() {
 #ifdef DEBUG
-  fprintf(stderr, "Liveness indication from client at %s\n", our_inet_ntoa(fClientAddr.sin_addr));
+  fprintf(stderr, "Liveness indication from client at %s\n", AddressString(fClientAddr).val());
 #endif
   if (fOurServer.fReclamationTestSeconds > 0) {
     envir().taskScheduler()
@@ -1544,7 +1543,7 @@ void RTSPServer::RTSPClientSession
   // If this gets called, the client session is assumed to have timed out,
   // so delete it:
 #ifdef DEBUG
-  fprintf(stderr, "RTSP client session from %s has timed out (due to inactivity)\n", our_inet_ntoa(clientSession->fClientAddr.sin_addr));
+  fprintf(stderr, "RTSP client session from %s has timed out (due to inactivity)\n", AddressString(clientSession->fClientAddr).val());
 #endif
   delete clientSession;
 }

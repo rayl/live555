@@ -1,5 +1,5 @@
 /* Some systems (e.g., SunOS) have header files that erroneously declare
- * inet_addr(), inet_ntoa() and gethostbyname() as taking no arguments.
+ * inet_addr() and gethostbyname() as taking no arguments.
  * This confuses C++.  To overcome this, we use our own routines,
  * implemented in C.
  */
@@ -18,32 +18,6 @@ unsigned our_inet_addr(cp)
 	char const* cp;
 {
 	return inet_addr(cp);
-}
-
-char *
-our_inet_ntoa(in)
-        struct in_addr in;
-{
-#ifndef VXWORKS
-  return inet_ntoa(in);
-#else
-  /* according the man pages of inet_ntoa :
-
-     NOTES
-     The return value from inet_ntoa() points to a  buffer  which
-     is  overwritten on each call.  This buffer is implemented as
-     thread-specific data in multithreaded applications.
-
-     the vxworks version of inet_ntoa allocates a buffer for each
-     ip address string, and does not reuse the same buffer.
-
-     this is merely to simulate the same behaviour (not multithread
-     safe though):
-  */
-  static char result[INET_ADDR_LEN];
-  inet_ntoa_b(in, result);
-  return(result);
-#endif
 }
 
 #if defined(__WIN32__) || defined(_WIN32)
@@ -459,10 +433,11 @@ long our_random() {
 #endif
 
 u_int32_t our_random32() {
-  // Return a 32-bit random number.
-  // Because "our_random()" returns a 31-bit random number, we call it a second
-  // time, to generate the high bit.
-  // (Actually, to increase the likelhood of randomness, we take the middle 16 bits of two successive calls to "our_random()")
+  /* Return a 32-bit random number.
+     Because "our_random()" returns a 31-bit random number, we call it a second
+     time, to generate the high bit.
+     (Actually, to increase the likelhood of randomness, we take the middle 16 bits of two successive calls to "our_random()")
+  */
   long random_1 = our_random();
   u_int32_t random16_1 = (u_int32_t)(random_1&0x00FFFF00);
 

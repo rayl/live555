@@ -66,7 +66,7 @@ PassiveServerMediaSubsession::sdpLines() {
     // Construct a set of SDP lines that describe this subsession:
     // Use the components from "rtpSink":
     Groupsock const& gs = fRTPSink.groupsockBeingUsed();
-    struct in_addr const& ipAddress = gs.groupAddress();
+    AddressString groupAddressStr(gs.groupAddress());
     unsigned short portNum = ntohs(gs.port().num());
     unsigned char ttl = gs.ttl();
     unsigned char rtpPayloadType = fRTPSink.rtpPayloadType();
@@ -78,8 +78,6 @@ PassiveServerMediaSubsession::sdpLines() {
     char const* auxSDPLine = fRTPSink.auxSDPLine();
     if (auxSDPLine == NULL) auxSDPLine = "";
 
-    char* const ipAddressStr = strDup(our_inet_ntoa(ipAddress));
-
     char const* const sdpFmt =
       "m=%s %d RTP/AVP %d\r\n"
       "c=IN IP4 %s/%d\r\n"
@@ -90,7 +88,7 @@ PassiveServerMediaSubsession::sdpLines() {
       "a=control:%s\r\n";
     unsigned sdpFmtSize = strlen(sdpFmt)
       + strlen(mediaType) + 5 /* max short len */ + 3 /* max char len */
-      + strlen(ipAddressStr) + 3 /* max char len */
+      + strlen(groupAddressStr.val()) + 3 /* max char len */
       + 20 /* max int len */
       + strlen(rtpmapLine)
       + strlen(rangeLine)
@@ -101,14 +99,14 @@ PassiveServerMediaSubsession::sdpLines() {
 	    mediaType, // m= <media>
 	    portNum, // m= <port>
 	    rtpPayloadType, // m= <fmt list>
-	    ipAddressStr, // c= <connection address>
+	    groupAddressStr.val(), // c= <connection address>
 	    ttl, // c= TTL
 	    estBitrate, // b=AS:<bandwidth>
 	    rtpmapLine, // a=rtpmap:... (if present)
 	    rangeLine, // a=range:... (if present)
 	    auxSDPLine, // optional extra SDP line
 	    trackId()); // a=control:<track-id>
-    delete[] ipAddressStr; delete[] (char*)rangeLine; delete[] rtpmapLine;
+    delete[] (char*)rangeLine; delete[] rtpmapLine;
 
     fSDPLines = strDup(sdpLines);
     delete[] sdpLines;

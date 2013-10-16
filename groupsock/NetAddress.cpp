@@ -22,6 +22,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "GroupsockHelper.hh"
 
 #include <stddef.h>
+#include <stdio.h>
 #if defined(__WIN32__) || defined(_WIN32)
 #else
 #ifndef INADDR_NONE
@@ -254,7 +255,8 @@ void* AddressPortLookupTable::Iterator::next() {
   return fIter->next(key);
 }
 
-////////// Misc. //////////
+
+////////// isMulticastAddress() implementation //////////
 
 Boolean IsMulticastAddress(netAddressBits address) {
   // Note: We return False for addresses in the range 224.0.0.0
@@ -263,4 +265,29 @@ Boolean IsMulticastAddress(netAddressBits address) {
   netAddressBits addressInHostOrder = ntohl(address);
   return addressInHostOrder >  0xE00000FF &&
          addressInHostOrder <= 0xEFFFFFFF;
+}
+
+
+////////// AddressString implementation //////////
+
+AddressString::AddressString(struct sockaddr_in const& addr) {
+  init(addr.sin_addr.s_addr);
+}
+
+AddressString::AddressString(struct in_addr const& addr) {
+  init(addr.s_addr);
+}
+
+AddressString::AddressString(netAddressBits addr) {
+  init(addr);
+}
+
+void AddressString::init(netAddressBits addr) {
+  fVal = new char[16]; // large enough for "abc.def.ghi.jkl"
+  netAddressBits addrNBO = htonl(addr); // make sure we have a value in a known byte order: big endian
+  sprintf(fVal, "%u.%u.%u.%u", (addrNBO>>24)&0xFF, (addrNBO>>16)&0xFF, (addrNBO>>8)&0xFF, addrNBO&0xFF);
+}
+
+AddressString::~AddressString() {
+  delete[] fVal;
 }

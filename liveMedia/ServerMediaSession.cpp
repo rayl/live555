@@ -183,10 +183,8 @@ Boolean ServerMediaSession::isServerMediaSession() const {
 }
 
 char* ServerMediaSession::generateSDPDescription() {
-  struct in_addr ipAddress;
-  ipAddress.s_addr = ourIPAddress(envir());
-  char* const ipAddressStr = strDup(our_inet_ntoa(ipAddress));
-  unsigned ipAddressStrSize = strlen(ipAddressStr);
+  AddressString ipAddressStr(ourIPAddress(envir()));
+  unsigned ipAddressStrSize = strlen(ipAddressStr.val());
 
   // For a SSM sessions, we need a "a=source-filter: incl ..." line also:
   char* sourceFilterLine;
@@ -197,7 +195,7 @@ char* ServerMediaSession::generateSDPDescription() {
     unsigned const sourceFilterFmtSize = strlen(sourceFilterFmt) + ipAddressStrSize + 1;
 
     sourceFilterLine = new char[sourceFilterFmtSize];
-    sprintf(sourceFilterLine, sourceFilterFmt, ipAddressStr);
+    sprintf(sourceFilterLine, sourceFilterFmt, ipAddressStr.val());
   } else {
     sourceFilterLine = strDup("");
   }
@@ -262,7 +260,7 @@ char* ServerMediaSession::generateSDPDescription() {
     sprintf(sdp, sdpPrefixFmt,
 	    fCreationTime.tv_sec, fCreationTime.tv_usec, // o= <session id>
 	    1, // o= <version> // (needs to change if params are modified)
-	    ipAddressStr, // o= <address>
+	    ipAddressStr.val(), // o= <address>
 	    fDescriptionSDPString, // s= <description>
 	    fInfoSDPString, // i= <info>
 	    libNameStr, libVersionStr, // a=tool:
@@ -281,7 +279,7 @@ char* ServerMediaSession::generateSDPDescription() {
     }
   } while (0);
 
-  delete[] rangeLine; delete[] sourceFilterLine; delete[] ipAddressStr;
+  delete[] rangeLine; delete[] sourceFilterLine;
   return sdp;
 }
 

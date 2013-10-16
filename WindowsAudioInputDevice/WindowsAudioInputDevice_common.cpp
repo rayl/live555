@@ -201,7 +201,11 @@ Boolean WindowsAudioInputDevice_common::waveIn_open(unsigned uid, WAVEFORMATEX& 
 
     if (waveInStart(shWaveIn) != MMSYSERR_NOERROR) break;
 
+#ifdef UNICODE
+    hAudioReady = CreateEvent(NULL, TRUE, FALSE, L"waveIn Audio Ready");
+#else
     hAudioReady = CreateEvent(NULL, TRUE, FALSE, "waveIn Audio Ready");
+#endif
     return True;
   } while (0);
 

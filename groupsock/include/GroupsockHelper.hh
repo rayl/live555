@@ -116,7 +116,6 @@ extern int gettimeofday(struct timeval*, int*);
 
 // The following are implemented in inet.c:
 extern "C" netAddressBits our_inet_addr(char const*);
-extern "C" char* our_inet_ntoa(struct in_addr);
 extern "C" struct hostent* our_gethostbyname(char* name);
 extern "C" void our_srandom(int x);
 extern "C" long our_random();

@@ -335,8 +335,7 @@ Boolean Groupsock::handleRead(unsigned char* buffer, unsigned bufferMaxSize,
     }
   }
   if (DebugLevel >= 3) {
-    env() << *this << ": read " << bytesRead << " bytes from ";
-    env() << our_inet_ntoa(fromAddress.sin_addr);
+    env() << *this << ": read " << bytesRead << " bytes from " << AddressString(fromAddress).val();
     if (numMembers > 0) {
       env() << "; relayed to " << numMembers << " members";
     }
@@ -447,11 +446,11 @@ int Groupsock::outputToAllMembersExcept(DirectedNetInterface* exceptInterface,
 UsageEnvironment& operator<<(UsageEnvironment& s, const Groupsock& g) {
   UsageEnvironment& s1 = s << timestampString() << " Groupsock("
 			   << g.socketNum() << ": "
-			   << our_inet_ntoa(g.groupAddress())
+			   << AddressString(g.groupAddress()).val()
 			   << ", " << g.port() << ", ";
   if (g.isSSM()) {
     return s1 << "SSM source: "
-	      <<  our_inet_ntoa(g.sourceFilterAddress()) << ")";
+	      <<  AddressString(g.sourceFilterAddress()).val() << ")";
   } else {
     return s1 << (unsigned)(g.ttl()) << ")";
   }

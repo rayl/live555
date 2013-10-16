@@ -60,13 +60,13 @@ SIPClient::SIPClient(UsageEnvironment& env,
 
   struct in_addr ourAddress;
   ourAddress.s_addr = ourIPAddress(env); // hack
-  fOurAddressStr = strDup(our_inet_ntoa(ourAddress));
+  fOurAddressStr = strDup(AddressString(ourAddress).val());
   fOurAddressStrSize = strlen(fOurAddressStr);
 
   fOurSocket = new Groupsock(env, ourAddress, 0, 255);
   if (fOurSocket == NULL) {
     env << "ERROR: Failed to create socket for addr "
-	<< our_inet_ntoa(ourAddress) << ": "
+	<< fOurAddressStr << ": "
 	<< env.getResultMsg() << "\n";
   }
 
@@ -84,7 +84,7 @@ SIPClient::SIPClient(UsageEnvironment& env,
     fOurSocket = new Groupsock(env, ourAddress, fOurPortNum, 255);
     if (fOurSocket == NULL) {
       env << "ERROR: Failed to create socket for addr "
-	  << our_inet_ntoa(ourAddress) << ", port "
+	  << fOurAddressStr << ", port "
 	  << fOurPortNum << ": "
 	  << env.getResultMsg() << "\n";
     }

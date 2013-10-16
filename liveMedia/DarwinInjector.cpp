@@ -146,7 +146,7 @@ Boolean DarwinInjector
       NetAddress const* address = addresses.firstAddress();
       addr.s_addr = *(unsigned*)(address->data());
     }
-    char const* remoteRTSPServerAddressStr = our_inet_ntoa(addr);
+    AddressString remoteRTSPServerAddressStr(addr);
 
     // Construct a SDP description for the session that we'll be streaming:
     char const* const sdpFmt =
@@ -166,7 +166,7 @@ Boolean DarwinInjector
       + 20 /* max int len */ + 20 /* max int len */
       + strlen(sessionName)
       + strlen(sessionInfo)
-      + strlen(remoteRTSPServerAddressStr)
+      + strlen(remoteRTSPServerAddressStr.val())
       + strlen(sessionName)
       + strlen(sessionInfo)
       + strlen(fApplicationName)
@@ -180,7 +180,7 @@ Boolean DarwinInjector
 	    sdpSessionId, sdpVersion, // o= line
 	    sessionName, // s= line
 	    sessionInfo, // i= line
-	    remoteRTSPServerAddressStr, // c= line
+	    remoteRTSPServerAddressStr.val(), // c= line
 	    sessionName, // a=x-qt-text-nam: line
 	    sessionInfo, // a=x-qt-text-inf: line
 	    fApplicationName, // a=x-qt-text-cmt: line
