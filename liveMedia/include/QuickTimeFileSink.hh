@@ -148,6 +148,7 @@ private:
                           _atom(rtp);
                               _atom(tims);
                       _atom(stts);
+                      _atom(stss);
                       _atom(stsc);
                       _atom(stsz);
                       _atom(stco);

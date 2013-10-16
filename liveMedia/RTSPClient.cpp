@@ -1707,7 +1707,7 @@ Boolean RTSPClient::teardownMediaSession(MediaSession& session) {
       // Get the response from the server:
       unsigned bytesRead; unsigned responseCode;
       char* firstLine; char* nextLineStart;
-      if (!getResponse("TEARDOWN", bytesRead, responseCode, firstLine, nextLineStart)) break;
+      getResponse("TEARDOWN", bytesRead, responseCode, firstLine, nextLineStart); // ignore the response; from our POV, we're done
 
       // Run through each subsession, deleting its "sessionId":
       MediaSubsessionIterator iter(session);
@@ -1777,7 +1777,7 @@ Boolean RTSPClient::teardownMediaSubsession(MediaSubsession& subsession) {
       // Get the response from the server:
       unsigned bytesRead; unsigned responseCode;
       char* firstLine; char* nextLineStart;
-      if (!getResponse("TEARDOWN", bytesRead, responseCode, firstLine, nextLineStart)) break;
+      getResponse("TEARDOWN", bytesRead, responseCode, firstLine, nextLineStart); // ignore the response; from our POV, we're done
     }
 
     delete[] (char*)subsession.sessionId;

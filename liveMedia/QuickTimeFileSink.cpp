@@ -1552,6 +1552,9 @@ addAtomEnd;
 addAtom(stbl);
   size += addAtom_stsd();
   size += addAtom_stts();
+  if (fCurrentIOState->fQTcomponentSubtype == fourChar('v','i','d','e')) {
+    size += addAtom_stss(); // only for video streams
+  }
   size += addAtom_stsc();
   size += addAtom_stsz();
   size += addAtom_stco();
@@ -1896,6 +1899,43 @@ addAtom(stts); // Time-to-Sample
   ++numEntries;
   size += addWord(numSamplesSoFar); // Sample count
   size += addWord(prevSampleDuration); // Sample duration
+
+  // Now go back and fill in the "Number of entries" field:
+  setWord(numEntriesPosition, numEntries);
+addAtomEnd;
+
+addAtom(stss); // Sync-Sample
+  size += addWord(0x00000000); // Version+flags
+
+  // First, add a dummy "Number of entries" field
+  // (and remember its position).  We'll fill this field in later:
+  unsigned numEntriesPosition = ftell(fOutFid);
+  size += addWord(0); // dummy for "Number of entries"
+
+  // Then, run through the chunk descriptors, counting up the total nuber of samples:
+  unsigned numEntries = 0, numSamplesSoFar = 0;
+  unsigned const samplesPerFrame = fCurrentIOState->fQTSamplesPerFrame;
+  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
+  while (chunk != NULL) {
+    unsigned const numSamples = chunk->fNumFrames*samplesPerFrame;
+    numSamplesSoFar += numSamples;
+    chunk = chunk->fNextChunk;
+  }
+
+  // Then, write out the sample numbers that we deem correspond to 'sync samples':
+  unsigned i;
+  for (i = 0; i < numSamplesSoFar; i += 12) {
+    // For an explanation of the constant "12", see http://lists.live555.com/pipermail/live-devel/2009-July/010969.html
+    // (Perhaps we should really try to keep track of which 'samples' ('frames' for video) really are 'key frames'?)
+    size += addWord(i+1);
+    ++numEntries;
+  }
+
+  // Then, write out the last entry (if we haven't already done so):
+  if (i != (numSamplesSoFar - 1)) {
+    size += addWord(numSamplesSoFar);
+    ++numEntries;
+  }
 
   // Now go back and fill in the "Number of entries" field:
   setWord(numEntriesPosition, numEntries);
