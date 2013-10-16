@@ -29,6 +29,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include <ws2tcpip.h>
 #endif
 #include <windows.h>
+#include <errno.h>
 #include <string.h>
 
 #define closeSocket closesocket

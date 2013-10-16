@@ -428,7 +428,7 @@ void SocketDescriptor::tcpReadHandler1(int mask) {
       } else {
 	// This wasn't a stream channel id that we expected.  We're (somehow) in a strange state.  Try to recover:
 #ifdef DEBUG_RECEIVE
-	fprintf(stderr, "SocketDescriptor(socket %d)::tcpReadHandler(): Saw nonexistent stream channel id: %d\n", fOurSocketNum, c);
+	fprintf(stderr, "SocketDescriptor(socket %d)::tcpReadHandler(): Saw nonexistent stream channel id: 0x%02x\n", fOurSocketNum, c);
 #endif
 	fTCPReadingState = AWAITING_DOLLAR;
       }

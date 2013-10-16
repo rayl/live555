@@ -66,8 +66,8 @@ void getSDPDescription(RTSPClient::responseHandler* afterFunc) {
   ourSIPClient->setClientStartPortNum(clientStartPortNum);
 
   extern char const* streamURL;
-  char const* username = ourAuthenticator->username();
-  char const* password = ourAuthenticator->password();
+  char const* username = ourAuthenticator == NULL ? NULL : ourAuthenticator->username();
+  char const* password = ourAuthenticator == NULL ? NULL : ourAuthenticator->password();
   char* result;
   if (username != NULL && password != NULL) {
     result = ourSIPClient->inviteWithPassword(streamURL, username, password);

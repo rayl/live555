@@ -638,6 +638,13 @@ char* MediaSubsession::absEndTime() const {
   return fParent.absEndTime();
 }
 
+static Boolean const honorSDPPortChoice
+#ifdef IGNORE_UNICAST_SDP_PORTS
+= False;
+#else
+= True;
+#endif
+
 Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
   if (fReadSource != NULL) return True; // has already been initiated
 
@@ -653,7 +660,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
     tempAddr.s_addr = connectionEndpointAddress();
         // This could get changed later, as a result of a RTSP "SETUP"
 
-    if (fClientPortNum != 0  && IsMulticastAddress(tempAddr.s_addr)) {
+    if (fClientPortNum != 0  && (honorSDPPortChoice || IsMulticastAddress(tempAddr.s_addr))) {
       // This is a multicast stream, and the sockets' port numbers were specified for us.  Use these:
       Boolean const protocolIsRTP = strcmp(fProtocolName, "RTP") == 0;
       if (protocolIsRTP) {

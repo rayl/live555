@@ -174,6 +174,8 @@ void StreamReplicator::deactivateStreamReplica(StreamReplica* replicaBeingDeacti
       }
     }
   }
+
+  if (fNumActiveReplicas == 0 && fInputSource != NULL) fInputSource->stopGettingFrames(); // tell our source to stop too
 }
 
 void StreamReplicator::removeStreamReplica(StreamReplica* replicaBeingRemoved) {
