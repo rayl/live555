@@ -635,6 +635,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
       HashTable* socketHashTable = HashTable::create(ONE_WORD_HASH_KEYS);
       if (socketHashTable == NULL) break;
       Boolean success = False;
+      NoReuse dummy; // ensures that our new ephemeral port number won't be one that's already in use
 
       while (1) {
 	// Create a new socket:
