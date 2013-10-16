@@ -84,9 +84,8 @@ void BasicUDPSink::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedB
   gettimeofday(&timeNow, NULL);
   int secsDiff = fNextSendTime.tv_sec - timeNow.tv_sec;
   int64_t uSecondsToGo = secsDiff*1000000 + (fNextSendTime.tv_usec - timeNow.tv_usec);
-  if (secsDiff < 0 || uSecondsToGo < 0) { // sanity check (perhaps the system clock jumped ahead?)
+  if (uSecondsToGo < 0 || secsDiff < 0) { // sanity check: Make sure that the time-to-delay is non-negative:
     uSecondsToGo = 0;
-    fNextSendTime = timeNow;
   }
 
   // Delay this amount of time:

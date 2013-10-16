@@ -1782,8 +1782,8 @@ addAtom(esds);
   } else if (strcmp(subsession.mediumName(), "video") == 0) {
     // MPEG-4 video
     size += addWord(0x00000000); // ???
-    size += addWord(0x03370000); // ???
-    size += addWord(0x1f042f20); // ???
+    size += addWord(0x03330000); // ???
+    size += addWord(0x1f042b20); // ???
     size += addWord(0x1104fd46); // ???
     size += addWord(0x000d4e10); // ???
     size += addWord(0x000d4e10); // ???
