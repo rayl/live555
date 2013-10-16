@@ -69,8 +69,11 @@ ByteStreamFileSource::createNew(UsageEnvironment& env, FILE* fid,
   return newSource;
 }
 
-void ByteStreamFileSource::seekToByteAbsolute(u_int64_t byteNumber) {
+void ByteStreamFileSource::seekToByteAbsolute(u_int64_t byteNumber, u_int64_t numBytesToStream) {
   SeekFile64(fFid, (int64_t)byteNumber, SEEK_SET);
+
+  fNumBytesToStream = numBytesToStream;
+  fLimitNumBytesToStream = fNumBytesToStream > 0;
 }
 
 void ByteStreamFileSource::seekToByteRelative(int64_t offset) {
@@ -83,7 +86,8 @@ ByteStreamFileSource::ByteStreamFileSource(UsageEnvironment& env, FILE* fid,
 					   unsigned playTimePerFrame)
   : FramedFileSource(env, fid), fPreferredFrameSize(preferredFrameSize),
     fPlayTimePerFrame(playTimePerFrame), fLastPlayTime(0), fFileSize(0),
-    fDeleteFidOnClose(deleteFidOnClose), fHaveStartedReading(False) {
+    fDeleteFidOnClose(deleteFidOnClose), fHaveStartedReading(False),
+    fLimitNumBytesToStream(False), fNumBytesToStream(0) {
 }
 
 ByteStreamFileSource::~ByteStreamFileSource() {
@@ -97,7 +101,7 @@ ByteStreamFileSource::~ByteStreamFileSource() {
 }
 
 void ByteStreamFileSource::doGetNextFrame() {
-  if (feof(fFid) || ferror(fFid)) {
+  if (feof(fFid) || ferror(fFid) || (fLimitNumBytesToStream && fNumBytesToStream == 0)) {
     handleClosure(this);
     return;
   }
@@ -130,8 +134,10 @@ void ByteStreamFileSource::fileReadableHandler(ByteStreamFileSource* source, int
 }
 
 void ByteStreamFileSource::doReadFromFile() {
-  // Try to read as many bytes as will fit in the buffer provided
-  // (or "fPreferredFrameSize" if less)
+  // Try to read as many bytes as will fit in the buffer provided (or "fPreferredFrameSize" if less)
+  if (fLimitNumBytesToStream && fNumBytesToStream < (u_int64_t)fMaxSize) {
+    fMaxSize = (unsigned)fNumBytesToStream;
+  }
   if (fPreferredFrameSize > 0 && fPreferredFrameSize < fMaxSize) {
     fMaxSize = fPreferredFrameSize;
   }
@@ -140,6 +146,7 @@ void ByteStreamFileSource::doReadFromFile() {
     handleClosure(this);
     return;
   }
+  fNumBytesToStream -= fFrameSize;
 
   // Set the 'presentation time':
   if (fPlayTimePerFrame > 0 && fPreferredFrameSize > 0) {

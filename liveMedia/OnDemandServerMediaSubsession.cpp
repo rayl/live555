@@ -287,14 +287,14 @@ void OnDemandServerMediaSubsession::pauseStream(unsigned /*clientSessionId*/,
 }
 
 void OnDemandServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
-					       void* streamToken, double seekNPT) {
+					       void* streamToken, double seekNPT, double streamDuration) {
   // Seeking isn't allowed if multiple clients are receiving data from
   // the same source:
   if (fReuseFirstSource) return;
 
   StreamState* streamState = (StreamState*)streamToken;
   if (streamState != NULL && streamState->mediaSource() != NULL) {
-    seekStreamSource(streamState->mediaSource(), seekNPT);
+    seekStreamSource(streamState->mediaSource(), seekNPT, streamDuration);
   }
 }
 
@@ -345,7 +345,7 @@ char const* OnDemandServerMediaSubsession
 }
 
 void OnDemandServerMediaSubsession::seekStreamSource(FramedSource* /*inputSource*/,
-						     double /*seekNPT*/) {
+						     double /*seekNPT*/, double /*streamDuration*/) {
   // Default implementation: Do nothing
 }
 

@@ -47,7 +47,7 @@ private:
   virtual ~MP3AudioFileServerMediaSubsession();
 
 private: // redefined virtual functions
-  virtual void seekStreamSource(FramedSource* inputSource, double seekNPT);
+  virtual void seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration);
   virtual void setStreamSourceScale(FramedSource* inputSource, float scale);
   virtual FramedSource* createNewStreamSource(unsigned clientSessionId,
 					      unsigned& estBitrate);

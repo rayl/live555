@@ -1090,11 +1090,18 @@ void RTSPServer::RTSPClientSession
     duration = -duration;
   }
 
-  if (rangeEnd <= 0.0 || rangeEnd > duration) rangeEnd = duration;
-  if (rangeStart < 0.0) {
-    rangeStart = 0.0;
-  } else if (rangeEnd > 0.0 && scale > 0.0 && rangeStart > rangeEnd) {
+  // Make sure that "rangeStart" and "rangeEnd" (from the client's "Range:" header) have sane values
+  // before we send back our own "Range:" header in our response:
+  if (rangeStart < 0.0) rangeStart = 0.0;
+  else if (rangeStart > duration) rangeStart = duration;
+  if (rangeEnd < 0.0) rangeEnd = 0.0;
+  else if (rangeEnd > duration) rangeEnd = duration;
+  if ((scale > 0.0 && rangeStart > rangeEnd && rangeEnd > 0.0) ||
+      (scale < 0.0 && rangeStart < rangeEnd)) {
+    // "rangeStart" and "rangeEnd" were the wrong way around; swap them:
+    double tmp = rangeStart;
     rangeStart = rangeEnd;
+    rangeEnd = tmp;
   }
 
   char* rangeHeader;
@@ -1129,9 +1136,15 @@ void RTSPServer::RTSPClientSession
 						    scale);
       }
       if (sawRangeHeader) {
+	double streamDuration = 0.0; // by default; means: stream until the end of the media
+	if (rangeEnd > 0.0 && (rangeEnd+0.001) < duration) { // the 0.001 is because we limited the values to 3 decimal places
+	  // We want the stream to end early.  Set the duration we want:
+	  streamDuration = rangeEnd - rangeStart;
+	  if (streamDuration < 0.0) streamDuration = -streamDuration; // should happen only if scale < 0.0
+	}
 	fStreamStates[i].subsession->seekStream(fOurSessionId,
 						fStreamStates[i].streamToken,
-						rangeStart);
+						rangeStart, streamDuration);
       }
     }
   }

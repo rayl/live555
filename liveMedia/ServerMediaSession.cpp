@@ -339,7 +339,7 @@ void ServerMediaSubsession::pauseStream(unsigned /*clientSessionId*/,
   // default implementation: do nothing
 }
 void ServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
-				       void* /*streamToken*/, double /*seekNPT*/) {
+				       void* /*streamToken*/, double /*seekNPT*/, double /*streamDuration*/) {
   // default implementation: do nothing
 }
 void ServerMediaSubsession::setStreamScale(unsigned /*clientSessionId*/,

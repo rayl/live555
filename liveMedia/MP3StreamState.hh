@@ -57,8 +57,10 @@ public:
 		   char const* fileName);
 
   float filePlayTime() const; // in seconds
+  unsigned fileSize() const { return fFileSize; }
   void setPresentationTimeScale(unsigned scale) { fPresentationTimeScale = scale; }
-  void seekWithinFile(double seekNPT);
+  unsigned getByteNumberFromPositionFraction(float fraction); // 0.0 <= fraction <= 1.0
+  void seekWithinFile(unsigned seekByteNumber);
 
   void checkForXingHeader(); // hack for Xing VBR files
 

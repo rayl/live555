@@ -140,7 +140,8 @@ public:
 			   ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
 			   void* serverRequestAlternativeByteHandlerClientData) = 0;
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
-  virtual void seekStream(unsigned clientSessionId, void* streamToken, double seekNPT);
+  virtual void seekStream(unsigned clientSessionId, void* streamToken, double seekNPT, double streamDuration);
+     // "streamDuration", if >0.0, specifies how much data to stream, past "seekNPT".  (If <=0.0, all remaining data is streamed.)
   virtual void setStreamScale(unsigned clientSessionId, void* streamToken, float scale);
   virtual void deleteStream(unsigned clientSessionId, void*& streamToken);
 

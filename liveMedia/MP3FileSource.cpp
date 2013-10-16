@@ -64,12 +64,43 @@ float MP3FileSource::filePlayTime() const {
   return fStreamState->filePlayTime();
 }
 
+unsigned MP3FileSource::fileSize() const {
+  return fStreamState->fileSize();
+}
+
 void MP3FileSource::setPresentationTimeScale(unsigned scale) {
   fStreamState->setPresentationTimeScale(scale);
 }
 
-void MP3FileSource::seekWithinFile(double seekNPT) {
-  fStreamState->seekWithinFile(seekNPT);
+void MP3FileSource::seekWithinFile(double seekNPT, double streamDuration) {
+  float fileDuration = filePlayTime();
+
+  // First, make sure that 0.0 <= seekNPT <= seekNPT + streamDuration <= fileDuration
+  if (seekNPT < 0.0) {
+    seekNPT = 0.0;
+  } else if (seekNPT > fileDuration) {
+    seekNPT = fileDuration;
+  }
+  if (streamDuration < 0.0) {
+    streamDuration = 0.0;
+  } else if (seekNPT + streamDuration > fileDuration) {
+    streamDuration = fileDuration - seekNPT; 
+  }
+
+  float seekFraction = (float)seekNPT/fileDuration;
+  unsigned seekByteNumber = fStreamState->getByteNumberFromPositionFraction(seekFraction);
+  fStreamState->seekWithinFile(seekByteNumber);
+
+  fLimitNumBytesToStream = False; // by default
+  if (streamDuration > 0.0) {
+    float endFraction = (float)(seekNPT + streamDuration)/fileDuration;
+    unsigned endByteNumber = fStreamState->getByteNumberFromPositionFraction(endFraction);
+    if (endByteNumber > seekByteNumber) { // sanity check
+      fNumBytesToStream = endByteNumber - seekByteNumber;
+      fLimitNumBytesToStream = True;
+    }
+  } else {
+  }
 }
 
 void MP3FileSource::getAttributes() const {
@@ -100,6 +131,8 @@ void MP3FileSource::doGetNextFrame() {
 }
 
 Boolean MP3FileSource::doGetNextFrame1() {
+  if (fLimitNumBytesToStream && fNumBytesToStream == 0) return False; // we've already streamed as much as we were asked for
+
   if (!fHaveJustInitialized) {
     if (fStreamState->findNextHeader(fPresentationTime) == 0) return False;
   } else {
@@ -116,6 +149,7 @@ Boolean MP3FileSource::doGetNextFrame1() {
     fFrameSize = fMaxSize;
     return False;
   }
+  if (fNumBytesToStream > fFrameSize) fNumBytesToStream -= fFrameSize; else fNumBytesToStream = 0;
 
   return True;
 }
@@ -135,6 +169,9 @@ Boolean MP3FileSource::initializeStream() {
   fStreamState->checkForXingHeader(); // in case this is a VBR file
 
   fHaveJustInitialized = True;
+  fLimitNumBytesToStream = False;
+  fNumBytesToStream = 0;
+
   // Hack: It's possible that our environment's 'result message' has been
   // reset within this function, so set it again to our name now:
   envir().setResultMsg(name());

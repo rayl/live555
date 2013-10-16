@@ -48,7 +48,7 @@ MP3AudioFileServerMediaSubsession
 }
 
 void MP3AudioFileServerMediaSubsession
-::seekStreamSource(FramedSource* inputSource, double seekNPT) {
+::seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration) {
   MP3FileSource* mp3Source;
   if (fGenerateADUs) {
     // "inputSource" is a filter; use its input source instead.
@@ -73,7 +73,7 @@ void MP3AudioFileServerMediaSubsession
     mp3Source = (MP3FileSource*)inputSource;
   }
 
-  mp3Source->seekWithinFile(seekNPT);
+  mp3Source->seekWithinFile(seekNPT, streamDuration);
 }
 
 void MP3AudioFileServerMediaSubsession
@@ -104,7 +104,6 @@ void MP3AudioFileServerMediaSubsession
 
 FramedSource* MP3AudioFileServerMediaSubsession
 ::createNewStreamSource(unsigned /*clientSessionId*/, unsigned& estBitrate) {
-  estBitrate = 128; // kbps, estimate
 
   FramedSource* streamSource;
   do {
@@ -112,6 +111,14 @@ FramedSource* MP3AudioFileServerMediaSubsession
     streamSource = mp3Source = MP3FileSource::createNew(envir(), fFileName);
     if (streamSource == NULL) break;
     fFileDuration = mp3Source->filePlayTime();
+
+    unsigned fileSize = mp3Source->fileSize();
+    // Use this, plus the duration, to estimate the stream's bitrate:
+    if (fileSize > 0 && fFileDuration > 0.0) {
+      estBitrate = (unsigned)(fileSize/(125*fFileDuration) + 0.5); // kbps, rounded
+    } else {
+      estBitrate = 128; // kbps, estimate
+    }
 
     if (fGenerateADUs) {
       // Add a filter that converts the source MP3s to ADUs:

@@ -67,6 +67,8 @@ private:
   double fTSPacketDurationEstimate;
   HashTable* fPIDStatusTable;
   unsigned long fTSPCRCount;
+  Boolean fLimitNumTSPacketsToStream;
+  unsigned fNumTSPacketsToStream; // used iff "fLimitNumTSPacketsToStream" is True
 };
 
 #endif

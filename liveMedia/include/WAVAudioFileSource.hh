@@ -28,11 +28,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 typedef enum {
-  WA_PCM = 1,
-  WA_PCMA = 6,
-  WA_PCMU = 7,
+  WA_PCM = 0x01,
+  WA_PCMA = 0x06,
+  WA_PCMU = 0x07,
+  WA_IMA_ADPCM = 0x11,
   WA_UNKNOWN
-}WAV_AUDIO_FORMAT;
+} WAV_AUDIO_FORMAT;
 
 
 class WAVAudioFileSource: public AudioInputDevice {
@@ -43,7 +44,8 @@ public:
 
   unsigned numPCMBytes() const;
   void setScaleFactor(int scale);
-  void seekToPCMByte(unsigned byteNumber);
+  void seekToPCMByte(unsigned byteNumber, unsigned numBytesToStream);
+      // if "numBytesToStream" is >0, then we limit the stream to that number of bytes, before treating it as EOF
 
   unsigned char getAudioFormat();
 
@@ -67,7 +69,8 @@ private:
   unsigned fWAVHeaderSize;
   unsigned fFileSize;
   int fScaleFactor;
-
+  Boolean fLimitNumBytesToStream;
+  unsigned fNumBytesToStream; // used iff "fLimitNumBytesToStream" is True
   unsigned char fAudioFormat;
 };
 

@@ -833,6 +833,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	delete[] mimeType;
       } else if (  strcmp(fCodecName, "PCMU") == 0 // PCM u-law audio
 		   || strcmp(fCodecName, "GSM") == 0 // GSM audio
+		   || strcmp(fCodecName, "DVI4") == 0 // DVI4 (IMA ADPCM) audio
 		   || strcmp(fCodecName, "PCMA") == 0 // PCM a-law audio
 		   || strcmp(fCodecName, "MP1S") == 0 // MPEG-1 System Stream
 		   || strcmp(fCodecName, "MP2P") == 0 // MPEG-2 Program Stream

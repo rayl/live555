@@ -56,6 +56,8 @@ public:
       //             "resultString" for a successful "DESCRIBE" command will be the media session's SDP description.
       //             "resultString" for a successful "OPTIONS" command will be a list of allowed commands.
       //         Note that this string can be present (i.e., not NULL) even if "resultCode" is non-zero - i.e., an error message.
+      //         Also, "resultString" can be NULL, even if "resultCode" is zero (e.g., if the RTSP command succeeded, but without
+      //             including an appropriate result header).
       //         Note also that this string is dynamically allocated, and must be freed by the handler (or the caller)
       //             - using "delete[]".
 

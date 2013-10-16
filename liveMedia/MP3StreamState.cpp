@@ -86,21 +86,10 @@ float MP3StreamState::filePlayTime() const {
   return numFramesInFile*(pt.tv_sec + pt.tv_usec/(float)MILLION);
 }
 
-void MP3StreamState::seekWithinFile(double seekNPT) {
-  if (fFidIsReallyASocket) return; // it's not seekable
-
-  float fileDuration = filePlayTime();
-  if (seekNPT < 0.0) {
-    seekNPT = 0.0;
-  } else if (seekNPT > fileDuration) {
-    seekNPT = fileDuration;
-  }
-  float seekFraction = (float)seekNPT/fileDuration;
-
-  unsigned seekByteNumber;
+unsigned MP3StreamState::getByteNumberFromPositionFraction(float fraction) {
   if (fHasXingTOC) {
     // The file is VBR, with a Xing TOC; use it to determine which byte to seek to:
-    float percent = seekFraction*100.0f;
+    float percent = fraction*100.0f;
     unsigned a = (unsigned)percent;
     if (a > 99) a = 99;
 
@@ -111,13 +100,14 @@ void MP3StreamState::seekWithinFile(double seekNPT) {
     } else {
       fb = 256;
     }
-    float seekByteFraction = (fa + (fb-fa)*(percent-a))/256.0f;
-
-    seekByteNumber = (unsigned)(seekByteFraction*fFileSize);
-  } else {
-    // Normal case: Treat the file as if it's CBR:
-    seekByteNumber = (unsigned)(seekFraction*fFileSize);
+    fraction = (fa + (fb-fa)*(percent-a))/256.0f;
   }
+
+  return (unsigned)(fraction*fFileSize);
+}
+
+void MP3StreamState::seekWithinFile(unsigned seekByteNumber) {
+  if (fFidIsReallyASocket) return; // it's not seekable
 
   fseek(fFid, seekByteNumber, SEEK_SET);
 }

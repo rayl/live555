@@ -57,16 +57,20 @@ void WAVAudioFileSource::setScaleFactor(int scale) {
     // Because we're reading backwards, seek back one sample, to ensure that
     // (i)  we start reading the last sample before the start point, and
     // (ii) we don't hit end-of-file on the first read.
-    int const bytesPerSample = (fNumChannels*fBitsPerSample)/8;
+    int bytesPerSample = (fNumChannels*fBitsPerSample)/8;
+    if (bytesPerSample == 0) bytesPerSample = 1;
     fseek(fFid, -bytesPerSample, SEEK_CUR);
   }
 }
 
-void WAVAudioFileSource::seekToPCMByte(unsigned byteNumber) {
+void WAVAudioFileSource::seekToPCMByte(unsigned byteNumber, unsigned numBytesToStream) {
   byteNumber += fWAVHeaderSize;
   if (byteNumber > fFileSize) byteNumber = fFileSize;
 
   fseek(fFid, byteNumber, SEEK_SET);
+
+  fNumBytesToStream = numBytesToStream;
+  fLimitNumBytesToStream = fNumBytesToStream > 0;
 }
 
 unsigned char WAVAudioFileSource::getAudioFormat() {
@@ -101,15 +105,12 @@ static Boolean skipBytes(FILE* fid, int num) {
 WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
   : AudioInputDevice(env, 0, 0, 0, 0)/* set the real parameters later */,
     fFid(fid), fLastPlayTime(0), fWAVHeaderSize(0), fFileSize(0), fScaleFactor(1),
-    fAudioFormat(WA_UNKNOWN) {
+    fLimitNumBytesToStream(False), fNumBytesToStream(0), fAudioFormat(WA_UNKNOWN) {
   // Check the WAV file header for validity.
   // Note: The following web pages contain info about the WAV format:
-  // http://www.technology.niagarac.on.ca/courses/comp630/WavFileFormat.html
-  // http://ccrma-www.stanford.edu/CCRMA/Courses/422/projects/WaveFormat/
   // http://www.ringthis.com/dev/wave_format.htm
   // http://www.lightlink.com/tjweber/StripWav/Canon.html
-  // http://www.borg.com/~jglatt/tech/wave.htm
-  // http://www.wotsit.org/download.asp?f=wavecomp
+  // http://www.wotsit.org/list.asp?al=W
 
   Boolean success = False; // until we learn otherwise
   do {
@@ -126,9 +127,9 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
     if (!get2Bytes(fid, audioFormat)) break;
 
     fAudioFormat = (unsigned char)audioFormat;
-    if (fAudioFormat != WA_PCM && fAudioFormat != WA_PCMA && fAudioFormat != WA_PCMU) {
-      // not PCM/PCMU/PCMA - we can't handle this
-      env.setResultMsg("Audio format is not PCM/PCMU/PCMA");
+    if (fAudioFormat != WA_PCM && fAudioFormat != WA_PCMA && fAudioFormat != WA_PCMU && fAudioFormat != WA_IMA_ADPCM) {
+      // It's a format that we don't (yet) understand
+      env.setResultMsg("Audio format is not one that we handle (PCM/PCMU/PCMA or IMA ADPCM)");
       break;
     }
     unsigned short numChannels;
@@ -145,7 +146,7 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
       env.setResultMsg("Bad sampling frequency: 0");
       break;
     }
-    if (!skipBytes(fid, 6)) break;
+    if (!skipBytes(fid, 6)) break; // "nAvgBytesPerSec" (4 bytes) + "nBlockAlign" (2 bytes)
     unsigned short bitsPerSample;
     if (!get2Bytes(fid, bitsPerSample)) break;
     fBitsPerSample = (unsigned char)bitsPerSample;
@@ -189,8 +190,7 @@ WAVAudioFileSource::WAVAudioFileSource(UsageEnvironment& env, FILE* fid)
   // than 1400 bytes (to ensure that it will fit in a single RTP packet)
   unsigned maxSamplesPerFrame = (1400*8)/(fNumChannels*fBitsPerSample);
   unsigned desiredSamplesPerFrame = (unsigned)(0.02*fSamplingFrequency);
-  unsigned samplesPerFrame = desiredSamplesPerFrame < maxSamplesPerFrame
-    ? desiredSamplesPerFrame : maxSamplesPerFrame;
+  unsigned samplesPerFrame = desiredSamplesPerFrame < maxSamplesPerFrame ? desiredSamplesPerFrame : maxSamplesPerFrame;
   fPreferredFrameSize = (samplesPerFrame*fNumChannels*fBitsPerSample)/8;
 }
 
@@ -201,21 +201,25 @@ WAVAudioFileSource::~WAVAudioFileSource() {
 // Note: We should change the following to use asynchronous file reading, #####
 // as we now do with ByteStreamFileSource. #####
 void WAVAudioFileSource::doGetNextFrame() {
-  if (feof(fFid) || ferror(fFid)) {
+  if (feof(fFid) || ferror(fFid) || (fLimitNumBytesToStream && fNumBytesToStream == 0)) {
     handleClosure(this);
     return;
   }
 
-  // Try to read as many bytes as will fit in the buffer provided
-  // (or "fPreferredFrameSize" if less)
+  // Try to read as many bytes as will fit in the buffer provided (or "fPreferredFrameSize" if less)
+  if (fLimitNumBytesToStream && fNumBytesToStream < fMaxSize) {
+    fMaxSize = fNumBytesToStream;
+  }
   if (fPreferredFrameSize < fMaxSize) {
     fMaxSize = fPreferredFrameSize;
   }
-  unsigned const bytesPerSample = (fNumChannels*fBitsPerSample)/8;
+  unsigned bytesPerSample = (fNumChannels*fBitsPerSample)/8;
+  if (bytesPerSample == 0) bytesPerSample = 1; // because we can't read less than a byte at a time
   unsigned bytesToRead = fMaxSize - fMaxSize%bytesPerSample;
   if (fScaleFactor == 1) {
     // Common case - read samples in bulk:
     fFrameSize = fread(fTo, 1, bytesToRead, fFid);
+    fNumBytesToStream -= fFrameSize;
   } else {
     // We read every 'fScaleFactor'th sample:
     fFrameSize = 0;
@@ -224,6 +228,7 @@ void WAVAudioFileSource::doGetNextFrame() {
       if (bytesRead <= 0) break;
       fTo += bytesRead;
       fFrameSize += bytesRead;
+      fNumBytesToStream -= bytesRead;
       bytesToRead -= bytesRead;
 
       // Seek to the appropriate place for the next sample:

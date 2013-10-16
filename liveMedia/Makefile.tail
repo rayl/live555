@@ -151,7 +151,7 @@ include/MPEG2TransportStreamFromPESSource.hh:	include/MPEG2TransportStreamMultip
 MPEG2TransportStreamFromESSource.$(CPP):	include/MPEG2TransportStreamFromESSource.hh
 include/MPEG2TransportStreamFromESSource.hh:	include/MPEG2TransportStreamMultiplexor.hh
 MPEG2TransportStreamFramer.$(CPP):	include/MPEG2TransportStreamFramer.hh
-include/MPEG2TransportStreamFramer.hh:	include/FramedFilter.hh
+include/MPEG2TransportStreamFramer.hh:	include/FramedFilter.hh include/MPEG2TransportStreamIndexFile.hh
 ADTSAudioFileSource.$(CPP):	include/ADTSAudioFileSource.hh include/InputFile.hh
 include/ADTSAudioFileSource.hh:	include/FramedFileSource.hh
 H263plusVideoRTPSource.$(CPP):	include/H263plusVideoRTPSource.hh

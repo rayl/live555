@@ -75,7 +75,7 @@ float DVVideoFileServerMediaSubsession::duration() const {
   return fFileDuration;
 }
 
-void DVVideoFileServerMediaSubsession::seekStreamSource(FramedSource* inputSource, double seekNPT) {
+void DVVideoFileServerMediaSubsession::seekStreamSource(FramedSource* inputSource, double seekNPT, double streamDuration) {
   // First, get the file source from "inputSource" (a framer):
   DVVideoStreamFramer* framer = (DVVideoStreamFramer*)inputSource;
   ByteStreamFileSource* fileSource = (ByteStreamFileSource*)(framer->inputSource());
@@ -83,6 +83,7 @@ void DVVideoFileServerMediaSubsession::seekStreamSource(FramedSource* inputSourc
   // Then figure out where to seek to within the file:
   if (fFileDuration > 0.0) {
     u_int64_t seekByteNumber = (u_int64_t)(((int64_t)fFileSize*seekNPT)/fFileDuration);
-    fileSource->seekToByteAbsolute(seekByteNumber);
+    u_int64_t numBytesToStream = (u_int64_t)(((int64_t)fFileSize*streamDuration)/fFileDuration);
+    fileSource->seekToByteAbsolute(seekByteNumber, numBytesToStream);
   }
 }
