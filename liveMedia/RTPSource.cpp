@@ -54,6 +54,7 @@ RTPSource::RTPSource(UsageEnvironment& env, Groupsock* RTPgs,
   : FramedSource(env),
     fRTPInterface(this, RTPgs),
     fCurPacketHasBeenSynchronizedUsingRTCP(False),
+    fLastReceivedSSRC(0),
     fRTPPayloadFormat(rtpPayloadFormat),
     fTimestampFrequency(rtpTimestampFrequency),
     fSSRC(our_random32()) {

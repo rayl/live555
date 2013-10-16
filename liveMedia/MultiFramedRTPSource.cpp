@@ -45,6 +45,7 @@ public:
   Boolean isEmpty() const { return fHeadPacket == NULL; }
 
   void setThresholdTime(unsigned uSeconds) { fThresholdTime = uSeconds; }
+  void resetHaveSeenFirstPacket() { fHaveSeenFirstPacket = False; }
 
 private:
   BufferedPacketFactory* fPacketFactory;
@@ -283,7 +284,12 @@ void MultiFramedRTPSource::networkReadHandler1() {
     }
 
     // The rest of the packet is the usable data.  Record and save it:
-    fLastReceivedSSRC = rtpSSRC;
+    if (rtpSSRC != fLastReceivedSSRC) {
+      // The SSRC of incoming packets has changed.  Unfortunately we don't yet handle streams that contain multiple SSRCs,
+      // but we can handle a single-SSRC stream where the SSRC changes occasionally:
+      fLastReceivedSSRC = rtpSSRC;
+      fReorderingBuffer->resetHaveSeenFirstPacket();
+    }
     unsigned short rtpSeqNo = (unsigned short)(rtpHdr&0xFFFF);
     Boolean usableInJitterCalculation
       = packetIsUsableInJitterCalculation((bPacket->data()),
@@ -467,7 +473,7 @@ ReorderingPacketBuffer::~ReorderingPacketBuffer() {
 void ReorderingPacketBuffer::reset() {
   if (fSavedPacketFree) delete fSavedPacket; // because fSavedPacket is not in the list
   delete fHeadPacket; // will also delete fSavedPacket if it's in the list
-  fHaveSeenFirstPacket = False;
+  resetHaveSeenFirstPacket();
   fHeadPacket = NULL;
   fSavedPacket = NULL;
 }

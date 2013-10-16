@@ -268,7 +268,9 @@ void RTSPServer::incomingConnectionHandler(int serverSocket) {
   // Create a new object for this RTSP session.
   // (Choose a random 32-bit integer for the session id (it will be encoded as a 8-digit hex number).  We don't bother checking for
   //  a collision; the probability of two concurrent sessions getting the same session id is very low.)
-  unsigned sessionId = (unsigned)our_random();
+  // (We do, however, avoid choosing session id 0, because that has a special use (by "OnDemandServerMediaSubsession").)
+  unsigned sessionId;
+  do { sessionId = (unsigned)our_random(); } while (sessionId == 0);
   (void)createNewClientSession(sessionId, clientSocket, clientAddr);
 }
 

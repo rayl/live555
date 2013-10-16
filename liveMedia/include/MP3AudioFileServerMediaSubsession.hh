@@ -38,7 +38,7 @@ public:
       // Note: "interleaving" is used only if "generateADUs" is True,
       // (and a value of NULL means 'no interleaving')
 
-private:
+protected:
   MP3AudioFileServerMediaSubsession(UsageEnvironment& env,
 				    char const* fileName, Boolean reuseFirstSource,
 				    Boolean generateADUs,

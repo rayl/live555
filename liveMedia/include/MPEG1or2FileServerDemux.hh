@@ -61,7 +61,7 @@ private:
   Boolean fReuseFirstSource;
   MPEG1or2Demux* fSession0Demux;
   MPEG1or2Demux* fLastCreatedDemux;
-  u_int8_t fLastClientSessionId;
+  unsigned fLastClientSessionId;
 };
 
 #endif
