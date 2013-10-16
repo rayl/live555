@@ -59,7 +59,7 @@ public:
   }
 
   double firstClock, lastClock, firstRealTime, lastRealTime;
-  unsigned lastPacketNum;
+  u_int64_t lastPacketNum;
 };
 
 
@@ -226,15 +226,18 @@ void MPEG2TransportStreamFramer
 #endif
   } else {
     // We've seen this PID's PCR before; update our per-packet duration estimate:
-    double durationPerPacket
-      = (clock - pidStatus->lastClock)/(fTSPacketCount - pidStatus->lastPacketNum);
+    int64_t packetsSinceLast = (int64_t)(fTSPacketCount - pidStatus->lastPacketNum);
+      // it's "int64_t" because some compilers can't convert "u_int64_t" -> "double"
+    double durationPerPacket = (clock - pidStatus->lastClock)/packetsSinceLast;
 
     // Hack (suggested by "Romain"): Don't update our estimate if this PCR appeared unusually quickly.
     // (This can produce more accurate estimates for wildly VBR streams.)
     double meanPCRPeriod = 0.0;
     if (fTSPCRCount > 0) {
-      meanPCRPeriod = (double)fTSPacketCount/fTSPCRCount;
-      if (fTSPacketCount - pidStatus->lastPacketNum < meanPCRPeriod*PCR_PERIOD_VARIATION_RATIO) return;
+      double tsPacketCount = (double)(int64_t)fTSPacketCount;
+      double tsPCRCount = (double)(int64_t)fTSPCRCount;
+      meanPCRPeriod = tsPacketCount/tsPCRCount;
+      if (packetsSinceLast < meanPCRPeriod*PCR_PERIOD_VARIATION_RATIO) return;
     }
 
     if (fTSPacketDurationEstimate == 0.0) { // we've just started

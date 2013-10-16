@@ -63,6 +63,7 @@ Boolean VP8VideoRTPSource
     Boolean const I = (byte2&0x80) != 0;
     Boolean const L = (byte2&0x40) != 0;
     Boolean const T = (byte2&0x20) != 0;
+    Boolean const K = (byte2&0x10) != 0;
 
     if (I) {
       ++resultSpecialHeaderSize;
@@ -72,7 +73,7 @@ Boolean VP8VideoRTPSource
     }
 
     if (L) ++resultSpecialHeaderSize;
-    if (T) ++resultSpecialHeaderSize;
+    if (T||K) ++resultSpecialHeaderSize;
   }
   
   return True;

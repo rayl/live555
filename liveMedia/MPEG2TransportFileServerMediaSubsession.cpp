@@ -328,7 +328,7 @@ void ClientTrickPlayState::setSource(MPEG2TransportStreamFramer* framer) {
 }
 
 void ClientTrickPlayState::updateTSRecordNum(){
-  if (fFramer != NULL) fTSRecordNum += fFramer->tsPacketCount();
+  if (fFramer != NULL) fTSRecordNum += (unsigned long)(fFramer->tsPacketCount());
 }
 
 void ClientTrickPlayState::reseekOriginalTransportStreamSource() {

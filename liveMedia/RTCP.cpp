@@ -321,6 +321,7 @@ void RTCPInstance::incomingReportHandler(RTCPInstance* instance,
 
 void RTCPInstance::incomingReportHandler1() {
   do {
+    Boolean callByeHandler = False;
     int tcpReadStreamSocketNum = fRTCPInterface.nextTCPReadStreamSocketNum();
     unsigned char tcpReadStreamChannelId = fRTCPInterface.nextTCPReadStreamChannelId();
     unsigned packetSize = 0;
@@ -512,17 +513,15 @@ void RTCPInstance::incomingReportHandler1() {
 #ifdef DEBUG
 	  fprintf(stderr, "BYE\n");
 #endif
-	  // If a 'BYE handler' was set, call it now:
-	  TaskFunc* byeHandler = fByeHandlerTask;
-	  if (byeHandler != NULL
+	  // If a 'BYE handler' was set, arrange for it to be called at the end of this routine.
+	  // (Note: We don't call it immediately, in case it happens to cause "this" to be deleted.)
+	  if (fByeHandlerTask != NULL
 	      && (!fByeHandleActiveParticipantsOnly
 		  || (fSource != NULL
 		      && fSource->receptionStatsDB().lookup(reportSenderSSRC) != NULL)
 		  || (fSink != NULL
 		      && fSink->transmissionStatsDB().lookup(reportSenderSSRC) != NULL))) {
-	    fByeHandlerTask = NULL;
-	        // we call this only once by default
-	    (*byeHandler)(fByeHandlerClientData);
+	    callByeHandler = True;
 	  }
 
 	  // We should really check for & handle >1 SSRCs being present #####
@@ -581,6 +580,13 @@ void RTCPInstance::incomingReportHandler1() {
     }
 
     onReceive(typeOfPacket, totPacketSize, reportSenderSSRC);
+
+    // Finally, if we need to call a "BYE" handler, do so now (in case it causes "this" to get deleted):
+    if (callByeHandler && fByeHandlerTask != NULL/*sanity check*/) {
+      TaskFunc* byeHandler = fByeHandlerTask;
+      fByeHandlerTask = NULL; // because we call the handler only once, by default
+      (*byeHandler)(fByeHandlerClientData);
+    }
   } while (0);
 }
 

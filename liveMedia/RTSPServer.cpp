@@ -711,7 +711,7 @@ static void parseTransportHeader(char const* buf,
       destinationTTL = (u_int8_t)ttl;
     } else if (sscanf(field, "client_port=%hu-%hu", &p1, &p2) == 2) {
 	clientRTPPortNum = p1;
-	clientRTCPPortNum = p2;
+	clientRTCPPortNum = streamingMode == RAW_UDP ? 0 : p2; // ignore the second port number if the client asked for raw UDP
     } else if (sscanf(field, "client_port=%hu", &p1) == 1) {
 	clientRTPPortNum = p1;
 	clientRTCPPortNum = streamingMode == RAW_UDP ? 0 : p1 + 1;

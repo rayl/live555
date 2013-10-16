@@ -36,7 +36,7 @@ public:
   static MPEG2TransportStreamFramer*
   createNew(UsageEnvironment& env, FramedSource* inputSource);
 
-  unsigned long tsPacketCount() const { return fTSPacketCount; }
+  u_int64_t tsPacketCount() const { return fTSPacketCount; }
 
   void changeInputSource(FramedSource* newInputSource) { fInputSource = newInputSource; }
 
@@ -64,10 +64,10 @@ private:
   void updateTSPacketDurationEstimate(unsigned char* pkt, double timeNow);
 
 private:
-  unsigned long fTSPacketCount;
+  u_int64_t fTSPacketCount;
   double fTSPacketDurationEstimate;
   HashTable* fPIDStatusTable;
-  unsigned long fTSPCRCount;
+  u_int64_t fTSPCRCount;
   Boolean fLimitNumTSPacketsToStream;
   unsigned long fNumTSPacketsToStream; // used iff "fLimitNumTSPacketsToStream" is True
 };
