@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
 // A filter that converts a MPEG Transport Stream file - with corresponding index file
 // - to a corresponding Video Elementary Stream.  It also uses a "scale" parameter
 // to implement 'trick mode' (fast forward or reverse play, using I-frames) on
@@ -62,9 +62,9 @@ Boolean MPEG2TransportStreamTrickModeFilter::seekTo(unsigned long tsPacketNumber
   return True;
 }
 
-#define isIFrameStart(type) ((type) == 0x81) // actually, a Video Sequence Header
-// This relies upon the fact that I-frames are always preceded by VSH and GOP
-#define isNonIFrameStart(type) ((type) == 0x83)
+#define isIFrameStart(type) ((type) == 0x81/*actually, a VSH*/ || (type) == 0x85/*actually, a SPS*//*for H.264*/)
+  // This relies upon I-frames always being preceded by a VSH+GOP (for MPEG-2 data) and by a SPS (for H.264 data)
+#define isNonIFrameStart(type) ((type) == 0x83 || (type) == 0x88/*for H.264*/)
 
 void MPEG2TransportStreamTrickModeFilter::doGetNextFrame() {
   //  fprintf(stderr, "#####DGNF1\n");

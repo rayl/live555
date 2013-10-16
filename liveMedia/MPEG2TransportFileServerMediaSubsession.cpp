@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
 // A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
 // on demand, from a MPEG-2 Transport Stream file.
 // Implementation
@@ -25,10 +25,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "MPEG2TransportStreamTrickModeFilter.hh"
 #include "MPEG2TransportStreamFromESSource.hh"
 #include "MPEG2TransportStreamFramer.hh"
-
-// We assume that the video - in the original Transport Stream file - is MPEG-2.
-// If, instead, it is MPEG-1, then change the following definition to 1:
-#define VIDEO_MPEG_VERSION 2
 
 ////////// ClientTrickPlayState definition //////////
 
@@ -304,7 +300,7 @@ void ClientTrickPlayState::updateStateOnScaleChange() {
 
     // And generate a Transport Stream from this:
     fTrickPlaySource = MPEG2TransportStreamFromESSource::createNew(env);
-    fTrickPlaySource->addNewVideoSource(fTrickModeFilter, VIDEO_MPEG_VERSION);
+    fTrickPlaySource->addNewVideoSource(fTrickModeFilter, fIndexFile->mpegVersion());
 
     fFramer->changeInputSource(fTrickPlaySource);
   } else {

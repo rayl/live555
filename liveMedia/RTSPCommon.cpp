@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
 // Common routines used by both RTSP clients and servers
 // Implementation
 
@@ -136,6 +136,7 @@ Boolean parseRTSPRequestString(char const* reqStr,
 
 Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeEnd) {
   double start, end;
+  int numCharsMatched = 0;
   Locale l("C", LC_NUMERIC);
   if (sscanf(paramStr, "npt = %lf - %lf", &start, &end) == 2) {
     rangeStart = start;
@@ -146,6 +147,10 @@ Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeE
   } else if (strcmp(paramStr, "npt=now-") == 0) {
     rangeStart = 0.0;
     rangeEnd = 0.0;
+  } else if (sscanf(paramStr, "clock = %*s%n", &numCharsMatched) == 0 && numCharsMatched > 0) {
+    // We accept "clock=" parameters, but currently do no interpret them.
+  } else if (sscanf(paramStr, "smtpe = %*s%n", &numCharsMatched) == 0 && numCharsMatched > 0) {
+    // We accept "smtpe=" parameters, but currently do no interpret them.
   } else {
     return False; // The header is malformed
   }

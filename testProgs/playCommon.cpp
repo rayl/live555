@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2010, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2011, Live Networks, Inc.  All rights reserved
 // A common framework, used for the "openRTSP" and "playSIP" applications
 // Implementation
 
@@ -893,7 +893,16 @@ void sessionAfterPlaying(void* /*clientData*/) {
   if (!playContinuously) {
     shutdown(0);
   } else {
-    // We've been asked to play the stream(s) over again:
+    // We've been asked to play the stream(s) over again.
+    // First, reset state from the current session:
+    if (env != NULL) {
+      env->taskScheduler().unscheduleDelayedTask(sessionTimerTask);
+      env->taskScheduler().unscheduleDelayedTask(arrivalCheckTimerTask);
+      env->taskScheduler().unscheduleDelayedTask(interPacketGapCheckTimerTask);
+      env->taskScheduler().unscheduleDelayedTask(qosMeasurementTimerTask);
+    }
+    totNumPacketsReceived = ~0;
+
     startPlayingSession(session, initialSeekTime, endTime, scale, continueAfterPLAY);
   }
 }

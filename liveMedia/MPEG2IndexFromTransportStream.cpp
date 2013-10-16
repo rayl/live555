@@ -14,7 +14,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
 // "liveMedia"
-// Copyright (c) 1996-2010 Live Networks, Inc.  All rights reserved.
+// Copyright (c) 1996-2011 Live Networks, Inc.  All rights reserved.
 // A filter that produces a sequence of I-frame indices from a MPEG-2 Transport Stream
 // Implementation
 
@@ -24,10 +24,16 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 enum RecordType {
   RECORD_UNPARSED = 0,
-  RECORD_VSH = 1,
+  RECORD_VSH = 1, // a MPEG Video Sequence Header
   RECORD_GOP = 2,
   RECORD_PIC_NON_IFRAME = 3, // includes slices
   RECORD_PIC_IFRAME = 4, // includes slices
+  RECORD_NAL_SPS = 5, // H.264	
+  RECORD_NAL_PPS = 6, // H.264	
+  RECORD_NAL_SEI = 7, // H.264	
+  RECORD_NAL_NON_IFRAME = 8, // H.264	
+  RECORD_NAL_IFRAME = 9, // H.264	
+  RECORD_NAL_OTHER = 10, // H.264	
   RECORD_JUNK
 };
 
@@ -68,6 +74,12 @@ static char const* recordTypeStr[] = {
   "GOP",
   "PIC(non-I-frame)",
   "PIC(I-frame)",
+  "SPS (H.264)",
+  "PPS (H.264)",
+  "SEI (H.264)",
+  "H.264 non-I-frame",
+  "H.264 I-frame",
+  "other NAL unit (H.264)",
   "JUNK"
 };
 UsageEnvironment& operator<<(UsageEnvironment& env, IndexRecord& r) {
@@ -101,7 +113,7 @@ MPEG2IFrameIndexFromTransportStream
 ::MPEG2IFrameIndexFromTransportStream(UsageEnvironment& env,
 				      FramedSource* inputSource)
   : FramedFilter(env, inputSource),
-    fInputTransportPacketCounter((unsigned)-1), fClosureNumber(0),
+    fIsH264(False), fInputTransportPacketCounter((unsigned)-1), fClosureNumber(0),
     fLastContinuityCounter(~0),
     fFirstPCR(0.0), fLastPCR(0.0), fHaveSeenFirstPCR(False),
     fPMT_PID(0x10), fVideo_PID(0xE0), // default values
@@ -156,13 +168,15 @@ void MPEG2IFrameIndexFromTransportStream
 			     presentationTime, durationInMicroseconds);
 }
 
+#define TRANSPORT_SYNC_BYTE 0x47
+
 void MPEG2IFrameIndexFromTransportStream
 ::afterGettingFrame1(unsigned frameSize,
 		     unsigned numTruncatedBytes,
 		     struct timeval presentationTime,
 		     unsigned durationInMicroseconds) {
-  if (frameSize < TRANSPORT_PACKET_SIZE || fInputBuffer[0] != 0x47/*sync byte*/) {
-    if (fInputBuffer[0] != 0x47) {
+  if (frameSize < TRANSPORT_PACKET_SIZE || fInputBuffer[0] != TRANSPORT_SYNC_BYTE) {
+    if (fInputBuffer[0] != TRANSPORT_SYNC_BYTE) {
       envir() << "Bad TS sync byte: 0x" << fInputBuffer[0] << "\n";
     }
     // Handle this as if the source ended:
@@ -309,8 +323,9 @@ void MPEG2IFrameIndexFromTransportStream
   while (size >= 9) {
     u_int8_t stream_type = pkt[0];
     u_int16_t elementary_PID = ((pkt[1]&0x1F)<<8) | pkt[2];
-    if (stream_type == 1 || stream_type == 2) {
-      fVideo_PID = elementary_PID;
+    if (stream_type == 1 || stream_type == 2 || stream_type == 0x1B/*H.264 video*/) {
+	if (stream_type == 0x1B) fIsH264 = True;
+	fVideo_PID = elementary_PID;
       return;
     }
 
@@ -382,8 +397,9 @@ Boolean MPEG2IFrameIndexFromTransportStream::parseFrame() {
   // At this point, we have a queue of >=0 (unparsed) index records, representing
   // the data in the parse buffer from "fParseBufferFrameStart"
   // to "fParseBufferDataEnd".  We now parse through this data, looking for
-  // a complete 'frame' (where a 'frame', in this case, means
-  // a Video Sequence Header, GOP Header, Picture Header, or Slice).
+  // a complete 'frame', where a 'frame', in this case, means:
+  // 	for MPEG video: a Video Sequence Header, GOP Header, Picture Header, or Slice
+  // 	for H.264 video: a NAL unit
 
   // Inspect the frame's initial 4-byte code, to make sure it starts with a system code:
   if (fParseBufferDataEnd-fParseBufferFrameStart < 4) return False; // not enough data
@@ -406,6 +422,7 @@ Boolean MPEG2IFrameIndexFromTransportStream::parseFrame() {
   }
 
   unsigned char curCode = p[3];
+  if (fIsH264) curCode &= 0x1F; // nal_unit_type
   RecordType curRecordType;
   unsigned char nextCode;
   switch (curCode) {
@@ -430,14 +447,39 @@ Boolean MPEG2IFrameIndexFromTransportStream::parseFrame() {
     }
     break;
   }
-  default: { // picture (including slices)
-    curRecordType = RECORD_PIC_NON_IFRAME; // may get changed to IFRAME later
-    while (1) {
+  case 1: // Coded slice of a non-IDR picture (H.264)
+    curRecordType = RECORD_NAL_NON_IFRAME;
+    if (!parseToNextCode(nextCode)) return False;
+    break;
+  case 5: // Coded slice of an IDR picture (H.264) 
+    curRecordType = RECORD_NAL_IFRAME;
+    if (!parseToNextCode(nextCode)) return False;
+    break;
+  case 6: // Supplemental enhancement information (SEI) (H.264)
+    curRecordType = RECORD_NAL_SEI;
+    if (!parseToNextCode(nextCode)) return False;
+    break;
+  case 7: // Sequence parameter set (SPS) (H.264)
+    curRecordType = RECORD_NAL_SPS;
+    if (!parseToNextCode(nextCode)) return False;
+    break;
+  case 8: // Picture parameter set (PPS) (H.264)
+    curRecordType = RECORD_NAL_PPS;
+    if (!parseToNextCode(nextCode)) return False;
+    break;
+  default: { // picture (including slices), or some other H.264 NAL unit
+    if (fIsH264) {
+      curRecordType = RECORD_NAL_OTHER;
       if (!parseToNextCode(nextCode)) return False;
-      if (nextCode == VIDEO_SEQUENCE_START_CODE || nextCode == VISUAL_OBJECT_SEQUENCE_START_CODE ||
-	  nextCode == GROUP_START_CODE || nextCode == GROUP_VOP_START_CODE ||
-	  nextCode == PICTURE_START_CODE || nextCode == VOP_START_CODE) break;
-      fParseBufferParseEnd += 4; // skip over the code that we just saw
+    } else {
+      curRecordType = RECORD_PIC_NON_IFRAME; // may get changed to IFRAME later
+      while (1) {
+        if (!parseToNextCode(nextCode)) return False;
+        if (nextCode == VIDEO_SEQUENCE_START_CODE || nextCode == VISUAL_OBJECT_SEQUENCE_START_CODE ||
+	    nextCode == GROUP_START_CODE || nextCode == GROUP_VOP_START_CODE ||
+	    nextCode == PICTURE_START_CODE || nextCode == VOP_START_CODE) break;
+        fParseBufferParseEnd += 4; // skip over the code that we just saw
+      }
     }
     break;
   }

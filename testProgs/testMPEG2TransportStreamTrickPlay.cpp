@@ -13,7 +13,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this library; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 **********/
-// Copyright (c) 1996-2010, Live Networks, Inc.  All rights reserved
+// Copyright (c) 1996-2011, Live Networks, Inc.  All rights reserved
 // A program that tests 'trick mode' operations on a MPEG-2 Transport Stream file,
 // by generating a new Transport Stream file that represents the result of the
 // 'trick mode' operation (seeking and/or fast forward/reverse play).
@@ -24,10 +24,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #include <liveMedia.hh>
 #include <BasicUsageEnvironment.hh>
-
-// We assume that the video - in the original Transport Stream file - is MPEG-2.  If, instead, it is MPEG-1,
-// then change the following definition to 1:
-#define VIDEO_MPEG_VERSION 2
 
 void afterPlaying(void* clientData); // forward
 
@@ -105,7 +101,7 @@ int main(int argc, char const** argv) {
   // Generate a new Transport Stream from the Trick Mode filter:
   MPEG2TransportStreamFromESSource* newTransportStream
     = MPEG2TransportStreamFromESSource::createNew(*env);
-  newTransportStream->addNewVideoSource(trickModeFilter, VIDEO_MPEG_VERSION);
+  newTransportStream->addNewVideoSource(trickModeFilter, indexFile->mpegVersion());
 
   // Open the output file (for writing), as a 'file sink':
   char const* outputFileName = argv[4];
