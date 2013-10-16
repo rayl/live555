@@ -56,16 +56,6 @@ public:
       // Initiates the first subsession with the specified MIME type
       // Returns the resulting subsession, or 'multi source' (not both)
 
-#ifdef SUPPORT_REAL_RTSP
-  // Attributes specific to RealNetworks streams:
-  Boolean isRealNetworksRDT;
-  unsigned fRealFlags;
-  unsigned char* fRealTitle; unsigned fRealTitleSize;
-  unsigned char* fRealAuthor; unsigned fRealAuthorSize;
-  unsigned char* fRealCopyright; unsigned fRealCopyrightSize;
-  unsigned char* fRealAbstract; unsigned fRealAbstractSize;
-#endif
-
 protected: // redefined virtual functions
   virtual Boolean isMediaSession() const;
 
@@ -228,16 +218,6 @@ public:
   // (e.g., by a "RTP-Info:" header in a RTSP response).
   // Also, for this function to work properly, the RTP stream's presentation times must (eventually) be
   // synchronized via RTCP.
-
-#ifdef SUPPORT_REAL_RTSP
-  // Attributes specific to RealNetworks streams:
-  unsigned fRealMaxBitRate, fRealAvgBitRate, fRealMaxPacketSize, fRealAvgPacketSize, fRealPreroll;
-  char* fRealStreamName; char* fRealMIMEType;
-  unsigned char* fRealOpaqueData; unsigned fRealOpaqueDataSize;
-  // A pointer into "fRealOpaqueData":
-  unsigned char* fRealTypeSpecificData; unsigned fRealTypeSpecificDataSize;
-  unsigned fRealRuleNumber;
-#endif
 
 protected:
   friend class MediaSession;

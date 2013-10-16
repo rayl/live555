@@ -24,9 +24,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "Locale.hh"
 #include <GroupsockHelper.hh>
 #include "our_md5.h"
-#ifdef SUPPORT_REAL_RTSP
-#include "../RealRTSP/include/RealRTSP.hh"
-#endif
 
 ////////// RTSPClient //////////
 
@@ -66,9 +63,6 @@ RTSPClient::RTSPClient(UsageEnvironment& env,
     fInputSocketNum(-1), fOutputSocketNum(-1), fServerAddress(0),
     fBaseURL(NULL), fTCPStreamIdCount(0), fLastSessionId(NULL),
     fSessionTimeoutParameter(0),
-#ifdef SUPPORT_REAL_RTSP
-    fRealChallengeStr(NULL), fRealETagStr(NULL),
-#endif
     fServerIsKasenna(False), fKasennaContentType(NULL),
     fServerIsMicrosoft(False)
 {
@@ -136,10 +130,6 @@ void RTSPClient::reset() {
   fCurrentAuthenticator.reset();
 
   delete[] fKasennaContentType; fKasennaContentType = NULL;
-#ifdef SUPPORT_REAL_RTSP
-  delete[] fRealChallengeStr; fRealChallengeStr = NULL;
-  delete[] fRealETagStr; fRealETagStr = NULL;
-#endif
   delete[] fLastSessionId; fLastSessionId = NULL;
 }
 
@@ -196,9 +186,6 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
       "%s"
       "%s"
       "%s"
-#ifdef SUPPORT_REAL_RTSP
-      REAL_DESCRIBE_HEADERS
-#endif
       "\r\n";
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(url)
@@ -227,9 +214,6 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
     // we can handle.
     Boolean wantRedirection = False;
     char* redirectionURL = NULL;
-#ifdef SUPPORT_REAL_RTSP
-    delete[] fRealETagStr; fRealETagStr = new char[fResponseBufferSize];
-#endif
     if (responseCode == 301 || responseCode == 302) {
       wantRedirection = True;
       redirectionURL = new char[fResponseBufferSize]; // ensures enough space
@@ -272,9 +256,6 @@ char* RTSPClient::describeURL(char const* url, Authenticator* authenticator,
       } else if (sscanf(lineStart, "Server: %s", serverType) == 1) {
 	if (strncmp(serverType, "Kasenna", 7) == 0) fServerIsKasenna = True;
 	if (strncmp(serverType, "WMServer", 8) == 0) fServerIsMicrosoft = True;
-#ifdef SUPPORT_REAL_RTSP
-      } else if (sscanf(lineStart, "ETag: %s", fRealETagStr) == 1) {
-#endif
       } else if (wantRedirection) {
 	if (sscanf(lineStart, "Location: %s", redirectionURL) == 1) {
 	  // Try again with this URL
@@ -545,9 +526,6 @@ char* RTSPClient::sendOptionsCmd(char const* url,
       "CSeq: %d\r\n"
       "%s"
       "%s"
-#ifdef SUPPORT_REAL_RTSP
-      REAL_OPTIONS_HEADERS
-#endif
       "\r\n";
     unsigned cmdSize = strlen(cmdFmt)
       + strlen(url)
@@ -585,10 +563,6 @@ char* RTSPClient::sendOptionsCmd(char const* url,
 
       if (_strncasecmp(lineStart, "Public: ", 8) == 0) {
 	delete[] result; result = strDup(&lineStart[8]);
-#ifdef SUPPORT_REAL_RTSP
-      } else if (_strncasecmp(lineStart, "RealChallenge1: ", 16) == 0) {
-	delete[] fRealChallengeStr; fRealChallengeStr = strDup(&lineStart[16]);
-#endif
       }
     }
   } while (0);
@@ -769,73 +743,6 @@ Boolean RTSPClient::setupMediaSubsession(MediaSubsession& subsession,
     }
 
     char* transportStr = NULL;
-#ifdef SUPPORT_REAL_RTSP
-    if (usingRealNetworksChallengeResponse()) {
-      // Use a special "Transport:" header, and also add a 'challenge response'.
-      char challenge2[64];
-      char checksum[34];
-      RealCalculateChallengeResponse(fRealChallengeStr, challenge2, checksum);
-
-      char const* etag = fRealETagStr == NULL ? "" : fRealETagStr;
-
-      char* transportHeader;
-      if (subsession.parentSession().isRealNetworksRDT) {
-	transportHeader = strDup("Transport: x-pn-tng/tcp;mode=play,rtp/avp/unicast;mode=play\r\n");
-      } else {
-	// Use a regular "Transport:" header:
-	char const* transportHeaderFmt
-	  = "Transport: RTP/AVP%s%s=%d-%d\r\n";
-	char const* transportTypeStr;
-	char const* portTypeStr;
-	unsigned short rtpNumber, rtcpNumber;
-	if (streamUsingTCP) { // streaming over the RTSP connection
-	  transportTypeStr = "/TCP;unicast";
-	  portTypeStr = ";interleaved";
-	  rtpNumber = fTCPStreamIdCount++;
-	  rtcpNumber = fTCPStreamIdCount++;
-	} else { // normal RTP streaming
-	  unsigned connectionAddress = subsession.connectionEndpointAddress();
-	  Boolean requestMulticastStreaming = IsMulticastAddress(connectionAddress)
-	    || (connectionAddress == 0 && forceMulticastOnUnspecified);
-	  transportTypeStr = requestMulticastStreaming ? ";multicast" : ";unicast";
-	  portTypeStr = ";client_port";
-	  rtpNumber = subsession.clientPortNum();
-	  if (rtpNumber == 0) {
-	    envir().setResultMsg("Client port number unknown\n");
-	    break;
-	  }
-	  rtcpNumber = rtpNumber + 1;
-	}
-
-	unsigned transportHeaderSize = strlen(transportHeaderFmt)
-	  + strlen(transportTypeStr) + strlen(portTypeStr) + 2*5 /* max port len */;
-	transportHeader = new char[transportHeaderSize];
-	sprintf(transportHeader, transportHeaderFmt,
-		transportTypeStr, portTypeStr, rtpNumber, rtcpNumber);
-      }
-      char const* transportFmt =
-	"%s"
-	"RealChallenge2: %s, sd=%s\r\n"
-	"If-Match: %s\r\n";
-      unsigned transportSize = strlen(transportFmt)
-	+ strlen(transportHeader)
-	+ sizeof challenge2 + sizeof checksum
-	+ strlen(etag);
-      transportStr = new char[transportSize];
-      sprintf(transportStr, transportFmt,
-	      transportHeader,
-	      challenge2, checksum,
-	      etag);
-      delete[] transportHeader;
-
-      if (subsession.parentSession().isRealNetworksRDT) {
-	// Also, tell the RDT source to use the RTSP TCP socket:
-	RealRDTSource* rdtSource
-	  = (RealRDTSource*)(subsession.readSource());
-	rdtSource->setInputSocket(fInputSocketNum);
-      }
-    }
-#endif
 
     char const *prefix, *separator, *suffix;
     constructSubsessionURL(subsession, prefix, separator, suffix);
@@ -1048,14 +955,6 @@ static char const* NoSessionErr = "No RTSP session is currently in progress\n";
 
 Boolean RTSPClient::playMediaSession(MediaSession& session,
 				     double start, double end, float scale) {
-#ifdef SUPPORT_REAL_RTSP
-  if (session.isRealNetworksRDT) {
-    // This is a RealNetworks stream; set the "Subscribe" parameter before proceeding:
-    char* streamRuleString = RealGetSubscribeRuleString(&session);
-    setMediaSessionParameter(session, "Subscribe", streamRuleString);
-    delete[] streamRuleString;
-  }
-#endif
   char* cmd = NULL;
   do {
     // First, make sure that we have a RTSP session in progress

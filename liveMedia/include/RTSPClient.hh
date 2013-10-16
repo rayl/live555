@@ -150,10 +150,6 @@ public:
 
   unsigned sessionTimeoutParameter() const { return fSessionTimeoutParameter; }
 
-#ifdef SUPPORT_REAL_RTSP
-  Boolean usingRealNetworksChallengeResponse() const { return fRealChallengeStr != NULL; }
-#endif
-
 protected:
   RTSPClient(UsageEnvironment& env, int verbosityLevel,
 	     char const* applicationName, portNumBits tunnelOverHTTPPortNum);
@@ -220,10 +216,6 @@ private:
   unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
   char* fLastSessionId;
   unsigned fSessionTimeoutParameter; // optionally set in response "Session:" headers
-#ifdef SUPPORT_REAL_RTSP
-  char* fRealChallengeStr;
-  char* fRealETagStr;
-#endif
   unsigned fDescribeStatusCode;
   // 0: OK; 1: connection failed; 2: stream unavailable
   char* fResponseBuffer;
