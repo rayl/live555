@@ -45,7 +45,11 @@ public:
   unsigned numTruncatedBytes() const { return fNumTruncatedBytes; }
 
 protected:
-  void setParseState();
+  void setParseState() {
+    fSavedTo = fTo;
+    fSavedNumTruncatedBytes = fNumTruncatedBytes;
+    saveParserState();
+  }
 
   // Record "byte" in the current output frame:
   void saveByte(u_int8_t byte) {

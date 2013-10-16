@@ -53,7 +53,8 @@ private:
 
 private:
   unsigned fOutputStartCodeSize;
-  Boolean fHaveSeenFirstStartCode;
+  Boolean fHaveSeenFirstStartCode, fHaveSeenFirstByteOfNALUnit;
+  u_int8_t fFirstByteOfNALUnit;
 
   // Fields in H.264 headers, used in parsing:
   unsigned log2_max_frame_num; // log2_max_frame_num_minus4 + 4
@@ -112,7 +113,7 @@ Boolean H264VideoStreamFramer::isH264VideoStreamFramer() const {
 H264VideoStreamParser
 ::H264VideoStreamParser(H264VideoStreamFramer* usingSource, FramedSource* inputSource, Boolean includeStartCodeInOutput)
   : MPEGVideoStreamParser(usingSource, inputSource),
-    fOutputStartCodeSize(includeStartCodeInOutput ? 4 : 0), fHaveSeenFirstStartCode(False),
+    fOutputStartCodeSize(includeStartCodeInOutput ? 4 : 0), fHaveSeenFirstStartCode(False), fHaveSeenFirstByteOfNALUnit(False),
     // Default values for our parser variables (in case they're not set explicitly in headers that we parse:
     log2_max_frame_num(5), separate_colour_plane_flag(False), frame_mbs_only_flag(True) {
 }
@@ -539,6 +540,7 @@ void H264VideoStreamParser
 
 void H264VideoStreamParser::flushInput() {
   fHaveSeenFirstStartCode = False;
+  fHaveSeenFirstByteOfNALUnit = False;
 
   StreamParser::flushInput();
 }
@@ -567,25 +569,29 @@ unsigned H264VideoStreamParser::parse() {
 
     // Then save everything up until the next 0x00000001 (4 bytes) or 0x000001 (3 bytes), or we hit EOF.
     // Also make note of the first byte, because it contains the "nal_unit_type": 
-    u_int8_t firstByte;
     if (haveSeenEOF()) {
-      // We hit EOF the last time that we tried to parse this data,
-      // so we know that the remaining unparsed data forms a complete NAL unit:
+      // We hit EOF the last time that we tried to parse this data, so we know that any remaining unparsed data
+      // forms a complete NAL unit, and that there's no 'start code' at the end:
       unsigned remainingDataSize = totNumValidBytes() - curOffset();
-      if (remainingDataSize == 0) (void)get1Byte(); // forces another read, which will cause EOF to get handled for real this time
-#ifdef DEBUG
-      fprintf(stderr, "This NAL unit (%d bytes) ends with EOF\n", remainingDataSize);
-#endif
-      if (remainingDataSize == 0) return 0;
-      firstByte = get1Byte();
-      saveByte(firstByte);
-      
-      while (--remainingDataSize > 0) {
+      while (remainingDataSize > 0) {
 	saveByte(get1Byte());
+	--remainingDataSize;
       }
+
+      if (!fHaveSeenFirstByteOfNALUnit) {
+	// There's no remaining NAL unit.
+	(void)get1Byte(); // forces another read, which will cause EOF to get handled for real this time
+	return 0;
+      }
+#ifdef DEBUG
+      fprintf(stderr, "This NAL unit (%d bytes) ends with EOF\n", curFrameSize()-fOutputStartCodeSize);
+#endif
     } else {
       u_int32_t next4Bytes = test4Bytes();
-      firstByte = next4Bytes>>24;
+      if (!fHaveSeenFirstByteOfNALUnit) {
+	fFirstByteOfNALUnit = next4Bytes>>24;
+	fHaveSeenFirstByteOfNALUnit = True;
+      }
       while (next4Bytes != 0x00000001 && (next4Bytes&0xFFFFFF00) != 0x00000100) {
 	// We save at least some of "next4Bytes".
 	if ((unsigned)(next4Bytes&0xFF) > 1) {
@@ -597,6 +603,7 @@ unsigned H264VideoStreamParser::parse() {
 	  saveByte(next4Bytes>>24);
 	  skipBytes(1);
 	}
+	setParseState(); // ensures forward progress
 	next4Bytes = test4Bytes();
       }
       // Assert: next4Bytes starts with 0x00000001 or 0x000001, and we've saved all previous bytes (forming a complete NAL unit).
@@ -608,8 +615,9 @@ unsigned H264VideoStreamParser::parse() {
       }
     }
 
-    u_int8_t nal_ref_idc = (firstByte&0x60)>>5;
-    u_int8_t nal_unit_type = firstByte&0x1F;
+    u_int8_t nal_ref_idc = (fFirstByteOfNALUnit&0x60)>>5;
+    u_int8_t nal_unit_type = fFirstByteOfNALUnit&0x1F;
+    fHaveSeenFirstByteOfNALUnit = False; // for the next NAL unit that we parse
 #ifdef DEBUG
     fprintf(stderr, "Parsed %d-byte NAL-unit (nal_ref_idc: %d, nal_unit_type: %d (\"%s\"))\n",
 	    curFrameSize()-fOutputStartCodeSize, nal_ref_idc, nal_unit_type, nal_unit_type_description[nal_unit_type]);

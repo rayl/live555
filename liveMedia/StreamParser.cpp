@@ -199,7 +199,7 @@ void StreamParser::onInputClosure(void* clientData) {
 void StreamParser::onInputClosure1() {
   if (!fHaveSeenEOF) {
     // We're hitting EOF for the first time.  Set our 'EOF' flag, and continue parsing, as if we'd just read 0 bytes of data.
-    // This allows the parser to re-parse any remaining unparsed code (perhaps while testing for EOF at the end):
+    // This allows the parser to re-parse any remaining unparsed data (perhaps while testing for EOF at the end):
     fHaveSeenEOF = True;
     afterGettingBytes1(0, fLastSeenPresentationTime);
   } else {
