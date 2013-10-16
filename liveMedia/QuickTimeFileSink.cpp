@@ -32,6 +32,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #define fourChar(x,y,z,w) ( ((x)<<24)|((y)<<16)|((z)<<8)|(w) )
 
+#define H264_IDR_FRAME 0x65  //bit 8 == 0, bits 7-6 (ref) == 3, bits 5-0 (type) == 5
+
 ////////// SubsessionIOState, ChunkDescriptor ///////////
 // A structure used to represent the I/O state of each input 'subsession':
 
@@ -84,15 +86,26 @@ private:
   unsigned fBytesInUse;
 };
 
-// A 64-bit counter, used below:
+class SyncFrame {
+public:
+  SyncFrame(unsigned frameNum);
+  virtual ~SyncFrame();
 
+public:
+  class SyncFrame *nextSyncFrame;
+  unsigned sfFrameNum;  
+};
+
+// A 64-bit counter, used below:
 class Count64 {
 public:
-  Count64() { hi = lo = 0; }
+  Count64()
+    : hi(0), lo(0) {
+  }
 
   void operator+=(unsigned arg);
 
-  unsigned hi, lo; // each 32 bits
+  u_int32_t hi, lo;
 };
 
 class SubsessionIOState {
@@ -156,6 +169,7 @@ public:
 
   ChunkDescriptor *fHeadChunk, *fTailChunk;
   unsigned fNumChunks;
+  SyncFrame *fHeadSyncFrame, *fTailSyncFrame;
 
   // Counters to be used in the hint track's 'udta'/'hinf' atom;
   struct hinf {
@@ -511,8 +525,9 @@ SubsessionIOState::SubsessionIOState(QuickTimeFileSink& sink,
 				     MediaSubsession& subsession)
   : fHintTrackForUs(NULL), fTrackHintedByUs(NULL),
     fOurSink(sink), fOurSubsession(subsession),
-    fLastPacketRTPSeqNum(0), fHaveBeenSynced(False), fQTTotNumSamples(0),
-    fHeadChunk(NULL), fTailChunk(NULL), fNumChunks(0) {
+    fLastPacketRTPSeqNum(0), fHaveBeenSynced(False), fQTTotNumSamples(0), 
+    fHeadChunk(NULL), fTailChunk(NULL), fNumChunks(0),
+    fHeadSyncFrame(NULL), fTailSyncFrame(NULL) {
   fTrackID = ++fCurrentTrackNumber;
 
   fBuffer = new SubsessionBuffer(fOurSink.fBufferSize);
@@ -529,7 +544,7 @@ SubsessionIOState::SubsessionIOState(QuickTimeFileSink& sink,
 
 SubsessionIOState::~SubsessionIOState() {
   delete fBuffer; delete fPrevBuffer;
-  delete fHeadChunk;
+  delete fHeadChunk; delete fHeadSyncFrame;
 }
 
 Boolean SubsessionIOState::setQTstate() {
@@ -785,6 +800,16 @@ void SubsessionIOState::useFrame(SubsessionBuffer& buffer) {
 	= useFrame1(frameSizeToUse, ppt, frameDuration, fPrevFrameState.destFileOffset);
       fQTTotNumSamples += numSamples;
       sampleNumberOfFrameStart = fQTTotNumSamples + 1;
+    }
+
+    if (avcHack && (*frameSource == H264_IDR_FRAME)) {
+      SyncFrame* newSyncFrame = new SyncFrame(fQTTotNumSamples + 1);
+      if (fTailSyncFrame == NULL) {
+        fHeadSyncFrame = newSyncFrame;
+      } else {
+        fTailSyncFrame->nextSyncFrame = newSyncFrame;
+      }
+      fTailSyncFrame = newSyncFrame;
     }
 
     // Remember the current frame for next time:
@@ -1057,6 +1082,15 @@ Boolean SubsessionIOState::syncOK(struct timeval presentationTime) {
     if (!fHaveBeenSynced) {
       // We weren't synchronized before
       if (fOurSubsession.rtpSource()->hasBeenSynchronizedUsingRTCP()) {
+	// H264 ?
+	if (fQTMediaDataAtomCreator == &QuickTimeFileSink::addAtom_avc1) {
+	  // special case: audio + H264 video: wait until audio is in sync
+	  if ((s.fNumSubsessions == 2) && (s.fNumSyncedSubsessions < (s.fNumSubsessions - 1))) return False;
+
+	  // if audio is in sync, wait for the next IDR frame to start
+	  unsigned char* const frameSource = fBuffer->dataStart();
+	  if (*frameSource != H264_IDR_FRAME) return False;
+	}
 	// But now we are
 	fHaveBeenSynced = True;
 	fSyncTime = presentationTime;
@@ -1080,6 +1114,14 @@ void SubsessionIOState::setHintTrack(SubsessionIOState* hintedTrack,
 				     SubsessionIOState* hintTrack) {
   if (hintedTrack != NULL) hintedTrack->fHintTrackForUs = hintTrack;
   if (hintTrack != NULL) hintTrack->fTrackHintedByUs = hintedTrack;
+}
+
+SyncFrame::SyncFrame(unsigned frameNum)
+  : nextSyncFrame(NULL), sfFrameNum(frameNum) {
+}  
+
+SyncFrame::~SyncFrame() {
+  delete nextSyncFrame;
 }
 
 void Count64::operator+=(unsigned arg) {
@@ -1953,29 +1995,38 @@ addAtom(stss); // Sync-Sample
   int64_t numEntriesPosition = TellFile64(fOutFid);
   size += addWord(0); // dummy for "Number of entries"
 
-  // Then, run through the chunk descriptors, counting up the total nuber of samples:
   unsigned numEntries = 0, numSamplesSoFar = 0;
-  unsigned const samplesPerFrame = fCurrentIOState->fQTSamplesPerFrame;
-  ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
-  while (chunk != NULL) {
-    unsigned const numSamples = chunk->fNumFrames*samplesPerFrame;
-    numSamplesSoFar += numSamples;
-    chunk = chunk->fNextChunk;
-  }
-
-  // Then, write out the sample numbers that we deem correspond to 'sync samples':
-  unsigned i;
-  for (i = 0; i < numSamplesSoFar; i += 12) {
-    // For an explanation of the constant "12", see http://lists.live555.com/pipermail/live-devel/2009-July/010969.html
-    // (Perhaps we should really try to keep track of which 'samples' ('frames' for video) really are 'key frames'?)
-    size += addWord(i+1);
-    ++numEntries;
-  }
-
-  // Then, write out the last entry (if we haven't already done so):
-  if (i != (numSamplesSoFar - 1)) {
-    size += addWord(numSamplesSoFar);
-    ++numEntries;
+  if (fCurrentIOState->fHeadSyncFrame != NULL) {
+    SyncFrame* currentSyncFrame = fCurrentIOState->fHeadSyncFrame;
+    while(currentSyncFrame != NULL) {
+      ++numEntries;
+      size += addWord(currentSyncFrame->sfFrameNum);
+      currentSyncFrame = currentSyncFrame->nextSyncFrame;
+    }
+  } else {
+    // Then, run through the chunk descriptors, counting up the total nuber of samples:
+    unsigned const samplesPerFrame = fCurrentIOState->fQTSamplesPerFrame;
+    ChunkDescriptor* chunk = fCurrentIOState->fHeadChunk;
+    while (chunk != NULL) {
+      unsigned const numSamples = chunk->fNumFrames*samplesPerFrame;
+      numSamplesSoFar += numSamples;
+      chunk = chunk->fNextChunk;
+    }
+  
+    // Then, write out the sample numbers that we deem correspond to 'sync samples':
+    unsigned i;
+    for (i = 0; i < numSamplesSoFar; i += 12) {
+      // For an explanation of the constant "12", see http://lists.live555.com/pipermail/live-devel/2009-July/010969.html
+      // (Perhaps we should really try to keep track of which 'samples' ('frames' for video) really are 'key frames'?)
+      size += addWord(i+1);
+      ++numEntries;
+    }
+  
+    // Then, write out the last entry (if we haven't already done so):
+    if (i != (numSamplesSoFar - 1)) {
+      size += addWord(numSamplesSoFar);
+      ++numEntries;
+    }
   }
 
   // Now go back and fill in the "Number of entries" field:
@@ -2236,7 +2287,7 @@ addAtomEnd;
 addAtom(payt);
   MediaSubsession& ourSubsession = fCurrentIOState->fOurSubsession;
   RTPSource* rtpSource = ourSubsession.rtpSource();
-  size += addByte(rtpSource->rtpPayloadFormat());
+  size += addWord(rtpSource->rtpPayloadFormat());
 
   // Also, add a 'rtpmap' string: <mime-subtype>/<rtp-frequency>
   unsigned rtpmapStringLength = strlen(ourSubsession.codecName()) + 20;
