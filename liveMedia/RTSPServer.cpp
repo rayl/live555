@@ -201,7 +201,12 @@ RTSPServer::RTSPServer(UsageEnvironment& env,
 #ifdef USE_SIGNALS
   // Ignore the SIGPIPE signal, so that clients on the same host that are killed
   // don't also kill us:
+#ifdef SO_NOSIGPIPE
+  int set_option = 1;
+  setsockopt(ourSocket, SOL_SOCKET, SO_NOSIGPIPE, &set_option, sizeof set_option);
+#else
   signal(SIGPIPE, SIG_IGN);
+#endif
 #endif
 
   // Arrange to handle connections from others:

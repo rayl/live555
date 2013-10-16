@@ -230,10 +230,15 @@ Boolean AVIFileSink::continuePlaying() {
 
 void AVIFileSink
 ::afterGettingFrame(void* clientData, unsigned packetDataSize,
-		    unsigned /*numTruncatedBytes*/,
+		    unsigned numTruncatedBytes,
 		    struct timeval presentationTime,
 		    unsigned /*durationInMicroseconds*/) {
   AVISubsessionIOState* ioState = (AVISubsessionIOState*)clientData;
+  if (numTruncatedBytes > 0) {
+    ioState->envir() << "AVIFileSink::afterGettingFrame(): The input frame data was too large for our buffer.  "
+		     << numTruncatedBytes
+		     << " bytes of trailing data was dropped!  Correct this by increasing the \"bufferSize\" parameter in the \"createNew()\" call.\n";
+  }
   ioState->afterGettingFrame(packetDataSize, presentationTime);
 }
 

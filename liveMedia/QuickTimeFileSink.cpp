@@ -403,7 +403,7 @@ Boolean QuickTimeFileSink::continuePlaying() {
 
 void QuickTimeFileSink
 ::afterGettingFrame(void* clientData, unsigned packetDataSize,
-		    unsigned /*numTruncatedBytes*/,
+		    unsigned numTruncatedBytes,
 		    struct timeval presentationTime,
 		    unsigned /*durationInMicroseconds*/) {
   SubsessionIOState* ioState = (SubsessionIOState*)clientData;
@@ -411,6 +411,11 @@ void QuickTimeFileSink
     // Ignore this data:
     ioState->fOurSink.continuePlaying();
     return;
+  }
+  if (numTruncatedBytes > 0) {
+    ioState->envir() << "QuickTimeFileSink::afterGettingFrame(): The input frame data was too large for our buffer.  "
+                     << numTruncatedBytes
+                     << " bytes of trailing data was dropped!  Correct this by increasing the \"bufferSize\" parameter in the \"createNew()\" call.\n";
   }
   ioState->afterGettingFrame(packetDataSize, presentationTime);
 }

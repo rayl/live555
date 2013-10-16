@@ -47,8 +47,9 @@ int main(int argc, char** argv) {
   MPEG2TransportStreamFromESSource* tsFrames = MPEG2TransportStreamFromESSource::createNew(*env);
   tsFrames->addNewVideoSource(framer, 5/*mpegVersion: H.264*/);
   
-  // Open the output file as a 'file sink':
-  MediaSink* outputSink = FileSink::createNew(*env, outputFileName);
+  // Open the output file as a 'file sink'.  Give it a large buffer size, because the input H.264 NAL units may be large:
+  unsigned const fileSinkBufferSize = 100000;
+  MediaSink* outputSink = FileSink::createNew(*env, outputFileName, fileSinkBufferSize);
   if (outputSink == NULL) {
     *env << "Unable to open file \"" << outputFileName << "\" as a file sink\n";
     exit(1);

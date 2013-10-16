@@ -30,7 +30,7 @@ public:
   static H264VideoFileSink* createNew(UsageEnvironment& env, char const* fileName,
 				      char const* sPropParameterSetsStr = NULL,
   // An optional 'SDP format' string (comma-separated Base64-encoded) representing SPS and/or PPS NAL-units to prepend to the output
-				      unsigned bufferSize = 10000,
+				      unsigned bufferSize = 100000,
 				      Boolean oneFilePerFrame = False);
   // See "FileSink.hh" for a description of these parameters.
 
@@ -42,7 +42,7 @@ protected:
   virtual ~H264VideoFileSink();
 
 protected: // redefined virtual functions:
-  virtual void afterGettingFrame1(unsigned frameSize, struct timeval presentationTime);
+  virtual void afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime);
 
 private:
   char const* fSPropParameterSetsStr;

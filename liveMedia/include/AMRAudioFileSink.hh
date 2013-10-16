@@ -40,8 +40,9 @@ protected:
 
 protected: // redefined virtual functions:
   virtual Boolean sourceIsCompatibleWithUs(MediaSource& source);
-  virtual void afterGettingFrame1(unsigned frameSize,
-				  struct timeval presentationTime);
+  virtual void afterGettingFrame(unsigned frameSize,
+				 unsigned numTruncatedBytes,
+				 struct timeval presentationTime);
 
 protected:
   Boolean fHaveWrittenHeader;

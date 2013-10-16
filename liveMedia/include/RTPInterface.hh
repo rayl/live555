@@ -33,7 +33,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Typedef for an optional auxilliary handler function, to be called
 // when each new packet is read:
 typedef void AuxHandlerFunc(void* clientData, unsigned char* packet,
-			    unsigned packetSize);
+			    unsigned& packetSize);
 
 typedef void ServerRequestAlternativeByteHandler(void* instance, u_int8_t requestByte);
 // A hack that allows a handler for RTP/RTCP packets received over TCP to process RTSP commands that may also appear within

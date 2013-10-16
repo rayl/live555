@@ -89,10 +89,15 @@ void TCPStreamSink::socketWritableHandler1() {
 void TCPStreamSink::afterGettingFrame(void* clientData, unsigned frameSize, unsigned numTruncatedBytes,
 				struct timeval /*presentationTime*/, unsigned /*durationInMicroseconds*/) {
   TCPStreamSink* sink = (TCPStreamSink*)clientData;
-  sink->afterGettingFrame1(frameSize, numTruncatedBytes);
+  sink->afterGettingFrame(frameSize, numTruncatedBytes);
 }
 
-void TCPStreamSink::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes) {
+void TCPStreamSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes) {
+  if (numTruncatedBytes > 0) {
+    envir() << "TCPStreamSink::afterGettingFrame(): The input frame data was too large for our buffer.  "
+	    << numTruncatedBytes
+	    << " bytes of trailing data was dropped!  Correct this by increasing the definition of \"TCP_STREAM_SINK_BUFFER_SIZE\" in \"include/TCPStreamSink.hh\".\n";
+  }
   fUnwrittenBytesEnd += frameSize;
   processBuffer();
 }

@@ -59,7 +59,7 @@ H264VideoFileSink::createNew(UsageEnvironment& env, char const* fileName,
   return NULL;
 }
 
-void H264VideoFileSink::afterGettingFrame1(unsigned frameSize, struct timeval presentationTime) {
+void H264VideoFileSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime) {
   unsigned char const start_code[4] = {0x00, 0x00, 0x00, 0x01};
 
   if (!fHaveWrittenFirstFrame) {
@@ -78,5 +78,5 @@ void H264VideoFileSink::afterGettingFrame1(unsigned frameSize, struct timeval pr
   addData(start_code, 4, presentationTime);
 
   // Call the parent class to complete the normal file write with the input data:
-  FileSink::afterGettingFrame1(frameSize, presentationTime);
+  FileSink::afterGettingFrame(frameSize, numTruncatedBytes, presentationTime);
 }
