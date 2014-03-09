@@ -115,14 +115,14 @@ static unsigned short const frameSizeWideband[16] = {
 // as we now do with ByteStreamFileSource. #####
 void AMRAudioFileSource::doGetNextFrame() {
   if (feof(fFid) || ferror(fFid)) {
-    handleClosure(this);
+    handleClosure();
     return;
   }
 
   // Begin by reading the 1-byte frame header (and checking it for validity)
   while (1) {
     if (fread(&fLastFrameHeader, 1, 1, fFid) < 1) {
-      handleClosure(this);
+      handleClosure();
       return;
     }
     if ((fLastFrameHeader&0x83) != 0) {

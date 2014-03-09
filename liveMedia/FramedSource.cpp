@@ -94,9 +94,13 @@ void FramedSource::afterGetting(FramedSource* source) {
 
 void FramedSource::handleClosure(void* clientData) {
   FramedSource* source = (FramedSource*)clientData;
-  source->fIsCurrentlyAwaitingData = False; // because we got a close instead
-  if (source->fOnCloseFunc != NULL) {
-    (*(source->fOnCloseFunc))(source->fOnCloseClientData);
+  source->handleClosure();
+}
+
+void FramedSource::handleClosure() {
+  fIsCurrentlyAwaitingData = False; // because we got a close instead
+  if (fOnCloseFunc != NULL) {
+    (*fOnCloseFunc)(fOnCloseClientData);
   }
 }
 

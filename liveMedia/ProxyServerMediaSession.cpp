@@ -665,7 +665,7 @@ void ProxyServerMediaSubsession::subsessionByeHandler() {
 
   // This "BYE" signals that our input source has (effectively) closed, so pass this onto the front-end clients:
   fHaveSetupStream = False; // hack to stop "PAUSE" getting sent by:
-  FramedSource::handleClosure(fClientMediaSubsession.readSource());
+  fClientMediaSubsession.readSource()->handleClosure();
 
   // And then treat this as if we had lost connection to the back-end server,
   // and can reestablish streaming from it only by sending another "DESCRIBE":

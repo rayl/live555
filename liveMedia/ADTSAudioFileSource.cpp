@@ -120,7 +120,7 @@ void ADTSAudioFileSource::doGetNextFrame() {
   if (fread(headers, 1, sizeof headers, fFid) < sizeof headers
       || feof(fFid) || ferror(fFid)) {
     // The input source has ended:
-    handleClosure(this);
+    handleClosure();
     return;
   }
 

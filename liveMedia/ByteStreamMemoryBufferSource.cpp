@@ -68,7 +68,7 @@ void ByteStreamMemoryBufferSource::seekToByteRelative(int64_t offset) {
 
 void ByteStreamMemoryBufferSource::doGetNextFrame() {
   if (fCurIndex >= fBufferSize || (fLimitNumBytesToStream && fNumBytesToStream == 0)) {
-    handleClosure(this);
+    handleClosure();
     return;
   }
 

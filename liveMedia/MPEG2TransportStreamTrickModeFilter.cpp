@@ -262,5 +262,5 @@ void MPEG2TransportStreamTrickModeFilter::onSourceClosure(void* clientData) {
 
 void MPEG2TransportStreamTrickModeFilter::onSourceClosure1() {
   fIndexFile->stopReading();
-  FramedSource::handleClosure(this);
+  handleClosure();
 }

@@ -96,7 +96,7 @@ void ByteStreamMultiFileSource::doGetNextFrame() {
   } while (0);
 
   // An error occurred; consider ourselves closed:
-  handleClosure(this);
+  handleClosure();
 }
 
 void ByteStreamMultiFileSource

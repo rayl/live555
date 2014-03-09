@@ -303,7 +303,7 @@ void MPEG2IFrameIndexFromTransportStream::handleInputClosure1() {
     doGetNextFrame();
   } else {
     // Handle closure in the regular way:
-    FramedSource::handleClosure(this);
+    handleClosure();
   }
 }
 

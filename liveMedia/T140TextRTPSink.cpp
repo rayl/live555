@@ -180,5 +180,5 @@ void T140IdleFilter::onSourceClosure() {
   envir().taskScheduler().unscheduleDelayedTask(fIdleTimerTask);
   fIdleTimerTask = NULL;
 
-  FramedSource::handleClosure(this);
+  handleClosure();
 }

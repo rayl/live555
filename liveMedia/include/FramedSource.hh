@@ -45,6 +45,7 @@ public:
 		    void* onCloseClientData);
 
   static void handleClosure(void* clientData);
+  void handleClosure();
       // This should be called (on ourself) if the source is discovered
       // to be closed (i.e., no longer readable)
 

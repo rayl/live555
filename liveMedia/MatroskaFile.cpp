@@ -407,7 +407,7 @@ void MatroskaDemux::handleEndOfFile() {
 
   for (i = 0; i < numTracks; ++i) {
     if (tracks[i] == NULL) continue; // sanity check; shouldn't happen
-    FramedSource::handleClosure(tracks[i]);
+    tracks[i]->handleClosure();
   }
 
   delete[] tracks;

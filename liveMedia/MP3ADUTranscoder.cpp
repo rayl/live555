@@ -82,7 +82,7 @@ void MP3ADUTranscoder::afterGettingFrame1(unsigned numBytesRead,
   fFrameSize = TranscodeMP3ADU(fOrigADU, numBytesRead, fOutBitrate,
 			    fTo, fMaxSize, fAvailableBytesForBackpointer);
   if (fFrameSize == 0) { // internal error - bad ADU data?
-    handleClosure(this);
+    handleClosure();
     return;
   }
 

@@ -91,7 +91,7 @@ ByteStreamFileSource::~ByteStreamFileSource() {
 
 void ByteStreamFileSource::doGetNextFrame() {
   if (feof(fFid) || ferror(fFid) || (fLimitNumBytesToStream && fNumBytesToStream == 0)) {
-    handleClosure(this);
+    handleClosure();
     return;
   }
 
@@ -142,7 +142,7 @@ void ByteStreamFileSource::doReadFromFile() {
   }
 #endif
   if (fFrameSize == 0) {
-    handleClosure(this);
+    handleClosure();
     return;
   }
   fNumBytesToStream -= fFrameSize;

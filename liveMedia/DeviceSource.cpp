@@ -80,7 +80,7 @@ void DeviceSource::doGetNextFrame() {
 
   // Note: If, for some reason, the source device stops being readable (e.g., it gets closed), then you do the following:
   if (0 /* the source stops being readable */ /*%%% TO BE WRITTEN %%%*/) {
-    handleClosure(this);
+    handleClosure();
     return;
   }
 

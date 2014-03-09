@@ -162,7 +162,7 @@ void ADUFromMP3Source::doGetNextFrame() {
 
     if (!doGetNextFrame1()) {
       // An internal error occurred; act as if our source went away:
-      FramedSource::handleClosure(this);
+      handleClosure();
     }
   }
 }
@@ -512,7 +512,7 @@ void SegmentQueue::enqueueNewSegment(FramedSource* inputSource,
 				     FramedSource* usingSource) {
   if (isFull()) {
     usingSource->envir() << "SegmentQueue::enqueueNewSegment() overflow\n";
-    FramedSource::handleClosure(usingSource);
+    usingSource->handleClosure();
     return;
   }
 

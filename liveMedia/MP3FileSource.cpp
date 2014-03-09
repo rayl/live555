@@ -111,7 +111,7 @@ void MP3FileSource::getAttributes() const {
 
 void MP3FileSource::doGetNextFrame() {
   if (!doGetNextFrame1()) {
-    handleClosure(this);
+    handleClosure();
     return;
   }
 
