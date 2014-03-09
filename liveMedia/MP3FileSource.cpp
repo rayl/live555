@@ -99,7 +99,6 @@ void MP3FileSource::seekWithinFile(double seekNPT, double streamDuration) {
       fNumBytesToStream = endByteNumber - seekByteNumber;
       fLimitNumBytesToStream = True;
     }
-  } else {
   }
 }
 

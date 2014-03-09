@@ -65,12 +65,14 @@ void WAVAudioFileSource::setScaleFactor(int scale) {
   }
 }
 
-void WAVAudioFileSource::seekToPCMByte(unsigned byteNumber, unsigned numBytesToStream) {
+void WAVAudioFileSource::seekToPCMByte(unsigned byteNumber) {
   byteNumber += fWAVHeaderSize;
   if (byteNumber > fFileSize) byteNumber = fFileSize;
 
   SeekFile64(fFid, byteNumber, SEEK_SET);
+}
 
+void WAVAudioFileSource::limitNumBytesToStream(unsigned numBytesToStream) {
   fNumBytesToStream = numBytesToStream;
   fLimitNumBytesToStream = fNumBytesToStream > 0;
 }

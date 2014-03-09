@@ -148,7 +148,8 @@ public:
 			   ServerRequestAlternativeByteHandler* serverRequestAlternativeByteHandler,
 			   void* serverRequestAlternativeByteHandlerClientData) = 0;
   virtual void pauseStream(unsigned clientSessionId, void* streamToken);
-  virtual void seekStream(unsigned clientSessionId, void* streamToken, double& seekNPT, double streamDuration, u_int64_t& numBytes);
+  virtual void seekStream(unsigned clientSessionId, void* streamToken, double& seekNPT,
+			  double streamDuration, u_int64_t& numBytes);
      // This routine is used to seek by relative (i.e., NPT) time.
      // "streamDuration", if >0.0, specifies how much data to stream, past "seekNPT".  (If <=0.0, all remaining data is streamed.)
      // "numBytes" returns the size (in bytes) of the data to be streamed, or 0 if unknown or unlimited.
@@ -157,7 +158,8 @@ public:
      // "absStart" should be a string of the form "YYYYMMDDTHHMMSSZ" or "YYYYMMDDTHHMMSS.<frac>Z".
      // "absEnd" should be either NULL (for no end time), or a string of the same form as "absStart".
      // These strings may be modified in-place, or can be reassigned to a newly-allocated value (after delete[]ing the original).
-  virtual void nullSeekStream(unsigned clientSessionId, void* streamToken);
+  virtual void nullSeekStream(unsigned clientSessionId, void* streamToken,
+			      double streamEndTime, u_int64_t& numBytes);
      // Called whenever we're handling a "PLAY" command without a specified start time.
   virtual void setStreamScale(unsigned clientSessionId, void* streamToken, float scale);
   virtual float getCurrentNPT(void* streamToken);

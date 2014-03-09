@@ -367,8 +367,10 @@ void ServerMediaSubsession::seekStream(unsigned /*clientSessionId*/,
   delete[] absStart; absStart = NULL;
   delete[] absEnd; absEnd = NULL;
 }
-void ServerMediaSubsession::nullSeekStream(unsigned /*clientSessionId*/, void* /*streamToken*/) {
+void ServerMediaSubsession::nullSeekStream(unsigned /*clientSessionId*/, void* /*streamToken*/,
+					   double streamEndTime, u_int64_t& numBytes) {
   // default implementation: do nothing
+  numBytes = 0;
 }
 void ServerMediaSubsession::setStreamScale(unsigned /*clientSessionId*/,
 					   void* /*streamToken*/, float /*scale*/) {

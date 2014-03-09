@@ -214,9 +214,13 @@ Boolean parseRTSPRequestString(char const* reqStr,
   return True;
 }
 
-Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeEnd, char*& absStartTime, char*& absEndTime) {
+Boolean parseRangeParam(char const* paramStr,
+			double& rangeStart, double& rangeEnd,
+			char*& absStartTime, char*& absEndTime,
+			Boolean& startTimeIsNow) {
   delete[] absStartTime; delete[] absEndTime;
   absStartTime = absEndTime = NULL; // by default, unless "paramStr" is a "clock=..." string
+  startTimeIsNow = False; // by default
   double start, end;
   int numCharsMatched = 0;
   Locale l("C", Numeric);
@@ -226,14 +230,17 @@ Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeE
   } else if (sscanf(paramStr, "npt = %lf -", &start) == 1) {
     if (start < 0.0) {
       // special case for "npt = -<endtime>", which seems to match here:
-      rangeStart = 0.0;
+      rangeStart = 0.0; startTimeIsNow = True;
       rangeEnd = -start;
     } else {
       rangeStart = start;
       rangeEnd = 0.0;
     }
-  } else if (strcmp(paramStr, "npt=now-") == 0) {
-    rangeStart = 0.0;
+  } else if (sscanf(paramStr, "npt = now - %lf", &end) == 1) {
+      rangeStart = 0.0; startTimeIsNow = True;
+      rangeEnd = end;
+  } else if (strcmp(paramStr, "npt = now -") == 0) {
+    rangeStart = 0.0; startTimeIsNow = True;
     rangeEnd = 0.0;
   } else if (sscanf(paramStr, "clock = %n", &numCharsMatched) == 0 && numCharsMatched > 0) {
     rangeStart = rangeEnd = 0.0;
@@ -262,7 +269,10 @@ Boolean parseRangeParam(char const* paramStr, double& rangeStart, double& rangeE
   return True;
 }
 
-Boolean parseRangeHeader(char const* buf, double& rangeStart, double& rangeEnd, char*& absStartTime, char*& absEndTime) {
+Boolean parseRangeHeader(char const* buf,
+			 double& rangeStart, double& rangeEnd,
+			 char*& absStartTime, char*& absEndTime,
+			 Boolean& startTimeIsNow) {
   // First, find "Range:"
   while (1) {
     if (*buf == '\0') return False; // not found
@@ -270,10 +280,9 @@ Boolean parseRangeHeader(char const* buf, double& rangeStart, double& rangeEnd, 
     ++buf;
   }
 
-  // Then, run through each of the fields, looking for ones we handle:
   char const* fields = buf + 7;
   while (*fields == ' ') ++fields;
-  return parseRangeParam(fields, rangeStart, rangeEnd, absStartTime, absEndTime);
+  return parseRangeParam(fields, rangeStart, rangeEnd, absStartTime, absEndTime, startTimeIsNow);
 }
 
 Boolean parseScaleHeader(char const* buf, float& scale) {
@@ -287,7 +296,6 @@ Boolean parseScaleHeader(char const* buf, float& scale) {
     ++buf;
   }
 
-  // Then, run through each of the fields, looking for ones we handle:
   char const* fields = buf + 6;
   while (*fields == ' ') ++fields;
   float sc;

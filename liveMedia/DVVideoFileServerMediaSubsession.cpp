@@ -88,3 +88,16 @@ void DVVideoFileServerMediaSubsession
     fileSource->seekToByteAbsolute(seekByteNumber, numBytes);
   }
 }
+
+void DVVideoFileServerMediaSubsession
+::setStreamSourceDuration(FramedSource* inputSource, double streamDuration, u_int64_t& numBytes) {
+  // First, get the file source from "inputSource" (a framer):
+  DVVideoStreamFramer* framer = (DVVideoStreamFramer*)inputSource;
+  ByteStreamFileSource* fileSource = (ByteStreamFileSource*)(framer->inputSource());
+
+  // Then figure out how many bytes to limit the streaming to:
+  if (fFileDuration > 0.0) {
+    numBytes = (u_int64_t)(((int64_t)fFileSize*streamDuration)/fFileDuration);
+    fileSource->seekToByteRelative(0, numBytes);
+  }
+}

@@ -44,7 +44,8 @@ public:
 
   unsigned numPCMBytes() const;
   void setScaleFactor(int scale);
-  void seekToPCMByte(unsigned byteNumber, unsigned numBytesToStream);
+  void seekToPCMByte(unsigned byteNumber);
+  void limitNumBytesToStream(unsigned numBytesToStream);
       // if "numBytesToStream" is >0, then we limit the stream to that number of bytes, before treating it as EOF
 
   unsigned char getAudioFormat();

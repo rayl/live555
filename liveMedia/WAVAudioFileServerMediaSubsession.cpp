@@ -56,11 +56,27 @@ void WAVAudioFileServerMediaSubsession
   unsigned seekSampleNumber = (unsigned)(seekNPT*fSamplingFrequency);
   unsigned seekByteNumber = seekSampleNumber*((fNumChannels*fBitsPerSample)/8);
 
+  wavSource->seekToPCMByte(seekByteNumber);
+
+  setStreamSourceDuration(inputSource, streamDuration, numBytes);
+}
+
+void WAVAudioFileServerMediaSubsession
+::setStreamSourceDuration(FramedSource* inputSource, double streamDuration, u_int64_t& numBytes) {
+  WAVAudioFileSource* wavSource;
+  if (fBitsPerSample > 8) {
+    // "inputSource" is a filter; its input source is the original WAV file source:
+    wavSource = (WAVAudioFileSource*)(((FramedFilter*)inputSource)->inputSource());
+  } else {
+    // "inputSource" is the original WAV file source:
+    wavSource = (WAVAudioFileSource*)inputSource;
+  }
+
   unsigned numDurationSamples = (unsigned)(streamDuration*fSamplingFrequency);
   unsigned numDurationBytes = numDurationSamples*((fNumChannels*fBitsPerSample)/8);
   numBytes = (u_int64_t)numDurationBytes;
 
-  wavSource->seekToPCMByte(seekByteNumber, numDurationBytes);
+  wavSource->limitNumBytesToStream(numDurationBytes);
 }
 
 void WAVAudioFileServerMediaSubsession

@@ -1132,8 +1132,12 @@ Boolean RTSPClient::handlePLAYResponse(MediaSession& session, MediaSubsession& s
       // The command was on the whole session
       if (scaleParamsStr != NULL && !parseScaleParam(scaleParamsStr, session.scale())) break;
       scaleOK = True;
-      if (rangeParamsStr != NULL && !parseRangeParam(rangeParamsStr, session.playStartTime(), session.playEndTime(),
-						     session._absStartTime(), session._absEndTime())) break;
+      Boolean startTimeIsNow;
+      if (rangeParamsStr != NULL &&
+	  !parseRangeParam(rangeParamsStr,
+			   session.playStartTime(), session.playEndTime(),
+			   session._absStartTime(), session._absEndTime(),
+			   startTimeIsNow)) break;
       rangeOK = True;
 
       MediaSubsessionIterator iter(session);
@@ -1153,8 +1157,12 @@ Boolean RTSPClient::handlePLAYResponse(MediaSession& session, MediaSubsession& s
       // The command was on a subsession
       if (scaleParamsStr != NULL && !parseScaleParam(scaleParamsStr, subsession.scale())) break;
       scaleOK = True;
-      if (rangeParamsStr != NULL && !parseRangeParam(rangeParamsStr, subsession._playStartTime(), subsession._playEndTime(),
-						     subsession._absStartTime(), subsession._absEndTime())) break;
+      Boolean startTimeIsNow;
+      if (rangeParamsStr != NULL &&
+	  !parseRangeParam(rangeParamsStr,
+			   subsession._playStartTime(), subsession._playEndTime(),
+			   subsession._absStartTime(), subsession._absEndTime(),
+			   startTimeIsNow)) break;
       rangeOK = True;
 
       u_int16_t seqNum; u_int32_t timestamp;

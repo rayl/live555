@@ -57,8 +57,11 @@ void ByteStreamFileSource::seekToByteAbsolute(u_int64_t byteNumber, u_int64_t nu
   fLimitNumBytesToStream = fNumBytesToStream > 0;
 }
 
-void ByteStreamFileSource::seekToByteRelative(int64_t offset) {
+void ByteStreamFileSource::seekToByteRelative(int64_t offset, u_int64_t numBytesToStream) {
   SeekFile64(fFid, offset, SEEK_CUR);
+
+  fNumBytesToStream = numBytesToStream;
+  fLimitNumBytesToStream = fNumBytesToStream > 0;
 }
 
 void ByteStreamFileSource::seekToEnd() {

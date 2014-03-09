@@ -56,7 +56,7 @@ void ByteStreamMemoryBufferSource::seekToByteAbsolute(u_int64_t byteNumber, u_in
   fLimitNumBytesToStream = fNumBytesToStream > 0;
 }
 
-void ByteStreamMemoryBufferSource::seekToByteRelative(int64_t offset) {
+void ByteStreamMemoryBufferSource::seekToByteRelative(int64_t offset, u_int64_t numBytesToStream) {
   int64_t newIndex = fCurIndex + offset;
   if (newIndex < 0) {
     fCurIndex = 0;
@@ -64,6 +64,9 @@ void ByteStreamMemoryBufferSource::seekToByteRelative(int64_t offset) {
     fCurIndex = (u_int64_t)offset;
     if (fCurIndex > fBufferSize) fCurIndex = fBufferSize;
   }
+
+  fNumBytesToStream = numBytesToStream;
+  fLimitNumBytesToStream = fNumBytesToStream > 0;
 }
 
 void ByteStreamMemoryBufferSource::doGetNextFrame() {

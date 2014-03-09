@@ -1592,7 +1592,8 @@ void RTSPServer::RTSPClientSession
     // This isn't legal, but some clients do this to combine "SETUP" and "PLAY":
     double rangeStart = 0.0, rangeEnd = 0.0;
     char* absStart = NULL; char* absEnd = NULL;
-    if (parseRangeHeader(fullRequestStr, rangeStart, rangeEnd, absStart, absEnd)) {
+    Boolean startTimeIsNow;
+    if (parseRangeHeader(fullRequestStr, rangeStart, rangeEnd, absStart, absEnd, startTimeIsNow)) {
       delete[] absStart; delete[] absEnd;
       fStreamAfterSETUP = True;
     } else if (parsePlayNowHeader(fullRequestStr)) {
@@ -1849,7 +1850,9 @@ void RTSPServer::RTSPClientSession
   float duration = 0.0;
   double rangeStart = 0.0, rangeEnd = 0.0;
   char* absStart = NULL; char* absEnd = NULL;
-  Boolean sawRangeHeader = parseRangeHeader(fullRequestStr, rangeStart, rangeEnd, absStart, absEnd);
+  Boolean startTimeIsNow;
+  Boolean sawRangeHeader
+    = parseRangeHeader(fullRequestStr, rangeStart, rangeEnd, absStart, absEnd, startTimeIsNow);
   
   if (sawRangeHeader && absStart == NULL/*not seeking by 'absolute' time*/) {
     // Use this information, plus the stream's duration (if known), to create our own "Range:" header, for the response:
@@ -1861,8 +1864,8 @@ void RTSPServer::RTSPClientSession
       duration = -duration;
     }
     
-    // Make sure that "rangeStart" and "rangeEnd" (from the client's "Range:" header) have sane values
-    // before we send back our own "Range:" header in our response:
+    // Make sure that "rangeStart" and "rangeEnd" (from the client's "Range:" header)
+    // have sane values, before we send back our own "Range:" header in our response:
     if (rangeStart < 0.0) rangeStart = 0.0;
     else if (rangeStart > duration) rangeStart = duration;
     if (rangeEnd < 0.0) rangeEnd = 0.0;
@@ -1889,41 +1892,41 @@ void RTSPServer::RTSPClientSession
   unsigned i, numRTPInfoItems = 0;
   
   // Do any required seeking/scaling on each subsession, before starting streaming.
-  // (However, we don't do this if the "PLAY" request was for just a single subsession of a multiple-subsession stream;
-  //  for such streams, seeking/scaling can be done only with an aggregate "PLAY".)
+  // (However, we don't do this if the "PLAY" request was for just a single subsession
+  // of a multiple-subsession stream; for such streams, seeking/scaling can be done
+  // only with an aggregate "PLAY".)
   for (i = 0; i < fNumStreamStates; ++i) {
     if (subsession == NULL /* means: aggregated operation */ || fNumStreamStates == 1) {
-      if (sawScaleHeader) {
-	if (fStreamStates[i].subsession != NULL) {
+      if (fStreamStates[i].subsession != NULL) {
+	if (sawScaleHeader) {
 	  fStreamStates[i].subsession->setStreamScale(fOurSessionId, fStreamStates[i].streamToken, scale);
 	}
-      }
-      if (sawRangeHeader) {
 	if (absStart != NULL) {
 	  // Special case handling for seeking by 'absolute' time:
-	  
-	  if (fStreamStates[i].subsession != NULL) {
-	    fStreamStates[i].subsession->seekStream(fOurSessionId, fStreamStates[i].streamToken, absStart, absEnd);
-	  }
+	
+	  fStreamStates[i].subsession->seekStream(fOurSessionId, fStreamStates[i].streamToken, absStart, absEnd);
 	} else {
 	  // Seeking by relative (NPT) time:
 	  
-	  double streamDuration = 0.0; // by default; means: stream until the end of the media
-	  if (rangeEnd > 0.0 && (rangeEnd+0.001) < duration) { // the 0.001 is because we limited the values to 3 decimal places
-	    // We want the stream to end early.  Set the duration we want:
-	    streamDuration = rangeEnd - rangeStart;
-	    if (streamDuration < 0.0) streamDuration = -streamDuration; // should happen only if scale < 0.0
-	  }
-	  if (fStreamStates[i].subsession != NULL) {
-	    u_int64_t numBytes;
+	  u_int64_t numBytes;
+	  if (!sawRangeHeader || startTimeIsNow) {
+	    // We're resuming streaming without seeking, so we just do a 'null' seek
+	    // (to get our NPT, and to specify when to end streaming):
+	    fStreamStates[i].subsession->nullSeekStream(fOurSessionId, fStreamStates[i].streamToken,
+							rangeEnd, numBytes);
+	  } else {
+	    // We do a real 'seek':
+	    double streamDuration = 0.0; // by default; means: stream until the end of the media
+	    if (rangeEnd > 0.0 && (rangeEnd+0.001) < duration) {
+	      // the 0.001 is because we limited the values to 3 decimal places
+	      // We want the stream to end early.  Set the duration we want:
+	      streamDuration = rangeEnd - rangeStart;
+	      if (streamDuration < 0.0) streamDuration = -streamDuration;
+	          // should happen only if scale < 0.0
+	    }
 	    fStreamStates[i].subsession->seekStream(fOurSessionId, fStreamStates[i].streamToken,
 						    rangeStart, streamDuration, numBytes);
 	  }
-	}
-      } else {
-	// No "Range:" header was specified in the "PLAY", so we do a 'null' seek (i.e., we don't seek at all):
-	if (fStreamStates[i].subsession != NULL) {
-	  fStreamStates[i].subsession->nullSeekStream(fOurSessionId, fStreamStates[i].streamToken);
 	}
       }
     }
@@ -1931,24 +1934,7 @@ void RTSPServer::RTSPClientSession
   
   // Create the "Range:" header that we'll send back in our response.
   // (Note that we do this after seeking, in case the seeking operation changed the range start time.)
-  char* rangeHeader;
-  if (!sawRangeHeader) {
-    // There wasn't a "Range:" header in the request, so, in our response, begin the range with the current NPT (normal play time):
-    float curNPT = 0.0;
-    for (i = 0; i < fNumStreamStates; ++i) {
-      if (subsession == NULL /* means: aggregated operation */
-	  || subsession == fStreamStates[i].subsession) {
-	if (fStreamStates[i].subsession == NULL) continue;
-	float npt = fStreamStates[i].subsession->getCurrentNPT(fStreamStates[i].streamToken);
-	if (npt > curNPT) curNPT = npt;
-	// Note: If this is an aggregate "PLAY" on a multi-subsession stream, then it's conceivable that the NPTs of each subsession
-	// may differ (if there has been a previous seek on just one subsession).  In this (unusual) case, we just return the
-	// largest NPT; I hope that turns out OK...
-      }
-    }
-    
-    sprintf(buf, "Range: npt=%.3f-\r\n", curNPT);
-  } else if (absStart != NULL) {
+  if (absStart != NULL) {
     // We're seeking by 'absolute' time:
     if (absEnd == NULL) {
       sprintf(buf, "Range: clock=%s-\r\n", absStart);
@@ -1958,13 +1944,31 @@ void RTSPServer::RTSPClientSession
     delete[] absStart; delete[] absEnd;
   } else {
     // We're seeking by relative (NPT) time:
+    if (!sawRangeHeader || startTimeIsNow) {
+      // We didn't seek, so in our response, begin the range with the current NPT (normal play time):
+      float curNPT = 0.0;
+      for (i = 0; i < fNumStreamStates; ++i) {
+	if (subsession == NULL /* means: aggregated operation */
+	    || subsession == fStreamStates[i].subsession) {
+	  if (fStreamStates[i].subsession == NULL) continue;
+	  float npt = fStreamStates[i].subsession->getCurrentNPT(fStreamStates[i].streamToken);
+	  if (npt > curNPT) curNPT = npt;
+	  // Note: If this is an aggregate "PLAY" on a multi-subsession stream,
+	  // then it's conceivable that the NPTs of each subsession may differ
+	  // (if there has been a previous seek on just one subsession).
+	  // In this (unusual) case, we just return the largest NPT; I hope that turns out OK...
+	}
+      }
+      rangeStart = curNPT;
+    }
+
     if (rangeEnd == 0.0 && scale >= 0.0) {
       sprintf(buf, "Range: npt=%.3f-\r\n", rangeStart);
     } else {
       sprintf(buf, "Range: npt=%.3f-%.3f\r\n", rangeStart, rangeEnd);
     }
   }
-  rangeHeader = strDup(buf);
+  char* rangeHeader = strDup(buf);
   
   // Now, start streaming:
   for (i = 0; i < fNumStreamStates; ++i) {

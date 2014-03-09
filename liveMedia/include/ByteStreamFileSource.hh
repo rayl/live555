@@ -46,7 +46,7 @@ public:
 
   void seekToByteAbsolute(u_int64_t byteNumber, u_int64_t numBytesToStream = 0);
     // if "numBytesToStream" is >0, then we limit the stream to that number of bytes, before treating it as EOF
-  void seekToByteRelative(int64_t offset);
+  void seekToByteRelative(int64_t offset, u_int64_t numBytesToStream = 0);
   void seekToEnd(); // to force EOF handling on the next read
 
 protected:
