@@ -110,7 +110,7 @@ void OnDemandServerMediaSubsession
     Groupsock* rtpGroupsock = NULL;
     Groupsock* rtcpGroupsock = NULL;
 
-    if (clientRTPPort.num() != 0) { // Normal case: Create destinations
+    if (clientRTPPort.num() != 0 || tcpSocketNum >= 0) { // Normal case: Create destinations
       portNumBits serverPortNum;
       if (clientRTCPPort.num() == 0) {
 	// We're streaming raw UDP (not RTP). Create a single groupsock:

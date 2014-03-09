@@ -559,18 +559,17 @@ RTPSink* ProxyServerMediaSubsession
   } else if (strcmp(codecName, "H264") == 0) {
     newSink = H264VideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
 					  fClientMediaSubsession.fmtp_spropparametersets(),
-					  fClientMediaSubsession.fmtp_profile_level_id());
+					  fClientMediaSubsession.attrVal_unsigned("profile-level-id"));
   } else if (strcmp(codecName, "H265") == 0) {
     newSink = H265VideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
 					  fClientMediaSubsession.fmtp_spropvps(),
 					  fClientMediaSubsession.fmtp_spropsps(),
 					  fClientMediaSubsession.fmtp_sproppps(),
-					  fClientMediaSubsession.fmtp_profilespace(),
-					  fClientMediaSubsession.fmtp_profileid(),
-					  fClientMediaSubsession.fmtp_tierflag(),
-					  fClientMediaSubsession.fmtp_levelid(),
-					  fClientMediaSubsession.fmtp_interopconstraintsstr());
-
+					  fClientMediaSubsession.attrVal_unsigned("profile-space"),
+					  fClientMediaSubsession.attrVal_unsigned("profile-id"),
+					  fClientMediaSubsession.attrVal_unsigned("tier-flag"),
+					  fClientMediaSubsession.attrVal_unsigned("level-id"),
+					  fClientMediaSubsession.attrVal_str("interop-constraints"));
   } else if (strcmp(codecName, "JPEG") == 0) {
     newSink = SimpleRTPSink::createNew(envir(), rtpGroupsock, 26, 90000, "video", "JPEG",
 				       1/*numChannels*/, False/*allowMultipleFramesPerPacket*/, False/*doNormalMBitRule*/);
@@ -582,7 +581,8 @@ RTPSink* ProxyServerMediaSubsession
   } else if (strcmp(codecName, "MP4V-ES") == 0) {
     newSink = MPEG4ESVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
 					     fClientMediaSubsession.rtpTimestampFrequency(),
-					     fClientMediaSubsession.fmtp_profile_level_id(), fClientMediaSubsession.fmtp_config()); 
+					     fClientMediaSubsession.attrVal_unsigned("profile-level-id"),
+					     fClientMediaSubsession.fmtp_config()); 
   } else if (strcmp(codecName, "MPA") == 0) {
     newSink = MPEG1or2AudioRTPSink::createNew(envir(), rtpGroupsock);
   } else if (strcmp(codecName, "MPA-ROBUST") == 0) {
@@ -590,7 +590,8 @@ RTPSink* ProxyServerMediaSubsession
   } else if (strcmp(codecName, "MPEG4-GENERIC") == 0) {
     newSink = MPEG4GenericRTPSink::createNew(envir(), rtpGroupsock,
 					     rtpPayloadTypeIfDynamic, fClientMediaSubsession.rtpTimestampFrequency(),
-					     fClientMediaSubsession.mediumName(), fClientMediaSubsession.fmtp_mode(),
+					     fClientMediaSubsession.mediumName(),
+					     fClientMediaSubsession.attrVal_str("mode"),
 					     fClientMediaSubsession.fmtp_config(), fClientMediaSubsession.numChannels());
   } else if (strcmp(codecName, "MPV") == 0) {
     newSink = MPEG1or2VideoRTPSink::createNew(envir(), rtpGroupsock);

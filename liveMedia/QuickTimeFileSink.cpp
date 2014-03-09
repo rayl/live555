@@ -1036,8 +1036,8 @@ void SubsessionIOState::useFrameForHinting(unsigned frameSize,
     }
   } else if (hackm4a_generic) {
     // Synthesize a special header, so that this frame can be in its own RTP packet.
-    unsigned const sizeLength = fOurSubsession.fmtp_sizelength();
-    unsigned const indexLength = fOurSubsession.fmtp_indexlength();
+    unsigned const sizeLength = fOurSubsession.attrVal_unsigned("sizelength");
+    unsigned const indexLength = fOurSubsession.attrVal_unsigned("indexlength");
     if (sizeLength + indexLength != 16) {
       envir() << "Warning: unexpected 'sizeLength' " << sizeLength
 	      << " and 'indexLength' " << indexLength
