@@ -998,6 +998,7 @@ void continueAfterPLAY(RTSPClient*, int resultCode, char* resultString) {
     *env << "Failed to start playing session: " << resultString << "\n";
     delete[] resultString;
     shutdown();
+    return;
   } else {
     *env << "Started playing session\n";
   }

@@ -432,7 +432,7 @@ static Boolean parseVorbisSetup_floors(LEBitVector& bv) {
 	if (floor1_partition_class_list[j] > maximum_class) maximum_class = floor1_partition_class_list[j];
       }
 
-      unsigned* floor1_class_dimensions = new unsigned[maximum_class];
+      unsigned* floor1_class_dimensions = new unsigned[maximum_class + 1];
       for (j = 0; j <= maximum_class; ++j) {
 	floor1_class_dimensions[j] = bv.getBits(3) + 1;
 	unsigned floor1_class_subclasses = bv.getBits(2);

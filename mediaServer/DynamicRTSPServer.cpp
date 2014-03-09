@@ -73,13 +73,28 @@ DynamicRTSPServer::lookupServerMediaSession(char const* streamName) {
 }
 
 // Special code for handling Matroska files:
-static char newMatroskaDemuxWatchVariable;
-static MatroskaFileServerDemux* demux;
-static void onMatroskaDemuxCreation(MatroskaFileServerDemux* newDemux, void* /*clientData*/) {
-  demux = newDemux;
-  newMatroskaDemuxWatchVariable = 1;
+struct MatroskaDemuxCreationState {
+  MatroskaFileServerDemux* demux;
+  char watchVariable;
+};
+static void onMatroskaDemuxCreation(MatroskaFileServerDemux* newDemux, void* clientData) {
+  MatroskaDemuxCreationState* creationState = (MatroskaDemuxCreationState*)clientData;
+  creationState->demux = newDemux;
+  creationState->watchVariable = 1;
 }
 // END Special code for handling Matroska files:
+
+// Special code for handling Ogg files:
+struct OggDemuxCreationState {
+  OggFileServerDemux* demux;
+  char watchVariable;
+};
+static void onOggDemuxCreation(OggFileServerDemux* newDemux, void* clientData) {
+  OggDemuxCreationState* creationState = (OggDemuxCreationState*)clientData;
+  creationState->demux = newDemux;
+  creationState->watchVariable = 1;
+}
+// END Special code for handling Ogg files:
 
 #define NEW_SMS(description) do {\
 char const* descStr = description\
@@ -183,13 +198,30 @@ static ServerMediaSession* createNewSMS(UsageEnvironment& env,
     // Assumed to be a Matroska file (note that WebM ('.webm') files are also Matroska files)
     NEW_SMS("Matroska video+audio+(optional)subtitles");
 
-    // Create a Matroska file server demultiplexor for the specified file.  (We enter the event loop to wait for this to complete.)
-    newMatroskaDemuxWatchVariable = 0;
-    MatroskaFileServerDemux::createNew(env, fileName, onMatroskaDemuxCreation, NULL);
-    env.taskScheduler().doEventLoop(&newMatroskaDemuxWatchVariable);
+    // Create a Matroska file server demultiplexor for the specified file.
+    // (We enter the event loop to wait for this to complete.)
+    MatroskaDemuxCreationState creationState;
+    creationState.watchVariable = 0;
+    MatroskaFileServerDemux::createNew(env, fileName, onMatroskaDemuxCreation, &creationState);
+    env.taskScheduler().doEventLoop(&creationState.watchVariable);
 
     ServerMediaSubsession* smss;
-    while ((smss = demux->newServerMediaSubsession()) != NULL) {
+    while ((smss = creationState.demux->newServerMediaSubsession()) != NULL) {
+      sms->addSubsession(smss);
+    }
+  } else if (strcmp(extension, ".ogg") == 0 || strcmp(extension, ".ogv") == 0 || strcmp(extension, ".opus") == 0) {
+    // Assumed to be an Ogg file
+    NEW_SMS("Ogg video and/or audio");
+
+    // Create a Ogg file server demultiplexor for the specified file.
+    // (We enter the event loop to wait for this to complete.)
+    OggDemuxCreationState creationState;
+    creationState.watchVariable = 0;
+    OggFileServerDemux::createNew(env, fileName, onOggDemuxCreation, &creationState);
+    env.taskScheduler().doEventLoop(&creationState.watchVariable);
+
+    ServerMediaSubsession* smss;
+    while ((smss = creationState.demux->newServerMediaSubsession()) != NULL) {
       sms->addSubsession(smss);
     }
   }

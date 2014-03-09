@@ -203,6 +203,11 @@ void MPEG2IFrameIndexFromTransportStream
   u_int8_t adaptation_field_control = (fInputBuffer[3]&0x30)>>4;
   u_int8_t totalHeaderSize
     = adaptation_field_control == 1 ? 4 : 5 + fInputBuffer[4];
+  if (totalHeaderSize >= TRANSPORT_PACKET_SIZE) {
+      envir() << "Bad \"adaptation_field_length\": " << fInputBuffer[4] << "\n";
+      doGetNextFrame();
+      return;
+  }
 
   // Check for a PCR:
   if (totalHeaderSize > 5 && (fInputBuffer[5]&0x10) != 0) {
@@ -250,8 +255,9 @@ void MPEG2IFrameIndexFromTransportStream
 
   // Also, if this is the start of a PES packet, then skip over the PES header:
   Boolean payload_unit_start_indicator = (fInputBuffer[1]&0x40) != 0;
-  if (payload_unit_start_indicator) {
-    // Note: The following works only for MPEG-2 data #####
+  if (payload_unit_start_indicator && totalHeaderSize < TRANSPORT_PACKET_SIZE - 8 
+      && fInputBuffer[totalHeaderSize] == 0x00 && fInputBuffer[totalHeaderSize+1] == 0x00
+      && fInputBuffer[totalHeaderSize+2] == 0x01) {
     u_int8_t PES_header_data_length = fInputBuffer[totalHeaderSize+8];
     totalHeaderSize += 9 + PES_header_data_length;
     if (totalHeaderSize >= TRANSPORT_PACKET_SIZE) {

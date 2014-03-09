@@ -100,7 +100,7 @@ public:
   unsigned estBitrate; // estimate, in kbps (for RTCP)
 
   // Special headers for Vorbis audio tracks:
-  struct {
+  struct _vorbisHdrs {
     u_int8_t* header[3]; // "identification", "comment", "setup"
     unsigned headerSize[3];
 

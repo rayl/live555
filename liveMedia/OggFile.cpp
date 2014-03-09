@@ -189,7 +189,7 @@ OggTrackTable::~OggTrackTable() {
 void OggTrackTable::add(OggTrack* newTrack) {
   OggTrack* existingTrack
     = (OggTrack*)fTable->Add((char const*)newTrack->trackNumber, newTrack);
-  delete existingTrack; // iif any
+  delete existingTrack; // if any
 }
 
 OggTrack* OggTrackTable::lookup(u_int32_t trackNumber) {
