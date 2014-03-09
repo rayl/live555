@@ -227,9 +227,9 @@ Boolean parseRangeParam(char const* paramStr,
   if (sscanf(paramStr, "npt = %lf - %lf", &start, &end) == 2) {
     rangeStart = start;
     rangeEnd = end;
-  } else if (sscanf(paramStr, "npt = %lf -", &start) == 1) {
-    if (start < 0.0) {
-      // special case for "npt = -<endtime>", which seems to match here:
+  } else if (sscanf(paramStr, "npt = %n%lf -", &numCharsMatched, &start) == 1) {
+    if (paramStr[numCharsMatched] == '-') {
+      // special case for "npt = -<endtime>", which matches here:
       rangeStart = 0.0; startTimeIsNow = True;
       rangeEnd = -start;
     } else {

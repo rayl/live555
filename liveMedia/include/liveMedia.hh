@@ -121,6 +121,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "AC3AudioFileServerMediaSubsession.hh"
 #include "MPEG2TransportUDPServerMediaSubsession.hh"
 #include "MatroskaFileServerDemux.hh"
+#include "OggFileServerDemux.hh"
 #include "ProxyServerMediaSession.hh"
 #include "DarwinInjector.hh"
 

@@ -15,70 +15,67 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2014 Live Networks, Inc.  All rights reserved.
-// A server demultiplexor for a Matroska file
+// A server demultiplexor for an Ogg file
 // C++ header
 
-#ifndef _MATROSKA_FILE_SERVER_DEMUX_HH
-#define _MATROSKA_FILE_SERVER_DEMUX_HH
+#ifndef _OGG_FILE_SERVER_DEMUX_HH
+#define _OGG_FILE_SERVER_DEMUX_HH
 
 #ifndef _SERVER_MEDIA_SESSION_HH
 #include "ServerMediaSession.hh"
 #endif
 
-#ifndef _MATROSKA_FILE_HH
-#include "MatroskaFile.hh"
+#ifndef _OGG_FILE_HH
+#include "OggFile.hh"
 #endif
 
-class MatroskaFileServerDemux: public Medium {
+class OggFileServerDemux: public Medium {
 public:
-  typedef void (onCreationFunc)(MatroskaFileServerDemux* newDemux, void* clientData);
+  typedef void (onCreationFunc)(OggFileServerDemux* newDemux, void* clientData);
   static void createNew(UsageEnvironment& env, char const* fileName,
-			onCreationFunc* onCreation, void* onCreationClientData,
-			char const* preferredLanguage = "eng");
+			onCreationFunc* onCreation, void* onCreationClientData);
     // Note: Unlike most "createNew()" functions, this one doesn't return a new object immediately.  Instead, because this class
-    // requires file reading (to parse the Matroska 'Track' headers) before a new object can be initialized, the creation of a new
+    // requires file reading (to parse the Ogg 'Track' headers) before a new object can be initialized, the creation of a new
     // object is signalled by calling - from the event loop - an 'onCreationFunc' that is passed as a parameter to "createNew()". 
 
   ServerMediaSubsession* newServerMediaSubsession();
-  ServerMediaSubsession* newServerMediaSubsession(unsigned& resultTrackNumber);
-    // Returns a new "ServerMediaSubsession" object that represents the next preferred media track
-    // (video, audio, subtitle - in that order) from the file. (Preferred media tracks are based on the file's language preference.)
-    // This function returns NULL when no more media tracks exist.
+  ServerMediaSubsession* newServerMediaSubsession(u_int32_t& resultTrackNumber);
+    // Returns a new "ServerMediaSubsession" object that represents the next media track
+    // from the file.  This function returns NULL when no more media tracks exist.
 
-  ServerMediaSubsession* newServerMediaSubsessionByTrackNumber(unsigned trackNumber);
-    // As above, but creates a new "ServerMediaSubsession" object for a specific track number within the Matroska file.
-    // (You should not call this function more than once with the same track number.)
+  ServerMediaSubsession* newServerMediaSubsessionByTrackNumber(u_int32_t trackNumber);
+  // As above, but creates a new "ServerMediaSubsession" object for a specific track number
+  // within the Ogg file.
+  // (You should not call this function more than once with the same track number.)
 
   // The following public: member functions are called only by the "ServerMediaSubsession" objects:
 
-  MatroskaFile* ourMatroskaFile() { return fOurMatroskaFile; }
+  OggFile* ourOggFile() { return fOurOggFile; }
   char const* fileName() const { return fFileName; }
-  float fileDuration() const { return fOurMatroskaFile->fileDuration(); }
 
-  FramedSource* newDemuxedTrack(unsigned clientSessionId, unsigned trackNumber);
+  FramedSource* newDemuxedTrack(unsigned clientSessionId, u_int32_t trackNumber);
     // Used by the "ServerMediaSubsession" objects to implement their "createNewStreamSource()" virtual function.
 
 private:
-  MatroskaFileServerDemux(UsageEnvironment& env, char const* fileName,
-			  onCreationFunc* onCreation, void* onCreationClientData,
-			  char const* preferredLanguage);
+  OggFileServerDemux(UsageEnvironment& env, char const* fileName,
+		     onCreationFunc* onCreation, void* onCreationClientData);
       // called only by createNew()
-  virtual ~MatroskaFileServerDemux();
+  virtual ~OggFileServerDemux();
 
-  static void onMatroskaFileCreation(MatroskaFile* newFile, void* clientData);
-  void onMatroskaFileCreation(MatroskaFile* newFile);
+  static void onOggFileCreation(OggFile* newFile, void* clientData);
+  void onOggFileCreation(OggFile* newFile);
 private:
   char const* fFileName; 
   onCreationFunc* fOnCreation;
   void* fOnCreationClientData;
-  MatroskaFile* fOurMatroskaFile;
+  OggFile* fOurOggFile;
 
   // Used to implement "newServerMediaSubsession()":
-  u_int8_t fNextTrackTypeToCheck;
+  OggTrackTableIterator* fIter;
 
   // Used to set up demuxing, to implement "newDemuxedTrack()":
   unsigned fLastClientSessionId;
-  MatroskaDemux* fLastCreatedDemux;
+  OggDemux* fLastCreatedDemux;
 };
 
 #endif
