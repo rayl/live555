@@ -72,7 +72,7 @@ void TCPStreamSink::processBuffer() {
 
   if (!fInputSourceIsOpen && numUnwrittenBytes() == 0) {
     // We're now done:
-    onSourceClosure(this);
+    onSourceClosure();
   }
 }
 
