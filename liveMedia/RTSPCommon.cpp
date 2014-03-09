@@ -75,7 +75,7 @@ Boolean parseRTSPRequestString(char const* reqStr,
   for (i = 0; i < resultCmdNameMaxSize-1 && i < reqStrSize; ++i) {
     char c = reqStr[i];
     if (c == ' ' || c == '\t') {
-      parseSucceeded = True;
+      parseSucceeded = i>0; // There must be at least one character in the command name
       break;
     }
 
