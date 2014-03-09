@@ -674,12 +674,12 @@ void H264or5VideoStreamParser
     }
     unsigned num_short_term_ref_pic_sets = bv.get_expGolomb();
     DEBUG_PRINT(num_short_term_ref_pic_sets);
+    unsigned num_negative_pics = 0, prev_num_negative_pics = 0;
+    unsigned num_positive_pics = 0, prev_num_positive_pics = 0;
     for (i = 0; i < num_short_term_ref_pic_sets; ++i) {
       // short_term_ref_pic_set(i):
       DEBUG_TAB;
       DEBUG_PRINT(i);
-      unsigned num_negative_pics = 0;
-      unsigned num_positive_pics = 0;
       Boolean inter_ref_pic_set_prediction_flag = False;
       if (i != 0) {
 	inter_ref_pic_set_prediction_flag = bv.get1BitBoolean();
@@ -693,15 +693,18 @@ void H264or5VideoStreamParser
 	}
 	bv.skipBits(1); // delta_rps_sign
 	(void)bv.get_expGolomb(); // abs_delta_rps_minus1
-	for (unsigned j = 0; j < num_negative_pics+num_positive_pics; ++j) {
+	unsigned NumDeltaPocs = prev_num_negative_pics + prev_num_positive_pics; // correct???
+	for (unsigned j = 0; j < NumDeltaPocs; ++j) {
 	  DEBUG_PRINT(j);
 	  Boolean used_by_curr_pic_flag = bv.get1BitBoolean();
 	  DEBUG_PRINT(used_by_curr_pic_flag);
 	  if (!used_by_curr_pic_flag) bv.skipBits(1); // use_delta_flag[j]
 	}
       } else {
+	prev_num_negative_pics = num_negative_pics;
 	num_negative_pics = bv.get_expGolomb();
 	DEBUG_PRINT(num_negative_pics);
+	prev_num_positive_pics = num_positive_pics;
 	num_positive_pics = bv.get_expGolomb();
 	DEBUG_PRINT(num_positive_pics);
 	unsigned k;

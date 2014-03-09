@@ -267,7 +267,7 @@ FramedSource* MatroskaFile
     } else if (strcmp(track->mimeType, "video/H264") == 0) {
       estBitrate = 500;
       // Allow for the possibility of very large NAL units being fed to the sink object:
-      OutPacketBuffer::maxSize = 300000; // bytes
+      OutPacketBuffer::increaseMaxSizeTo(300000); // bytes
 
       // Add a framer in front of the source:
       result = H264VideoStreamDiscreteFramer::createNew(envir(), result);
@@ -275,7 +275,7 @@ FramedSource* MatroskaFile
     } else if (strcmp(track->mimeType, "video/H265") == 0) {
       estBitrate = 500;
       // Allow for the possibility of very large NAL units being fed to the sink object:
-      OutPacketBuffer::maxSize = 300000; // bytes
+      OutPacketBuffer::increaseMaxSizeTo(300000); // bytes
 
       // Add a framer in front of the source:
       result = H265VideoStreamDiscreteFramer::createNew(envir(), result);

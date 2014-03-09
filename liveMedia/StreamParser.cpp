@@ -85,7 +85,7 @@ unsigned StreamParser::getBits(unsigned numBits) {
     lastByte >>= (fRemainingUnparsedBits - numBits);
     fRemainingUnparsedBits -= numBits;
 
-    return (unsigned)lastByte &~ ((~0)<<numBits);
+    return (unsigned)lastByte &~ ((~0u)<<numBits);
   } else {
     unsigned char lastByte;
     if (fRemainingUnparsedBits > 0) {
@@ -102,7 +102,7 @@ unsigned StreamParser::getBits(unsigned numBits) {
 
     result >>= (32 - remainingBits);
     result |= (lastByte << remainingBits);
-    if (numBits < 32) result &=~ ((~0)<<numBits);
+    if (numBits < 32) result &=~ ((~0u)<<numBits);
 
     unsigned const numRemainingBytes = (remainingBits+7)/8;
     fCurParserIndex += numRemainingBytes;

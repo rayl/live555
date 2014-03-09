@@ -156,7 +156,6 @@ char const* H265VideoRTPSink::auxSDPLine() {
     ";tier-flag=%u"
     ";level-id=%u"
     ";interop-constraints=%s"
-    ";tx-mode=SST"
     ";sprop-vps=%s"
     ";sprop-sps=%s"
     ";sprop-pps=%s\r\n";
