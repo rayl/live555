@@ -174,10 +174,12 @@ AVIFileSink::AVIFileSink(UsageEnvironment& env,
 AVIFileSink::~AVIFileSink() {
   completeOutputFile();
 
-  // Then, delete each active "AVISubsessionIOState":
+  // Then, stop streaming and delete each active "AVISubsessionIOState":
   MediaSubsessionIterator iter(fInputSession);
   MediaSubsession* subsession;
   while ((subsession = iter.next()) != NULL) {
+    subsession->readSource()->stopGettingFrames();
+
     AVISubsessionIOState* ioState
       = (AVISubsessionIOState*)(subsession->miscPtr);
     if (ioState == NULL) continue;

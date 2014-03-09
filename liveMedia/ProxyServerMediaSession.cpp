@@ -64,6 +64,16 @@ UsageEnvironment& operator<<(UsageEnvironment& env, const ProxyServerMediaSessio
   return env << "ProxyServerMediaSession[\"" << psms.url() << "\"]";
 }
 
+ProxyRTSPClient*
+defaultCreateNewProxyRTSPClientFunc(ProxyServerMediaSession& ourServerMediaSession,
+				    char const* rtspURL,
+				    char const* username, char const* password,
+				    portNumBits tunnelOverHTTPPortNum, int verbosityLevel,
+				    int socketNumToServer) {
+  return new ProxyRTSPClient(ourServerMediaSession, rtspURL, username, password,
+			     tunnelOverHTTPPortNum, verbosityLevel, socketNumToServer);
+}
+
 ProxyServerMediaSession* ProxyServerMediaSession
 ::createNew(UsageEnvironment& env, RTSPServer* ourRTSPServer,
 	    char const* inputStreamURL, char const* streamName,
@@ -74,17 +84,25 @@ ProxyServerMediaSession* ProxyServerMediaSession
 }
 
 
-ProxyServerMediaSession::ProxyServerMediaSession(UsageEnvironment& env, RTSPServer* ourRTSPServer,
-						 char const* inputStreamURL, char const* streamName,
-						 char const* username, char const* password,
-						 portNumBits tunnelOverHTTPPortNum, int verbosityLevel, int socketNumToServer)
+ProxyServerMediaSession
+::ProxyServerMediaSession(UsageEnvironment& env, RTSPServer* ourRTSPServer,
+			  char const* inputStreamURL, char const* streamName,
+			  char const* username, char const* password,
+			  portNumBits tunnelOverHTTPPortNum, int verbosityLevel,
+			  int socketNumToServer,
+			  createNewProxyRTSPClientFunc* ourCreateNewProxyRTSPClientFunc)
   : ServerMediaSession(env, streamName, NULL, NULL, False, NULL),
     describeCompletedFlag(0), fOurRTSPServer(ourRTSPServer), fClientMediaSession(NULL),
-    fVerbosityLevel(verbosityLevel), fPresentationTimeSessionNormalizer(new PresentationTimeSessionNormalizer(envir())) {
+    fVerbosityLevel(verbosityLevel),
+    fPresentationTimeSessionNormalizer(new PresentationTimeSessionNormalizer(envir())),
+    fCreateNewProxyRTSPClientFunc(ourCreateNewProxyRTSPClientFunc) {
   // Open a RTSP connection to the input stream, and send a "DESCRIBE" command.
   // We'll use the SDP description in the response to set ourselves up.
-  fProxyRTSPClient = createNewProxyRTSPClient(inputStreamURL, username, password, tunnelOverHTTPPortNum,
-					      verbosityLevel > 0 ? verbosityLevel-1 : verbosityLevel, socketNumToServer);
+  fProxyRTSPClient
+    = (*fCreateNewProxyRTSPClientFunc)(*this, inputStreamURL, username, password,
+				       tunnelOverHTTPPortNum,
+				       verbosityLevel > 0 ? verbosityLevel-1 : verbosityLevel,
+				       socketNumToServer);
   ProxyRTSPClient::sendDESCRIBE(fProxyRTSPClient);
 }
 
@@ -104,13 +122,6 @@ ProxyServerMediaSession::~ProxyServerMediaSession() {
 
 char const* ProxyServerMediaSession::url() const {
   return fProxyRTSPClient == NULL ? NULL : fProxyRTSPClient->url();
-}
-
-ProxyRTSPClient* ProxyServerMediaSession
-::createNewProxyRTSPClient(char const* rtspURL, char const* username, char const* password,
-			   portNumBits tunnelOverHTTPPortNum, int verbosityLevel, int socketNumToServer){
-  // default implementation:
-  return new ProxyRTSPClient(*this, rtspURL, username, password, tunnelOverHTTPPortNum, verbosityLevel, socketNumToServer);
 }
 
 void ProxyServerMediaSession::continueAfterDESCRIBE(char const* sdpDescription) {

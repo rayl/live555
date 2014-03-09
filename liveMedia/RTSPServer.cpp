@@ -955,7 +955,7 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
     fLastCRLF[2] = '\r'; // restore its value
     if (parseSucceeded) {
 #ifdef DEBUG
-      fprintf(stderr, "parseRTSPRequestString() succeeded, returning cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\", CSeq \"%s\", Content-Length %u, with %d bytes following the message.\n", cmdName, urlPreSuffix, urlSuffix, cseq, contentLength, ptr + newBytesRead - (tmpPtr + 2));
+      fprintf(stderr, "parseRTSPRequestString() succeeded, returning cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\", CSeq \"%s\", Content-Length %u, with %ld bytes following the message.\n", cmdName, urlPreSuffix, urlSuffix, cseq, contentLength, ptr + newBytesRead - (tmpPtr + 2));
 #endif
       // If there was a "Content-Length:" header, then make sure we've received all of the data that it specified:
       if (ptr + newBytesRead < tmpPtr + 2 + contentLength) break; // we still need more data; subsequent reads will give it to us 
@@ -1642,6 +1642,12 @@ void RTSPServer::RTSPClientSession
     
     AddressString destAddrStr(destinationAddress);
     AddressString sourceAddrStr(sourceAddr);
+    char timeoutParameterString[100];
+    if (fOurServer.fReclamationTestSeconds > 0) {
+      sprintf(timeoutParameterString, ";timeout=%u", fOurServer.fReclamationTestSeconds);
+    } else {
+      timeoutParameterString[0] = '\0';
+    }
     if (fIsMulticast) {
       switch (streamingMode) {
           case RTP_UDP: {
@@ -1650,11 +1656,11 @@ void RTSPServer::RTSPClientSession
 		     "CSeq: %s\r\n"
 		     "%s"
 		     "Transport: RTP/AVP;multicast;destination=%s;source=%s;port=%d-%d;ttl=%d\r\n"
-		     "Session: %08X\r\n\r\n",
+		     "Session: %08X%s\r\n\r\n",
 		     ourClientConnection->fCurrentCSeq,
 		     dateHeader(),
 		     destAddrStr.val(), sourceAddrStr.val(), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()), destinationTTL,
-		     fOurSessionId);
+		     fOurSessionId, timeoutParameterString);
 	    break;
 	  }
           case RTP_TCP: {
@@ -1668,11 +1674,11 @@ void RTSPServer::RTSPClientSession
 		     "CSeq: %s\r\n"
 		     "%s"
 		     "Transport: %s;multicast;destination=%s;source=%s;port=%d;ttl=%d\r\n"
-		     "Session: %08X\r\n\r\n",
+		     "Session: %08X%s\r\n\r\n",
 		     ourClientConnection->fCurrentCSeq,
 		     dateHeader(),
 		     streamingModeString, destAddrStr.val(), sourceAddrStr.val(), ntohs(serverRTPPort.num()), destinationTTL,
-		     fOurSessionId);
+		     fOurSessionId, timeoutParameterString);
 	    break;
 	  }
       }
@@ -1684,11 +1690,11 @@ void RTSPServer::RTSPClientSession
 		     "CSeq: %s\r\n"
 		     "%s"
 		     "Transport: RTP/AVP;unicast;destination=%s;source=%s;client_port=%d-%d;server_port=%d-%d\r\n"
-		     "Session: %08X\r\n\r\n",
+		     "Session: %08X%s\r\n\r\n",
 		     ourClientConnection->fCurrentCSeq,
 		     dateHeader(),
 		     destAddrStr.val(), sourceAddrStr.val(), ntohs(clientRTPPort.num()), ntohs(clientRTCPPort.num()), ntohs(serverRTPPort.num()), ntohs(serverRTCPPort.num()),
-		     fOurSessionId);
+		     fOurSessionId, timeoutParameterString);
 	    break;
 	  }
           case RTP_TCP: {
@@ -1697,11 +1703,11 @@ void RTSPServer::RTSPClientSession
 		     "CSeq: %s\r\n"
 		     "%s"
 		     "Transport: RTP/AVP/TCP;unicast;destination=%s;source=%s;interleaved=%d-%d\r\n"
-		     "Session: %08X\r\n\r\n",
+		     "Session: %08X%s\r\n\r\n",
 		     ourClientConnection->fCurrentCSeq,
 		     dateHeader(),
 		     destAddrStr.val(), sourceAddrStr.val(), rtpChannelId, rtcpChannelId,
-		     fOurSessionId);
+		     fOurSessionId, timeoutParameterString);
 	    break;
 	  }
           case RAW_UDP: {
@@ -1710,11 +1716,11 @@ void RTSPServer::RTSPClientSession
 		     "CSeq: %s\r\n"
 		     "%s"
 		     "Transport: %s;unicast;destination=%s;source=%s;client_port=%d;server_port=%d\r\n"
-		     "Session: %08X\r\n\r\n",
+		     "Session: %08X%s\r\n\r\n",
 		     ourClientConnection->fCurrentCSeq,
 		     dateHeader(),
 		     streamingModeString, destAddrStr.val(), sourceAddrStr.val(), ntohs(clientRTPPort.num()), ntohs(serverRTPPort.num()),
-		     fOurSessionId);
+		     fOurSessionId, timeoutParameterString);
 	    break;
 	  }
       }

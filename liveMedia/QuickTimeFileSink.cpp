@@ -314,10 +314,12 @@ QuickTimeFileSink::QuickTimeFileSink(UsageEnvironment& env,
 QuickTimeFileSink::~QuickTimeFileSink() {
   completeOutputFile();
 
-  // Then, delete each active "SubsessionIOState":
+  // Then, stop streaming and delete each active "SubsessionIOState":
   MediaSubsessionIterator iter(fInputSession);
   MediaSubsession* subsession;
   while ((subsession = iter.next()) != NULL) {
+    subsession->readSource()->stopGettingFrames();
+
     SubsessionIOState* ioState
       = (SubsessionIOState*)(subsession->miscPtr);
     if (ioState == NULL) continue;
