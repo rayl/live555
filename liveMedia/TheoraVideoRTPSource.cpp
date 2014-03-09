@@ -38,7 +38,7 @@ private: // redefined virtual functions
 };
 
 
-///////// MPEG4TheoraVideoRTPSource implementation ////////
+///////// TheoraVideoRTPSource implementation ////////
 
 TheoraVideoRTPSource*
 TheoraVideoRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,

@@ -332,7 +332,6 @@ RTPSink* MatroskaFile
       u_int8_t* identificationHeader = NULL; unsigned identificationHeaderSize = 0;
       u_int8_t* commentHeader = NULL; unsigned commentHeaderSize = 0;
       u_int8_t* setupHeader = NULL; unsigned setupHeaderSize = 0;
-      unsigned estimatedBitrate = 0;
       Boolean isTheora = strcmp(track->mimeType, "video/THEORA") == 0; // otherwise, Vorbis
 
       do {
@@ -412,53 +411,12 @@ RTPSink* MatroskaFile
 	if (!success) break;
 
 	if (isTheora) {
-	  unsigned width = 1280; // default value
-	  unsigned height = 720; // default value
-	  unsigned pf = 0; // default value
-	  if (identificationHeaderSize >= 42) {
-	    // Parse this header to get the "width", "height", "pf" (pixel format), and
-	    // 'nominal bitrate' parameters:
-	    u_int8_t* p = identificationHeader; // alias
-	    width = (p[14]<<16)|(p[15]<<8)|p[16];
-	    height = (p[17]<<16)|(p[18]<<8)|p[19];
-	    pf = (p[41]&0x18)>>3;
-	    unsigned nominalBitrate = (p[37]<<16)|(p[38]<<8)|p[39];
-	    if (nominalBitrate > 0) estimatedBitrate = nominalBitrate/1000;
-	  }
 	  result = TheoraVideoRTPSink
 	    ::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
-			width, height, TheoraVideoRTPSink::PixFmt(pf),
 			identificationHeader, identificationHeaderSize,
 			commentHeader, commentHeaderSize,
 			setupHeader, setupHeaderSize);
 	} else { // Vorbis
-	  if (identificationHeaderSize >= 28) {
-	    // Get the 'bitrate' values from this header, and use them to set "estimatedBitrate":
-	    u_int32_t val;
-	    u_int8_t* p;
-	      
-	    p = &identificationHeader[16];
-	    val = ((p[3]*256 + p[2])*256 + p[1])*256 + p[0]; // i.e., little-endian
-	    int bitrate_maximum = (int)val;
-	    if (bitrate_maximum < 0) bitrate_maximum = 0;
-	    
-	    p = &identificationHeader[20];
-	    val = ((p[3]*256 + p[2])*256 + p[1])*256 + p[0]; // i.e., little-endian
-	    int bitrate_nominal = (int)val;
-	    if (bitrate_nominal < 0) bitrate_nominal = 0;
-	    
-	    p = &identificationHeader[24];
-	    val = ((p[3]*256 + p[2])*256 + p[1])*256 + p[0]; // i.e., little-endian
-	    int bitrate_minimum = (int)val;
-	    if (bitrate_minimum < 0) bitrate_minimum = 0;
-	    
-	    int bitrate
-	      = bitrate_nominal > 0 ? bitrate_nominal
-	      : bitrate_maximum > 0 ? bitrate_maximum
-	      : bitrate_minimum > 0 ? bitrate_minimum : 0;
-	    if (bitrate > 0) estimatedBitrate = ((unsigned)bitrate)/1000;
-	  }
-
 	  result = VorbisAudioRTPSink
 	    ::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
 			track->samplingFrequency, track->numChannels,
@@ -466,8 +424,6 @@ RTPSink* MatroskaFile
 			commentHeader, commentHeaderSize,
 			setupHeader, setupHeaderSize);
 	}
-	if (result == NULL) break;
-	result->estimatedBitrate() = estimatedBitrate;
       } while (0);
 
       delete[] identificationHeader; delete[] commentHeader; delete[] setupHeader;

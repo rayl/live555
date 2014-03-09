@@ -93,23 +93,24 @@ RTPSink* OggFile
   RTPSink* result = NULL; // default value for unknown media types
 
   if (strcmp(track->mimeType, "audio/VORBIS") == 0) {
-      // For Vorbis audio, we use the special "identification", "comment", and "setup" headers
-      // that we read when we initially read the headers at the start of the file:
-      result = VorbisAudioRTPSink
-	::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
-		    track->samplingFrequency, track->numChannels,
-		    track->vorbisHdrs.header[0], track->vorbisHdrs.headerSize[0],
-		    track->vorbisHdrs.header[1], track->vorbisHdrs.headerSize[1],
-		    track->vorbisHdrs.header[2], track->vorbisHdrs.headerSize[2]);
+    // For Vorbis audio, we use the special "identification", "comment", and "setup" headers
+    // that we read when we initially read the headers at the start of the file:
+    result = VorbisAudioRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
+					   track->samplingFrequency, track->numChannels,
+					   track->vtHdrs.header[0], track->vtHdrs.headerSize[0],
+					   track->vtHdrs.header[1], track->vtHdrs.headerSize[1],
+					   track->vtHdrs.header[2], track->vtHdrs.headerSize[2]);
   } else if (strcmp(track->mimeType, "audio/OPUS") == 0) {
     result = SimpleRTPSink
       ::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
 		  48000, "audio", "OPUS", 2, False/*only 1 Opus 'packet' in each RTP packet*/);
   } else if (strcmp(track->mimeType, "video/THEORA") == 0) {
-    result = TheoraVideoRTPSink
-      ::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
-		  640, 480, TheoraVideoRTPSink::YUV420, // "width", "height", "pf" FIX #####@@@@@
-		  NULL, 0, NULL, 0, NULL, 0); // headers FIX #####@@@@@
+    // For Theora video, we use the special "identification", "comment", and "setup" headers
+    // that we read when we initially read the headers at the start of the file:
+    result = TheoraVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
+					   track->vtHdrs.header[0], track->vtHdrs.headerSize[0],
+					   track->vtHdrs.header[1], track->vtHdrs.headerSize[1],
+					   track->vtHdrs.header[2], track->vtHdrs.headerSize[2]);
   }
 
   return result;
@@ -217,16 +218,16 @@ OggTrack* OggTrackTableIterator::next() {
 OggTrack::OggTrack()
   : trackNumber(0), mimeType(NULL),
     samplingFrequency(48000), numChannels(2), estBitrate(100) { // default settings
-  vorbisHdrs.header[0] = vorbisHdrs.header[1] = vorbisHdrs.header[2] = NULL;
-  vorbisHdrs.headerSize[0] = vorbisHdrs.headerSize[1] = vorbisHdrs.headerSize[2] = 0;
+  vtHdrs.header[0] = vtHdrs.header[1] = vtHdrs.header[2] = NULL;
+  vtHdrs.headerSize[0] = vtHdrs.headerSize[1] = vtHdrs.headerSize[2] = 0;
 
-  vorbisHdrs.vorbis_mode_count = 0;
-  vorbisHdrs.vorbis_mode_blockflag = NULL;
+  vtHdrs.vorbis_mode_count = 0;
+  vtHdrs.vorbis_mode_blockflag = NULL;
 }
 
 OggTrack::~OggTrack() {
-  delete[] vorbisHdrs.header[0]; delete[] vorbisHdrs.header[1]; delete[] vorbisHdrs.header[2];
-  delete[] vorbisHdrs.vorbis_mode_blockflag;
+  delete[] vtHdrs.header[0]; delete[] vtHdrs.header[1]; delete[] vtHdrs.header[2];
+  delete[] vtHdrs.vorbis_mode_blockflag;
 }
 
 

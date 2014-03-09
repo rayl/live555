@@ -54,8 +54,9 @@ OggFileSink::OggFileSink(UsageEnvironment& env, FILE* fid,
   : FileSink(env, fid, bufferSize, perFrameFileNamePrefix),
     fSamplingFrequency(samplingFrequency), fConfigStr(configStr),
     fHaveWrittenFirstFrame(False), fHaveSeenEOF(False),
-    fGranulePosition(0), fGranulePositionAdjustment(0),
-    fPageSequenceNumber(0), fAltFrameSize(0), fAltNumTruncatedBytes(0) {
+    fGranulePosition(0), fGranulePositionAdjustment(0), fPageSequenceNumber(0),
+    fIsTheora(False), fGranuleIncrementPerFrame(1),
+    fAltFrameSize(0), fAltNumTruncatedBytes(0) {
   fAltBuffer = new unsigned char[bufferSize];
 
   // Initialize our 'Ogg page header' array with constant values:
@@ -96,16 +97,27 @@ void OggFileSink::addData(unsigned char const* data, unsigned dataSize,
 			  struct timeval presentationTime) {
   if (dataSize == 0) return;
 
-  double ptDiff
-    = (presentationTime.tv_sec - fFirstPresentationTime.tv_sec)
-    + (presentationTime.tv_usec - fFirstPresentationTime.tv_usec)/1000000.0;
-  int64_t newGranulePosition
-    = (int64_t)(fSamplingFrequency*ptDiff) + fGranulePositionAdjustment;
-  if (newGranulePosition < fGranulePosition) {
-    // Update "fGranulePositionAdjustment" so that "fGranulePosition" remains monotonic
-    fGranulePositionAdjustment += fGranulePosition - newGranulePosition;
+  // Set "fGranulePosition" for this frame:
+  if (fIsTheora) {
+    // Special case for Theora: "fGranulePosition" is supposed to be made up of a pair:
+    //   (frame count to last key frame) | (frame count since last key frame)
+    // However, because there appears to be no easy way to figure out which frames are key frames,
+    // we just assume that all frames are key frames.
+    if (!(data[0] >= 0x80 && data[0] <= 0x82)) { // for header pages, "fGranulePosition" remains 0
+      fGranulePosition += fGranuleIncrementPerFrame;
+    }
   } else {
-    fGranulePosition = newGranulePosition;
+    double ptDiff
+      = (presentationTime.tv_sec - fFirstPresentationTime.tv_sec)
+      + (presentationTime.tv_usec - fFirstPresentationTime.tv_usec)/1000000.0;
+    int64_t newGranulePosition
+      = (int64_t)(fSamplingFrequency*ptDiff) + fGranulePositionAdjustment;
+    if (newGranulePosition < fGranulePosition) {
+      // Update "fGranulePositionAdjustment" so that "fGranulePosition" remains monotonic
+      fGranulePositionAdjustment += fGranulePosition - newGranulePosition;
+    } else {
+      fGranulePosition = newGranulePosition;
+    }
   }
 
   // Write the frame to the file as a single Ogg 'page' (or perhaps as multiple pages
@@ -204,6 +216,13 @@ void OggFileSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedByt
 				 commentHdr, commentHdrSize,
 				 setupHdr, setupHdrSize,
 				 identField);
+    if (identificationHdrSize >= 42
+	&& strncmp((const char*)&identificationHdr[1], "theora", 6) == 0) {
+      // Hack for Theora video: Parse the "identification" header to get the "KFGSHIFT" parameter:
+      fIsTheora = True;
+      u_int8_t const KFGSHIFT = ((identificationHdr[40]&3)<<3) | (identificationHdr[41]>>5);
+      fGranuleIncrementPerFrame = (u_int64_t)(1 << KFGSHIFT);
+    }
     OggFileSink::addData(identificationHdr, identificationHdrSize, presentationTime);
     fHaveWrittenFirstFrame = True; // for the future
 

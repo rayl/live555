@@ -59,7 +59,7 @@ public:
   void continueParsing();
 
 private:
-  Boolean needVorbisHeaders() { return fNumUnfulfilledVorbisTracks > 0; }
+  Boolean needVorbisOrTheoraHeaders() { return fNumUnfulfilledVorbisOrTheoraTracks > 0; }
 
   // Parsing functions:
   Boolean parse(); // returns True iff we have finished parsing all BOS pages (on initialization)
@@ -71,7 +71,7 @@ private:
   Boolean deliverPacketWithinPage();
   void parseStartOfPage(u_int8_t& header_type_flag, u_int32_t& bitstream_serial_number);
 
-  Boolean validateVorbisHeader(OggTrack* track, u_int8_t const* p, unsigned headerSize);
+  Boolean validateVorbisOrTheoraHeader(OggTrack* track, u_int8_t const* p, unsigned headerSize);
 
 private:
   // General state for parsing:
@@ -82,7 +82,7 @@ private:
   OggDemux* fOurDemux;
   OggParseState fCurrentParseState;
 
-  unsigned fNumUnfulfilledVorbisTracks;
+  unsigned fNumUnfulfilledVorbisOrTheoraTracks;
   PacketSizeTable* fPacketSizeTable;
   u_int32_t fCurrentTrackNumber;
   u_int8_t* fSavedPacket; // used to temporarily save a copy of a 'packet' from a page

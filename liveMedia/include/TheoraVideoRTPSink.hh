@@ -27,16 +27,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 class TheoraVideoRTPSink: public VideoRTPSink {
 public:
-  enum PixFmt {
-    YUV420 = 0,
-    Reserved = 1,
-    YUV422 = 2,
-    YUV444 = 3,
-  };
-  
   static TheoraVideoRTPSink*
   createNew(UsageEnvironment& env, Groupsock* RTPgs, u_int8_t rtpPayloadFormat,
-	    unsigned width, unsigned height, PixFmt pf,
 	    // The following headers provide the 'configuration' information, for the SDP description:
 	    u_int8_t* identificationHeader, unsigned identificationHeaderSize,
 	    u_int8_t* commentHeader, unsigned commentHeaderSize,
@@ -45,7 +37,6 @@ public:
   
   static TheoraVideoRTPSink*
   createNew(UsageEnvironment& env, Groupsock* RTPgs, u_int8_t rtpPayloadFormat,
-	    unsigned width, unsigned height, PixFmt pf,
             char const* configStr);
   // an optional variant of "createNew()" that takes a Base-64-encoded 'configuration' string,
   // rather than the raw configuration headers as parameter.
@@ -53,7 +44,6 @@ public:
 protected:
   TheoraVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs,
 		     u_int8_t rtpPayloadFormat,
-		     unsigned width, unsigned height, PixFmt pf,
 		     u_int8_t* identificationHeader, unsigned identificationHeaderSize,
 		     u_int8_t* commentHeader, unsigned commentHeaderSize,
 		     u_int8_t* setupHeader, unsigned setupHeaderSize,

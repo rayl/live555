@@ -25,14 +25,12 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 TheoraVideoRTPSink* TheoraVideoRTPSink
 ::createNew(UsageEnvironment& env, Groupsock* RTPgs, u_int8_t rtpPayloadFormat,
-	    unsigned width, unsigned height, enum PixFmt pf,
 	    u_int8_t* identificationHeader, unsigned identificationHeaderSize,
 	    u_int8_t* commentHeader, unsigned commentHeaderSize,
 	    u_int8_t* setupHeader, unsigned setupHeaderSize,
 	    u_int32_t identField) {
   return new TheoraVideoRTPSink(env, RTPgs,
 				rtpPayloadFormat,
-				width, height, pf,
 				identificationHeader, identificationHeaderSize,
 				commentHeader, commentHeaderSize,
 				setupHeader, setupHeaderSize, identField);
@@ -40,7 +38,6 @@ TheoraVideoRTPSink* TheoraVideoRTPSink
 
 TheoraVideoRTPSink* TheoraVideoRTPSink
 ::createNew(UsageEnvironment& env, Groupsock* RTPgs, u_int8_t rtpPayloadFormat,
-	    unsigned width, unsigned height, PixFmt pf,
             char const* configStr) {
   // Begin by decoding and unpacking the configuration string:
   u_int8_t* identificationHeader; unsigned identificationHeaderSize;
@@ -56,7 +53,6 @@ TheoraVideoRTPSink* TheoraVideoRTPSink
 
   TheoraVideoRTPSink* resultSink
     = new TheoraVideoRTPSink(env, RTPgs, rtpPayloadFormat,
-			     width, height, pf,
                              identificationHeader, identificationHeaderSize,
                              commentHeader, commentHeaderSize,
                              setupHeader, setupHeaderSize,
@@ -68,7 +64,6 @@ TheoraVideoRTPSink* TheoraVideoRTPSink
 
 TheoraVideoRTPSink
 ::TheoraVideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs, u_int8_t rtpPayloadFormat,
-		     unsigned width, unsigned height, enum PixFmt pf,
 		     u_int8_t* identificationHeader, unsigned identificationHeaderSize,
 		     u_int8_t* commentHeader, unsigned commentHeaderSize,
 		     u_int8_t* setupHeader, unsigned setupHeaderSize,
@@ -77,11 +72,26 @@ TheoraVideoRTPSink
     fIdent(identField), fFmtpSDPLine(NULL) {
   static const char *pf_to_str[] = {
     "YCbCr-4:2:0",
+    "Reserved",
     "YCbCr-4:2:2",
     "YCbCr-4:4:4",
   };
   
-  // First, generate a 'config' string from the supplied configuration headers:
+  unsigned width = 1280; // default value
+  unsigned height = 720; // default value
+  unsigned pf = 0; // default value
+  if (identificationHeaderSize >= 42) {
+    // Parse this header to get the "width", "height", "pf" (pixel format), and
+    // 'nominal bitrate' parameters:
+    u_int8_t* p = identificationHeader; // alias
+    width = (p[14]<<16)|(p[15]<<8)|p[16];
+    height = (p[17]<<16)|(p[18]<<8)|p[19];
+    pf = (p[41]&0x18)>>3;
+    unsigned nominalBitrate = (p[37]<<16)|(p[38]<<8)|p[39];
+    if (nominalBitrate > 0) estimatedBitrate() = nominalBitrate/1000;
+  }
+
+  // Generate a 'config' string from the supplied configuration headers:
   char* base64PackedHeaders
     = generateVorbisOrTheoraConfigStr(identificationHeader, identificationHeaderSize,
                                       commentHeader, commentHeaderSize,
@@ -89,7 +99,7 @@ TheoraVideoRTPSink
                                       identField);
   if (base64PackedHeaders == NULL) return;
 
-  // Then use this 'config' string to constructour "a=fmtp:" SDP line:
+  // Then use this 'config' string to construct our "a=fmtp:" SDP line:
   unsigned fmtpSDPLineMaxSize = 200 + strlen(base64PackedHeaders);// 200 => more than enough space
   fFmtpSDPLine = new char[fmtpSDPLineMaxSize];
   sprintf(fFmtpSDPLine, "a=fmtp:%d sampling=%s;width=%u;height=%u;delivery-method=out_band/rtsp;configuration=%s\r\n", rtpPayloadType(), pf_to_str[pf], width, height, base64PackedHeaders);

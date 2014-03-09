@@ -73,14 +73,41 @@ VorbisAudioRTPSink
 		     u_int32_t identField)
   : AudioRTPSink(env, RTPgs, rtpPayloadFormat, rtpTimestampFrequency, "VORBIS", numChannels),
     fIdent(identField), fFmtpSDPLine(NULL) {
-  // First, generate a 'config' string from the supplied configuration headers:
+  if (identificationHeaderSize >= 28) {
+    // Get the 'bitrate' values from this header, and use them to set our estimated bitrate:
+    u_int32_t val;
+    u_int8_t* p;
+    
+    p = &identificationHeader[16];
+    val = ((p[3]*256 + p[2])*256 + p[1])*256 + p[0]; // i.e., little-endian
+    int bitrate_maximum = (int)val;
+    if (bitrate_maximum < 0) bitrate_maximum = 0;
+    
+    p = &identificationHeader[20];
+    val = ((p[3]*256 + p[2])*256 + p[1])*256 + p[0]; // i.e., little-endian
+    int bitrate_nominal = (int)val;
+    if (bitrate_nominal < 0) bitrate_nominal = 0;
+    
+    p = &identificationHeader[24];
+    val = ((p[3]*256 + p[2])*256 + p[1])*256 + p[0]; // i.e., little-endian
+    int bitrate_minimum = (int)val;
+    if (bitrate_minimum < 0) bitrate_minimum = 0;
+    
+    int bitrate
+      = bitrate_nominal > 0 ? bitrate_nominal
+      : bitrate_maximum > 0 ? bitrate_maximum
+      : bitrate_minimum > 0 ? bitrate_minimum : 0;
+    if (bitrate > 0) estimatedBitrate() = ((unsigned)bitrate)/1000;
+  }
+  
+  // Generate a 'config' string from the supplied configuration headers:
   char* base64PackedHeaders
     = generateVorbisOrTheoraConfigStr(identificationHeader, identificationHeaderSize,
 				      commentHeader, commentHeaderSize,
 				      setupHeader, setupHeaderSize,
 				      identField);
   if (base64PackedHeaders == NULL) return;
-
+  
   // Then use this 'config' string to construct our "a=fmtp:" SDP line:
   unsigned fmtpSDPLineMaxSize = 50 + strlen(base64PackedHeaders); // 50 => more than enough space
   fFmtpSDPLine = new char[fmtpSDPLineMaxSize];

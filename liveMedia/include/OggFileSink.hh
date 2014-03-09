@@ -65,6 +65,10 @@ private:
   u_int8_t fPageHeaderBytes[27];
       // the header of each Ogg page, through the "number_page_segments" byte
 
+  // Special fields used for Theora video:
+  Boolean fIsTheora;
+  u_int64_t fGranuleIncrementPerFrame; // == 1 << KFGSHIFT
+
   // Because the last Ogg page before EOF needs to have a special 'eos' bit set in the header,
   // we need to defer the writing of each incoming frame.  To do this, we maintain a 2nd buffer:
   unsigned char* fAltBuffer;

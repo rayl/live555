@@ -39,7 +39,7 @@ private: // redefined virtual functions
 };
 
 
-///////// MPEG4VorbisAudioRTPSource implementation ////////
+///////// VorbisAudioRTPSource implementation ////////
 
 VorbisAudioRTPSource*
 VorbisAudioRTPSource::createNew(UsageEnvironment& env, Groupsock* RTPgs,

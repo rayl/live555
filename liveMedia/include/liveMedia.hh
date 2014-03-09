@@ -65,6 +65,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "JPEGVideoSource.hh"
 #include "MPEG1or2VideoRTPSource.hh"
 #include "VorbisAudioRTPSource.hh"
+#include "TheoraVideoRTPSource.hh"
 #include "VP8VideoRTPSource.hh"
 #include "MPEG2TransportStreamFromPESSource.hh"
 #include "MPEG2TransportStreamFromESSource.hh"

@@ -601,6 +601,9 @@ RTPSink* ProxyServerMediaSubsession
     newSink = VorbisAudioRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
 					    fClientMediaSubsession.rtpTimestampFrequency(), fClientMediaSubsession.numChannels(),
 					    fClientMediaSubsession.fmtp_config()); 
+  } else if (strcmp(codecName, "THEORA") == 0) {
+    newSink = TheoraVideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
+					    fClientMediaSubsession.fmtp_config()); 
   } else if (strcmp(codecName, "VP8") == 0) {
     newSink = VP8VideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic);
   } else if (strcmp(codecName, "AMR") == 0 || strcmp(codecName, "AMR-WB") == 0) {
