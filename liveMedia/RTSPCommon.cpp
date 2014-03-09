@@ -69,19 +69,27 @@ Boolean parseRTSPRequestString(char const* reqStr,
 			       unsigned& contentLength) {
   // This parser is currently rather dumb; it should be made smarter #####
 
-  // Read everything up to the first space as the command name:
-  Boolean parseSucceeded = False;
+  // "Be liberal in what you accept": Skip over any whitespace at the start of the request:
   unsigned i;
-  for (i = 0; i < resultCmdNameMaxSize-1 && i < reqStrSize; ++i) {
+  for (i = 0; i < reqStrSize; ++i) {
+    char c = reqStr[i];
+    if (!(c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\0')) break;
+  }
+  if (i == reqStrSize) return False; // The request consisted of nothing but whitespace!
+
+  // Then read everything up to the next space (or tab) as the command name:
+  Boolean parseSucceeded = False;
+  unsigned i1 = 0;
+  for (; i1 < resultCmdNameMaxSize-1 && i < reqStrSize; ++i,++i1) {
     char c = reqStr[i];
     if (c == ' ' || c == '\t') {
-      parseSucceeded = i>0; // There must be at least one character in the command name
+      parseSucceeded = True;
       break;
     }
 
-    resultCmdName[i] = c;
+    resultCmdName[i1] = c;
   }
-  resultCmdName[i] = '\0';
+  resultCmdName[i1] = '\0';
   if (!parseSucceeded) return False;
 
   // Skip over the prefix of any "rtsp://" or "rtsp:/" URL that follows:

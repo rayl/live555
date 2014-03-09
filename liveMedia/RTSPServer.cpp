@@ -25,6 +25,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "Base64.hh"
 #include <GroupsockHelper.hh>
 
+#define DEBUG 1 //#####@@@@@
 ////////// RTSPServer implementation //////////
 
 RTSPServer*
@@ -876,7 +877,7 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
 	    this, numBytesRemaining > 0 ? "processing" : "read", newBytesRead, ptr);
 #endif
     
-    if (fClientOutputSocket != fClientInputSocket) {
+    if (fClientOutputSocket != fClientInputSocket && numBytesRemaining == 0) {
       // We're doing RTSP-over-HTTP tunneling, and input commands are assumed to have been Base64-encoded.
       // We therefore Base64-decode as much of this new data as we can (i.e., up to a multiple of 4 bytes).
       
