@@ -779,7 +779,8 @@ void createOutputFiles(char const* periodicFilenameSuffix) {
       sprintf(outFileName, "stdout");
     } else {
       // Otherwise output to a type-specific file name, containing "periodicFilenameSuffix":
-      snprintf(outFileName, sizeof outFileName, "output%s.%s", periodicFilenameSuffix,
+      char const* prefix = fileNamePrefix[0] == '\0' ? "output" : fileNamePrefix;
+      snprintf(outFileName, sizeof outFileName, "%s%s.%s", prefix, periodicFilenameSuffix,
 	       outputAVIFile ? "avi" : generateMP4Format ? "mp4" : "mov");
     }
 
