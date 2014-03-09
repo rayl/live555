@@ -913,7 +913,7 @@ Boolean RTSPClient::checkForHeader(char const* line, char const* headerName, uns
   // The line begins with the desired header name.  Trim off any whitespace, and return the header parameters:
   unsigned paramIndex = headerNameLength;
   while (line[paramIndex] != '\0' && (line[paramIndex] == ' ' || line[paramIndex] == '\t')) ++paramIndex;
-  if (&line[paramIndex] == '\0') return False; // the header is assumed to be bad if it has no parameters
+  if (line[paramIndex] == '\0') return False; // the header is assumed to be bad if it has no parameters
 
   headerParams = &line[paramIndex];
   return True;

@@ -299,8 +299,9 @@ Boolean RTPInterface::sendRTPorRTCPPacketOverTCP(u_int8_t* packet, unsigned pack
 #endif
   // Send a RTP/RTCP packet over TCP, using the encoding defined in RFC 2326, section 10.12:
   //     $<streamChannelId><packetSize><packet>
-  // (If the initial "send()" of '$<streamChannelId><packetSize>' succeeds, then we force the subsequent "send()" for
-  //  the <packet> data to succeed, even if we have to do so with a blocking "send()".)
+  // (If the initial "send()" of '$<streamChannelId><packetSize>' succeeds, then we force
+  // the subsequent "send()" for the <packet> data to succeed, even if we have to do so with
+  // a blocking "send()".)
   do {
     u_int8_t framingHeader[4];
     framingHeader[0] = '$';
@@ -324,19 +325,23 @@ Boolean RTPInterface::sendRTPorRTCPPacketOverTCP(u_int8_t* packet, unsigned pack
 }
 
 Boolean RTPInterface::sendDataOverTCP(int socketNum, u_int8_t const* data, unsigned dataSize, Boolean forceSendToSucceed) {
-  if (send(socketNum, (char const*)data, dataSize, 0/*flags*/) != (int)dataSize) {
-    // The TCP send() failed.
+  int sendResult = send(socketNum, (char const*)data, dataSize, 0/*flags*/);
+  if (sendResult < (int)dataSize) {
+    // The TCP send() failed - at least partially.
 
-    if (forceSendToSucceed && envir().getErrno() == EAGAIN) {
-      // The OS's TCP send buffer has filled up (because the stream's bitrate has exceeded the capacity of the TCP connection!).
+    unsigned numBytesSentSoFar = sendResult < 0 ? 0 : (unsigned)sendResult;
+    if (numBytesSentSoFar > 0 || (forceSendToSucceed && envir().getErrno() == EAGAIN)) {
+      // The OS's TCP send buffer has filled up (because the stream's bitrate has exceeded
+      // the capacity of the TCP connection!).
       // Force this data write to succeed, by blocking if necessary until it does:
+      unsigned numBytesRemainingToSend = dataSize - numBytesSentSoFar;
 #ifdef DEBUG_SEND
-      fprintf(stderr, "sendDataOverTCP: resending %d-byte send (blocking)\n", dataSize); fflush(stderr);
+      fprintf(stderr, "sendDataOverTCP: resending %d-byte send (blocking)\n", numBytesRemainingToSend); fflush(stderr);
 #endif
       makeSocketBlocking(socketNum);
-      Boolean sendSuccess = send(socketNum, (char const*)data, dataSize, 0/*flags*/) == (int)dataSize;
+      sendResult = send(socketNum, (char const*)(&data[numBytesSentSoFar]), numBytesRemainingToSend, 0/*flags*/);
       makeSocketNonBlocking(socketNum);
-      return sendSuccess;
+      return sendResult == (int)numBytesRemainingToSend;
     }
     return False;
   }
