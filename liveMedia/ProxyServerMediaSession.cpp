@@ -331,7 +331,7 @@ void ProxyRTSPClient::scheduleLivenessCommand() {
   // Choose a random time from [delayMax/2,delayMax-1) seconds:
   unsigned const us_1stPart = delayMax*500000;
   unsigned uSecondsToDelay;
-  if (us_1stPart < 1000000) {
+  if (us_1stPart <= 1000000) {
     uSecondsToDelay = us_1stPart;
   } else {
     unsigned const us_2ndPart = us_1stPart-1000000;
