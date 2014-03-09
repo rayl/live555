@@ -32,6 +32,8 @@ TCPStreamSink::TCPStreamSink(UsageEnvironment& env, int socketNum)
 }
 
 TCPStreamSink::~TCPStreamSink() {
+  // Turn off any pending background handling of our output socket:
+  envir().taskScheduler().disableBackgroundHandling(fOutputSocketNum);
 }
 
 Boolean TCPStreamSink::continuePlaying() {
