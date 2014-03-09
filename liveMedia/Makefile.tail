@@ -263,7 +263,7 @@ AMRAudioRTPSink.$(CPP):		include/AMRAudioRTPSink.hh include/AMRAudioSource.hh
 include/AMRAudioRTPSink.hh:	include/AudioRTPSink.hh
 T140TextRTPSink.$(CPP):		include/T140TextRTPSink.hh
 include/T140TextRTPSink.hh:	include/TextRTPSink.hh include/FramedFilter.hh
-TCPStreamSink.$(CPP):		include/TCPStreamSink.hh
+TCPStreamSink.$(CPP):		include/TCPStreamSink.hh include/RTSPCommon.hh
 include/TCPStreamSink.hh:	include/MediaSink.hh
 OutputFile.$(CPP):		include/OutputFile.hh
 uLawAudioFilter.$(CPP):		include/uLawAudioFilter.hh

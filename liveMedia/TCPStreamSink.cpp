@@ -19,6 +19,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "TCPStreamSink.hh"
+#include "RTSPCommon.hh" // for "ignoreSigPipeOnSocket()"
 
 TCPStreamSink* TCPStreamSink::createNew(UsageEnvironment& env, int socketNum) {
   return new TCPStreamSink(env, socketNum);
@@ -29,6 +30,7 @@ TCPStreamSink::TCPStreamSink(UsageEnvironment& env, int socketNum)
     fUnwrittenBytesStart(0), fUnwrittenBytesEnd(0),
     fInputSourceIsOpen(False), fOutputSocketIsWritable(True),
     fOutputSocketNum(socketNum) {
+  ignoreSigPipeOnSocket(socketNum);
 }
 
 TCPStreamSink::~TCPStreamSink() {
@@ -70,9 +72,7 @@ void TCPStreamSink::processBuffer() {
   // Then, read from our input source, if we can (& we're not already reading from it):
   if (fInputSourceIsOpen && freeBufferSpace() >= TCP_STREAM_SINK_MIN_READ_SIZE && !fSource->isCurrentlyAwaitingData()) {
     fSource->getNextFrame(&fBuffer[fUnwrittenBytesEnd], freeBufferSpace(), afterGettingFrame, this, ourOnSourceClosure, this);
-  }
-
-  if (!fInputSourceIsOpen && numUnwrittenBytes() == 0) {
+  } else if (!fInputSourceIsOpen && numUnwrittenBytes() == 0) {
     // We're now done:
     onSourceClosure();
   }
