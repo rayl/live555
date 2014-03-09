@@ -978,7 +978,7 @@ unsigned H264or5VideoStreamParser::parse() {
 #endif
 	} else {
 #ifdef DEBUG
-	  fprintf(stderr, "\tThis \"Picture Parameter Set\" NAL unit contained no frame rate information, so we use a default frame rate of %f fps\n", usingSource()->fFrameRate);
+	  fprintf(stderr, "\tThis \"Video Parameter Set\" NAL unit contained no frame rate information, so we use a default frame rate of %f fps\n", usingSource()->fFrameRate);
 #endif
 	}
       }

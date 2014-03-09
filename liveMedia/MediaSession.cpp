@@ -584,8 +584,11 @@ MediaSubsession::MediaSubsession(MediaSession& parent)
     fIndexdeltalength(0), fIndexlength(0), fInterleaving(0), fMaxdisplacement(0),
     fObjecttype(0), fOctetalign(0), fProfile_level_id(0), fRobustsorting(0),
     fSizelength(0), fStreamstateindication(0), fStreamtype(0),
+    fSpropDepackBufNalus(0), fProfileSpace(0), fProfileId(1), fTierFlag(0), fLevelId(93),
     fCpresent(False), fRandomaccessindication(False),
     fConfig(NULL), fMode(NULL), fSpropParameterSets(NULL), fEmphasis(NULL), fChannelOrder(NULL),
+    fTxMode(strDup("sst")), fSpropVPS(NULL), fSpropSPS(NULL), fSpropPPS(NULL),
+    fInteropConstraintsStr(NULL),
     fPlayStartTime(0.0), fPlayEndTime(0.0), fAbsStartTime(NULL), fAbsEndTime(NULL),
     fVideoWidth(0), fVideoHeight(0), fVideoFPS(0), fNumChannels(1), fScale(1.0f), fNPT_PTS_Offset(0.0f),
     fRTPSocket(NULL), fRTCPSocket(NULL),
@@ -602,6 +605,8 @@ MediaSubsession::~MediaSubsession() {
   delete[] fMediumName; delete[] fCodecName; delete[] fProtocolName;
   delete[] fControlPath;
   delete[] fConfig; delete[] fMode; delete[] fSpropParameterSets; delete[] fEmphasis; delete[] fChannelOrder;
+  delete[] fTxMode; delete[] fSpropVPS; delete[] fSpropSPS; delete[] fSpropPPS;
+  delete[] fInteropConstraintsStr;
   delete[] fAbsStartTime; delete[] fAbsEndTime;
   delete[] fSessionId;
 
@@ -1006,6 +1011,7 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
   // TEMP: We check only for a handful of expected parameter names #####
   // Later: (i) check that payload format number matches; #####
   //        (ii) look for other parameters also (generalize?) #####
+  // ##### This has become too unweildy; we need to reimplement it using a hash table 
   do {
     if (strncmp(sdpLine, "a=fmtp:", 7) != 0) break; sdpLine += 7;
     while (isdigit(*sdpLine)) ++sdpLine;
@@ -1059,6 +1065,16 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
 	fStreamstateindication = u;
       } else if (sscanf(line, " streamtype = %u", &u) == 1) {
 	fStreamtype = u;
+      } else if (sscanf(line, " sprop-depack-buf-nalus = %u", &u) == 1) {
+	fSpropDepackBufNalus = u;
+      } else if (sscanf(line, " profile-space = %u", &u) == 1) {
+	fProfileSpace = u;
+      } else if (sscanf(line, " profile-id = %u", &u) == 1) {
+	fProfileId = u;
+      } else if (sscanf(line, " tier-flag = %u", &u) == 1) {
+	fTierFlag = u;
+      } else if (sscanf(line, " level-id = %u", &u) == 1) {
+	fLevelId = u;
       } else if (sscanf(line, " cpresent = %u", &u) == 1) {
 	fCpresent = u != 0;
       } else if (sscanf(line, " randomaccessindication = %u", &u) == 1) {
@@ -1077,6 +1093,19 @@ Boolean MediaSubsession::parseSDPAttribute_fmtp(char const* sdpLine) {
       } else if (sscanf(sdpLine, " channel-order = %[^; \t\r\n]", valueStr) == 1) {
 	// Note: We used "sdpLine" here, because the value is case-sensitive.
 	delete[] fChannelOrder; fChannelOrder = strDup(valueStr);
+      } else if (sscanf(line, " interop-constraints = %[^; \t\r\n]", valueStr) == 1) {
+	delete[] fInteropConstraintsStr; fInteropConstraintsStr = strDup(valueStr);
+      } else if (sscanf(line, " tx-mode = %[^; \t\r\n]", valueStr) == 1) {
+	delete[] fTxMode; fTxMode = strDup(valueStr);
+      } else if (sscanf(sdpLine, " sprop-vps = %[^; \t\r\n]", valueStr) == 1) {
+	// Note: We used "sdpLine" here, because the value is case-sensitive.
+	delete[] fSpropVPS; fSpropVPS = strDup(valueStr);
+      } else if (sscanf(sdpLine, " sprop-sps = %[^; \t\r\n]", valueStr) == 1) {
+	// Note: We used "sdpLine" here, because the value is case-sensitive.
+	delete[] fSpropSPS; fSpropSPS = strDup(valueStr);
+      } else if (sscanf(sdpLine, " sprop-pps = %[^; \t\r\n]", valueStr) == 1) {
+	// Note: We used "sdpLine" here, because the value is case-sensitive.
+	delete[] fSpropPPS; fSpropPPS = strDup(valueStr);
       } else if (sscanf(line, " width = %u", &u) == 1) {
 	// A non-standard parameter, but one that's often used:
 	fVideoWidth = u;
@@ -1285,6 +1314,13 @@ Boolean MediaSubsession::createSourceObjects(int useSpecialRTPoffset) {
 	fReadSource = fRTPSource
 	  = H264VideoRTPSource::createNew(env(), fRTPSocket,
 					  fRTPPayloadFormat,
+					  fRTPTimestampFrequency);
+      } else if (strcmp(fCodecName, "H265") == 0) {
+	Boolean expectDONFields = strcmp(fTxMode, "sst") != 0 || fSpropDepackBufNalus > 0;
+	fReadSource = fRTPSource
+	  = H265VideoRTPSource::createNew(env(), fRTPSocket,
+					  fRTPPayloadFormat,
+					  expectDONFields,
 					  fRTPTimestampFrequency);
       } else if (strcmp(fCodecName, "DV") == 0) {
 	fReadSource = fRTPSource

@@ -21,8 +21,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // "H265VideoStreamFramer".
 // C++ header
 
-#ifndef _H264_VIDEO_STREAM_DISCRETE_FRAMER_HH
-#define _H264_VIDEO_STREAM_DISCRETE_FRAMER_HH
+#ifndef _H265_VIDEO_STREAM_DISCRETE_FRAMER_HH
+#define _H265_VIDEO_STREAM_DISCRETE_FRAMER_HH
 
 #ifndef _H264_OR_5_VIDEO_STREAM_DISCRETE_FRAMER_HH
 #include "H264or5VideoStreamDiscreteFramer.hh"

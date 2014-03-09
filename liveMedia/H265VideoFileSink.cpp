@@ -15,28 +15,32 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2014 Live Networks, Inc.  All rights reserved.
-// H.264 Video File sinks
+// H.265 Video File sinks
 // Implementation
 
-#include "H264VideoFileSink.hh"
+#include "H265VideoFileSink.hh"
 #include "OutputFile.hh"
 
-////////// H264VideoFileSink //////////
+////////// H265VideoFileSink //////////
 
-H264VideoFileSink
-::H264VideoFileSink(UsageEnvironment& env, FILE* fid,
-		    char const* sPropParameterSetsStr,
+H265VideoFileSink
+::H265VideoFileSink(UsageEnvironment& env, FILE* fid,
+		    char const* sPropVPSStr,
+                    char const* sPropSPSStr,
+                    char const* sPropPPSStr,
 		    unsigned bufferSize, char const* perFrameFileNamePrefix)
   : H264or5VideoFileSink(env, fid, bufferSize, perFrameFileNamePrefix,
-			 sPropParameterSetsStr, NULL, NULL) {
+			 sPropVPSStr, sPropSPSStr, sPropPPSStr) {
 }
 
-H264VideoFileSink::~H264VideoFileSink() {
+H265VideoFileSink::~H265VideoFileSink() {
 }
 
-H264VideoFileSink*
-H264VideoFileSink::createNew(UsageEnvironment& env, char const* fileName,
-			     char const* sPropParameterSetsStr,
+H265VideoFileSink*
+H265VideoFileSink::createNew(UsageEnvironment& env, char const* fileName,
+			     char const* sPropVPSStr,
+			     char const* sPropSPSStr,
+			     char const* sPropPPSStr,
 			     unsigned bufferSize, Boolean oneFilePerFrame) {
   do {
     FILE* fid;
@@ -52,7 +56,7 @@ H264VideoFileSink::createNew(UsageEnvironment& env, char const* fileName,
       perFrameFileNamePrefix = NULL;
     }
 
-    return new H264VideoFileSink(env, fid, sPropParameterSetsStr, bufferSize, perFrameFileNamePrefix);
+    return new H265VideoFileSink(env, fid, sPropVPSStr, sPropSPSStr, sPropPPSStr, bufferSize, perFrameFileNamePrefix);
   } while (0);
 
   return NULL;

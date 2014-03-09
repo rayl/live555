@@ -27,9 +27,11 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 H264VideoRTPSink
 ::H264VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
-		   u_int8_t const* sps, unsigned spsSize, u_int8_t const* pps, unsigned ppsSize)
+		   u_int8_t const* sps, unsigned spsSize, u_int8_t const* pps, unsigned ppsSize,
+		   unsigned profile_level_id)
   : H264or5VideoRTPSink(264, env, RTPgs, rtpPayloadFormat,
-			NULL, 0, sps, spsSize, pps, ppsSize) {
+			NULL, 0, sps, spsSize, pps, ppsSize),
+    fProfileLevelId(profile_level_id) {
 }
 
 H264VideoRTPSink::~H264VideoRTPSink() {
@@ -42,13 +44,14 @@ H264VideoRTPSink* H264VideoRTPSink
 
 H264VideoRTPSink* H264VideoRTPSink
 ::createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
-	    u_int8_t const* sps, unsigned spsSize, u_int8_t const* pps, unsigned ppsSize) {
-  return new H264VideoRTPSink(env, RTPgs, rtpPayloadFormat, sps, spsSize, pps, ppsSize);
+	    u_int8_t const* sps, unsigned spsSize, u_int8_t const* pps, unsigned ppsSize,
+	    unsigned profile_level_id) {
+  return new H264VideoRTPSink(env, RTPgs, rtpPayloadFormat, sps, spsSize, pps, ppsSize, profile_level_id);
 }
 
 H264VideoRTPSink* H264VideoRTPSink
 ::createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
-	    char const* sPropParameterSetsStr) {
+	    char const* sPropParameterSetsStr, unsigned profile_level_id) {
   u_int8_t* sps = NULL; unsigned spsSize = 0;
   u_int8_t* pps = NULL; unsigned ppsSize = 0;
 
@@ -67,7 +70,7 @@ H264VideoRTPSink* H264VideoRTPSink
   }
 
   H264VideoRTPSink* result
-    = new H264VideoRTPSink(env, RTPgs, rtpPayloadFormat, sps, spsSize, pps, ppsSize);
+    = new H264VideoRTPSink(env, RTPgs, rtpPayloadFormat, sps, spsSize, pps, ppsSize, profile_level_id);
   delete[] sPropRecords;
 
   return result;
@@ -94,11 +97,14 @@ char const* H264VideoRTPSink::auxSDPLine() {
 
     framerSource->getVPSandSPSandPPS(vpsDummy, vpsDummySize, sps, spsSize, pps, ppsSize);
     if (sps == NULL || pps == NULL) return NULL; // our source isn't ready
+
+    fProfileLevelId = framerSource->profileLevelId();
   }
 
   // Set up the "a=fmtp:" SDP line for this stream:
   char* sps_base64 = base64Encode((char*)sps, spsSize);
   char* pps_base64 = base64Encode((char*)pps, ppsSize);
+
   char const* fmtpFmt =
     "a=fmtp:%d packetization-mode=1"
     ";profile-level-id=%06X"
@@ -110,8 +116,9 @@ char const* H264VideoRTPSink::auxSDPLine() {
   char* fmtp = new char[fmtpFmtSize];
   sprintf(fmtp, fmtpFmt,
           rtpPayloadType(),
-	  framerSource->profileLevelId(),
+	  fProfileLevelId,
           sps_base64, pps_base64);
+
   delete[] sps_base64;
   delete[] pps_base64;
 

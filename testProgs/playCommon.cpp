@@ -851,9 +851,19 @@ void createOutputFiles(char const* periodicFilenameSuffix) {
 					       fileSinkBufferSize, oneFilePerFrame);
       } else if (strcmp(subsession->mediumName(), "video") == 0 &&
 		 (strcmp(subsession->codecName(), "H264") == 0)) {
-	// For H.264 video stream, we use a special sink that adds 'start codes', and (at the start) the SPS and PPS NAL units:
+	// For H.264 video stream, we use a special sink that adds 'start codes',
+	// and (at the start) the SPS and PPS NAL units:
 	fileSink = H264VideoFileSink::createNew(*env, outFileName,
 						subsession->fmtp_spropparametersets(),
+						fileSinkBufferSize, oneFilePerFrame);
+      } else if (strcmp(subsession->mediumName(), "video") == 0 &&
+		 (strcmp(subsession->codecName(), "H265") == 0)) {
+	// For H.265 video stream, we use a special sink that adds 'start codes',
+	// and (at the start) the VPS, SPS, and PPS NAL units:
+	fileSink = H265VideoFileSink::createNew(*env, outFileName,
+						subsession->fmtp_spropvps(),
+						subsession->fmtp_spropsps(),
+						subsession->fmtp_sproppps(),
 						fileSinkBufferSize, oneFilePerFrame);
       } else {
 	// Normal case:

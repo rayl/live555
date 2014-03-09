@@ -445,18 +445,26 @@ FramedSource* ProxyServerMediaSubsession::createNewStreamSource(unsigned clientS
 							codecName);
       fClientMediaSubsession.addFilter(normalizerFilter);
 
-      // Some data sources require a 'framer' object to be added, before they can be fed into a "RTPSink".  Adjust for this now:
+      // Some data sources require a 'framer' object to be added, before they can be fed into
+      // a "RTPSink".  Adjust for this now:
       if (strcmp(codecName, "H264") == 0) {
-	fClientMediaSubsession.addFilter(H264VideoStreamDiscreteFramer::createNew(envir(), fClientMediaSubsession.readSource()));
+	fClientMediaSubsession.addFilter(H264VideoStreamDiscreteFramer
+					 ::createNew(envir(), fClientMediaSubsession.readSource()));
+      } else if (strcmp(codecName, "H265") == 0) {
+	fClientMediaSubsession.addFilter(H265VideoStreamDiscreteFramer
+					 ::createNew(envir(), fClientMediaSubsession.readSource()));
       } else if (strcmp(codecName, "MP4V-ES") == 0) {
 	fClientMediaSubsession.addFilter(MPEG4VideoStreamDiscreteFramer
-					 ::createNew(envir(), fClientMediaSubsession.readSource(), True/* leave PTs unmodified*/));
+					 ::createNew(envir(), fClientMediaSubsession.readSource(),
+						     True/* leave PTs unmodified*/));
       } else if (strcmp(codecName, "MPV") == 0) {
-	fClientMediaSubsession.addFilter(MPEG1or2VideoStreamDiscreteFramer::createNew(envir(), fClientMediaSubsession.readSource(),
-										      False, 5.0, True/* leave PTs unmodified*/));
+	fClientMediaSubsession.addFilter(MPEG1or2VideoStreamDiscreteFramer
+					 ::createNew(envir(), fClientMediaSubsession.readSource(),
+						     False, 5.0, True/* leave PTs unmodified*/));
       } else if (strcmp(codecName, "DV") == 0) {
-	fClientMediaSubsession.addFilter(DVVideoStreamFramer::createNew(envir(), fClientMediaSubsession.readSource(),
-									False, True/* leave PTs unmodified*/));
+	fClientMediaSubsession.addFilter(DVVideoStreamFramer
+					 ::createNew(envir(), fClientMediaSubsession.readSource(),
+						     False, True/* leave PTs unmodified*/));
       }
     }
 
@@ -550,7 +558,19 @@ RTPSink* ProxyServerMediaSubsession
 					      fClientMediaSubsession.rtpTimestampFrequency()); 
   } else if (strcmp(codecName, "H264") == 0) {
     newSink = H264VideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
-					  fClientMediaSubsession.fmtp_spropparametersets());
+					  fClientMediaSubsession.fmtp_spropparametersets(),
+					  fClientMediaSubsession.fmtp_profile_level_id());
+  } else if (strcmp(codecName, "H265") == 0) {
+    newSink = H265VideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic,
+					  fClientMediaSubsession.fmtp_spropvps(),
+					  fClientMediaSubsession.fmtp_spropsps(),
+					  fClientMediaSubsession.fmtp_sproppps(),
+					  fClientMediaSubsession.fmtp_profilespace(),
+					  fClientMediaSubsession.fmtp_profileid(),
+					  fClientMediaSubsession.fmtp_tierflag(),
+					  fClientMediaSubsession.fmtp_levelid(),
+					  fClientMediaSubsession.fmtp_interopconstraintsstr());
+
   } else if (strcmp(codecName, "JPEG") == 0) {
     newSink = SimpleRTPSink::createNew(envir(), rtpGroupsock, 26, 90000, "video", "JPEG",
 				       1/*numChannels*/, False/*allowMultipleFramesPerPacket*/, False/*doNormalMBitRule*/);
@@ -620,6 +640,7 @@ RTPSink* ProxyServerMediaSubsession
   // Also tell our "PresentationTimeSubsessionNormalizer" object about the "RTPSink", so it can enable RTCP "SR" reports later:
   PresentationTimeSubsessionNormalizer* ssNormalizer;
   if (strcmp(codecName, "H264") == 0 ||
+      strcmp(codecName, "H265") == 0 ||
       strcmp(codecName, "MP4V-ES") == 0 ||
       strcmp(codecName, "MPV") == 0 ||
       strcmp(codecName, "DV") == 0) {

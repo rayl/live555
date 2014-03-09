@@ -15,33 +15,32 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2014 Live Networks, Inc.  All rights reserved.
-// H.264 Video File Sinks
+// H.264 or H.265 Video File Sinks
 // C++ header
 
-#ifndef _H264_VIDEO_FILE_SINK_HH
-#define _H264_VIDEO_FILE_SINK_HH
-
 #ifndef _H264_OR_5_VIDEO_FILE_SINK_HH
-#include "H264or5VideoFileSink.hh"
+#define _H264_OR_5_VIDEO_FILE_SINK_HH
+
+#ifndef _FILE_SINK_HH
+#include "FileSink.hh"
 #endif
 
-class H264VideoFileSink: public H264or5VideoFileSink {
-public:
-  static H264VideoFileSink* createNew(UsageEnvironment& env, char const* fileName,
-				      char const* sPropParameterSetsStr = NULL,
-      // "sPropParameterSetsStr" is an optional 'SDP format' string
-      // (comma-separated Base64-encoded) representing SPS and/or PPS NAL-units
-      // to prepend to the output
-				      unsigned bufferSize = 100000,
-				      Boolean oneFilePerFrame = False);
-      // See "FileSink.hh" for a description of these parameters.
-
+class H264or5VideoFileSink: public FileSink {
 protected:
-  H264VideoFileSink(UsageEnvironment& env, FILE* fid,
-		    char const* sPropParameterSetsStr,
-		    unsigned bufferSize, char const* perFrameFileNamePrefix);
-      // called only by createNew()
-  virtual ~H264VideoFileSink();
+  H264or5VideoFileSink(UsageEnvironment& env, FILE* fid,
+		       unsigned bufferSize, char const* perFrameFileNamePrefix,
+		       char const* sPropParameterSetsStr1,
+		       char const* sPropParameterSetsStr2 = NULL,
+		       char const* sPropParameterSetsStr3 = NULL);
+      // we're an abstract base class
+  virtual ~H264or5VideoFileSink();
+
+protected: // redefined virtual functions:
+  virtual void afterGettingFrame(unsigned frameSize, unsigned numTruncatedBytes, struct timeval presentationTime);
+
+private:
+  char const* fSPropParameterSetsStr[3];
+  Boolean fHaveWrittenFirstFrame;
 };
 
 #endif
