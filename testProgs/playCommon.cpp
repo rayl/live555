@@ -33,7 +33,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #endif
 
 // Forward function definitions:
-void continueAfterClientCreation0(RTSPClient* client);
+void continueAfterClientCreation0(RTSPClient* client, Boolean requestStreamingOverTCP);
 void continueAfterClientCreation1();
 void continueAfterOPTIONS(RTSPClient* client, int resultCode, char* resultString);
 void continueAfterDESCRIBE(RTSPClient* client, int resultCode, char* resultString);
@@ -563,8 +563,10 @@ int main(int argc, char** argv) {
   return 0; // only to prevent compiler warning
 }
 
-void continueAfterClientCreation0(RTSPClient* newRTSPClient) {
-  if (newRTSPClient == 0) return;
+void continueAfterClientCreation0(RTSPClient* newRTSPClient, Boolean requestStreamingOverTCP) {
+  if (newRTSPClient == NULL) return;
+
+  streamUsingTCP = requestStreamingOverTCP;
 
   assignClient(ourClient = newRTSPClient);
   streamURL = newRTSPClient->url();

@@ -319,7 +319,7 @@ private:
 // A simple server that creates a new "RTSPClient" object whenever a "REGISTER" request arrives (specifying the "rtsp://" URL
 // of a stream).  The new "RTSPClient" object will be created with the specified URL, and passed to the provided handler function.
 
-typedef void onRTSPClientCreationFunc(RTSPClient* newRTSPClient);
+typedef void onRTSPClientCreationFunc(RTSPClient* newRTSPClient, Boolean requestStreamingOverTCP);
 
 class HandlerServerForREGISTERCommand: public RTSPServer {
 public:
@@ -341,8 +341,9 @@ protected:
 
 protected: // redefined virtual functions
   virtual char const* allowedCommandNames(); // we support "OPTIONS" and "REGISTER" only
-  virtual Boolean weImplementREGISTER(); // redefined to return True
-  virtual void implementCmd_REGISTER(char const* url, char const* urlSuffix, int socketToRemoteServer);
+  virtual Boolean weImplementREGISTER(char const* proxyURLSuffix, char*& responseStr); // redefined to return True
+  virtual void implementCmd_REGISTER(char const* url, char const* urlSuffix, int socketToRemoteServer,
+				     Boolean deliverViaTCP, char const* proxyURLSuffix);
 
 private:
   onRTSPClientCreationFunc* fCreationFunc;
