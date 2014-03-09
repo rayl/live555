@@ -15,16 +15,15 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2014 Live Networks, Inc.  All rights reserved.
-// Framed File Sources
-// Implementation
+// Because MD5 may not be implemented (at least, with the same interface) on all systems,
+// we have our own implementation.
+// C++ header
 
-#include "FramedFileSource.hh"
+#ifndef _OUR_MD5_HH
+#define _OUR_MD5_HH
 
-////////// FramedFileSource //////////
-
-FramedFileSource::FramedFileSource(UsageEnvironment& env, FILE* fid)
-  : FramedSource(env), fFid(fid) {
-}
-
-FramedFileSource::~FramedFileSource() {
-}
+extern char* our_MD5Data(unsigned char const* data, unsigned dataSize, char* outputDigest);
+    // "outputDigest" must be either NULL (in which case this function returns a heap-allocated
+    // buffer, which should be later delete[]d by the caller), or else it must point to
+    // a (>=)33-byte buffer (which this function will also return).
+#endif
