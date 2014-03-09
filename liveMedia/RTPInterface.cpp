@@ -367,7 +367,7 @@ SocketDescriptor::~SocketDescriptor() {
     char const* key;
 
     while ((rtpInterface = (RTPInterface*)(iter->next(key))) != NULL) {
-      long streamChannelIdLong = (long)key;
+      u_int64_t streamChannelIdLong = (u_int64_t)key;
       unsigned char streamChannelId = (unsigned char)streamChannelIdLong;
 
       rtpInterface->removeStreamSocket(fOurSocketNum, streamChannelId);
