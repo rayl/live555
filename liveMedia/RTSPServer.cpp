@@ -953,6 +953,7 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
 						    sessionIdStr, sizeof sessionIdStr,
 						    contentLength);
     fLastCRLF[2] = '\r'; // restore its value
+    Boolean playAfterSetup = False;
     if (parseSucceeded) {
 #ifdef DEBUG
       fprintf(stderr, "parseRTSPRequestString() succeeded, returning cmdName \"%s\", urlPreSuffix \"%s\", urlSuffix \"%s\", CSeq \"%s\", Content-Length %u, with %ld bytes following the message.\n", cmdName, urlPreSuffix, urlSuffix, cseq, contentLength, ptr + newBytesRead - (tmpPtr + 2));
@@ -1000,6 +1001,7 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
 	}
 	if (clientSession != NULL) {
 	  clientSession->handleCmd_SETUP(this, urlPreSuffix, urlSuffix, (char const*)fRequestBuffer);
+	  playAfterSetup = clientSession->fStreamAfterSETUP;
 	} else {
 	    handleCmd_sessionNotFound();
 	}
@@ -1093,7 +1095,7 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
 #endif
     send(fClientOutputSocket, (char const*)fResponseBuffer, strlen((char*)fResponseBuffer), 0);
     
-    if (clientSession != NULL && clientSession->fStreamAfterSETUP && strcmp(cmdName, "SETUP") == 0) {
+    if (playAfterSetup) {
       // The client has asked for streaming to commence now, rather than after a
       // subsequent "PLAY" command.  So, simulate the effect of a "PLAY" command:
       clientSession->handleCmd_withinSession(this, "PLAY", urlPreSuffix, urlSuffix, (char const*)fRequestBuffer);
