@@ -111,6 +111,7 @@ Boolean syncStreams = False;
 Boolean generateHintTracks = False;
 Boolean waitForResponseToTEARDOWN = True;
 unsigned qosMeasurementIntervalMS = 0; // 0 means: Don't output QOS data
+char* userAgent = NULL;
 Boolean createHandlerServerForREGISTERCommand = False;
 portNumBits handlerServerForREGISTERCommandPortNum = 0;
 HandlerServerForREGISTERCommand* handlerServerForREGISTERCommand;
@@ -127,7 +128,7 @@ void usage() {
        << " [-u <username> <password>"
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-M <mime-subtype-name>]" : "")
-       << " [-s <initial-seek-time>]|[-U <absolute-seek-time>] [-z <scale>]"
+       << " [-s <initial-seek-time>]|[-U <absolute-seek-time>] [-z <scale>] [-g user-agent]"
        << " [-k <username-for-REGISTER> <password-for-REGISTER>]"
        << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] [-B <input-socket-buffer-size>] [-I <input-interface-ip-address>] [-m] [<url>|-R [<port-num>]] (or " << progName << " -o [-V] <url>)\n";
   shutdown();
@@ -396,6 +397,12 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 'g': { // specify a user agent name to use in outgoing requests
+      userAgent = argv[2];
+      ++argv; --argc;
+      break;
+    }
+
     case 'b': { // specify the size of buffers for "FileSink"s
       if (sscanf(argv[2], "%u", &fileSinkBufferSize) != 1) {
 	usage();
@@ -454,7 +461,7 @@ int main(int argc, char** argv) {
     }
 
     case 'U': {
-      // specify initial absolute seek time (trick play), using a string of the form "YYYYMMDDTHHMMSSZ" or "YYYYMMDDTHHMMSS.<frac>Z
+      // specify initial absolute seek time (trick play), using a string of the form "YYYYMMDDTHHMMSSZ" or "YYYYMMDDTHHMMSS.<frac>Z"
       initialAbsoluteSeekTime = argv[2];
       ++argv; --argc;
       break;
@@ -598,6 +605,8 @@ void continueAfterClientCreation0(RTSPClient* newRTSPClient, Boolean requestStre
 }
 
 void continueAfterClientCreation1() {
+  setUserAgentString(userAgent);
+
   if (sendOptionsRequest) {
     // Begin by sending an "OPTIONS" command:
     getOptions(continueAfterOPTIONS);

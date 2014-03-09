@@ -174,6 +174,10 @@ void tearDownSession(MediaSession* /*session*/, RTSPClient::responseHandler* aft
   }
 }
 
+void setUserAgentString(char const* userAgentString) {
+  ourSIPClient->setUserAgentString(userAgentString);
+}
+
 Boolean allowProxyServers = True;
 Boolean controlConnectionUsesTCP = False;
 Boolean supportCodecSelection = True;

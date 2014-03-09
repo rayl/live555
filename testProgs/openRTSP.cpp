@@ -58,6 +58,10 @@ void tearDownSession(MediaSession* session, RTSPClient::responseHandler* afterFu
   ourRTSPClient->sendTeardownCommand(*session, afterFunc, ourAuthenticator);
 }
 
+void setUserAgentString(char const* userAgentString) {
+  ourRTSPClient->setUserAgentString(userAgentString);
+}
+
 Boolean allowProxyServers = False;
 Boolean controlConnectionUsesTCP = True;
 Boolean supportCodecSelection = False;

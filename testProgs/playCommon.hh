@@ -37,6 +37,8 @@ extern void startPlayingSession(MediaSession* session, char const* absStartTime,
 
 extern void tearDownSession(MediaSession* session, RTSPClient::responseHandler* afterFunc);
 
+extern void setUserAgentString(char const* userAgentString);
+
 extern Authenticator* ourAuthenticator;
 extern Boolean allowProxyServers;
 extern Boolean controlConnectionUsesTCP;
