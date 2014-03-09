@@ -15,32 +15,38 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2014 Live Networks, Inc.  All rights reserved.
-// A simplified version of "H265VideoStreamFramer" that takes only complete,
+// A simplified version of "H264or5VideoStreamFramer" that takes only complete,
 // discrete frames (rather than an arbitrary byte stream) as input.
 // This avoids the parsing and data copying overhead of the full
-// "H265VideoStreamFramer".
+// "H264or5VideoStreamFramer".
 // C++ header
 
-#ifndef _H264_VIDEO_STREAM_DISCRETE_FRAMER_HH
-#define _H264_VIDEO_STREAM_DISCRETE_FRAMER_HH
-
 #ifndef _H264_OR_5_VIDEO_STREAM_DISCRETE_FRAMER_HH
-#include "H264or5VideoStreamDiscreteFramer.hh"
+#define _H264_OR_5_VIDEO_STREAM_DISCRETE_FRAMER_HH
+
+#ifndef _H264_OR_5_VIDEO_STREAM_FRAMER_HH
+#include "H264or5VideoStreamFramer.hh"
 #endif
 
-class H265VideoStreamDiscreteFramer: public H264or5VideoStreamDiscreteFramer {
-public:
-  static H265VideoStreamDiscreteFramer*
-  createNew(UsageEnvironment& env, FramedSource* inputSource);
+class H264or5VideoStreamDiscreteFramer: public H264or5VideoStreamFramer {
+protected:
+  H264or5VideoStreamDiscreteFramer(int hNumber, UsageEnvironment& env, FramedSource* inputSource);
+      // we're an abstract base class
+  virtual ~H264or5VideoStreamDiscreteFramer();
 
 protected:
-  H265VideoStreamDiscreteFramer(UsageEnvironment& env, FramedSource* inputSource);
-      // called only by createNew()
-  virtual ~H265VideoStreamDiscreteFramer();
-
-private:
   // redefined virtual functions:
-  virtual Boolean isH265VideoStreamFramer() const;
+  virtual void doGetNextFrame();
+
+protected:
+  static void afterGettingFrame(void* clientData, unsigned frameSize,
+                                unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+                                unsigned durationInMicroseconds);
+  void afterGettingFrame1(unsigned frameSize,
+                          unsigned numTruncatedBytes,
+                          struct timeval presentationTime,
+                          unsigned durationInMicroseconds);
 };
 
 #endif

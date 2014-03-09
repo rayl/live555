@@ -19,7 +19,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "H264VideoStreamFramer.hh"
-#include "H264VideoRTPSource.hh" // for "parseSPropParameterSets()"
 
 H264VideoStreamFramer* H264VideoStreamFramer
 ::createNew(UsageEnvironment& env, FramedSource* inputSource, Boolean includeStartCodeInOutput) {
@@ -36,19 +35,4 @@ H264VideoStreamFramer::~H264VideoStreamFramer() {
 
 Boolean H264VideoStreamFramer::isH264VideoStreamFramer() const {
   return True;
-}
-
-void H264VideoStreamFramer::setSPSandPPS(char const* sPropParameterSetsStr) {
-  unsigned numSPropRecords;
-  SPropRecord* sPropRecords = parseSPropParameterSets(sPropParameterSetsStr, numSPropRecords);
-  for (unsigned i = 0; i < numSPropRecords; ++i) {
-    if (sPropRecords[i].sPropLength == 0) continue; // bad data
-    u_int8_t nal_unit_type = (sPropRecords[i].sPropBytes[0])&0x1F;
-    if (nal_unit_type == 7/*SPS*/) {
-      saveCopyOfSPS(sPropRecords[i].sPropBytes, sPropRecords[i].sPropLength);
-    } else if (nal_unit_type == 8/*PPS*/) {
-      saveCopyOfPPS(sPropRecords[i].sPropBytes, sPropRecords[i].sPropLength);
-    }
-  }
-  delete[] sPropRecords;
 }

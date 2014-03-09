@@ -19,7 +19,6 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // Implementation
 
 #include "H265VideoStreamFramer.hh"
-#include "H264VideoRTPSource.hh" // for "parseSPropParameterSets()"
 
 H265VideoStreamFramer* H265VideoStreamFramer
 ::createNew(UsageEnvironment& env, FramedSource* inputSource, Boolean includeStartCodeInOutput) {
@@ -36,21 +35,4 @@ H265VideoStreamFramer::~H265VideoStreamFramer() {
 
 Boolean H265VideoStreamFramer::isH265VideoStreamFramer() const {
   return True;
-}
-
-void H265VideoStreamFramer::setVPSandSPSandPPS(char const* sPropParameterSetsStr) {
-  unsigned numSPropRecords;
-  SPropRecord* sPropRecords = parseSPropParameterSets(sPropParameterSetsStr, numSPropRecords);
-  for (unsigned i = 0; i < numSPropRecords; ++i) {
-    if (sPropRecords[i].sPropLength == 0) continue; // bad data
-    u_int8_t nal_unit_type = ((sPropRecords[i].sPropBytes[0])&0x7E)>>1;
-    if (nal_unit_type == 32/*VPS*/) {
-      saveCopyOfVPS(sPropRecords[i].sPropBytes, sPropRecords[i].sPropLength);
-    } else if (nal_unit_type == 33/*SPS*/) {
-      saveCopyOfSPS(sPropRecords[i].sPropBytes, sPropRecords[i].sPropLength);
-    } else if (nal_unit_type == 34/*PPS*/) {
-      saveCopyOfPPS(sPropRecords[i].sPropBytes, sPropRecords[i].sPropLength);
-    }
-  }
-  delete[] sPropRecords;
 }

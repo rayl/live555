@@ -291,7 +291,7 @@ int main(int argc, char** argv) {
       break;
     }
 
-    case 'P': { // specify an interval (in seconds) between writing sucessive output files
+    case 'P': { // specify an interval (in seconds) between writing successive output files
       int fileOutputIntervalInt;
       if (sscanf(argv[2], "%d", &fileOutputIntervalInt) != 1 || fileOutputIntervalInt <= 0) {
 	usage();
@@ -529,8 +529,12 @@ int main(int argc, char** argv) {
     usage();
   }
   Boolean outputCompositeFile = outputQuickTimeFile || outputAVIFile;
-  if (!createReceivers && outputCompositeFile) {
-    *env << "The -r and -q (or -4 or -i) options cannot both be used!\n";
+  if (!createReceivers && (outputCompositeFile || oneFilePerFrame || fileOutputInterval > 0)) {
+    *env << "The -r option cannot be used with -q, -4, -i, -m, or -P!\n";
+    usage();
+  }
+  if (oneFilePerFrame && fileOutputInterval > 0) {
+    *env << "The -m and -P options cannot both be used!\n";
     usage();
   }
   if (outputCompositeFile && !movieWidthOptionSet) {

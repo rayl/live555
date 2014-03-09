@@ -25,67 +25,17 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 H265VideoStreamDiscreteFramer*
 H265VideoStreamDiscreteFramer::createNew(UsageEnvironment& env, FramedSource* inputSource) {
-  // Need to add source type checking here???  #####
   return new H265VideoStreamDiscreteFramer(env, inputSource);
 }
 
 H265VideoStreamDiscreteFramer
 ::H265VideoStreamDiscreteFramer(UsageEnvironment& env, FramedSource* inputSource)
-  : H265VideoStreamFramer(env, inputSource, False/*don't create a parser*/, False) {
+  : H264or5VideoStreamDiscreteFramer(265, env, inputSource) {
 }
 
 H265VideoStreamDiscreteFramer::~H265VideoStreamDiscreteFramer() {
 }
 
-void H265VideoStreamDiscreteFramer::doGetNextFrame() {
-  // Arrange to read data (which should be a complete H.265 NAL unit)
-  // from our data source, directly into the client's input buffer.
-  // After reading this, we'll do some parsing on the frame.
-  fInputSource->getNextFrame(fTo, fMaxSize,
-                             afterGettingFrame, this,
-                             FramedSource::handleClosure, this);
-}
-
-void H265VideoStreamDiscreteFramer
-::afterGettingFrame(void* clientData, unsigned frameSize,
-                    unsigned numTruncatedBytes,
-                    struct timeval presentationTime,
-                    unsigned durationInMicroseconds) {
-  H265VideoStreamDiscreteFramer* source = (H265VideoStreamDiscreteFramer*)clientData;
-  source->afterGettingFrame1(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
-}
-
-void H265VideoStreamDiscreteFramer
-::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
-                     struct timeval presentationTime,
-                     unsigned durationInMicroseconds) {
-  // Get the "nal_unit_type", to see if this NAL unit is one that we want to save a copy of:
-  u_int8_t nal_unit_type = frameSize == 0 ? 0xFF : (fTo[0]&0x7E)>>1;
-
-  // Check for a (likely) common error: NAL units that (erroneously) begin with a 0x00000001 or 0x000001 'start code'
-  //     (Those start codes should only be in byte-stream data; *not* data that consists of discrete NAL units.)
-  //     Once again, to be clear: The NAL units that you feed to a "H265VideoStreamDiscreteFramer" MUST NOT include start codes.
-  if (frameSize >= 4 && fTo[0] == 0 && fTo[1] == 0 && ((fTo[2] == 0 && fTo[3] == 1) || fTo[2] == 1)) {
-    envir() << "H265VideoStreamDiscreteFramer error: MPEG 'start code' seen in the input\n";
-  } else if (nal_unit_type == 32) { // Video parameter set (VPS)
-    saveCopyOfVPS(fTo, frameSize);
-  } else if (nal_unit_type == 33) { // Sequence parameter set (SPS)
-    saveCopyOfSPS(fTo, frameSize);
-  } else if (nal_unit_type == 34) { // Picture parameter set (PPS)
-    saveCopyOfPPS(fTo, frameSize);
-  }
-
-  // Next, check whether this NAL unit ends the current 'access unit' (basically, a video frame).
-  // Unfortunately, we can't do this reliably, because we don't yet know anything about
-  // the *next* NAL unit that we'll see.  So, we guess this as best as we can,
-  // by assuming that if this NAL unit is a VCL NAL unit, then it ends the current 'access unit'.
-  Boolean const isVCL = nal_unit_type <= 31;
-  if (isVCL) fPictureEndMarker = True;
-
-  // Finally, complete delivery to the client:
-  fFrameSize = frameSize;
-  fNumTruncatedBytes = numTruncatedBytes;
-  fPresentationTime = presentationTime;
-  fDurationInMicroseconds = durationInMicroseconds;
-  afterGetting(this);
+Boolean H265VideoStreamDiscreteFramer::isH265VideoStreamFramer() const {
+  return True;
 }

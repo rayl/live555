@@ -39,21 +39,21 @@ private:
     return (H264or5VideoStreamFramer*)fUsingSource;
   }
 
-  Boolean isVPS(u_int8_t nal_unit_type);
-  Boolean isSPS(u_int8_t nal_unit_type);
-  Boolean isPPS(u_int8_t nal_unit_type);
+  Boolean isVPS(u_int8_t nal_unit_type) { return usingSource()->isVPS(nal_unit_type); }
+  Boolean isSPS(u_int8_t nal_unit_type) { return usingSource()->isSPS(nal_unit_type); }
+  Boolean isPPS(u_int8_t nal_unit_type) { return usingSource()->isPPS(nal_unit_type); }
+  Boolean isVCL(u_int8_t nal_unit_type) { return usingSource()->isVCL(nal_unit_type); }
   Boolean isSEI(u_int8_t nal_unit_type);
   Boolean isEOF(u_int8_t nal_unit_type);
-  Boolean isVCL(u_int8_t nal_unit_type);
   Boolean usuallyBeginsAccessUnit(u_int8_t nal_unit_type);
 
   void removeEmulationBytes(u_int8_t* nalUnitCopy, unsigned maxSize, unsigned& nalUnitCopySize);
 
-  void analyze_picture_parameter_set_data(unsigned& num_units_in_tick, unsigned& time_scale);
+  void analyze_video_parameter_set_data(unsigned& num_units_in_tick, unsigned& time_scale);
   void analyze_seq_parameter_set_data(unsigned& num_units_in_tick, unsigned& time_scale);
   void profile_tier_level(BitVector& bv, unsigned max_sub_layers_minus1);
   void analyze_vui_parameters(BitVector& bv, unsigned& num_units_in_tick, unsigned& time_scale);
-  void analyze_sei_data();
+  void analyze_sei_data(u_int8_t nal_unit_type);
 
 private:
   int fHNumber; // 264 or 265
@@ -70,9 +70,13 @@ H264or5VideoStreamFramer
 ::H264or5VideoStreamFramer(int hNumber, UsageEnvironment& env, FramedSource* inputSource,
 			   Boolean createParser, Boolean includeStartCodeInOutput)
   : MPEGVideoStreamFramer(env, inputSource),
+    fHNumber(hNumber),
     fLastSeenVPS(NULL), fLastSeenVPSSize(0),
     fLastSeenSPS(NULL), fLastSeenSPSSize(0),
-    fLastSeenPPS(NULL), fLastSeenPPSSize(0) {
+    fLastSeenPPS(NULL), fLastSeenPPSSize(0),
+    fProfileLevelId(0) {
+  for (unsigned i = 0; i < 12; ++i) fProfileTierLevelHeaderBytes[i] = 0;
+
   fParser = createParser
     ? new H264or5VideoStreamParser(hNumber, this, inputSource, includeStartCodeInOutput)
     : NULL;
@@ -87,6 +91,7 @@ H264or5VideoStreamFramer::~H264or5VideoStreamFramer() {
 }
 
 void H264or5VideoStreamFramer::saveCopyOfVPS(u_int8_t* from, unsigned size) {
+  if (from == NULL) return;
   delete[] fLastSeenVPS;
   fLastSeenVPS = new u_int8_t[size];
   memmove(fLastSeenVPS, from, size);
@@ -95,6 +100,7 @@ void H264or5VideoStreamFramer::saveCopyOfVPS(u_int8_t* from, unsigned size) {
 }
 
 void H264or5VideoStreamFramer::saveCopyOfSPS(u_int8_t* from, unsigned size) {
+  if (from == NULL) return;
   delete[] fLastSeenSPS;
   fLastSeenSPS = new u_int8_t[size];
   memmove(fLastSeenSPS, from, size);
@@ -103,11 +109,31 @@ void H264or5VideoStreamFramer::saveCopyOfSPS(u_int8_t* from, unsigned size) {
 }
 
 void H264or5VideoStreamFramer::saveCopyOfPPS(u_int8_t* from, unsigned size) {
+  if (from == NULL) return;
   delete[] fLastSeenPPS;
   fLastSeenPPS = new u_int8_t[size];
   memmove(fLastSeenPPS, from, size);
 
   fLastSeenPPSSize = size;
+}
+
+Boolean H264or5VideoStreamFramer::isVPS(u_int8_t nal_unit_type) {
+  // VPS NAL units occur in H.265 only:
+  return fHNumber == 265 && nal_unit_type == 32;
+}
+
+Boolean H264or5VideoStreamFramer::isSPS(u_int8_t nal_unit_type) {
+  return fHNumber == 264 ? nal_unit_type == 7 : nal_unit_type == 33;
+}
+
+Boolean H264or5VideoStreamFramer::isPPS(u_int8_t nal_unit_type) {
+  return fHNumber == 264 ? nal_unit_type == 8 : nal_unit_type == 34;
+}
+
+Boolean H264or5VideoStreamFramer::isVCL(u_int8_t nal_unit_type) {
+  return fHNumber == 264
+    ? (nal_unit_type <= 5 && nal_unit_type > 0)
+    : (nal_unit_type <= 31);
 }
 
 
@@ -123,22 +149,12 @@ H264or5VideoStreamParser
 H264or5VideoStreamParser::~H264or5VideoStreamParser() {
 }
 
-Boolean H264or5VideoStreamParser::isVPS(u_int8_t nal_unit_type) {
-  // VPS NAL units occur in H.265 only:
-  return fHNumber == 265 && nal_unit_type == 32;
-}
-
-Boolean H264or5VideoStreamParser::isSPS(u_int8_t nal_unit_type) {
-  return fHNumber == 264 ? nal_unit_type == 7 : nal_unit_type == 33;
-}
-
-Boolean H264or5VideoStreamParser::isPPS(u_int8_t nal_unit_type) {
-  return fHNumber == 264 ? nal_unit_type == 8 : nal_unit_type == 34;
-}
-
+#define PREFIX_SEI_NUT 39 // for H.265
+#define SUFFIX_SEI_NUT 40 // for H.265
 Boolean H264or5VideoStreamParser::isSEI(u_int8_t nal_unit_type) {
-  // SEI NAL units occur in H.264 only:
-  return fHNumber == 264 && nal_unit_type == 6;
+  return fHNumber == 264
+    ? nal_unit_type == 6
+    : (nal_unit_type == PREFIX_SEI_NUT || nal_unit_type == SUFFIX_SEI_NUT);
 }
 
 Boolean H264or5VideoStreamParser::isEOF(u_int8_t nal_unit_type) {
@@ -146,12 +162,6 @@ Boolean H264or5VideoStreamParser::isEOF(u_int8_t nal_unit_type) {
   return fHNumber == 264
     ? (nal_unit_type == 10 || nal_unit_type == 11)
     : (nal_unit_type == 36 || nal_unit_type == 37);
-}
-
-Boolean H264or5VideoStreamParser::isVCL(u_int8_t nal_unit_type) {
-  return fHNumber == 264
-    ? (nal_unit_type <= 5 && nal_unit_type > 0)
-    : (nal_unit_type <= 31);
 }
 
 Boolean H264or5VideoStreamParser::usuallyBeginsAccessUnit(u_int8_t nal_unit_type) {
@@ -162,19 +172,12 @@ Boolean H264or5VideoStreamParser::usuallyBeginsAccessUnit(u_int8_t nal_unit_type
     || (nal_unit_type >= 48 && nal_unit_type <= 55);
 }
 
-void H264or5VideoStreamParser::removeEmulationBytes(u_int8_t* nalUnitCopy, unsigned maxSize, unsigned& nalUnitCopySize) {
+void H264or5VideoStreamParser
+::removeEmulationBytes(u_int8_t* nalUnitCopy, unsigned maxSize, unsigned& nalUnitCopySize) {
   u_int8_t* nalUnitOrig = fStartOfFrame + fOutputStartCodeSize;
-  unsigned const NumBytesInNALunit = fTo - nalUnitOrig;
-  nalUnitCopySize = 0;
-  if (NumBytesInNALunit > maxSize) return;
-  for (unsigned i = 0; i < NumBytesInNALunit; ++i) {
-    if (i+2 < NumBytesInNALunit && nalUnitOrig[i] == 0 && nalUnitOrig[i+1] == 0 && nalUnitOrig[i+2] == 3) {
-      nalUnitCopy[nalUnitCopySize++] = nalUnitOrig[i++];
-      nalUnitCopy[nalUnitCopySize++] = nalUnitOrig[i++];
-    } else {
-      nalUnitCopy[nalUnitCopySize++] = nalUnitOrig[i];
-    }
-  }
+  unsigned const numBytesInNALunit = fTo - nalUnitOrig;
+  nalUnitCopySize
+    = removeH264or5EmulationBytes(nalUnitCopy, maxSize, nalUnitOrig, numBytesInNALunit);
 }
 
 #ifdef DEBUG
@@ -299,9 +302,11 @@ public:
 #endif
 
 void H264or5VideoStreamParser::profile_tier_level(BitVector& bv, unsigned max_sub_layers_minus1) {
-  bv.skipBits(96);
-  Boolean sub_layer_profile_present_flag[7], sub_layer_level_present_flag[7];
+  // Get and save the first 96 bits (== 12 bytes) of this, in case the downstream object wants it:
   unsigned i;
+  for (i = 0; i < 12; ++i) usingSource()->fProfileTierLevelHeaderBytes[i] = bv.getBits(8);
+
+  Boolean sub_layer_profile_present_flag[7], sub_layer_level_present_flag[7];
   for (i = 0; i < max_sub_layers_minus1; ++i) {
     sub_layer_profile_present_flag[i] = bv.get1BitBoolean();
     sub_layer_level_present_flag[i] = bv.get1BitBoolean();
@@ -387,18 +392,18 @@ void H264or5VideoStreamParser
   }
 }
 
-#define PPS_MAX_SIZE 1000 // larger than the largest possible PPS (Picture Parameter Set) NAL unit
+#define VPS_MAX_SIZE 1000 // larger than the largest possible VPS (Video Parameter Set) NAL unit
 
 void H264or5VideoStreamParser
-::analyze_picture_parameter_set_data(unsigned& num_units_in_tick, unsigned& time_scale) {
+::analyze_video_parameter_set_data(unsigned& num_units_in_tick, unsigned& time_scale) {
   num_units_in_tick = time_scale = 0; // default values
 
   // Begin by making a copy of the NAL unit data, removing any 'emulation prevention' bytes:
-  u_int8_t pps[PPS_MAX_SIZE];
-  unsigned ppsSize;
-  removeEmulationBytes(pps, sizeof pps, ppsSize);
+  u_int8_t vps[VPS_MAX_SIZE];
+  unsigned vpsSize;
+  removeEmulationBytes(vps, sizeof vps, vpsSize);
 
-  BitVector bv(pps, 0, 8*ppsSize);
+  BitVector bv(vps, 0, 8*vpsSize);
 
   // Assert: fHNumber == 265 (because this function is called only when parsing H.265)
   unsigned i;
@@ -463,6 +468,10 @@ void H264or5VideoStreamParser
     DEBUG_PRINT(constraint_setN_flag);
     unsigned level_idc = bv.getBits(8);
     DEBUG_PRINT(level_idc);
+    // These three values make up the 'profile_level_id'.
+    // Save this, in case the downstream object wants to use it:
+    usingSource()->fProfileLevelId = (profile_idc<<16)|(constraint_setN_flag<<8)|level_idc;
+
     unsigned seq_parameter_set_id = bv.get_expGolomb();
     DEBUG_PRINT(seq_parameter_set_id);
     if (profile_idc == 100 || profile_idc == 110 || profile_idc == 122 || profile_idc == 244 || profile_idc == 44 || profile_idc == 83 || profile_idc == 86 || profile_idc == 118 || profile_idc == 128 ) {
@@ -623,7 +632,7 @@ void H264or5VideoStreamParser
 	      unsigned const c = 1 << (4+(sizeId<<1));
 	      unsigned coefNum = c < 64 ? c : 64;
 	      if (sizeId > 1) {
-		(void)bv.get_expGolomb(); // scaling_list_dc_coef_minus8[sizeId−2][matrixId]
+		(void)bv.get_expGolomb(); // scaling_list_dc_coef_minus8[sizeId][matrixId]
 	      }
 	      for (i = 0; i < coefNum; ++i) {
 		(void)bv.get_expGolomb(); // scaling_list_delta_coef
@@ -711,8 +720,8 @@ void H264or5VideoStreamParser
 #define SEI_MAX_SIZE 5000 // larger than the largest possible SEI NAL unit
 
 #ifdef DEBUG
-#define MAX_SEI_PAYLOAD_TYPE_DESCRIPTION 46
-char const* sei_payloadType_description[MAX_SEI_PAYLOAD_TYPE_DESCRIPTION+1] = {
+#define MAX_SEI_PAYLOAD_TYPE_DESCRIPTION_H264 46
+char const* sei_payloadType_description_h264[MAX_SEI_PAYLOAD_TYPE_DESCRIPTION_H264+1] = {
   "buffering_period", //0
   "pic_timing", //1
   "pan_scan_rect", //2
@@ -763,7 +772,7 @@ char const* sei_payloadType_description[MAX_SEI_PAYLOAD_TYPE_DESCRIPTION+1] = {
 };
 #endif
 
-void H264or5VideoStreamParser::analyze_sei_data() {
+void H264or5VideoStreamParser::analyze_sei_data(u_int8_t nal_unit_type) {
   // Begin by making a copy of the NAL unit data, removing any 'emulation prevention' bytes:
   u_int8_t sei[SEI_MAX_SIZE];
   unsigned seiSize;
@@ -784,8 +793,39 @@ void H264or5VideoStreamParser::analyze_sei_data() {
     if (j >= seiSize) break;
 
 #ifdef DEBUG
-    unsigned descriptionNum = payloadType <= MAX_SEI_PAYLOAD_TYPE_DESCRIPTION ? payloadType : MAX_SEI_PAYLOAD_TYPE_DESCRIPTION;
-    fprintf(stderr, "\tpayloadType %d (\"%s\"); payloadSize %d\n", payloadType, sei_payloadType_description[descriptionNum], payloadSize);
+    char const* description;
+    if (fHNumber == 264) {
+      unsigned descriptionNum = payloadType <= MAX_SEI_PAYLOAD_TYPE_DESCRIPTION_H264
+	? payloadType : MAX_SEI_PAYLOAD_TYPE_DESCRIPTION_H264;
+      description = sei_payloadType_description_h264[descriptionNum];
+    } else { // 265
+      description =
+	payloadType == 3 ? "filler_payload" :
+	payloadType == 4 ? "user_data_registered_itu_t_t35" :
+	payloadType == 5 ? "user_data_unregistered" :
+	payloadType == 17 ? "progressive_refinement_segment_end" :
+	payloadType == 22 ? "post_filter_hint" :
+	(payloadType == 132 && nal_unit_type == SUFFIX_SEI_NUT) ? "decoded_picture_hash" :
+	nal_unit_type == SUFFIX_SEI_NUT ? "reserved_sei_message" :
+	payloadType == 0 ? "buffering_period" :
+	payloadType == 1 ? "pic_timing" :
+	payloadType == 2 ? "pan_scan_rect" :
+	payloadType == 6 ? "recovery_point" :
+	payloadType == 9 ? "scene_info" :
+	payloadType == 15 ? "picture_snapshot" :
+	payloadType == 16 ? "progressive_refinement_segment_start" :
+	payloadType == 19 ? "film_grain_characteristics" :
+	payloadType == 23 ? "tone_mapping_info" :
+	payloadType == 45 ? "frame_packing_arrangement" :
+	payloadType == 47 ? "display_orientation" :
+	payloadType == 128 ? "structure_of_pictures_info" :
+	payloadType == 129 ? "active_parameter_sets" :
+	payloadType == 130 ? "decoding_unit_info" :
+	payloadType == 131 ? "temporal_sub_layer_zero_index" :
+	payloadType == 133 ? "scalable_nesting" :
+	payloadType == 134 ? "region_refresh_info" : "reserved_sei_message";
+    }
+    fprintf(stderr, "\tpayloadType %d (\"%s\"); payloadSize %d\n", payloadType, description, payloadSize);
 #endif
     j += payloadSize;
   }
@@ -909,7 +949,7 @@ unsigned H264or5VideoStreamParser::parse() {
 	// We haven't yet parsed a frame rate from the stream.
 	// So parse this NAL unit to check whether frame rate information is present:
 	unsigned num_units_in_tick, time_scale;
-	analyze_picture_parameter_set_data(num_units_in_tick, time_scale);
+	analyze_video_parameter_set_data(num_units_in_tick, time_scale);
 	if (time_scale > 0 && num_units_in_tick > 0) {
 	  usingSource()->fFrameRate = fParsedFrameRate = time_scale/(2.0*num_units_in_tick);
 #ifdef DEBUG
@@ -945,7 +985,7 @@ unsigned H264or5VideoStreamParser::parse() {
       // Save a copy of this NAL unit, in case the downstream object wants to see it:
       usingSource()->saveCopyOfPPS(fStartOfFrame + fOutputStartCodeSize, fTo - fStartOfFrame - fOutputStartCodeSize);
     } else if (isSEI(nal_unit_type)) { // Supplemental enhancement information (SEI)
-      analyze_sei_data();
+      analyze_sei_data(nal_unit_type);
       // Later, perhaps adjust "fPresentationTime" if we saw a "pic_timing" SEI payload??? #####
     }
 
@@ -1014,4 +1054,23 @@ unsigned H264or5VideoStreamParser::parse() {
 #endif
     return 0;  // the parsing got interrupted
   }
+}
+
+unsigned removeH264or5EmulationBytes(u_int8_t* to, unsigned toMaxSize,
+                                     u_int8_t* from, unsigned fromSize) {
+  unsigned toSize = 0;
+  unsigned i = 0;
+  while (i < fromSize && toSize+1 < toMaxSize) {
+    if (i+2 < fromSize && from[i] == 0 && from[i+1] == 0 && from[i+2] == 3) {
+      to[toSize] = to[toSize+1] = 0;
+      toSize += 2;
+      i += 3;
+    } else {
+      to[toSize] = from[i];
+      toSize += 1;
+      i += 1;
+    }
+  }
+
+  return toSize;
 }

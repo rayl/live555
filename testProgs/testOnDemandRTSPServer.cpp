@@ -100,6 +100,20 @@ int main(int argc, char** argv) {
     announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
+  // A H.265 video elementary stream:
+  {
+    char const* streamName = "h265ESVideoTest";
+    char const* inputFileName = "test.265";
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, streamName, streamName,
+				      descriptionString);
+    sms->addSubsession(H265VideoFileServerMediaSubsession
+		       ::createNew(*env, inputFileName, reuseFirstSource));
+    rtspServer->addServerMediaSession(sms);
+
+    announceStream(rtspServer, sms, streamName, inputFileName);
+  }
+
   // A MPEG-1 or 2 audio+video program stream:
   {
     char const* streamName = "mpeg1or2AudioVideoTest";

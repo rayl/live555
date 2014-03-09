@@ -64,7 +64,8 @@ protected:
   unsigned fBufferSize;
   char* fPerFrameFileNamePrefix; // used if "oneFilePerFrame" is True
   char* fPerFrameFileNameBuffer; // used if "oneFilePerFrame" is True
+  struct timeval fPrevPresentationTime;
+  unsigned fSamePresentationTimeCounter;
 };
-
 
 #endif

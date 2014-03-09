@@ -98,7 +98,7 @@ float H264VideoMatroskaFileServerMediaSubsession::duration() const { return fOur
 void H264VideoMatroskaFileServerMediaSubsession
 ::seekStreamSource(FramedSource* inputSource, double& seekNPT, double /*streamDuration*/, u_int64_t& /*numBytes*/) {
   // "inputSource" is a framer. *Its* source is the demuxed track that we seek on:
-  H264VideoStreamFramer* framer = (H264VideoStreamFramer*)inputSource;
+  H264VideoStreamDiscreteFramer* framer = (H264VideoStreamDiscreteFramer*)inputSource;
 
   MatroskaDemuxedTrack* demuxedTrack = (MatroskaDemuxedTrack*)(framer->inputSource());
   demuxedTrack->seekToTime(seekNPT);
@@ -115,8 +115,9 @@ FramedSource* H264VideoMatroskaFileServerMediaSubsession
   if (baseH264VideoSource == NULL) return NULL;
   
   // Create a framer for the Video stream:
-  H264VideoStreamFramer* framer = H264VideoStreamDiscreteFramer::createNew(envir(), baseH264VideoSource);
-  framer->setSPSandPPS(fSPS, fSPSSize, fPPS, fPPSSize);
+  H264VideoStreamDiscreteFramer* framer
+    = H264VideoStreamDiscreteFramer::createNew(envir(), baseH264VideoSource);
+  framer->setVPSandSPSandPPS(NULL, 0, fSPS, fSPSSize, fPPS, fPPSSize);
 
   return framer;
 }

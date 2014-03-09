@@ -566,6 +566,12 @@ netAddressBits ourIPAddress(UsageEnvironment& env) {
   int sock = -1;
   struct in_addr testAddr;
 
+  if (ReceivingInterfaceAddr != INADDR_ANY) {
+    // Hack: If we were told to receive on a specific interface address, then 
+    // define this to be our ip address:
+    ourAddress = ReceivingInterfaceAddr;
+  }
+
   if (ourAddress == 0) {
     // We need to find our source address
     struct sockaddr_in fromAddr;

@@ -15,37 +15,40 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2014 Live Networks, Inc.  All rights reserved.
-// RTP sink for H.264 video (RFC 3984)
+// RTP sink for H.265 video
 // C++ header
 
-#ifndef _H264_VIDEO_RTP_SINK_HH
-#define _H264_VIDEO_RTP_SINK_HH
+#ifndef _H265_VIDEO_RTP_SINK_HH
+#define _H265_VIDEO_RTP_SINK_HH
 
 #ifndef _H264_OR_5_VIDEO_RTP_SINK_HH
 #include "H264or5VideoRTPSink.hh"
 #endif
 
-class H264VideoRTPSink: public H264or5VideoRTPSink {
+class H265VideoRTPSink: public H264or5VideoRTPSink {
 public:
-  static H264VideoRTPSink*
+  static H265VideoRTPSink*
   createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat);
-  static H264VideoRTPSink*
+  static H265VideoRTPSink*
   createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
-	    u_int8_t const* sps, unsigned spsSize, u_int8_t const* pps, unsigned ppsSize);
+	    u_int8_t const* vps, unsigned vpsSize,
+	    u_int8_t const* sps, unsigned spsSize,
+	    u_int8_t const* pps, unsigned ppsSize);
     // an optional variant of "createNew()", useful if we know, in advance,
-    // the stream's SPS and PPS NAL units.
-  static H264VideoRTPSink*
+    // the stream's VPS, SPS and PPS NAL units.
+  static H265VideoRTPSink*
   createNew(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
-	    char const* sPropParameterSetsStr);
+	    char const* sPropVPSStr, char const* sPropSPSStr=NULL, char const* sPropPPSStr=NULL);
     // an optional variant of "createNew()", useful if we know, in advance,
-    // the stream's SPS and PPS NAL units.
+    // the stream's VPS, SPS and PPS NAL units.
 
 protected:
-  H264VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
+  H265VideoRTPSink(UsageEnvironment& env, Groupsock* RTPgs, unsigned char rtpPayloadFormat,
+		   u_int8_t const* vps = NULL, unsigned vpsSize = 0,
 		   u_int8_t const* sps = NULL, unsigned spsSize = 0,
 		   u_int8_t const* pps = NULL, unsigned ppsSize = 0);
 	// called only by createNew()
-  virtual ~H264VideoRTPSink();
+  virtual ~H265VideoRTPSink();
 
 protected: // redefined virtual functions:
   virtual char const* auxSDPLine();

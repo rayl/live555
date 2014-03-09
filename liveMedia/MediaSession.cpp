@@ -659,11 +659,12 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
     tempAddr.s_addr = connectionEndpointAddress();
         // This could get changed later, as a result of a RTSP "SETUP"
 
-    if (fClientPortNum != 0  && (honorSDPPortChoice || IsMulticastAddress(tempAddr.s_addr))) {
-      // This is a multicast stream, and the sockets' port numbers were specified for us.  Use these:
+    if (fClientPortNum != 0 && (honorSDPPortChoice || IsMulticastAddress(tempAddr.s_addr))) {
+      // The sockets' port numbers were specified for us.  Use these:
       Boolean const protocolIsRTP = strcmp(fProtocolName, "RTP") == 0;
       if (protocolIsRTP) {
-	fClientPortNum = fClientPortNum&~1; // use an even-numbered port for RTP, and the next (odd-numbered) port for RTCP
+	fClientPortNum = fClientPortNum&~1;
+	    // use an even-numbered port for RTP, and the next (odd-numbered) port for RTCP
       }
       if (isSSM()) {
 	fRTPSocket = new Groupsock(env(), tempAddr, fSourceFilterAddr, fClientPortNum);
@@ -687,12 +688,13 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
     } else {
       // Port numbers were not specified in advance, so we use ephemeral port numbers.
       // Create sockets until we get a port-number pair (even: RTP; even+1: RTCP).
-      // We need to make sure that we don't keep trying to use the same bad port numbers over and over again.
-      // so we store bad sockets in a table, and delete them all when we're done.
+      // We need to make sure that we don't keep trying to use the same bad port numbers over
+      // and over again, so we store bad sockets in a table, and delete them all when we're done.
       HashTable* socketHashTable = HashTable::create(ONE_WORD_HASH_KEYS);
       if (socketHashTable == NULL) break;
       Boolean success = False;
-      NoReuse dummy(env()); // ensures that our new ephemeral port number won't be one that's already in use
+      NoReuse dummy(env());
+          // ensures that our new ephemeral port number won't be one that's already in use
 
       while (1) {
 	// Create a new socket:
