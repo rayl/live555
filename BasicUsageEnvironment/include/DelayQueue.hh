@@ -111,9 +111,9 @@ DelayInterval operator*(short arg1, DelayInterval const& arg2);
 
 extern DelayInterval const DELAY_ZERO;
 extern DelayInterval const DELAY_SECOND;
-DelayInterval const DELAY_MINUTE = 60*DELAY_SECOND;
-DelayInterval const DELAY_HOUR = 60*DELAY_MINUTE;
-DelayInterval const DELAY_DAY = 24*DELAY_HOUR;
+extern DelayInterval const DELAY_MINUTE;
+extern DelayInterval const DELAY_HOUR;
+extern DelayInterval const DELAY_DAY;
 
 ///// EventTime /////
 

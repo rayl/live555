@@ -83,6 +83,9 @@ DelayInterval operator*(short arg1, const DelayInterval& arg2) {
 #endif
 const DelayInterval DELAY_ZERO(0, 0);
 const DelayInterval DELAY_SECOND(1, 0);
+const DelayInterval DELAY_MINUTE = 60*DELAY_SECOND;
+const DelayInterval DELAY_HOUR = 60*DELAY_MINUTE;
+const DelayInterval DELAY_DAY = 24*DELAY_HOUR;
 const DelayInterval ETERNITY(INT_MAX, MILLION-1);
 // used internally to make the implementation work
 
