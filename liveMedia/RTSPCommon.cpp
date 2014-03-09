@@ -124,7 +124,7 @@ Boolean parseRTSPRequestString(char const* reqStr,
       // The URL suffix comes from [k1+1,k]
       // Copy "resultURLSuffix":
       unsigned n = 0, k2 = k1+1;
-      if (i <= k) { // There's a slash after "host" or "host:port"
+      if (k2 <= k) {
         if (k - k1 + 1 > resultURLSuffixMaxSize) return False; // there's no room
         while (k2 <= k) resultURLSuffix[n++] = reqStr[k2++];
       }
@@ -132,10 +132,10 @@ Boolean parseRTSPRequestString(char const* reqStr,
 
       // The URL 'pre-suffix' comes from [i+1,k1-1]
       // Copy "resultURLPreSuffix":
-      n = 0; k2 = i + 1;
-      if (i <= k) { // There's a slash after "host" or "host:port"
+      n = 0; k2 = i+1;
+      if (k2+1 <= k1) {
         if (k1 - i > resultURLPreSuffixMaxSize) return False; // there's no room
-        while (k2 <= k1 - 1) resultURLPreSuffix[n++] = reqStr[k2++];
+        while (k2 <= k1-1) resultURLPreSuffix[n++] = reqStr[k2++];
       }
       resultURLPreSuffix[n] = '\0';
       decodeURL(resultURLPreSuffix);

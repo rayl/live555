@@ -503,7 +503,6 @@ void StreamState::endPlaying(Destinations* dests) {
   if (dests->isTCP) {
     if (fRTPSink != NULL) {
       fRTPSink->removeStreamSocket(dests->tcpSocketNum, dests->rtpChannelId);
-      RTPInterface::clearServerRequestAlternativeByteHandler(fRTPSink->envir(), dests->tcpSocketNum);
     }
     if (fRTCPInstance != NULL) {
       fRTCPInstance->removeStreamSocket(dests->tcpSocketNum, dests->rtcpChannelId);
