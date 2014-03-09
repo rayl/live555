@@ -21,8 +21,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #ifndef _MATROSKA_FILE_HH
 #define _MATROSKA_FILE_HH
 
-#ifndef _MEDIA_HH
-#include "Media.hh"
+#ifndef _RTP_SINK_HH
+#include "RTPSink.hh"
 #endif
 #ifndef _HASH_TABLE_HH
 #include "HashTable.hh"
@@ -55,6 +55,17 @@ public:
   unsigned chosenVideoTrackNumber() { return fChosenVideoTrackNumber; }
   unsigned chosenAudioTrackNumber() { return fChosenAudioTrackNumber; }
   unsigned chosenSubtitleTrackNumber() { return fChosenSubtitleTrackNumber; }
+
+  FramedSource*
+  createSourceForStreaming(FramedSource* baseSource, unsigned trackNumber,
+			   unsigned& estBitrate, unsigned& numFiltersInFrontOfTrack);
+    // Takes a data source (which must be a demultiplexed track from this file) and returns
+    // a (possibly modified) data source that can be used for streaming.
+
+  RTPSink* createRTPSinkForTrackNumber(unsigned trackNumber, Groupsock* rtpGroupsock,
+				       unsigned char rtpPayloadTypeIfDynamic);
+    // Creates a "RTPSink" object that would be appropriate for streaming the specified track,
+    // or NULL if no appropriate "RTPSink" exists
 
 private:
   MatroskaFile(UsageEnvironment& env, char const* fileName, onCreationFunc* onCreation, void* onCreationClientData,

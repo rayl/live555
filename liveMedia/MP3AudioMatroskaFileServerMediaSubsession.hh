@@ -33,12 +33,13 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class MP3AudioMatroskaFileServerMediaSubsession: public MP3AudioFileServerMediaSubsession {
 public:
   static MP3AudioMatroskaFileServerMediaSubsession*
-  createNew(MatroskaFileServerDemux& demux, unsigned trackNumber, Boolean generateADUs, Interleaving* interleaving);
+  createNew(MatroskaFileServerDemux& demux, MatroskaTrack* track,
+	    Boolean generateADUs = False, Interleaving* interleaving = NULL);
       // Note: "interleaving" is used only if "generateADUs" is True,
       // (and a value of NULL means 'no interleaving')
 
 private:
-  MP3AudioMatroskaFileServerMediaSubsession(MatroskaFileServerDemux& demux, unsigned trackNumber,
+  MP3AudioMatroskaFileServerMediaSubsession(MatroskaFileServerDemux& demux, MatroskaTrack* track,
 					    Boolean generateADUs, Interleaving* interleaving);
       // called only by createNew();
   virtual ~MP3AudioMatroskaFileServerMediaSubsession();

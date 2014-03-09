@@ -16,43 +16,50 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 // "liveMedia"
 // Copyright (c) 1996-2014 Live Networks, Inc.  All rights reserved.
 // A 'ServerMediaSubsession' object that creates new, unicast, "RTPSink"s
-// on demand, from a VP8 Video track within a Matroska file.
+// on demand, from a track within a Matroska file.
 // Implementation
 
-#include "VP8VideoMatroskaFileServerMediaSubsession.hh"
-#include "VP8VideoRTPSink.hh"
+#include "MatroskaFileServerMediaSubsession.hh"
 #include "MatroskaDemuxedTrack.hh"
+#include "FramedFilter.hh"
 
-VP8VideoMatroskaFileServerMediaSubsession* VP8VideoMatroskaFileServerMediaSubsession
-::createNew(MatroskaFileServerDemux& demux, unsigned trackNumber) {
-  return new VP8VideoMatroskaFileServerMediaSubsession(demux, trackNumber);
+MatroskaFileServerMediaSubsession* MatroskaFileServerMediaSubsession
+::createNew(MatroskaFileServerDemux& demux, MatroskaTrack* track) {
+  return new MatroskaFileServerMediaSubsession(demux, track);
 }
 
-VP8VideoMatroskaFileServerMediaSubsession
-::VP8VideoMatroskaFileServerMediaSubsession(MatroskaFileServerDemux& demux, unsigned trackNumber)
+MatroskaFileServerMediaSubsession
+::MatroskaFileServerMediaSubsession(MatroskaFileServerDemux& demux, MatroskaTrack* track)
   : FileServerMediaSubsession(demux.envir(), demux.fileName(), False),
-    fOurDemux(demux), fTrackNumber(trackNumber) {
+    fOurDemux(demux), fTrack(track), fNumFiltersInFrontOfTrack(0) {
 }
 
-VP8VideoMatroskaFileServerMediaSubsession
-::~VP8VideoMatroskaFileServerMediaSubsession() {
+MatroskaFileServerMediaSubsession::~MatroskaFileServerMediaSubsession() {
 }
 
-float VP8VideoMatroskaFileServerMediaSubsession::duration() const { return fOurDemux.fileDuration(); }
+float MatroskaFileServerMediaSubsession::duration() const { return fOurDemux.fileDuration(); }
 
-void VP8VideoMatroskaFileServerMediaSubsession
+void MatroskaFileServerMediaSubsession
 ::seekStreamSource(FramedSource* inputSource, double& seekNPT, double /*streamDuration*/, u_int64_t& /*numBytes*/) {
+  for (unsigned i = 0; i < fNumFiltersInFrontOfTrack; ++i) {
+    // "inputSource" is a filter.  Go back to *its* source:
+    inputSource = ((FramedFilter*)inputSource)->inputSource();
+  }
   ((MatroskaDemuxedTrack*)inputSource)->seekToTime(seekNPT);
 }
 
-FramedSource* VP8VideoMatroskaFileServerMediaSubsession
+FramedSource* MatroskaFileServerMediaSubsession
 ::createNewStreamSource(unsigned clientSessionId, unsigned& estBitrate) {
-  estBitrate = 500; // kbps, estimate
-
-  return fOurDemux.newDemuxedTrack(clientSessionId, fTrackNumber);
+  FramedSource* baseSource = fOurDemux.newDemuxedTrack(clientSessionId, fTrack->trackNumber);
+  if (baseSource == NULL) return NULL;
+  
+  return fOurDemux.ourMatroskaFile()
+    ->createSourceForStreaming(baseSource, fTrack->trackNumber,
+			       estBitrate, fNumFiltersInFrontOfTrack);
 }
 
-RTPSink* VP8VideoMatroskaFileServerMediaSubsession
+RTPSink* MatroskaFileServerMediaSubsession
 ::createNewRTPSink(Groupsock* rtpGroupsock, unsigned char rtpPayloadTypeIfDynamic, FramedSource* /*inputSource*/) {
-  return VP8VideoRTPSink::createNew(envir(), rtpGroupsock, rtpPayloadTypeIfDynamic);
+  return fOurDemux.ourMatroskaFile()
+    ->createRTPSinkForTrackNumber(fTrack->trackNumber, rtpGroupsock, rtpPayloadTypeIfDynamic);
 }

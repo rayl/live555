@@ -63,6 +63,7 @@ OnDemandServerMediaSubsession::sdpLines() {
     unsigned char rtpPayloadType = 96 + trackNumber()-1; // if dynamic
     RTPSink* dummyRTPSink
       = createNewRTPSink(&dummyGroupsock, rtpPayloadType, inputSource);
+    if (dummyRTPSink != NULL && dummyRTPSink->estimatedBitrate() > 0) estBitrate = dummyRTPSink->estimatedBitrate();
 
     setSDPLinesFromRTPSink(dummyRTPSink, inputSource, estBitrate);
     Medium::close(dummyRTPSink);
@@ -151,6 +152,7 @@ void OnDemandServerMediaSubsession
 
 	unsigned char rtpPayloadType = 96 + trackNumber()-1; // if dynamic
 	rtpSink = createNewRTPSink(rtpGroupsock, rtpPayloadType, mediaSource);
+	if (rtpSink != NULL && rtpSink->estimatedBitrate() > 0) streamBitrate = rtpSink->estimatedBitrate();
       }
 
       // Turn off the destinations for each groupsock.  They'll get set later

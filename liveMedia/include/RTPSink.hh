@@ -84,6 +84,7 @@ public:
   void removeStreamSocket(int sockNum, unsigned char streamChannelId) {
     fRTPInterface.removeStreamSocket(sockNum, streamChannelId);
   }
+  unsigned& estimatedBitrate() { return fEstimatedBitrate; } // kbps; usually 0 (i.e., unset)
 
 protected:
   RTPSink(UsageEnvironment& env,
@@ -124,6 +125,7 @@ private:
   char const* fRTPPayloadFormatName;
   unsigned fNumChannels;
   struct timeval fCreationTime;
+  unsigned fEstimatedBitrate; // set on creation if known; otherwise 0
 
   RTPTransmissionStatsDB* fTransmissionStatsDB;
 };

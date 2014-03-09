@@ -433,6 +433,25 @@ Boolean MatroskaFileParser::parseTrack() {
 #endif
 	  if (track != NULL) {
 	    delete[] track->codecID; track->codecID = codecID;
+
+	    // Also set the track's "mimeType" field, if we can deduce it from the "codecID":
+	    if (strncmp(codecID, "A_MPEG", 6) == 0) {
+	      track->mimeType = "audio/MPEG";
+	    } else if (strncmp(codecID, "A_AAC", 5) == 0) {
+	      track->mimeType = "audio/AAC";
+	    } else if (strncmp(codecID, "A_AC3", 5) == 0) {
+	      track->mimeType = "audio/AC3";
+	    } else if (strncmp(codecID, "A_VORBIS", 8) == 0) {
+	      track->mimeType = "audio/VORBIS";
+	    } else if (strcmp(codecID, "V_MPEG4/ISO/AVC") == 0) {
+	      track->mimeType = "video/H264";
+	    } else if (strcmp(codecID, "V_MPEGH/ISO/HEVC") == 0) {
+	      track->mimeType = "video/H265";
+	    } else if (strncmp(codecID, "V_VP8", 5) == 0) {
+	      track->mimeType = "video/VP8";
+	    } else if (strncmp(codecID, "S_TEXT", 6) == 0) {
+	      track->mimeType = "text/T140";
+	    }
 	  } else {
 	    delete[] codecID;
 	  }

@@ -52,7 +52,7 @@ RTPSink::RTPSink(UsageEnvironment& env,
     fRTPPayloadType(rtpPayloadType),
     fPacketCount(0), fOctetCount(0), fTotalOctetCount(0),
     fTimestampFrequency(rtpTimestampFrequency), fNextTimestampHasBeenPreset(False), fEnableRTCPReports(True),
-    fNumChannels(numChannels) {
+    fNumChannels(numChannels), fEstimatedBitrate(0) {
   fRTPPayloadFormatName
     = strDup(rtpPayloadFormatName == NULL ? "???" : rtpPayloadFormatName);
   gettimeofday(&fCreationTime, NULL);
