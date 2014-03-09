@@ -68,6 +68,7 @@ unsigned RTSPClient::sendPlayCommand(MediaSession& session, responseHandler* res
                                      double start, double end, float scale,
                                      Authenticator* authenticator) {
   if (authenticator != NULL) fCurrentAuthenticator = *authenticator;
+  sendDummyUDPPackets(session); // hack to improve NAT traversal
   return sendRequest(new RequestRecord(++fCSeq, "PLAY", responseHandler, &session, NULL, 0, start, end, scale));
 }
 
@@ -75,6 +76,7 @@ unsigned RTSPClient::sendPlayCommand(MediaSubsession& subsession, responseHandle
                                      double start, double end, float scale,
                                      Authenticator* authenticator) {
   if (authenticator != NULL) fCurrentAuthenticator = *authenticator;
+  sendDummyUDPPackets(subsession); // hack to improve NAT traversal
   return sendRequest(new RequestRecord(++fCSeq, "PLAY", responseHandler, NULL, &subsession, 0, start, end, scale));
 }
 
@@ -82,6 +84,7 @@ unsigned RTSPClient::sendPlayCommand(MediaSession& session, responseHandler* res
 				     char const* absStartTime, char const* absEndTime, float scale,
                                      Authenticator* authenticator) {
   if (authenticator != NULL) fCurrentAuthenticator = *authenticator;
+  sendDummyUDPPackets(session); // hack to improve NAT traversal
   return sendRequest(new RequestRecord(++fCSeq, responseHandler, absStartTime, absEndTime, scale, &session, NULL));
 }
 
@@ -89,6 +92,7 @@ unsigned RTSPClient::sendPlayCommand(MediaSubsession& subsession, responseHandle
 				     char const* absStartTime, char const* absEndTime, float scale,
                                      Authenticator* authenticator) {
   if (authenticator != NULL) fCurrentAuthenticator = *authenticator;
+  sendDummyUDPPackets(subsession); // hack to improve NAT traversal
   return sendRequest(new RequestRecord(++fCSeq, responseHandler, absStartTime, absEndTime, scale, NULL, &subsession));
 }
 
@@ -151,6 +155,29 @@ unsigned RTSPClient::sendGetParameterCommand(MediaSession& session, responseHand
   unsigned result = sendRequest(new RequestRecord(++fCSeq, "GET_PARAMETER", responseHandler, &session, NULL, False, 0.0, 0.0, 0.0, paramString));
   delete[] paramString;
   return result;
+}
+
+void RTSPClient::sendDummyUDPPackets(MediaSession& session, unsigned numDummyPackets) {
+  MediaSubsessionIterator iter(session);
+  MediaSubsession* subsession;
+
+  while ((subsession = iter.next()) != NULL) {
+    sendDummyUDPPackets(*subsession, numDummyPackets);
+  }
+}
+
+void RTSPClient::sendDummyUDPPackets(MediaSubsession& subsession, unsigned numDummyPackets) {
+  // Hack: To increase the likelihood of UDP packets from the server reaching us,
+  // if we're behind a NAT, send a few 'dummy' UDP packets to the server now.
+  // (We do this on both our RTP port and our RTCP port.)
+  Groupsock* gs1 = NULL; Groupsock* gs2 = NULL;
+  if (subsession.rtpSource() != NULL) gs1 = subsession.rtpSource()->RTPgs();
+  if (subsession.rtcpInstance() != NULL) gs2 = subsession.rtcpInstance()->RTCPgs();
+  u_int32_t const dummy = 0xFEEDFACE;
+  for (unsigned i = 0; i < numDummyPackets; ++i) {
+    if (gs1 != NULL) gs1->output(envir(), 255, (unsigned char*)&dummy, sizeof dummy);
+    if (gs2 != NULL) gs2->output(envir(), 255, (unsigned char*)&dummy, sizeof dummy);
+  }
 }
 
 Boolean RTSPClient::changeResponseHandler(unsigned cseq, responseHandler* newResponseHandler) { 
@@ -1079,18 +1106,6 @@ Boolean RTSPClient::handleSETUPResponse(MediaSubsession& subsession, char const*
       netAddressBits destAddress = subsession.connectionEndpointAddress();
       if (destAddress == 0) destAddress = fServerAddress;
       subsession.setDestinations(destAddress);
-
-      // Hack: To increase the likelihood of UDP packets from the server reaching us, if we're behind a NAT, send a few 'dummy'
-      // UDP packets to the server now.  (We do this on both our RTP port and our RTCP port.)
-      Groupsock* gs1 = NULL; Groupsock* gs2 = NULL;
-      if (subsession.rtpSource() != NULL) gs1 = subsession.rtpSource()->RTPgs();
-      if (subsession.rtcpInstance() != NULL) gs2 = subsession.rtcpInstance()->RTCPgs();
-      u_int32_t const dummy = 0xFEEDFACE;
-      unsigned const numDummyPackets = 2;
-      for (unsigned i = 0; i < numDummyPackets; ++i) {
-	if (gs1 != NULL) gs1->output(envir(), 255, (unsigned char*)&dummy, sizeof dummy);
-	if (gs2 != NULL) gs2->output(envir(), 255, (unsigned char*)&dummy, sizeof dummy);
-      }
     }
 
     success = True;

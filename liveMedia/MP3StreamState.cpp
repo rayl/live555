@@ -24,6 +24,9 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 
 #if defined(__WIN32__) || defined(_WIN32)
 #define snprintf _snprintf
+#if _MSC_VER >= 1400 // 1400 == vs2005
+#define fileno _fileno
+#endif
 #endif
 
 #define MILLION 1000000

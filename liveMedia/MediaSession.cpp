@@ -733,7 +733,7 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
 	  break;
 	} else {
 	  // We couldn't create the RTCP socket (perhaps that port number's already in use elsewhere?).
-	  delete fRTCPSocket;
+	  delete fRTCPSocket; fRTCPSocket = NULL;
 
 	  // Record the first socket in our table, and keep trying:
 	  unsigned key = (unsigned)fClientPortNum;
@@ -794,23 +794,19 @@ Boolean MediaSubsession::initiate(int useSpecialRTPoffset) {
     return True;
   } while (0);
 
-  delete fRTPSocket; fRTPSocket = NULL;
-  delete fRTCPSocket; fRTCPSocket = NULL;
-  Medium::close(fRTCPInstance); fRTCPInstance = NULL;
-  Medium::close(fReadSource); fReadSource = fRTPSource = NULL;
+  deInitiate();
   fClientPortNum = 0;
   return False;
 }
 
 void MediaSubsession::deInitiate() {
-  Medium::close(fRTCPInstance);
-  fRTCPInstance = NULL;
+  Medium::close(fRTCPInstance); fRTCPInstance = NULL;
 
   Medium::close(fReadSource); // this is assumed to also close fRTPSource
   fReadSource = NULL; fRTPSource = NULL;
 
-  delete fRTCPSocket; delete fRTPSocket;
-  fRTCPSocket = fRTPSocket = NULL;
+  delete fRTPSocket; fRTPSocket = NULL;
+  delete fRTCPSocket; fRTCPSocket = NULL;
 }
 
 Boolean MediaSubsession::setClientPortNum(unsigned short portNum) {
