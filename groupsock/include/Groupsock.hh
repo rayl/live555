@@ -56,7 +56,7 @@ private: // redefined virtual function
 
 private:
   Port fSourcePort;
-  u_int8_t fLastSentTTL;
+  unsigned fLastSentTTL;
 };
 
 class destRecord {

@@ -304,36 +304,40 @@ Boolean writeSocket(UsageEnvironment& env,
 		    int socket, struct in_addr address, Port port,
 		    u_int8_t ttlArg,
 		    unsigned char* buffer, unsigned bufferSize) {
-	do {
-		if (ttlArg != 0) {
-			// Before sending, set the socket's TTL:
+  // Before sending, set the socket's TTL:
 #if defined(__WIN32__) || defined(_WIN32)
 #define TTL_TYPE int
 #else
 #define TTL_TYPE u_int8_t
 #endif
-			TTL_TYPE ttl = (TTL_TYPE)ttlArg;
-			if (setsockopt(socket, IPPROTO_IP, IP_MULTICAST_TTL,
-				       (const char*)&ttl, sizeof ttl) < 0) {
-				socketErr(env, "setsockopt(IP_MULTICAST_TTL) error: ");
-				break;
-			}
-		}
+  TTL_TYPE ttl = (TTL_TYPE)ttlArg;
+  if (setsockopt(socket, IPPROTO_IP, IP_MULTICAST_TTL,
+		 (const char*)&ttl, sizeof ttl) < 0) {
+    socketErr(env, "setsockopt(IP_MULTICAST_TTL) error: ");
+    return False;
+  }
 
-		MAKE_SOCKADDR_IN(dest, address.s_addr, port.num());
-		int bytesSent = sendto(socket, (char*)buffer, bufferSize, 0,
-			               (struct sockaddr*)&dest, sizeof dest);
-		if (bytesSent != (int)bufferSize) {
-			char tmpBuf[100];
-			sprintf(tmpBuf, "writeSocket(%d), sendTo() error: wrote %d bytes instead of %u: ", socket, bytesSent, bufferSize);
-			socketErr(env, tmpBuf);
-			break;
-		}
+  return writeSocket(env, socket, address, port, buffer, bufferSize);
+}
 
-		return True;
-	} while (0);
+Boolean writeSocket(UsageEnvironment& env,
+		    int socket, struct in_addr address, Port port,
+		    unsigned char* buffer, unsigned bufferSize) {
+  do {
+    MAKE_SOCKADDR_IN(dest, address.s_addr, port.num());
+    int bytesSent = sendto(socket, (char*)buffer, bufferSize, 0,
+			   (struct sockaddr*)&dest, sizeof dest);
+    if (bytesSent != (int)bufferSize) {
+      char tmpBuf[100];
+      sprintf(tmpBuf, "writeSocket(%d), sendTo() error: wrote %d bytes instead of %u: ", socket, bytesSent, bufferSize);
+      socketErr(env, tmpBuf);
+      break;
+    }
+    
+    return True;
+  } while (0);
 
-	return False;
+  return False;
 }
 
 static unsigned getBufferSize(UsageEnvironment& env, int bufOptName,

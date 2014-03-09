@@ -28,9 +28,10 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 class TheoraVideoRTPSink: public VideoRTPSink {
 public:
   enum PixFmt {
-    YUV420,
-    YUV422,
-    YUV444,
+    YUV420 = 0,
+    Reserved = 1,
+    YUV422 = 2,
+    YUV444 = 3,
   };
   
   static TheoraVideoRTPSink*

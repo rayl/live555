@@ -38,6 +38,11 @@ Boolean writeSocket(UsageEnvironment& env,
 		    u_int8_t ttlArg,
 		    unsigned char* buffer, unsigned bufferSize);
 
+Boolean writeSocket(UsageEnvironment& env,
+		    int socket, struct in_addr address, Port port,
+		    unsigned char* buffer, unsigned bufferSize);
+    // An optimized version of "writeSocket" that omits the "setsockopt()" call to set the TTL.
+
 unsigned getSendBufferSize(UsageEnvironment& env, int socket);
 unsigned getReceiveBufferSize(UsageEnvironment& env, int socket);
 unsigned setSendBufferTo(UsageEnvironment& env,

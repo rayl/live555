@@ -351,6 +351,13 @@ RTSPServer::~RTSPServer() {
   envir().taskScheduler().turnOffBackgroundReadHandling(fHTTPServerSocket);
   ::closeSocket(fHTTPServerSocket);
   
+  // Close all client session objects:
+  RTSPServer::RTSPClientSession* clientSession;
+  while ((clientSession = (RTSPServer::RTSPClientSession*)fClientSessions->getFirst()) != NULL) {
+    delete clientSession;
+  }
+  delete fClientSessions;
+  
   // Close all client connection objects:
   RTSPServer::RTSPClientConnection* connection;
   while ((connection = (RTSPServer::RTSPClientConnection*)fClientConnections->getFirst()) != NULL) {
@@ -358,13 +365,6 @@ RTSPServer::~RTSPServer() {
   }
   delete fClientConnections;
   delete fClientConnectionsForHTTPTunneling; // all content was already removed as a result of the loop above
-  
-  // Close all client session objects:
-  RTSPServer::RTSPClientSession* clientSession;
-  while ((clientSession = (RTSPServer::RTSPClientSession*)fClientSessions->getFirst()) != NULL) {
-    delete clientSession;
-  }
-  delete fClientSessions;
   
   // Delete all server media sessions
   ServerMediaSession* serverMediaSession;
