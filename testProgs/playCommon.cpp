@@ -114,6 +114,9 @@ unsigned qosMeasurementIntervalMS = 0; // 0 means: Don't output QOS data
 Boolean createHandlerServerForREGISTERCommand = False;
 portNumBits handlerServerForREGISTERCommandPortNum = 0;
 HandlerServerForREGISTERCommand* handlerServerForREGISTERCommand;
+char* usernameForREGISTER = NULL;
+char* passwordForREGISTER = NULL;
+UserAuthenticationDatabase* authDBForREGISTER = NULL;
 
 struct timeval startTime;
 
@@ -125,6 +128,7 @@ void usage() {
 	   << (allowProxyServers ? " [<proxy-server> [<proxy-server-port>]]" : "")
        << "]" << (supportCodecSelection ? " [-A <audio-codec-rtp-payload-format-code>|-M <mime-subtype-name>]" : "")
        << " [-s <initial-seek-time>]|[-U <absolute-seek-time>] [-z <scale>]"
+       << " [-k <username-for-REGISTER> <password-for-REGISTER>]"
        << " [-w <width> -h <height>] [-f <frames-per-second>] [-y] [-H] [-Q [<measurement-interval>]] [-F <filename-prefix>] [-b <file-sink-buffer-size>] [-B <input-socket-buffer-size>] [-I <input-interface-ip-address>] [-m] [<url>|-R [<port-num>]] (or " << progName << " -o [-V] <url>)\n";
   shutdown();
 }
@@ -330,6 +334,17 @@ int main(int argc, char** argv) {
       break;
     }
 
+    case 'k': { // specify a username and password to be used to authentication an incoming "REGISTER" command (for use with -R)
+      if (argc < 4) usage(); // there's no argv[3] (for the "password")
+      usernameForREGISTER = argv[2];
+      passwordForREGISTER = argv[3];
+      argv+=2; argc-=2;
+
+      if (authDBForREGISTER == NULL) authDBForREGISTER = new UserAuthenticationDatabase;
+      authDBForREGISTER->addUserRecord(usernameForREGISTER, passwordForREGISTER);
+      break;
+    }
+
     case 'A': { // specify a desired audio RTP payload format
       unsigned formatArg;
       if (sscanf(argv[2], "%u", &formatArg) != 1
@@ -518,6 +533,10 @@ int main(int argc, char** argv) {
     *env << "The -s and -U options cannot both be used!\n";
     usage();
   }
+  if (authDBForREGISTER != NULL && !createHandlerServerForREGISTERCommand) {
+    *env << "If \"-k <username> <password>\" is used, then -R (or \"-R <port-num>\") must also be used!\n";
+    usage();
+  }
   if (tunnelOverHTTPPortNum > 0) {
     if (streamUsingTCP) {
       *env << "The -t and -T options cannot both be used!\n";
@@ -542,7 +561,8 @@ int main(int argc, char** argv) {
   if (createHandlerServerForREGISTERCommand) {
     handlerServerForREGISTERCommand
       = HandlerServerForREGISTERCommand::createNew(*env, continueAfterClientCreation0,
-						   handlerServerForREGISTERCommandPortNum, verbosityLevel, progName);
+						   handlerServerForREGISTERCommandPortNum, authDBForREGISTER,
+						   verbosityLevel, progName);
     if (handlerServerForREGISTERCommand == NULL) {
       *env << "Failed to create a server for handling incoming \"REGISTER\" commands: " << env->getResultMsg() << "\n";
     } else {
@@ -1249,6 +1269,7 @@ void continueAfterTEARDOWN(RTSPClient*, int /*resultCode*/, char* resultString) 
 
   // Finally, shut down our client:
   delete ourAuthenticator;
+  delete authDBForREGISTER;
   Medium::close(ourClient);
 
   // Adios...

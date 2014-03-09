@@ -220,7 +220,13 @@ protected:
 
   void reset();
   void setBaseURL(char const* url);
+  int grabSocket(); // allows a subclass to reuse our input socket, so that it won't get closed when we're deleted
   virtual unsigned sendRequest(RequestRecord* request);
+  virtual Boolean setRequestFields(RequestRecord* request,
+				   char*& cmdURL, Boolean& cmdURLWasAllocated,
+				   char const*& protocolStr,
+				   char*& extraHeaders, Boolean& extraHeadersWereAllocated);
+      // used to implement "sendRequest()"; subclasses may reimplement this (e.g., when implementing a new command name)
 
 private: // redefined virtual functions
   virtual Boolean isRTSPClient() const;
@@ -292,13 +298,13 @@ protected:
   int fVerbosityLevel;
   unsigned fCSeq; // sequence number, used in consecutive requests
   Authenticator fCurrentAuthenticator;
+  netAddressBits fServerAddress;
 
 private:
   portNumBits fTunnelOverHTTPPortNum;
   char* fUserAgentHeaderStr;
   unsigned fUserAgentHeaderStrLen;
   int fInputSocketNum, fOutputSocketNum;
-  netAddressBits fServerAddress;
   char* fBaseURL;
   unsigned char fTCPStreamIdCount; // used for (optional) RTP/TCP
   char* fLastSessionId;
@@ -324,13 +330,14 @@ typedef void onRTSPClientCreationFunc(RTSPClient* newRTSPClient, Boolean request
 class HandlerServerForREGISTERCommand: public RTSPServer {
 public:
   static HandlerServerForREGISTERCommand* createNew(UsageEnvironment& env, onRTSPClientCreationFunc* creationFunc,
-						    Port ourPort = 0, int verbosityLevel = 0, char const* applicationName = NULL);
+						    Port ourPort = 0, UserAuthenticationDatabase* authDatabase = NULL,
+						    int verbosityLevel = 0, char const* applicationName = NULL);
       // If ourPort.num() == 0, we'll choose the port number ourself.  (Use the following function to get it.)
   portNumBits serverPortNum() const { return ntohs(fRTSPServerPort.num()); }
 
 protected:
   HandlerServerForREGISTERCommand(UsageEnvironment& env, onRTSPClientCreationFunc* creationFunc, int ourSocket, Port ourPort,
-				  int verbosityLevel, char const* applicationName);
+				  UserAuthenticationDatabase* authDatabase, int verbosityLevel, char const* applicationName);
       // called only by createNew();
   virtual ~HandlerServerForREGISTERCommand();
 
