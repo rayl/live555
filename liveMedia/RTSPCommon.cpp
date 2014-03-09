@@ -222,13 +222,13 @@ Boolean parseRangeParam(char const* paramStr,
   absStartTime = absEndTime = NULL; // by default, unless "paramStr" is a "clock=..." string
   startTimeIsNow = False; // by default
   double start, end;
-  int numCharsMatched = 0;
+  int numCharsMatched1 = 0, numCharsMatched2 = 0, numCharsMatched3 = 0, numCharsMatched4 = 0;
   Locale l("C", Numeric);
   if (sscanf(paramStr, "npt = %lf - %lf", &start, &end) == 2) {
     rangeStart = start;
     rangeEnd = end;
-  } else if (sscanf(paramStr, "npt = %n%lf -", &numCharsMatched, &start) == 1) {
-    if (paramStr[numCharsMatched] == '-') {
+  } else if (sscanf(paramStr, "npt = %n%lf -", &numCharsMatched1, &start) == 1) {
+    if (paramStr[numCharsMatched1] == '-') {
       // special case for "npt = -<endtime>", which matches here:
       rangeStart = 0.0; startTimeIsNow = True;
       rangeEnd = -start;
@@ -239,13 +239,13 @@ Boolean parseRangeParam(char const* paramStr,
   } else if (sscanf(paramStr, "npt = now - %lf", &end) == 1) {
       rangeStart = 0.0; startTimeIsNow = True;
       rangeEnd = end;
-  } else if (strcmp(paramStr, "npt = now -") == 0) {
+  } else if (sscanf(paramStr, "npt = now -%n", &numCharsMatched2) == 0 && numCharsMatched2 > 0) {
     rangeStart = 0.0; startTimeIsNow = True;
     rangeEnd = 0.0;
-  } else if (sscanf(paramStr, "clock = %n", &numCharsMatched) == 0 && numCharsMatched > 0) {
+  } else if (sscanf(paramStr, "clock = %n", &numCharsMatched3) == 0 && numCharsMatched3 > 0) {
     rangeStart = rangeEnd = 0.0;
 
-    char const* utcTimes = &paramStr[numCharsMatched];
+    char const* utcTimes = &paramStr[numCharsMatched3];
     size_t len = strlen(utcTimes) + 1;
     char* as = new char[len];
     char* ae = new char[len];
@@ -260,7 +260,7 @@ Boolean parseRangeParam(char const* paramStr,
       delete[] as; delete[] ae;
       return False;
     }
-  } else if (sscanf(paramStr, "smtpe = %n", &numCharsMatched) == 0 && numCharsMatched > 0) {
+  } else if (sscanf(paramStr, "smtpe = %n", &numCharsMatched4) == 0 && numCharsMatched4 > 0) {
     // We accept "smtpe=" parameters, but currently do not interpret them.
   } else {
     return False; // The header is malformed
