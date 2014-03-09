@@ -62,9 +62,10 @@ Boolean MPEG2TransportStreamTrickModeFilter::seekTo(unsigned long tsPacketNumber
   return True;
 }
 
-#define isIFrameStart(type) ((type) == 0x81/*actually, a VSH*/ || (type) == 0x85/*actually, a SPS*//*for H.264*/)
-  // This relies upon I-frames always being preceded by a VSH+GOP (for MPEG-2 data) and by a SPS (for H.264 data)
-#define isNonIFrameStart(type) ((type) == 0x83 || (type) == 0x88/*for H.264*/)
+#define isIFrameStart(type) ((type) == 0x81/*actually, a VSH*/ || (type) == 0x85/*actually, a SPS, for H.264*/ || (type) == 0x8B/*actually, a VPS, for H.265*/)
+  // This relies upon I-frames always being preceded by a VSH+GOP (for MPEG-2 data),
+  // by a SPS (for H.264 data), or by a VPS (for H.265 data)
+#define isNonIFrameStart(type) ((type) == 0x83 || (type) == 0x88/*for H.264*/ || (type) == 0x8E/*for H.265*/)
 
 void MPEG2TransportStreamTrickModeFilter::doGetNextFrame() {
   //  fprintf(stderr, "#####DGNF1\n");

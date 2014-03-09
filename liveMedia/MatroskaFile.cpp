@@ -301,7 +301,8 @@ MatroskaTrack::MatroskaTrack()
     defaultDuration(0),
     name(NULL), language(NULL), codecID(NULL),
     samplingFrequency(0), numChannels(2), mimeType(""),
-    codecPrivateSize(0), codecPrivate(NULL), headerStrippedBytesSize(0), headerStrippedBytes(NULL),
+    codecPrivateSize(0), codecPrivate(NULL), codecPrivateUsesH264FormatForH265(False),
+    headerStrippedBytesSize(0), headerStrippedBytes(NULL),
     subframeSizeSize(0) {
 }
 

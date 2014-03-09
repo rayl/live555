@@ -116,6 +116,7 @@ public:
   char const* mimeType;
   unsigned codecPrivateSize;
   u_int8_t* codecPrivate;
+  Boolean codecPrivateUsesH264FormatForH265; // a hack specifically for H.265 video tracks
   unsigned headerStrippedBytesSize;
   u_int8_t* headerStrippedBytes;
   unsigned subframeSizeSize; // 0 means: frames do not have subframes (the default behavior)

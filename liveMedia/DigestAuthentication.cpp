@@ -125,7 +125,7 @@ char const* Authenticator::computeDigestResponse(char const* cmd,
 }
 
 void Authenticator::reclaimDigestResponse(char const* responseStr) const {
-  free((char*)responseStr); // NOT delete, because it was malloc-allocated
+  delete[](char*)responseStr;
 }
 
 void Authenticator::resetRealmAndNonce() {

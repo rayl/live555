@@ -54,6 +54,7 @@ public:
   char const* password() const { return fPassword; }
 
   char const* computeDigestResponse(char const* cmd, char const* url) const;
+      // The returned string from this function must later be freed by calling:
   void reclaimDigestResponse(char const* responseStr) const;
 
 private:

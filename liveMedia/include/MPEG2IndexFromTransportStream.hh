@@ -74,6 +74,7 @@ private:
 
 private:
   Boolean fIsH264; // True iff the video is H.264 (encapsulated in a Transport Stream)
+  Boolean fIsH265; // True iff the video is H.265 (encapsulated in a Transport Stream)
   unsigned long fInputTransportPacketCounter;
   unsigned fClosureNumber;
   u_int8_t fLastContinuityCounter;

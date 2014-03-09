@@ -49,9 +49,6 @@ void H264or5VideoStreamDiscreteFramer
   source->afterGettingFrame1(frameSize, numTruncatedBytes, presentationTime, durationInMicroseconds);
 }
 
-#define VPS_MAX_SIZE 1000 // larger than the largest possible VPS (Video Parameter Set) NAL unit
-#define SPS_MAX_SIZE 1000 // larger than the largest possible SPS (Sequence Parameter Set) NAL unit
-
 void H264or5VideoStreamDiscreteFramer
 ::afterGettingFrame1(unsigned frameSize, unsigned numTruncatedBytes,
                      struct timeval presentationTime,
@@ -76,34 +73,8 @@ void H264or5VideoStreamDiscreteFramer
     envir() << "H264or5VideoStreamDiscreteFramer error: MPEG 'start code' seen in the input\n";
   } else if (isVPS(nal_unit_type)) { // Video parameter set (VPS)
     saveCopyOfVPS(fTo, frameSize);
-
-    // We also make another copy - without 'emulation bytes', to extract parameters that we need:
-    u_int8_t vps[VPS_MAX_SIZE];
-    unsigned vpsSize
-      = removeH264or5EmulationBytes(vps, VPS_MAX_SIZE, fLastSeenVPS, fLastSeenVPSSize);
-
-    // Extract the first 12 'profile_tier_level' bytes:
-    if (vpsSize >= 6/*'profile_tier_level' offset*/+12/*num 'profile_tier_level' bytes*/) {
-      memmove(fProfileTierLevelHeaderBytes, &vps[6], 12);
-    }
   } else if (isSPS(nal_unit_type)) { // Sequence parameter set (SPS)
     saveCopyOfSPS(fTo, frameSize);
-
-    // We also make another copy - without 'emulation bytes', to extract parameters that we need:
-    u_int8_t sps[SPS_MAX_SIZE];
-    unsigned spsSize
-      = removeH264or5EmulationBytes(sps, SPS_MAX_SIZE, fLastSeenSPS, fLastSeenSPSSize);
-    if (fHNumber == 264) {
-      // Extract the first 3 bytes of the SPS (after the nal_unit_header byte) as profile_level_id
-      if (spsSize >= 1/*'profile_level_id' offset within SPS*/ + 3/*num bytes needed*/) {
-	fProfileLevelId = (sps[1]<<16) | (sps[2]<<8) | sps[3];
-      }
-    } else { // 265
-      // Extract the first 12 'profile_tier_level' bytes:
-      if (spsSize >= 3/*'profile_tier_level' offset*/+12/*num 'profile_tier_level' bytes*/) {
-	memmove(fProfileTierLevelHeaderBytes, &sps[3], 12);
-      }
-    }
   } else if (isPPS(nal_unit_type)) { // Picture parameter set (PPS)
     saveCopyOfPPS(fTo, frameSize);
   }

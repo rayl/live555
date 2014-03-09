@@ -28,8 +28,8 @@ H264VideoMatroskaFileServerMediaSubsession* H264VideoMatroskaFileServerMediaSubs
   return new H264VideoMatroskaFileServerMediaSubsession(demux, trackNumber);
 }
 
-#define checkPtr if (ptr >= limit) return;
-#define numBytesRemaining (unsigned)(limit - ptr)
+#define CHECK_PTR if (ptr >= limit) return
+#define NUM_BYTES_REMAINING (unsigned)(limit - ptr)
 
 H264VideoMatroskaFileServerMediaSubsession
 ::H264VideoMatroskaFileServerMediaSubsession(MatroskaFileServerDemux& demux, unsigned trackNumber)
@@ -43,48 +43,48 @@ H264VideoMatroskaFileServerMediaSubsession
 
   if (track->codecPrivateSize >= 6) {
     numSPSandPPSBytes = track->codecPrivateSize - 5;
-    track->codecPrivate[5] &=~ 0xE0; // mask out the top 3 (reserved) bits from the 'numSPSs' byte
     SPSandPPSBytes = &track->codecPrivate[5];
   } else {
     numSPSandPPSBytes = 0;
     SPSandPPSBytes = NULL;
   }
 
-  // Extract, from "SPSandPPSBytes", one SPS NAL unit, and one PPS NAL unit.  (I hope one is all we need of each.)
-  do {
-    if (numSPSandPPSBytes == 0 || SPSandPPSBytes == NULL) break; // sanity check
-    u_int8_t* ptr = SPSandPPSBytes;
-    u_int8_t* limit = &SPSandPPSBytes[numSPSandPPSBytes];
+  // Extract, from "SPSandPPSBytes", one SPS NAL unit, and one PPS NAL unit.
+  // (I hope one is all we need of each.)
+  if (numSPSandPPSBytes == 0 || SPSandPPSBytes == NULL) return; // sanity check
+  unsigned i;
+  u_int8_t* ptr = SPSandPPSBytes;
+  u_int8_t* limit = &SPSandPPSBytes[numSPSandPPSBytes];
 
-    unsigned numSPSs = *ptr++; checkPtr;
-    unsigned i;
-    for (i = 0; i < numSPSs; ++i) {
-      unsigned spsSize = (*ptr++)<<8; checkPtr;
-      spsSize |= *ptr++; checkPtr;
-
-      if (spsSize > numBytesRemaining) return;
-      if (i == 0) { // save the first one
-	fSPSSize = spsSize;
-	fSPS = new u_int8_t[spsSize];
-	memmove(fSPS, ptr, spsSize);
-      }
-      ptr += spsSize;
+  unsigned numSPSs = (*ptr++)&0x1F; CHECK_PTR;
+  for (i = 0; i < numSPSs; ++i) {
+    unsigned spsSize = (*ptr++)<<8; CHECK_PTR;
+    spsSize |= *ptr++; CHECK_PTR;
+    
+    if (spsSize > NUM_BYTES_REMAINING) return;
+    u_int8_t nal_unit_type = ptr[0]&0x1F;
+    if (fSPS == NULL && nal_unit_type == 7/*sanity check*/) { // save the first one
+      fSPSSize = spsSize;
+      fSPS = new u_int8_t[spsSize];
+      memmove(fSPS, ptr, spsSize);
     }
-
-    unsigned numPPSs = *ptr++; checkPtr;
-    for (i = 0; i < numPPSs; ++i) {
-      unsigned ppsSize = (*ptr++)<<8; checkPtr;
-      ppsSize |= *ptr++; checkPtr;
-
-      if (ppsSize > numBytesRemaining) return;
-      if (i == 0) { // save the first one
-	fPPSSize = ppsSize;
-	fPPS = new u_int8_t[ppsSize];
-	memmove(fPPS, ptr, ppsSize);
-      }
-      ptr += ppsSize;
+    ptr += spsSize;
+  }
+  
+  unsigned numPPSs = (*ptr++)&0x1F; CHECK_PTR;
+  for (i = 0; i < numPPSs; ++i) {
+    unsigned ppsSize = (*ptr++)<<8; CHECK_PTR;
+    ppsSize |= *ptr++; CHECK_PTR;
+    
+    if (ppsSize > NUM_BYTES_REMAINING) return;
+    u_int8_t nal_unit_type = ptr[0]&0x1F;
+    if (fPPS == NULL && nal_unit_type == 8/*sanity check*/) { // save the first one
+      fPPSSize = ppsSize;
+      fPPS = new u_int8_t[ppsSize];
+      memmove(fPPS, ptr, ppsSize);
     }
-  } while (0);
+    ptr += ppsSize;
+  }
 }
 
 H264VideoMatroskaFileServerMediaSubsession
