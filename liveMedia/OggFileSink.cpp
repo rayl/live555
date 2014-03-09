@@ -133,7 +133,10 @@ void OggFileSink::addData(unsigned char const* data, unsigned dataSize,
   for (unsigned i = 0; i < numPagesToWrite; ++i) {
     // First, fill in the changeable parts of our 'page header' array;
     u_int8_t header_type_flag = 0x0;
-    if (!fHaveWrittenFirstFrame && i == 0) header_type_flag |= 0x02; // 'bos'
+    if (!fHaveWrittenFirstFrame && i == 0) {
+      header_type_flag |= 0x02; // 'bos'
+      fHaveWrittenFirstFrame = True; // for the future
+    }
     if (i > 0) header_type_flag |= 0x01; // 'continuation'
     if (fHaveSeenEOF && i == numPagesToWrite-1) header_type_flag |= 0x04; // 'eos'
     fPageHeaderBytes[5] = header_type_flag;
@@ -207,42 +210,42 @@ void OggFileSink::afterGettingFrame(unsigned frameSize, unsigned numTruncatedByt
 
     // If we have a 'config string' representing 'packed configuration headers'
     // ("identification", "comment", "setup"), unpack them and prepend them to the file:
-    u_int8_t* identificationHdr; unsigned identificationHdrSize;
-    u_int8_t* commentHdr; unsigned commentHdrSize;
-    u_int8_t* setupHdr; unsigned setupHdrSize;
-    u_int32_t identField;
-    parseVorbisOrTheoraConfigStr(fConfigStr,
-				 identificationHdr, identificationHdrSize,
-				 commentHdr, commentHdrSize,
-				 setupHdr, setupHdrSize,
-				 identField);
-    if (identificationHdrSize >= 42
-	&& strncmp((const char*)&identificationHdr[1], "theora", 6) == 0) {
-      // Hack for Theora video: Parse the "identification" header to get the "KFGSHIFT" parameter:
-      fIsTheora = True;
-      u_int8_t const KFGSHIFT = ((identificationHdr[40]&3)<<3) | (identificationHdr[41]>>5);
-      fGranuleIncrementPerFrame = (u_int64_t)(1 << KFGSHIFT);
+    if (fConfigStr != NULL && fConfigStr[0] != '\0') {
+      u_int8_t* identificationHdr; unsigned identificationHdrSize;
+      u_int8_t* commentHdr; unsigned commentHdrSize;
+      u_int8_t* setupHdr; unsigned setupHdrSize;
+      u_int32_t identField;
+      parseVorbisOrTheoraConfigStr(fConfigStr,
+				   identificationHdr, identificationHdrSize,
+				   commentHdr, commentHdrSize,
+				   setupHdr, setupHdrSize,
+				   identField);
+      if (identificationHdrSize >= 42
+	  && strncmp((const char*)&identificationHdr[1], "theora", 6) == 0) {
+	// Hack for Theora video: Parse the "identification" hdr to get the "KFGSHIFT" parameter:
+	fIsTheora = True;
+	u_int8_t const KFGSHIFT = ((identificationHdr[40]&3)<<3) | (identificationHdr[41]>>5);
+	fGranuleIncrementPerFrame = (u_int64_t)(1 << KFGSHIFT);
+      }
+      OggFileSink::addData(identificationHdr, identificationHdrSize, presentationTime);
+      OggFileSink::addData(commentHdr, commentHdrSize, presentationTime);
+      
+      // Hack: Handle the "setup" header as if had arrived in the previous delivery, so it'll get
+      // written properly below:
+      if (setupHdrSize > fBufferSize) {
+	fAltFrameSize = fBufferSize;
+	fAltNumTruncatedBytes = setupHdrSize - fBufferSize;
+      } else {
+	fAltFrameSize = setupHdrSize;
+	fAltNumTruncatedBytes = 0;
+      }
+      memmove(fAltBuffer, setupHdr, fAltFrameSize);
+      fAltPresentationTime = presentationTime;
+      
+      delete[] identificationHdr;
+      delete[] commentHdr;
+      delete[] setupHdr;
     }
-    OggFileSink::addData(identificationHdr, identificationHdrSize, presentationTime);
-    fHaveWrittenFirstFrame = True; // for the future
-
-    OggFileSink::addData(commentHdr, commentHdrSize, presentationTime);
-
-    // Hack: Handle the "setup" header as if had arrived in the previous delivery, so it'll get
-    // written properly below:
-    if (setupHdrSize > fBufferSize) {
-      fAltFrameSize = fBufferSize;
-      fAltNumTruncatedBytes = setupHdrSize - fBufferSize;
-    } else {
-      fAltFrameSize = setupHdrSize;
-      fAltNumTruncatedBytes = 0;
-    }
-    memmove(fAltBuffer, setupHdr, fAltFrameSize);
-    fAltPresentationTime = presentationTime;
-
-    delete[] identificationHdr;
-    delete[] commentHdr;
-    delete[] setupHdr;
   }
 
   // Save this input frame for next time, and instead write the previous input frame now:

@@ -1286,7 +1286,7 @@ Boolean MediaSubsession::createSourceObjects(int useSpecialRTPoffset) {
 					  fRTPTimestampFrequency);
       } else if (strcmp(fCodecName, "H265") == 0) {
 	Boolean expectDONFields
-	  = strcmp(attrVal_str("tx-mode"), "sst") != 0
+	  = strcmp(attrVal_str("tx-mode"), "SST") != 0
 	  || attrVal_unsigned("sprop-depack-buf-nalus") > 0;
 	fReadSource = fRTPSource
 	  = H265VideoRTPSource::createNew(env(), fRTPSocket,

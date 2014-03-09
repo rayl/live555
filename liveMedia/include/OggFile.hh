@@ -99,12 +99,10 @@ public:
   unsigned samplingFrequency, numChannels; // for audio tracks
   unsigned estBitrate; // estimate, in kbps (for RTCP)
 
-  // Special headers for Vorbis audio and Theora video tracks:
-  struct _vtHdrs {
+  // Special headers for Vorbis audio, Theora video, and Opus audio tracks:
+  struct _vtoHdrs {
     u_int8_t* header[3]; // "identification", "comment", "setup"
     unsigned headerSize[3];
-
-    Boolean weNeed() const { return header[0] == NULL || header[1] == NULL || header[2] == NULL; }
 
     // Fields specific to Vorbis audio:
     unsigned blocksize[2]; // samples per frame (packet)
@@ -118,7 +116,14 @@ public:
     u_int8_t KFGSHIFT;
     unsigned uSecsPerFrame;
 
-  } vtHdrs;
+  } vtoHdrs;
+
+  Boolean weNeedHeaders() const {
+    return
+      vtoHdrs.header[0] == NULL ||
+      vtoHdrs.header[1] == NULL ||
+      (vtoHdrs.header[2] == NULL && strcmp(mimeType, "audio/OPUS") != 0);
+    }
 };
 
 class OggTrackTableIterator {

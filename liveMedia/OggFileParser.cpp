@@ -39,7 +39,7 @@ OggFileParser::OggFileParser(OggFile& ourFile, FramedSource* inputSource,
   : StreamParser(inputSource, onEndFunc, onEndClientData, continueParsing, this),
     fOurFile(ourFile), fInputSource(inputSource),
     fOnEndFunc(onEndFunc), fOnEndClientData(onEndClientData),
-    fOurDemux(ourDemux), fNumUnfulfilledVorbisOrTheoraTracks(0),
+    fOurDemux(ourDemux), fNumUnfulfilledTracks(0),
     fPacketSizeTable(NULL), fCurrentTrackNumber(0), fSavedPacket(NULL) {
   if (ourDemux == NULL) {
     // Initialization
@@ -106,11 +106,11 @@ Boolean OggFileParser::parseStartOfFile() {
   fprintf(stderr, "parsing start of file\n");
 #endif
   // Read and parse each 'page', until we see the first non-BOS page, or until we have
-  // collected all required headers for Vorbis or Theora track(s) (if any).
+  // collected all required headers for Vorbis, Theora, or Opus track(s) (if any).
   u_int8_t header_type_flag;
   do {
     header_type_flag = parseInitialPage();
-  } while ((header_type_flag&0x02) != 0 || needVorbisOrTheoraHeaders());
+  } while ((header_type_flag&0x02) != 0 || needHeaders());
   
 #ifdef DEBUG
   fprintf(stderr, "Finished parsing start of file\n");
@@ -131,19 +131,20 @@ u_int8_t OggFileParser::parseInitialPage() {
   // the track data type is one that we know how to stream:
   OggTrack* track;
   if ((header_type_flag&0x02) != 0) { // BOS
-    char* mimeType = NULL; // if unknown
+    char const* mimeType = NULL; // if unknown
     if (fPacketSizeTable != NULL && fPacketSizeTable->size[0] >= 8) { // sanity check
       char buf[8];
       testBytes((u_int8_t*)buf, 8);
 
       if (strncmp(&buf[1], "vorbis", 6) == 0) {
 	mimeType = "audio/VORBIS";
-	++fNumUnfulfilledVorbisOrTheoraTracks;
+	++fNumUnfulfilledTracks;
       } else if (strncmp(buf, "OpusHead", 8) == 0) {
 	mimeType = "audio/OPUS";
+	++fNumUnfulfilledTracks;
       } else if (strncmp(&buf[1], "theora", 6) == 0) {
 	mimeType = "video/THEORA";
-	++fNumUnfulfilledVorbisOrTheoraTracks;
+	++fNumUnfulfilledTracks;
       }
     }
 
@@ -163,12 +164,15 @@ u_int8_t OggFileParser::parseInitialPage() {
 	    track->mimeType == NULL ? "(unknown)" : track->mimeType);
 #endif
     if (track->mimeType != NULL &&
-	(strcmp(track->mimeType, "audio/VORBIS") == 0 || strcmp(track->mimeType, "video/THEORA") == 0)) {
-      // Special-case handling of Vorbis or Theora tracks:
+	(strcmp(track->mimeType, "audio/VORBIS") == 0 ||
+	 strcmp(track->mimeType, "video/THEORA") == 0 ||
+	 strcmp(track->mimeType, "audio/OPUS") == 0)) {
+      // Special-case handling of Vorbis, Theora, or Opus tracks:
       // Make a copy of each packet, until we get the three special headers that we need:
+      Boolean isVorbis = strcmp(track->mimeType, "audio/VORBIS") == 0;
       Boolean isTheora = strcmp(track->mimeType, "video/THEORA") == 0;
 
-      for (unsigned j = 0; j < fPacketSizeTable->numCompletedPackets && track->vtHdrs.weNeed(); ++j) {
+      for (unsigned j = 0; j < fPacketSizeTable->numCompletedPackets && track->weNeedHeaders(); ++j) {
 	unsigned const packetSize = fPacketSizeTable->size[j];
 	if (packetSize == 0) continue; // sanity check
 
@@ -176,16 +180,27 @@ u_int8_t OggFileParser::parseInitialPage() {
 	getBytes(fSavedPacket, packetSize);
 	fPacketSizeTable->totSizes -= packetSize;
 
-	// The first byte of the packet tells us whether its a header that we know about:
-	u_int8_t const firstByte = fSavedPacket[0];
-	Boolean headerIsKnown;
-	unsigned index;
-	if (isTheora) {
-	  headerIsKnown = firstByte == 0x80 || firstByte == 0x81 || firstByte == 0x82;
-	  index = firstByte &~0x80; // 0x80, 0x81, or 0x82 => 0, 1, or 2
-	} else { // Vorbis
+	// The start of the packet tells us whether its a header that we know about:
+	Boolean headerIsKnown = False;
+	unsigned index = 0;
+	if (isVorbis) {
+	  u_int8_t const firstByte = fSavedPacket[0];
+
 	  headerIsKnown = firstByte == 1 || firstByte == 3 || firstByte == 5;
 	  index = (firstByte-1)/2; // 1, 3, or 5 => 0, 1, or 2
+	} else if (isTheora) {
+	  u_int8_t const firstByte = fSavedPacket[0];
+
+	  headerIsKnown = firstByte == 0x80 || firstByte == 0x81 || firstByte == 0x82;
+	  index = firstByte &~0x80; // 0x80, 0x81, or 0x82 => 0, 1, or 2
+	} else { // Opus
+	  if (strncmp((char const*)fSavedPacket, "OpusHead", 8) == 0) {
+	    headerIsKnown = True;
+	    index = 0; // "identification" header
+	  } else if (strncmp((char const*)fSavedPacket, "OpusTags", 8) == 0) {
+	    headerIsKnown = True;
+	    index = 1; // "comment" header
+	  }
 	}
 	if (headerIsKnown) {
 #ifdef DEBUG
@@ -194,17 +209,17 @@ u_int8_t OggFileParser::parseInitialPage() {
 		  headerName[index]);
 #endif
 	  // This is a header, but first check it for validity:
-	  if (!validateVorbisOrTheoraHeader(track, fSavedPacket, packetSize)) continue;
+	  if (!validateHeader(track, fSavedPacket, packetSize)) continue;
 
 	  // Save this header (deleting any old header of the same type that we'd saved before)
-	  delete[] track->vtHdrs.header[index];
-	  track->vtHdrs.header[index] = fSavedPacket;
+	  delete[] track->vtoHdrs.header[index];
+	  track->vtoHdrs.header[index] = fSavedPacket;
 	  fSavedPacket = NULL;
-	  track->vtHdrs.headerSize[index] = packetSize;
+	  track->vtoHdrs.headerSize[index] = packetSize;
 
-	  if (!track->vtHdrs.weNeed()) {
-	    // We now have all of the needed Vorbis or Theora headers for this track:
-	    --fNumUnfulfilledVorbisOrTheoraTracks;
+	  if (!track->weNeedHeaders()) {
+	    // We now have all of the needed Vorbis, Theora, or Opus headers for this track:
+	    --fNumUnfulfilledTracks;
 	  }
 	  // Note: The above code won't work if a required header is fragmented over
 	  // more than one 'page'.  We assume that that won't ever happen...
@@ -580,14 +595,14 @@ static Boolean parseVorbisSetup_modes(LEBitVector& bv, OggTrack* track) {
   fprintf(stderr, "\tModes: vorbis_mode_count: %d (ilog(%d-1):%d)\n",
 	  vorbis_mode_count, vorbis_mode_count, ilog_vorbis_mode_count_minus_1);
 #endif
-  track->vtHdrs.vorbis_mode_count = vorbis_mode_count;
-  track->vtHdrs.ilog_vorbis_mode_count_minus_1 = ilog_vorbis_mode_count_minus_1;
-  track->vtHdrs.vorbis_mode_blockflag = new u_int8_t[vorbis_mode_count];
+  track->vtoHdrs.vorbis_mode_count = vorbis_mode_count;
+  track->vtoHdrs.ilog_vorbis_mode_count_minus_1 = ilog_vorbis_mode_count_minus_1;
+  track->vtoHdrs.vorbis_mode_blockflag = new u_int8_t[vorbis_mode_count];
 
   for (unsigned i = 0; i < vorbis_mode_count; ++i) {
-    track->vtHdrs.vorbis_mode_blockflag[i] = (u_int8_t)bv.getBits(1);
+    track->vtoHdrs.vorbis_mode_blockflag[i] = (u_int8_t)bv.getBits(1);
 #ifdef DEBUG_SETUP_HEADER
-    fprintf(stderr, "\t\tMode %d: vorbis_mode_blockflag: %d\n", i, track->vtHdrs.vorbis_mode_blockflag[i]);
+    fprintf(stderr, "\t\tMode %d: vorbis_mode_blockflag: %d\n", i, track->vtoHdrs.vorbis_mode_blockflag[i]);
 #endif
     bv.skipBits(16+16+8); // "vorbis_mode_windowtype", "vorbis_mode_transformtype", "vorbis_mode_mapping"
   }
@@ -622,15 +637,16 @@ static Boolean parseVorbisSetupHeader(OggTrack* track, u_int8_t const* p, unsign
 #define printComment(p, len) do { for (unsigned k = 0; k < len; ++k) { CHECK_PTR; fprintf(stderr, "%c", *p++); } } while (0)
 #endif
 
-static Boolean validateCommentHeader(u_int8_t const *p, unsigned headerSize) {
-  if (headerSize < 15) { // need 7 + 4(vendor_length) + 4(user_comment_list_length)
+static Boolean validateCommentHeader(u_int8_t const *p, unsigned headerSize,
+				     unsigned isOpus = 0) {
+  if (headerSize < 15+isOpus) { // need 7+isOpus + 4(vendor_length) + 4(user_comment_list_length)
     fprintf(stderr, "\"comment\" header is too short (%d bytes)\n", headerSize);
     return False;
   }
       
 #ifdef DEBUG
   u_int8_t const* pEnd = &p[headerSize];
-  p += 7;
+  p += 7+isOpus;
 
   u_int32_t vendor_length = (p[3]<<24)|(p[2]<<16)|(p[1]<<8)|p[0]; p += 4;
   fprintf(stderr, "\tvendor_string:");
@@ -655,41 +671,11 @@ static unsigned blocksizeFromExponent(unsigned exponent) {
   return result;
 }
 
-Boolean OggFileParser
-::validateVorbisOrTheoraHeader(OggTrack* track, u_int8_t const* p, unsigned headerSize) {
-  // Assert: headerSize >= 7 (because we've already checked "<packet_type>XXXXXX")
-  u_int8_t const firstByte = p[0]; 
+Boolean OggFileParser::validateHeader(OggTrack* track, u_int8_t const* p, unsigned headerSize) {
+  // Assert: headerSize >= 7 (because we've already checked "<packet_type>XXXXXX" or "OpusXXXX")
+  if (strcmp(track->mimeType, "audio/VORBIS") == 0) {
+    u_int8_t const firstByte = p[0]; 
 
-  if (strcmp(track->mimeType, "video/THEORA") == 0) {
-    if (firstByte == 0x80) { // "identification" header
-      if (headerSize < 42) {
-	fprintf(stderr, "Theora \"identification\" header is too short (%d bytes)\n", headerSize);
-	return False;
-      } else if ((p[41]&0x7) != 0) {
-	fprintf(stderr, "Theora \"identification\" header: 'res' bits are non-zero\n");
-	return False;
-      }
-
-      track->vtHdrs.KFGSHIFT = ((p[40]&3)<<3) | (p[41]>>5);
-      u_int32_t FRN = (p[22]<<24) | (p[23]<<16) | (p[24]<<8) | p[25]; // Frame rate numerator
-      u_int32_t FRD = (p[26]<<24) | (p[27]<<16) | (p[28]<<8) | p[29]; // Frame rate numerator
-#ifdef DEBUG
-      fprintf(stderr, "\tKFGSHIFT %d, Frame rate numerator %d, Frame rate denominator %d\n", track->vtHdrs.KFGSHIFT, FRN, FRD);
-#endif
-      if (FRN == 0 || FRD == 0) {
-	fprintf(stderr, "Theora \"identification\" header: Bad FRN and/or FRD values: %d, %d\n", FRN, FRD);
-	return False;
-      }
-      track->vtHdrs.uSecsPerFrame = (unsigned)((1000000.0*FRD)/FRN);
-#ifdef DEBUG
-      fprintf(stderr, "\t\t=> %u microseconds per frame\n", track->vtHdrs.uSecsPerFrame);
-#endif
-    } else if (firstByte == 0x81) { // "comment" header
-      if (!validateCommentHeader(p, headerSize)) return False;
-    } else if (firstByte == 0x82) { // "setup" header
-      // We don't care about the contents of the Theora "setup" header; just assume it's valid
-    }
-  } else { // Vorbis audio
     if (firstByte == 1) { // "identification" header
       if (headerSize < 30) {
 	fprintf(stderr, "Vorbis \"identification\" header is too short (%d bytes)\n", headerSize);
@@ -728,20 +714,20 @@ Boolean OggFileParser
       
       // Note the two 'block sizes' (samples per packet), and their durations in microseconds:
       u_int8_t blocksizeBits = *p++;
-      unsigned& blocksize_0 = track->vtHdrs.blocksize[0]; // alias
-      unsigned& blocksize_1 = track->vtHdrs.blocksize[1]; // alias
+      unsigned& blocksize_0 = track->vtoHdrs.blocksize[0]; // alias
+      unsigned& blocksize_1 = track->vtoHdrs.blocksize[1]; // alias
       blocksize_0 = blocksizeFromExponent(blocksizeBits&0x0F);
       blocksize_1 = blocksizeFromExponent(blocksizeBits>>4);
       
       double uSecsPerSample = 1000000.0/(track->samplingFrequency*2);
           // Why the "2"?  I don't know, but it seems to be necessary
-      track->vtHdrs.uSecsPerPacket[0] = (unsigned)(uSecsPerSample*blocksize_0);
-      track->vtHdrs.uSecsPerPacket[1] = (unsigned)(uSecsPerSample*blocksize_1);
+      track->vtoHdrs.uSecsPerPacket[0] = (unsigned)(uSecsPerSample*blocksize_0);
+      track->vtoHdrs.uSecsPerPacket[1] = (unsigned)(uSecsPerSample*blocksize_1);
 #ifdef DEBUG
       fprintf(stderr, "\t%u Hz, %u-channel, %u kbps (est), block sizes: %u,%u (%u,%u us)\n",
 	      track->samplingFrequency, track->numChannels, track->estBitrate,
 	      blocksize_0, blocksize_1,
-	      track->vtHdrs.uSecsPerPacket[0], track->vtHdrs.uSecsPerPacket[1]);
+	      track->vtoHdrs.uSecsPerPacket[0], track->vtoHdrs.uSecsPerPacket[1]);
 #endif
       // To be valid, "blocksize_0" must be <= "blocksize_1", and both must be in [64,8192]:
       if (!(blocksize_0 <= blocksize_1 && blocksize_0 >= 64 && blocksize_1 <= 8192)) {
@@ -760,6 +746,44 @@ Boolean OggFileParser
 	fprintf(stderr, "Failed to parse Vorbis \"setup\" header!\n");
 	return False;
       }
+    }
+  } else if (strcmp(track->mimeType, "video/THEORA") == 0) {
+    u_int8_t const firstByte = p[0]; 
+
+    if (firstByte == 0x80) { // "identification" header
+      if (headerSize < 42) {
+	fprintf(stderr, "Theora \"identification\" header is too short (%d bytes)\n", headerSize);
+	return False;
+      } else if ((p[41]&0x7) != 0) {
+	fprintf(stderr, "Theora \"identification\" header: 'res' bits are non-zero\n");
+	return False;
+      }
+
+      track->vtoHdrs.KFGSHIFT = ((p[40]&3)<<3) | (p[41]>>5);
+      u_int32_t FRN = (p[22]<<24) | (p[23]<<16) | (p[24]<<8) | p[25]; // Frame rate numerator
+      u_int32_t FRD = (p[26]<<24) | (p[27]<<16) | (p[28]<<8) | p[29]; // Frame rate numerator
+#ifdef DEBUG
+      fprintf(stderr, "\tKFGSHIFT %d, Frame rate numerator %d, Frame rate denominator %d\n", track->vtoHdrs.KFGSHIFT, FRN, FRD);
+#endif
+      if (FRN == 0 || FRD == 0) {
+	fprintf(stderr, "Theora \"identification\" header: Bad FRN and/or FRD values: %d, %d\n", FRN, FRD);
+	return False;
+      }
+      track->vtoHdrs.uSecsPerFrame = (unsigned)((1000000.0*FRD)/FRN);
+#ifdef DEBUG
+      fprintf(stderr, "\t\t=> %u microseconds per frame\n", track->vtoHdrs.uSecsPerFrame);
+#endif
+    } else if (firstByte == 0x81) { // "comment" header
+      if (!validateCommentHeader(p, headerSize)) return False;
+    } else if (firstByte == 0x82) { // "setup" header
+      // We don't care about the contents of the Theora "setup" header; just assume it's valid
+    }
+  } else { // Opus audio
+    if (strncmp((char const*)p, "OpusHead", 8) == 0) { // "identification" header
+      // Just check the size, and the 'major' number of the version byte:
+      if (headerSize < 19 || (p[8]&0xF0) != 0) return False;
+    } else { // comment header
+      if (!validateCommentHeader(p, headerSize, 1/*isOpus*/)) return False;
     }
   }
   
@@ -830,7 +854,8 @@ Boolean OggFileParser::deliverPacketWithinPage() {
   unsigned numBytesDelivered
     = packetSize < demuxedTrack->maxSize() ? packetSize : demuxedTrack->maxSize();
   getBytes(demuxedTrack->to(), numBytesDelivered);
-  u_int8_t firstByte = demuxedTrack->to()[0];
+  u_int8_t firstByte = numBytesDelivered > 0 ? demuxedTrack->to()[0] : 0x00;
+  u_int8_t secondByte = numBytesDelivered > 1 ? demuxedTrack->to()[1] : 0x00;
   demuxedTrack->to() += numBytesDelivered;
 
   if (demuxedTrack->fCurrentPageIsContinuation) { // the previous page's read was incomplete
@@ -846,29 +871,55 @@ Boolean OggFileParser::deliverPacketWithinPage() {
 
   // Figure out the duration and presentation time of this frame.
   unsigned durationInMicroseconds;
-  if ((firstByte&0x01) != 0) { // This is a header packet
-    durationInMicroseconds = 0;
-  } else { // This is a data packet.
-    OggTrack* track = fOurFile.lookup(demuxedTrack->fOurTrackNumber);
+  OggTrack* track = fOurFile.lookup(demuxedTrack->fOurTrackNumber);
 
-    if (strcmp(track->mimeType, "video/THEORA") == 0) {
-      // Special case for Theora video: 
-      durationInMicroseconds = track->vtHdrs.uSecsPerFrame;
-    } else {
+  if (strcmp(track->mimeType, "audio/VORBIS") == 0) {
+    if ((firstByte&0x01) != 0) { // This is a header packet
+      durationInMicroseconds = 0;
+    } else { // This is a data packet.
       // Parse the first byte to figure out its duration.
-      // Extract the next "track->vtHdrs.ilog_vorbis_mode_count_minus_1" bits of the first byte:
-      u_int8_t const mask = 0xFE<<(track->vtHdrs.ilog_vorbis_mode_count_minus_1);
+      // Extract the next "track->vtoHdrs.ilog_vorbis_mode_count_minus_1" bits of the first byte:
+      u_int8_t const mask = 0xFE<<(track->vtoHdrs.ilog_vorbis_mode_count_minus_1);
       u_int8_t const modeNumber = (firstByte&~mask)>>1;
-      if (modeNumber >= track->vtHdrs.vorbis_mode_count) {
+      if (modeNumber >= track->vtoHdrs.vorbis_mode_count) {
 	fprintf(stderr, "Error: Bad mode number %d (>= vorbis_mode_count %d) in Vorbis packet!\n",
-		modeNumber, track->vtHdrs.vorbis_mode_count);
+		modeNumber, track->vtoHdrs.vorbis_mode_count);
 	durationInMicroseconds = 0;
       } else {
-	unsigned blockNumber = track->vtHdrs.vorbis_mode_blockflag[modeNumber];
-	durationInMicroseconds = track->vtHdrs.uSecsPerPacket[blockNumber];
+	unsigned blockNumber = track->vtoHdrs.vorbis_mode_blockflag[modeNumber];
+	durationInMicroseconds = track->vtoHdrs.uSecsPerPacket[blockNumber];
       }
     }
+  } else if (strcmp(track->mimeType, "video/THEORA") == 0) {
+    if ((firstByte&0x80) != 0) { // This is a header packet
+      durationInMicroseconds = 0;
+    } else { // This is a data packet.
+      durationInMicroseconds = track->vtoHdrs.uSecsPerFrame;
+    }
+  } else { // "audio/OPUS"
+    if (firstByte == 0x4F/*'O'*/ && secondByte == 0x70/*'p*/) { // This is a header packet
+      durationInMicroseconds = 0;
+    } else { // This is a data packet.
+      // Parse the first byte to figure out the duration of each frame, and then (if necessary)
+      // parse the second byte to figure out how many frames are in this packet:
+      u_int8_t config = firstByte >> 3;
+      u_int8_t c = firstByte & 0x03;
+      unsigned const configDuration[32] = { // in microseconds
+	10000, 20000, 40000, 60000, // config 0..3
+	10000, 20000, 40000, 60000, // config 4..7
+	10000, 20000, 40000, 60000, // config 8..11
+	10000, 20000, // config 12..13
+	10000, 20000, // config 14..15
+	2500, 5000, 10000, 20000, // config 16..19
+	2500, 5000, 10000, 20000, // config 20..23
+	2500, 5000, 10000, 20000, // config 24..27
+	2500, 5000, 10000, 20000  // config 28..31
+      };
+      unsigned const numFramesInPacket = c == 0 ? 1 : c == 3 ? (secondByte&0x3F) : 2;
+      durationInMicroseconds = numFramesInPacket*configDuration[config];
+    }
   }
+
   if (demuxedTrack->nextPresentationTime().tv_sec == 0 && demuxedTrack->nextPresentationTime().tv_usec == 0) {
     // This is the first delivery.  Initialize "demuxedTrack->nextPresentationTime()":
     gettimeofday(&demuxedTrack->nextPresentationTime(), NULL);
@@ -942,8 +993,11 @@ void OggFileParser::parseStartOfPage(u_int8_t& header_type_flag,
   fprintf(stderr, "\tgranule_position 0x%08x%08x, bitstream_serial_number 0x%08x, page_sequence_number 0x%08x, CRC_checksum 0x%08x, number_page_segments %d\n", granule_position2, granule_position1, bitstream_serial_number, page_sequence_number, CRC_checksum, number_page_segments);
 #else
   // Dummy statements to prevent 'unused variable' compiler warnings:
-  granule_position1 = granule_position1; granule_position2 = granule_position2;
-  page_sequence_number = page_sequence_number; CRC_checksum = CRC_checksum;
+#define DUMMY_STATEMENT(x) do {x = x;} while (0)
+  DUMMY_STATEMENT(granule_position1);
+  DUMMY_STATEMENT(granule_position2);
+  DUMMY_STATEMENT(page_sequence_number);
+  DUMMY_STATEMENT(CRC_checksum);
 #endif  
   
   // Look at the "segment_table" to count the sizes of the packets in this page:

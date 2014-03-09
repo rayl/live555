@@ -374,6 +374,33 @@ int main(int argc, char** argv) {
     announceStream(rtspServer, sms, streamName, inputFileName);
   }
 
+  // An Opus ('.opus') audio file:
+  // (Note: ".opus' files are special types of Ogg files, so we use the same code as the Ogg ('.ogg') file code above.)
+  {
+    char const* streamName = "opusFileTest";
+    char const* inputFileName = "test.opus";
+    ServerMediaSession* sms
+      = ServerMediaSession::createNew(*env, streamName, streamName,
+				      descriptionString);
+
+    newDemuxWatchVariable = 0;
+    OggFileServerDemux::createNew(*env, inputFileName, onOggDemuxCreation, NULL);
+    env->taskScheduler().doEventLoop(&newDemuxWatchVariable);
+
+    Boolean sessionHasTracks = False;
+    ServerMediaSubsession* smss;
+    while ((smss = oggDemux->newServerMediaSubsession()) != NULL) {
+      sms->addSubsession(smss);
+      sessionHasTracks = True;
+    }
+    if (sessionHasTracks) {
+      rtspServer->addServerMediaSession(sms);
+    }
+    // otherwise, because the stream has no tracks, we don't add a ServerMediaSession to the server.
+
+    announceStream(rtspServer, sms, streamName, inputFileName);
+  }
+
   // A MPEG-2 Transport Stream, coming from a live UDP (raw-UDP or RTP/UDP) source:
   {
     char const* streamName = "mpeg2TransportStreamFromUDPSourceTest";
