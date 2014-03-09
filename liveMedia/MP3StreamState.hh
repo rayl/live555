@@ -53,9 +53,6 @@ public:
 
   void getAttributes(char* buffer, unsigned bufferSize) const;
 
-  void writeGetCmd(char const* hostName, unsigned short portNum,
-		   char const* fileName);
-
   float filePlayTime() const; // in seconds
   unsigned fileSize() const { return fFileSize; }
   void setPresentationTimeScale(unsigned scale) { fPresentationTimeScale = scale; }

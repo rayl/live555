@@ -663,7 +663,8 @@ Boolean RTSPClient::setRequestFields(RequestRecord* request,
     delete[] transportStr; delete[] sessionStr;
   } else if (strcmp(request->commandName(), "GET") == 0 || strcmp(request->commandName(), "POST") == 0) {
     // We will be sending a HTTP (not a RTSP) request.
-    // Begin by re-parsing our RTSP URL, just to get the stream name, which we'll use as our 'cmdURL' in the subsequent request:
+    // Begin by re-parsing our RTSP URL, to get the stream name (which we'll use as our 'cmdURL'
+    // in the subsequent request), and the server address (which we'll use in a "Host:" header):
     char* username;
     char* password;
     NetAddress destAddress;
@@ -672,6 +673,8 @@ Boolean RTSPClient::setRequestFields(RequestRecord* request,
     if (cmdURL[0] == '\0') cmdURL = (char*)"/";
     delete[] username;
     delete[] password;
+    netAddressBits serverAddress = *(netAddressBits*)(destAddress.data());
+    AddressString serverAddressString(serverAddress);
     
     protocolStr = "HTTP/1.1";
     
@@ -688,18 +691,22 @@ Boolean RTSPClient::setRequestFields(RequestRecord* request,
       fSessionCookie[23] = '\0';
       
       char const* const extraHeadersFmt =
+	"Host: %s\r\n"
 	"x-sessioncookie: %s\r\n"
 	"Accept: application/x-rtsp-tunnelled\r\n"
 	"Pragma: no-cache\r\n"
 	"Cache-Control: no-cache\r\n";
       unsigned extraHeadersSize = strlen(extraHeadersFmt)
+	+ strlen(serverAddressString.val())
 	+ strlen(fSessionCookie);
       extraHeaders = new char[extraHeadersSize];
       extraHeadersWereAllocated = True;
       sprintf(extraHeaders, extraHeadersFmt,
+	      serverAddressString.val(),
 	      fSessionCookie);
     } else { // "POST"
       char const* const extraHeadersFmt =
+	"Host: %s\r\n"
 	"x-sessioncookie: %s\r\n"
 	"Content-Type: application/x-rtsp-tunnelled\r\n"
 	"Pragma: no-cache\r\n"
@@ -707,10 +714,12 @@ Boolean RTSPClient::setRequestFields(RequestRecord* request,
 	"Content-Length: 32767\r\n"
 	"Expires: Sun, 9 Jan 1972 00:00:00 GMT\r\n";
       unsigned extraHeadersSize = strlen(extraHeadersFmt)
+	+ strlen(serverAddressString.val())
 	+ strlen(fSessionCookie);
       extraHeaders = new char[extraHeadersSize];
       extraHeadersWereAllocated = True;
       sprintf(extraHeaders, extraHeadersFmt,
+	      serverAddressString.val(),
 	      fSessionCookie);
     }
   } else { // "PLAY", "PAUSE", "TEARDOWN", "RECORD", "SET_PARAMETER", "GET_PARAMETER"

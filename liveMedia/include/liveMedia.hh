@@ -38,6 +38,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "DVVideoRTPSink.hh"
 #include "DVVideoStreamFramer.hh"
 #include "H264VideoStreamDiscreteFramer.hh"
+#include "H265VideoStreamDiscreteFramer.hh"
 #include "JPEGVideoRTPSink.hh"
 #include "SimpleRTPSink.hh"
 #include "uLawAudioFilter.hh"

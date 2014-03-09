@@ -15,38 +15,40 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 **********/
 // "liveMedia"
 // Copyright (c) 1996-2014 Live Networks, Inc.  All rights reserved.
-// A filter that breaks up a H.264 Video Elementary Stream into NAL units.
+// A filter that breaks up a H.265 Video Elementary Stream into NAL units.
 // Implementation
 
-#include "H264VideoStreamFramer.hh"
+#include "H265VideoStreamFramer.hh"
 #include "H264VideoRTPSource.hh" // for "parseSPropParameterSets()"
 
-H264VideoStreamFramer* H264VideoStreamFramer
+H265VideoStreamFramer* H265VideoStreamFramer
 ::createNew(UsageEnvironment& env, FramedSource* inputSource, Boolean includeStartCodeInOutput) {
-  return new H264VideoStreamFramer(env, inputSource, True, includeStartCodeInOutput);
+  return new H265VideoStreamFramer(env, inputSource, True, includeStartCodeInOutput);
 }
 
-H264VideoStreamFramer
-::H264VideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource, Boolean createParser, Boolean includeStartCodeInOutput)
-  : H264or5VideoStreamFramer(264, env, inputSource, createParser, includeStartCodeInOutput) {
+H265VideoStreamFramer
+::H265VideoStreamFramer(UsageEnvironment& env, FramedSource* inputSource, Boolean createParser, Boolean includeStartCodeInOutput)
+  : H264or5VideoStreamFramer(265, env, inputSource, createParser, includeStartCodeInOutput) {
 }
 
-H264VideoStreamFramer::~H264VideoStreamFramer() {
+H265VideoStreamFramer::~H265VideoStreamFramer() {
 }
 
-Boolean H264VideoStreamFramer::isH264VideoStreamFramer() const {
+Boolean H265VideoStreamFramer::isH265VideoStreamFramer() const {
   return True;
 }
 
-void H264VideoStreamFramer::setSPSandPPS(char const* sPropParameterSetsStr) {
+void H265VideoStreamFramer::setVPSandSPSandPPS(char const* sPropParameterSetsStr) {
   unsigned numSPropRecords;
   SPropRecord* sPropRecords = parseSPropParameterSets(sPropParameterSetsStr, numSPropRecords);
   for (unsigned i = 0; i < numSPropRecords; ++i) {
     if (sPropRecords[i].sPropLength == 0) continue; // bad data
-    u_int8_t nal_unit_type = (sPropRecords[i].sPropBytes[0])&0x1F;
-    if (nal_unit_type == 7/*SPS*/) {
+    u_int8_t nal_unit_type = ((sPropRecords[i].sPropBytes[0])&0x7E)>>1;
+    if (nal_unit_type == 32/*VPS*/) {
+      saveCopyOfVPS(sPropRecords[i].sPropBytes, sPropRecords[i].sPropLength);
+    } else if (nal_unit_type == 33/*SPS*/) {
       saveCopyOfSPS(sPropRecords[i].sPropBytes, sPropRecords[i].sPropLength);
-    } else if (nal_unit_type == 8/*PPS*/) {
+    } else if (nal_unit_type == 34/*PPS*/) {
       saveCopyOfPPS(sPropRecords[i].sPropBytes, sPropRecords[i].sPropLength);
     }
   }

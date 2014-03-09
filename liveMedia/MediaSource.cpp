@@ -52,6 +52,9 @@ Boolean MediaSource::isMPEG4VideoStreamFramer() const {
 Boolean MediaSource::isH264VideoStreamFramer() const {
   return False; // default implementation
 }
+Boolean MediaSource::isH265VideoStreamFramer() const {
+  return False; // default implementation
+}
 Boolean MediaSource::isDVVideoStreamFramer() const {
   return False; // default implementation
 }

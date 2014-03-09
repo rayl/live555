@@ -136,7 +136,7 @@ unsigned BitVector::get_expGolomb() {
     codeStart *= 2;
   }
 
-  return codeStart -1 + getBits(numLeadingZeroBits);
+  return codeStart - 1 + getBits(numLeadingZeroBits);
 }
 
 

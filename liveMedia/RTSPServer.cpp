@@ -857,7 +857,7 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
   
   do {
     RTSPServer::RTSPClientSession* clientSession = NULL;
-    
+
     if (newBytesRead < 0 || (unsigned)newBytesRead >= fRequestBufferBytesLeft) {
       // Either the client socket has died, or the request was too big for us.
       // Terminate this connection:
@@ -960,16 +960,18 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
       // If there was a "Content-Length:" header, then make sure we've received all of the data that it specified:
       if (ptr + newBytesRead < tmpPtr + 2 + contentLength) break; // we still need more data; subsequent reads will give it to us 
       
+      // If the request included a "Session:" id, and it refers to a client session that's
+      // current ongoing, then use this command to indicate 'liveness' on that client session:
+      Boolean const requestIncludedSessionId = sessionIdStr[0] != '\0';
+      if (requestIncludedSessionId) {
+	clientSession = (RTSPServer::RTSPClientSession*)(fOurServer.fClientSessions->Lookup(sessionIdStr));
+	if (clientSession != NULL) clientSession->noteLiveness();
+      }
+    
       // We now have a complete RTSP request.
-      // Handle the specified command (beginning by checking those that don't require session ids):
+      // Handle the specified command (beginning with commands that are session-independent):
       fCurrentCSeq = cseq;
       if (strcmp(cmdName, "OPTIONS") == 0) {
-	// If the request included a "Session:" id, and it refers to a client session that's current ongoing, then use this
-	// command to indicate 'liveness' on that client session:
-	if (sessionIdStr[0] != '\0') {
-	  clientSession = (RTSPServer::RTSPClientSession*)(fOurServer.fClientSessions->Lookup(sessionIdStr));
-	  if (clientSession != NULL) clientSession->noteLiveness();
-	}
 	handleCmd_OPTIONS();
       } else if (urlPreSuffix[0] == '\0' && urlSuffix[0] == '*' && urlSuffix[1] == '\0') {
 	// The special "*" URL means: an operation on the entire server.  This works only for GET_PARAMETER and SET_PARAMETER:
@@ -983,10 +985,11 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
       } else if (strcmp(cmdName, "DESCRIBE") == 0) {
 	handleCmd_DESCRIBE(urlPreSuffix, urlSuffix, (char const*)fRequestBuffer);
       } else if (strcmp(cmdName, "SETUP") == 0) {
-	if (sessionIdStr[0] == '\0') {
-	  // No session id was present in the request.  So create a new "RTSPClientSession" object for this request.
-	  // Choose a random (unused) 32-bit integer for the session id (it will be encoded as a 8-digit hex number).
-	  // (We avoid choosing session id 0, because that has a special use (by "OnDemandServerMediaSubsession").)
+	if (!requestIncludedSessionId) {
+	  // No session id was present in the request.  So create a new "RTSPClientSession" object
+	  // for this request.  Choose a random (unused) 32-bit integer for the session id
+	  // (it will be encoded as a 8-digit hex number).  (We avoid choosing session id 0,
+	  // because that has a special use (by "OnDemandServerMediaSubsession").)
 	  u_int32_t sessionId;
 	  do {
 	    sessionId = (u_int32_t)our_random32();
@@ -994,30 +997,25 @@ void RTSPServer::RTSPClientConnection::handleRequestBytes(int newBytesRead) {
 	  } while (sessionId == 0 || fOurServer.fClientSessions->Lookup(sessionIdStr) != NULL);
 	  clientSession = fOurServer.createNewClientSession(sessionId);
 	  fOurServer.fClientSessions->Add(sessionIdStr, clientSession);
-	} else {
-	  // The request included a session id.  Make sure it's one that we have already set up:
-	  clientSession = (RTSPServer::RTSPClientSession*)(fOurServer.fClientSessions->Lookup(sessionIdStr));
-	  
-	  if (clientSession == NULL) {
-	    handleCmd_sessionNotFound();
-	  }
 	}
-	if (clientSession != NULL) clientSession->handleCmd_SETUP(this, urlPreSuffix, urlSuffix, (char const*)fRequestBuffer);
+	if (clientSession != NULL) {
+	  clientSession->handleCmd_SETUP(this, urlPreSuffix, urlSuffix, (char const*)fRequestBuffer);
+	} else {
+	    handleCmd_sessionNotFound();
+	}
       } else if (strcmp(cmdName, "TEARDOWN") == 0
 		 || strcmp(cmdName, "PLAY") == 0
 		 || strcmp(cmdName, "PAUSE") == 0
 		 || strcmp(cmdName, "GET_PARAMETER") == 0
 		 || strcmp(cmdName, "SET_PARAMETER") == 0) {
-	RTSPServer::RTSPClientSession* clientSession
-	  = sessionIdStr[0] == '\0' ? NULL : (RTSPServer::RTSPClientSession*)(fOurServer.fClientSessions->Lookup(sessionIdStr));
-	if (clientSession == NULL) {
-	  handleCmd_sessionNotFound();
-	} else {
+	if (clientSession != NULL) {
 	  clientSession->handleCmd_withinSession(this, cmdName, urlPreSuffix, urlSuffix, (char const*)fRequestBuffer);
+	} else {
+	  handleCmd_sessionNotFound();
 	}
       } else if (strcmp(cmdName, "REGISTER") == 0) {
-	// Because - unlike other commands - an implementation of this command needs the entire URL, we re-parse the
-	// command to get it:
+	// Because - unlike other commands - an implementation of this command needs
+	// the entire URL, we re-parse the command to get it:
 	char* url = strDupSize((char*)fRequestBuffer);
 	if (sscanf((char*)fRequestBuffer, "%*s %s", url) == 1) {
 	  // Check for special command-specific parameters in a "Transport:" header:
@@ -1484,7 +1482,6 @@ void RTSPServer::RTSPClientSession
   char const* trackId = urlSuffix; // in the normal case
   char* concatenatedStreamName = NULL; // in the normal case
   
-  noteLiveness();
   do {
     // First, make sure the specified stream name exists:
     ServerMediaSession* sms = fOurServer.lookupServerMediaSession(streamName);
@@ -1745,7 +1742,6 @@ void RTSPServer::RTSPClientSession
   // Begin by figuring out which of these it is:
   ServerMediaSubsession* subsession;
   
-  noteLiveness();
   if (fOurServerMediaSession == NULL) { // There wasn't a previous SETUP!
     ourClientConnection->handleCmd_notSupported();
     return;

@@ -189,30 +189,6 @@ void MP3StreamState::getAttributes(char* buffer, unsigned bufferSize) const {
 #endif
 }
 
-void MP3StreamState::writeGetCmd(char const* hostName,
-				 unsigned short portNum,
-				 char const* fileName) {
-  char const* const getCmdFmt = "GET %s HTTP/1.1\r\nHost: %s:%d\r\n\r\n";
-
-  if (fFidIsReallyASocket) {
-    intptr_t fid_long = (intptr_t)fFid;
-    int sock = (int)fid_long;
-    char writeBuf[100];
-#if defined(IRIX) || defined(ALPHA) || defined(_QNX4) || defined(IMN_PIM) || defined(CRIS)
-    /* snprintf() isn't defined, so just use sprintf() */
-    /* This is a security risk if filename can come from an external user */
-    sprintf(writeBuf, getCmdFmt, fileName, hostName, portNum);
-#else
-    snprintf(writeBuf, sizeof writeBuf, getCmdFmt,
-	     fileName, hostName, portNum);
-#endif
-    send(sock, writeBuf, strlen(writeBuf), 0);
-  } else {
-    fprintf(fFid, getCmdFmt, fileName, hostName, portNum);
-    fflush(fFid);
-  }
-}
-
 // This is crufty old code that needs to be cleaned up #####
 #define HDRCMPMASK 0xfffffd00
 
