@@ -100,7 +100,7 @@ void MatroskaFileParser::continueParsing() {
     }
   }
 
-  // We successfully parsed the file's 'Track' headers.  Call our 'done' function now:
+  // We successfully parsed the file.  Call our 'done' function now:
   if (fOnEndFunc != NULL) (*fOnEndFunc)(fOnEndClientData);
 }
 

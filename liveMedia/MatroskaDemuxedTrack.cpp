@@ -41,6 +41,6 @@ void MatroskaDemuxedTrack::doGetNextFrame() {
 
 char const* MatroskaDemuxedTrack::MIMEtype() const {
   MatroskaTrack* track = fOurSourceDemux.fOurFile.lookup(fOurTrackNumber);
-  if (track == NULL) return NULL; // shouldn't happen
+  if (track == NULL) return "(unknown)"; // shouldn't happen
   return track->mimeType;
 }

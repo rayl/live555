@@ -234,8 +234,6 @@ void MPEG2TransportStreamMultiplexor
   }
 }
 
-static u_int32_t calculateCRC(u_int8_t* data, unsigned dataLength); // forward
-
 #define PAT_PID 0
 #define OUR_PROGRAM_NUMBER 1
 #define OUR_PROGRAM_MAP_PID 0x30
@@ -427,8 +425,8 @@ static u_int32_t const CRC32[256] = {
   0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4
 };
 
-static u_int32_t calculateCRC(u_int8_t* data, unsigned dataLength) {
-  u_int32_t crc = 0xFFFFFFFF;
+u_int32_t calculateCRC(u_int8_t const* data, unsigned dataLength, u_int32_t initialValue) {
+  u_int32_t crc = initialValue;
 
   while (dataLength-- > 0) {
     crc = (crc<<8) ^ CRC32[(crc>>24) ^ (u_int32_t)(*data++)];

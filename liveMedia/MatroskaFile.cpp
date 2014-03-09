@@ -166,7 +166,7 @@ void MatroskaFile::handleEndOfTrackHeaderParsing() {
     MatroskaTrackTable::Iterator iter(*fTrackTable);
     MatroskaTrack* track;
     while ((track = iter.next()) != NULL) {
-      if (!track->isEnabled || track->trackType == 0 || track->codecID == NULL) continue; // track not enabled, or not fully-defined
+      if (!track->isEnabled || track->trackType == 0 || track->mimeType[0] == '\0') continue; // track not enabled, or not fully-defined
 
       trackChoice[numEnabledTracks].trackNumber = track->trackNumber;
       trackChoice[numEnabledTracks].trackType = track->trackType;
@@ -774,9 +774,9 @@ FramedSource* MatroskaDemux::newDemuxedTrack(unsigned& resultTrackNumber) {
 FramedSource* MatroskaDemux::newDemuxedTrackByTrackNumber(unsigned trackNumber) {
   if (trackNumber == 0) return NULL;
 
-  FramedSource* track = new MatroskaDemuxedTrack(envir(), trackNumber, *this);
-  fDemuxedTracksTable->Add((char const*)trackNumber, track);
-  return track;
+  FramedSource* trackSource = new MatroskaDemuxedTrack(envir(), trackNumber, *this);
+  fDemuxedTracksTable->Add((char const*)trackNumber, trackSource);
+  return trackSource;
 }
 
 MatroskaDemuxedTrack* MatroskaDemux::lookupDemuxedTrack(unsigned trackNumber) {
@@ -840,10 +840,6 @@ CuePoint::CuePoint(double cueTime, u_int64_t clusterOffsetInFile, unsigned block
 CuePoint::~CuePoint() {
   delete fSubTree[0]; delete fSubTree[1];
 }
-
-#ifndef ABS
-#define ABS(x) (x)<0 ? -(x) : (x)
-#endif
 
 void CuePoint::addCuePoint(CuePoint*& root, double cueTime, u_int64_t clusterOffsetInFile, unsigned blockNumWithinCluster,
 			   Boolean& needToReviseBalanceOfParent) {

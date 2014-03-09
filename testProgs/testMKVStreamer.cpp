@@ -95,6 +95,8 @@ void onMatroskaFileCreation(MatroskaFile* newFile, void* /*clientData*/) {
     unsigned estBitrate, numFiltersInFrontOfTrack;
     trackState[i].source = matroskaFile
       ->createSourceForStreaming(baseSource, trackNumber, estBitrate, numFiltersInFrontOfTrack);
+    trackState[i].sink = NULL; // by default; may get changed below
+    trackState[i].rtcp = NULL; // ditto
     
     if (trackState[i].source != NULL) {
       Groupsock* rtpGroupsock = new Groupsock(*env, destinationAddress, rtpPortNum, ttl);
@@ -103,20 +105,19 @@ void onMatroskaFileCreation(MatroskaFile* newFile, void* /*clientData*/) {
 
       trackState[i].sink
 	= matroskaFile->createRTPSinkForTrackNumber(trackNumber, rtpGroupsock, 96+i);
-      if (trackState[i].sink != NULL && trackState[i].sink->estimatedBitrate() > 0) {
-	estBitrate = trackState[i].sink->estimatedBitrate(); // hack
-      }
-      trackState[i].rtcp
-	= RTCPInstance::createNew(*env, rtcpGroupsock, estBitrate, CNAME,
-				  trackState[i].sink, NULL /* we're a server */,
-				  True /* we're a SSM source */);
-        // Note: This starts RTCP running automatically
+      if (trackState[i].sink != NULL) {
+	if (trackState[i].sink->estimatedBitrate() > 0) {
+	  estBitrate = trackState[i].sink->estimatedBitrate(); // hack
+	}
+	trackState[i].rtcp
+	  = RTCPInstance::createNew(*env, rtcpGroupsock, estBitrate, CNAME,
+				    trackState[i].sink, NULL /* we're a server */,
+				    True /* we're a SSM source */);
+          // Note: This starts RTCP running automatically
 
-      // Having set up a track for streaming, add it to our RTSP server's "ServerMediaSession":
-      sms->addSubsession(PassiveServerMediaSubsession::createNew(*trackState[i].sink, trackState[i].rtcp));
-    } else {
-      trackState[i].sink = NULL;
-      trackState[i].rtcp = NULL;
+	// Having set up a track for streaming, add it to our RTSP server's "ServerMediaSession":
+	sms->addSubsession(PassiveServerMediaSubsession::createNew(*trackState[i].sink, trackState[i].rtcp));
+      }
     }
   }
 
@@ -141,14 +142,15 @@ void afterPlaying(void* /*clientData*/) {
 
   // Stop playing all "RTPSink"s, then close the source streams
   // (which will also close the demultiplexor itself):
-  for (unsigned i = 0; i < 3; ++i) {
+  unsigned i;
+  for (i = 0; i < 3; ++i) {
     if (trackState[i].sink != NULL) trackState[i].sink->stopPlaying();
     Medium::close(trackState[i].source); trackState[i].source = NULL;
   }
 
   // Create a new demultiplexor from our Matroska file, then new data sources for each track:
   matroskaDemux = matroskaFile->newDemux();
-  for (unsigned i = 0; i < 3; ++i) {
+  for (i = 0; i < 3; ++i) {
     if (trackState[i].trackNumber != 0) {
       FramedSource* baseSource
 	= matroskaDemux->newDemuxedTrackByTrackNumber(trackState[i].trackNumber);

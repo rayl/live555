@@ -77,4 +77,9 @@ private:
   Boolean fIsFirstAdaptationField;
 };
 
+
+// The CRC calculation function that Transport Streams use.  We make this function public
+// here in case it's useful elsewhere:
+u_int32_t calculateCRC(u_int8_t const* data, unsigned dataLength, u_int32_t initialValue = 0xFFFFFFFF);
+
 #endif

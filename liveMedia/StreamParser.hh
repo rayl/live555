@@ -74,7 +74,7 @@ protected: // we're a virtual base class
     fRemainingUnparsedBits = 0;
     return curBank()[fCurParserIndex++];
   }
-  u_int8_t test1Byte(unsigned numBytes) { // as above, but doesn't advance ptr
+  u_int8_t test1Byte() { // as above, but doesn't advance ptr
     ensureValidBytes(1);
     return nextToParse()[0];
   }

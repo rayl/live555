@@ -842,35 +842,49 @@ void createOutputFiles(char const* periodicFilenameSuffix) {
 	// (unless the '-P <interval-in-seconds>' option was given):
 	sprintf(outFileName, "stdout");
       }
-      FileSink* fileSink;
-      if (strcmp(subsession->mediumName(), "audio") == 0 &&
-	  (strcmp(subsession->codecName(), "AMR") == 0 ||
-	   strcmp(subsession->codecName(), "AMR-WB") == 0)) {
-	// For AMR audio streams, we use a special sink that inserts AMR frame hdrs:
-	fileSink = AMRAudioFileSink::createNew(*env, outFileName,
-					       fileSinkBufferSize, oneFilePerFrame);
-      } else if (strcmp(subsession->mediumName(), "video") == 0 &&
-		 (strcmp(subsession->codecName(), "H264") == 0)) {
-	// For H.264 video stream, we use a special sink that adds 'start codes',
-	// and (at the start) the SPS and PPS NAL units:
-	fileSink = H264VideoFileSink::createNew(*env, outFileName,
-						subsession->fmtp_spropparametersets(),
-						fileSinkBufferSize, oneFilePerFrame);
-      } else if (strcmp(subsession->mediumName(), "video") == 0 &&
-		 (strcmp(subsession->codecName(), "H265") == 0)) {
-	// For H.265 video stream, we use a special sink that adds 'start codes',
-	// and (at the start) the VPS, SPS, and PPS NAL units:
-	fileSink = H265VideoFileSink::createNew(*env, outFileName,
-						subsession->fmtp_spropvps(),
-						subsession->fmtp_spropsps(),
-						subsession->fmtp_sproppps(),
-						fileSinkBufferSize, oneFilePerFrame);
-      } else {
+
+      FileSink* fileSink = NULL;
+      Boolean createOggFileSink = False; // by default
+      if (strcmp(subsession->mediumName(), "video") == 0) {
+	if (strcmp(subsession->codecName(), "H264") == 0) {
+	  // For H.264 video stream, we use a special sink that adds 'start codes',
+	  // and (at the start) the SPS and PPS NAL units:
+	  fileSink = H264VideoFileSink::createNew(*env, outFileName,
+						  subsession->fmtp_spropparametersets(),
+						  fileSinkBufferSize, oneFilePerFrame);
+	} else if (strcmp(subsession->codecName(), "H265") == 0) {
+	  // For H.265 video stream, we use a special sink that adds 'start codes',
+	  // and (at the start) the VPS, SPS, and PPS NAL units:
+	  fileSink = H265VideoFileSink::createNew(*env, outFileName,
+						  subsession->fmtp_spropvps(),
+						  subsession->fmtp_spropsps(),
+						  subsession->fmtp_sproppps(),
+						  fileSinkBufferSize, oneFilePerFrame);
+	} else if (strcmp(subsession->codecName(), "THEORA") == 0) {
+	  createOggFileSink = True;
+	}
+      } else if (strcmp(subsession->mediumName(), "audio") == 0) {
+	if (strcmp(subsession->codecName(), "AMR") == 0 ||
+	    strcmp(subsession->codecName(), "AMR-WB") == 0) {
+	  // For AMR audio streams, we use a special sink that inserts AMR frame hdrs:
+	  fileSink = AMRAudioFileSink::createNew(*env, outFileName,
+						 fileSinkBufferSize, oneFilePerFrame);
+	} else if (strcmp(subsession->codecName(), "VORBIS") == 0 ||
+		   strcmp(subsession->codecName(), "OPUS") == 0) {
+	  createOggFileSink = True;
+	}
+      }
+      if (createOggFileSink) {
+	fileSink = OggFileSink
+	  ::createNew(*env, outFileName,
+		      subsession->rtpTimestampFrequency(), subsession->fmtp_config());
+      } else if (fileSink == NULL) {
 	// Normal case:
 	fileSink = FileSink::createNew(*env, outFileName,
 				       fileSinkBufferSize, oneFilePerFrame);
       }
       subsession->sink = fileSink;
+
       if (subsession->sink == NULL) {
 	*env << "Failed to create FileSink for \"" << outFileName
 	     << "\": " << env->getResultMsg() << "\n";
