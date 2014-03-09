@@ -105,66 +105,66 @@ void OnDemandServerMediaSubsession
 
     // Create 'groupsock' and 'sink' objects for the destination,
     // using previously unused server port numbers:
-    RTPSink* rtpSink;
-    BasicUDPSink* udpSink;
-    Groupsock* rtpGroupsock;
-    Groupsock* rtcpGroupsock;
-    portNumBits serverPortNum;
-    if (clientRTCPPort.num() == 0) {
-      // We're streaming raw UDP (not RTP). Create a single groupsock:
-      NoReuse dummy(envir()); // ensures that we skip over ports that are already in use
-      for (serverPortNum = fInitialPortNum; ; ++serverPortNum) {
-	struct in_addr dummyAddr; dummyAddr.s_addr = 0;
+    RTPSink* rtpSink = NULL;
+    BasicUDPSink* udpSink = NULL;
+    Groupsock* rtpGroupsock = NULL;
+    Groupsock* rtcpGroupsock = NULL;
 
-	serverRTPPort = serverPortNum;
-	rtpGroupsock = new Groupsock(envir(), dummyAddr, serverRTPPort, 255);
-	if (rtpGroupsock->socketNum() >= 0) break; // success
-      }
-
-      rtcpGroupsock = NULL;
-      rtpSink = NULL;
-      udpSink = BasicUDPSink::createNew(envir(), rtpGroupsock);
-    } else {
-      // Normal case: We're streaming RTP (over UDP or TCP).  Create a pair of
-      // groupsocks (RTP and RTCP), with adjacent port numbers (RTP port number even):
-      NoReuse dummy(envir()); // ensures that we skip over ports that are already in use
-      for (portNumBits serverPortNum = fInitialPortNum; ; serverPortNum += 2) {
-	struct in_addr dummyAddr; dummyAddr.s_addr = 0;
-
-	serverRTPPort = serverPortNum;
-	rtpGroupsock = new Groupsock(envir(), dummyAddr, serverRTPPort, 255);
-	if (rtpGroupsock->socketNum() < 0) {
-	  delete rtpGroupsock;
-	  continue; // try again
+    if (clientRTPPort.num() != 0) { // Normal case: Create destinations
+      portNumBits serverPortNum;
+      if (clientRTCPPort.num() == 0) {
+	// We're streaming raw UDP (not RTP). Create a single groupsock:
+	NoReuse dummy(envir()); // ensures that we skip over ports that are already in use
+	for (serverPortNum = fInitialPortNum; ; ++serverPortNum) {
+	  struct in_addr dummyAddr; dummyAddr.s_addr = 0;
+	  
+	  serverRTPPort = serverPortNum;
+	  rtpGroupsock = new Groupsock(envir(), dummyAddr, serverRTPPort, 255);
+	  if (rtpGroupsock->socketNum() >= 0) break; // success
 	}
 
-	serverRTCPPort = serverPortNum+1;
-	rtcpGroupsock = new Groupsock(envir(), dummyAddr, serverRTCPPort, 255);
-	if (rtcpGroupsock->socketNum() < 0) {
-	  delete rtpGroupsock;
-	  delete rtcpGroupsock;
-	  continue; // try again
+	udpSink = BasicUDPSink::createNew(envir(), rtpGroupsock);
+      } else {
+	// Normal case: We're streaming RTP (over UDP or TCP).  Create a pair of
+	// groupsocks (RTP and RTCP), with adjacent port numbers (RTP port number even):
+	NoReuse dummy(envir()); // ensures that we skip over ports that are already in use
+	for (portNumBits serverPortNum = fInitialPortNum; ; serverPortNum += 2) {
+	  struct in_addr dummyAddr; dummyAddr.s_addr = 0;
+
+	  serverRTPPort = serverPortNum;
+	  rtpGroupsock = new Groupsock(envir(), dummyAddr, serverRTPPort, 255);
+	  if (rtpGroupsock->socketNum() < 0) {
+	    delete rtpGroupsock;
+	    continue; // try again
+	  }
+
+	  serverRTCPPort = serverPortNum+1;
+	  rtcpGroupsock = new Groupsock(envir(), dummyAddr, serverRTCPPort, 255);
+	  if (rtcpGroupsock->socketNum() < 0) {
+	    delete rtpGroupsock;
+	    delete rtcpGroupsock;
+	    continue; // try again
+	  }
+
+	  break; // success
 	}
 
-	break; // success
+	unsigned char rtpPayloadType = 96 + trackNumber()-1; // if dynamic
+	rtpSink = createNewRTPSink(rtpGroupsock, rtpPayloadType, mediaSource);
       }
 
-      unsigned char rtpPayloadType = 96 + trackNumber()-1; // if dynamic
-      rtpSink = createNewRTPSink(rtpGroupsock, rtpPayloadType, mediaSource);
-      udpSink = NULL;
-    }
+      // Turn off the destinations for each groupsock.  They'll get set later
+      // (unless TCP is used instead):
+      if (rtpGroupsock != NULL) rtpGroupsock->removeAllDestinations();
+      if (rtcpGroupsock != NULL) rtcpGroupsock->removeAllDestinations();
 
-    // Turn off the destinations for each groupsock.  They'll get set later
-    // (unless TCP is used instead):
-    if (rtpGroupsock != NULL) rtpGroupsock->removeAllDestinations();
-    if (rtcpGroupsock != NULL) rtcpGroupsock->removeAllDestinations();
-
-    if (rtpGroupsock != NULL) {
-      // Try to use a big send buffer for RTP -  at least 0.1 second of
-      // specified bandwidth and at least 50 KB
-      unsigned rtpBufSize = streamBitrate * 25 / 2; // 1 kbps * 0.1 s = 12.5 bytes
-      if (rtpBufSize < 50 * 1024) rtpBufSize = 50 * 1024;
-      increaseSendBufferTo(envir(), rtpGroupsock->socketNum(), rtpBufSize);
+      if (rtpGroupsock != NULL) {
+	// Try to use a big send buffer for RTP -  at least 0.1 second of
+	// specified bandwidth and at least 50 KB
+	unsigned rtpBufSize = streamBitrate * 25 / 2; // 1 kbps * 0.1 s = 12.5 bytes
+	if (rtpBufSize < 50 * 1024) rtpBufSize = 50 * 1024;
+	increaseSendBufferTo(envir(), rtpGroupsock->socketNum(), rtpBufSize);
+      }
     }
 
     // Set up the state of the stream.  The stream will get started later:
