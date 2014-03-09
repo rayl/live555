@@ -312,7 +312,7 @@ Boolean MatroskaFileParser::parseTrack() {
 #endif
 	  if (track != NULL && trackNumber != 0) {
 	    track->trackNumber = trackNumber;
-	    fOurFile.fTracks.add(track, trackNumber);
+	    fOurFile.addTrack(track, trackNumber);
 	  }
 	}
 	break;
@@ -438,6 +438,13 @@ Boolean MatroskaFileParser::parseTrack() {
 	  if (track != NULL) {
 	    delete[] track->codecPrivate; track->codecPrivate = codecPrivate;
 	    track->codecPrivateSize = codecPrivateSize;
+
+	    // Hack for H.264: Byte 4 of the 'codec private' data contains
+	    // the size of NAL unit lengths:
+	    if (track->codecID != NULL && strcmp(track->codecID, "V_MPEG4/ISO/AVC") == 0
+		&& codecPrivateSize >= 5) {
+	      track->subframeSizeSize = (codecPrivate[4])&0x3 + 1;
+	    }
 	  } else {
 	    delete[] codecPrivate;
 	  }
