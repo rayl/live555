@@ -964,7 +964,7 @@ unsigned H264or5VideoStreamParser::parse() {
     // Now that we have found (& copied) a NAL unit, process it if it's of special interest to us:
     if (isVPS(nal_unit_type)) { // Video parameter set
       // First, save a copy of this NAL unit, in case the downstream object wants to see it:
-      usingSource()->saveCopyOfVPS(fStartOfFrame + fOutputStartCodeSize, fTo - fStartOfFrame - fOutputStartCodeSize);
+      usingSource()->saveCopyOfVPS(fStartOfFrame + fOutputStartCodeSize, curFrameSize() - fOutputStartCodeSize);
 
       if (fParsedFrameRate == 0.0) {
 	// We haven't yet parsed a frame rate from the stream.
@@ -984,7 +984,7 @@ unsigned H264or5VideoStreamParser::parse() {
       }
     } else if (isSPS(nal_unit_type)) { // Sequence parameter set
       // First, save a copy of this NAL unit, in case the downstream object wants to see it:
-      usingSource()->saveCopyOfSPS(fStartOfFrame + fOutputStartCodeSize, fTo - fStartOfFrame - fOutputStartCodeSize);
+      usingSource()->saveCopyOfSPS(fStartOfFrame + fOutputStartCodeSize, curFrameSize() - fOutputStartCodeSize);
 
       if (fParsedFrameRate == 0.0) {
 	// We haven't yet parsed a frame rate from the stream.
@@ -1004,7 +1004,7 @@ unsigned H264or5VideoStreamParser::parse() {
       }
     } else if (isPPS(nal_unit_type)) { // Picture parameter set
       // Save a copy of this NAL unit, in case the downstream object wants to see it:
-      usingSource()->saveCopyOfPPS(fStartOfFrame + fOutputStartCodeSize, fTo - fStartOfFrame - fOutputStartCodeSize);
+      usingSource()->saveCopyOfPPS(fStartOfFrame + fOutputStartCodeSize, curFrameSize() - fOutputStartCodeSize);
     } else if (isSEI(nal_unit_type)) { // Supplemental enhancement information (SEI)
       analyze_sei_data(nal_unit_type);
       // Later, perhaps adjust "fPresentationTime" if we saw a "pic_timing" SEI payload??? #####

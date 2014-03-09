@@ -115,9 +115,6 @@ Boolean H265VideoRTPSource
 	headerStart[2] = newNALHeader[1];
 	numBytesToSkip = 1;
       }
-
-      headerStart[2] = headerStart[1];
-      headerStart[1] = (headerStart[0]&0x81)|(nal_unit_type<<1);
     } else {
       // The start bit is not set, so we skip over all headers:
       fCurrentPacketBeginsFrame = False;
